@@ -1,0 +1,8 @@
+Time Elapsed: 1.03 seconds
+Start GPR: 53.167
+Number of edges: 15925
+Num operations: 463
+Percent edges examined: 2.90738
+Time per operation: 0 seconds
+Time Elapsed: 0 seconds
+Finish GPR: 86.2132
