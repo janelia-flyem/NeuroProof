@@ -29,6 +29,9 @@ void set_edge_result(boost::python::tuple body_pair, double connection_probabili
 // number of edges yet to be processed in the scheduler
 unsigned int get_estimated_num_remaining_edges();
 
+
+// get current threshold and spot?
+
 #endif
 
 

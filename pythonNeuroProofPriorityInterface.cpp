@@ -100,7 +100,7 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
 
     class_<PriorityInfo>("PriorityInfo")
-        .def_readonly("body_pair", &PriorityInfo::body_pair)
+        .def_readwrite("body_pair", &PriorityInfo::body_pair)
         .def_readonly("location", &PriorityInfo::location);
 }
 
