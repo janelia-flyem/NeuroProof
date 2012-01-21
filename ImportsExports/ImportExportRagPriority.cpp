@@ -40,17 +40,18 @@ Rag<Label>* create_rag_from_jsonfile(const char * file_name)
             unsigned int size1 = edge_list[i].get("size1", 1).asUInt();
             unsigned int size2 = edge_list[i].get("size2", 1).asUInt();
             double weight = edge_list[i].get("weight", 0.0).asDouble();
+            unsigned int edge_size = edge_list[i].get("edge_size", 1).asUInt();
 
             RagNode<Label>* rag_node1 = rag->find_rag_node(node1);
             if (!rag_node1) {
                 rag_node1 = rag->insert_rag_node(node1);
             }
-            rag_node1->set_size(1);
+            rag_node1->set_size(size1);
             RagNode<Label>* rag_node2 = rag->find_rag_node(node2);
             if (!rag_node2) {
                 rag_node2 = rag->insert_rag_node(node2);
             }
-            rag_node2->set_size(1);
+            rag_node2->set_size(size2);
            
             if (!rag->find_rag_edge(rag_node1, rag_node2)) {
                 RagEdge<Label>* rag_edge = rag->insert_rag_edge(rag_node1, rag_node2);
@@ -70,6 +71,13 @@ Rag<Label>* create_rag_from_jsonfile(const char * file_name)
                     }
                     rag_add_property(rag, rag_edge, "location", Location(x,y,z));
                 }
+
+                try {
+                        rag->retrieve_property_list("edge_size");
+                } catch (ErrMsg& msg) {
+                        rag_bind_edge_property_list(rag, "edge_size");
+                }
+                rag_add_property(rag, rag_edge, "edge_size", edge_size);
             } 
         }
 
@@ -113,7 +121,13 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
             } catch (ErrMsg& msg) {
                 //
             }
-            
+          
+            try { 
+                unsigned int edge_size = rag_retrieve_property<Label, unsigned int>(rag, *iter, "edge_size");
+                json_edge["edge_size"] = edge_size;
+            } catch (ErrMsg& msg) {
+            }
+
             json_writer["edge_list"][edge_num] = json_edge; 
         }
         fout << json_writer; 

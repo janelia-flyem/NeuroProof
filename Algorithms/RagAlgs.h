@@ -13,20 +13,7 @@ struct EdgeRanking {
     typedef std::multimap<double, RagEdge<Region>* > type;
 };
 
-template <typename Region>
-typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val)
-{
-    typename EdgeRanking<Region>::type ranking;
 
-    for (typename Rag<Region>::edges_iterator iter = rag.edges_begin(); iter != rag.edges_end(); ++iter) {
-        double val = (*iter)->get_weight();
-        if ((val <= max_val) && (val >= min_val)) {
-            ranking.insert(std::make_pair(std::abs(val - start_val), *iter));
-        } 
-    }
-
-    return ranking;
-}
 
 template <typename Region>
 void rag_bind_edge_property_list(Rag<Region>* rag, std::string property_type)
@@ -92,6 +79,24 @@ void rag_remove_property(Rag<Region>* rag, RagNode<Region>* node, std::string pr
     property_list->remove_property(node);
 }
 
+template <typename Region>
+typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val)
+{
+    typename EdgeRanking<Region>::type ranking;
+
+    for (typename Rag<Region>::edges_iterator iter = rag.edges_begin(); iter != rag.edges_end(); ++iter) {
+        double val = (*iter)->get_weight();
+        if ((val <= max_val) && (val >= min_val)) {
+            if (rag_retrieve_property<Region, unsigned int>(&rag, *iter, "edge_size") > 1) {
+            if (((*iter)->get_node1()->get_size() > 27) && ((*iter)->get_node2()->get_size() > 27)) {
+                ranking.insert(std::make_pair(std::abs(val - start_val), *iter));
+            }
+            }
+        } 
+    }
+
+    return ranking;
+}
 
 
 
