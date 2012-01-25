@@ -13,12 +13,18 @@ class EdgePriority {
     typedef boost::tuple<Region, Region> NodePair;
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
-    EdgePriority(Rag<Region>& rag_) : rag(rag_), updated(false) {}
+    EdgePriority(Rag<Region>& rag_) : rag(rag_), updated(false)
+    {
+        property_names.push_back(std::string("location"));
+        property_names.push_back(std::string("edge_size"));
+    }
     virtual NodePair getTopEdge(Location& location) = 0;
     virtual bool isFinished() = 0;
     virtual void updatePriority() = 0;
     // low weight == no connection
     virtual void setEdge(NodePair node_pair, double weight);
+    virtual bool undo();
+    virtual void removeEdge(NodePair node_pair, bool remove);
 
   protected:
     void setUpdated(bool status);
@@ -26,6 +32,24 @@ class EdgePriority {
     Rag<Region>& rag;
     
   private:
+    struct EdgeHistory {
+        Region node1;
+        Region node2;
+        unsigned long long size1;
+        unsigned long long size2;
+        std::vector<Region> node_list1;
+        std::vector<Region> node_list2;
+        std::vector<double> edge_weight1;
+        std::vector<double> edge_weight2;
+        std::vector<std::vector<boost::shared_ptr<Property> > > property_list1;
+        std::vector<std::vector<boost::shared_ptr<Property> > > property_list2;
+        bool remove;
+        double weight;
+        std::vector<boost::shared_ptr<Property> > property_list_curr;
+    };
+
+    std::vector<EdgeHistory> history_queue;
+    std::vector<std::string> property_names;
     bool updated;
 };
 
@@ -42,9 +66,121 @@ template <typename Region> bool EdgePriority<Region>::isUpdated()
 
 template <typename Region> void EdgePriority<Region>::setEdge(NodePair node_pair, double weight)
 {
-    RagEdge<Region>* edge = rag.find_rag_edge(boost::get<0>(node_pair), boost::get<1>(node_pair));
+    EdgeHistory history;
+    history.node1 = boost::get<0>(node_pair);
+    history.node2 = boost::get<1>(node_pair);
+    RagEdge<Region>* edge = rag.find_rag_edge(history.node1, history.node2);
+    history.weight = edge->get_weight();
+    history.remove = false;
+    history_queue.push_back(history);
     edge->set_weight(weight);
 }
+
+template <typename Region> bool EdgePriority<Region>::undo()
+{
+    if (history_queue.empty()) {
+        return false;
+    }
+    EdgeHistory& history = history_queue.back();
+
+    if (history.remove) {
+        rag.remove_rag_node(rag.find_rag_node(history.node1));
+    
+        RagNode<Region>* temp_node1 = rag.insert_rag_node(history.node1);
+        RagNode<Region>* temp_node2 = rag.insert_rag_node(history.node2);
+        temp_node1->set_size(history.size1);
+        temp_node2->set_size(history.size2);
+
+        for (int i = 0; i < history.node_list1.size(); ++i) {
+            RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node1, rag.find_rag_node(history.node_list1[i]));
+            temp_edge->set_weight(history.edge_weight1[i]);
+            rag_add_propertyptr(&rag, temp_edge, "location", history.property_list1[i][0]);
+            rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list1[i][1]);
+        } 
+        for (int i = 0; i < history.node_list2.size(); ++i) {
+            RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node2, rag.find_rag_node(history.node_list2[i]));
+            temp_edge->set_weight(history.edge_weight2[i]);
+            rag_add_propertyptr(&rag, temp_edge, "location", history.property_list2[i][0]);
+            rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list2[i][1]);
+        }
+
+        RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node1, temp_node2);
+        temp_edge->set_weight(history.weight);
+        rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
+        rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
+    } else {
+        RagNode<Region>* temp_node1 = rag.find_rag_node(history.node1);
+        RagNode<Region>* temp_node2 = rag.find_rag_node(history.node2);
+
+        RagEdge<Region>* temp_edge = rag.find_rag_edge(temp_node1, temp_node2);
+        temp_edge->set_weight(history.weight);
+        //rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
+        //rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
+    }
+    
+    history_queue.pop_back();
+    return true;
+}
+
+
+template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
+{
+    EdgeHistory history;
+    history.node1 = boost::get<0>(node_pair);
+    history.node2 = boost::get<1>(node_pair);
+    RagEdge<Region>* edge = rag.find_rag_edge(history.node1, history.node2);
+    history.weight = edge->get_weight();
+    history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "location"));
+    history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "edge_size"));
+
+    // node id that is kept
+    if (remove) {
+        history.remove = true;
+        RagNode<Region>* node1 = rag.find_rag_node(history.node1);
+        RagNode<Region>* node2 = rag.find_rag_node(history.node2);
+        history.size1 = node1->get_size();
+        history.size2 = node2->get_size();
+ 
+        for (typename RagNode<Region>::edge_iterator iter = node1->edge_begin(); iter != node1->edge_end(); ++iter) {
+            RagNode<Region>* other_node = (*iter)->get_other_node(node1);
+            if (other_node != node2) {
+                history.node_list1.push_back(other_node->get_node_id());
+                history.edge_weight1.push_back((*iter)->get_weight());
+            
+                std::vector<boost::shared_ptr<Property> > property_list;
+                property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
+                property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "edge_size"));  
+                history.property_list1.push_back(property_list);
+            }
+        } 
+
+        for (typename RagNode<Region>::edge_iterator iter = node2->edge_begin(); iter != node2->edge_end(); ++iter) {
+            RagNode<Region>* other_node = (*iter)->get_other_node(node2);
+            if (other_node != node1) {
+                history.node_list2.push_back(other_node->get_node_id());
+                history.edge_weight2.push_back((*iter)->get_weight());
+                
+                std::vector<boost::shared_ptr<Property> > property_list;
+                property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
+                property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "edge_size"));  
+                history.property_list2.push_back(property_list);
+            }
+        }
+
+        rag_merge_edge(rag, edge, node1, property_names); 
+    } else {
+        assert(0);
+        history.remove = false;
+        rag.remove_rag_edge(edge);
+    }
+
+    history_queue.push_back(history);
+}
+
+
+
+
+
 
 }
 

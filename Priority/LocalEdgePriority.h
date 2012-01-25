@@ -13,12 +13,54 @@ class LocalEdgePriority : public EdgePriority<Region> {
     typedef boost::tuple<Region, Region> NodePair;
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_) 
-        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_) {}
+        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_)
+    {
+
+
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
+                iter != ragtemp.edges_end(); ++iter) {
+            if ((rag_retrieve_property<Region, unsigned int>(&ragtemp, *iter, "edge_size") <= 1)) {
+                (*iter)->set_weight(2.0);
+            }
+        } 
+
+
+#if 0    
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        std::vector<RagEdge<Region>* > remove_edges;
+        for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
+                iter != ragtemp.edges_end(); ++iter) {
+            if ((rag_retrieve_property<Region, unsigned int>(&ragtemp, *iter, "edge_size") <= 1)
+                || (((*iter)->get_weight() > max_val) || ((*iter)->get_weight() < min_val))  ) {
+                remove_edges.push_back(*iter);         
+            }
+        } 
+        for (int i = 0; i < remove_edges.size(); ++i) {
+            ragtemp.remove_rag_edge(remove_edges[i]);
+        }
+        
+
+        std::vector<RagNode<Region>* > remove_nodes;
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
+                iter != ragtemp.nodes_end(); ++iter) {
+            if ((*iter)->get_size() <= 27) {
+                remove_nodes.push_back(*iter);
+            }
+        }
+        for (int i = 0; i < remove_nodes.size(); ++i) {
+            ragtemp.remove_rag_node(remove_nodes[i]);
+        }
+#endif
+        //EdgePriority<Region>::rag.unbind_property_list("edge_size");
+    }
     NodePair getTopEdge(Location& location);
     void updatePriority();
     bool isFinished(); 
     void setEdge(NodePair node_pair, double weight);
     unsigned int getNumRemaining() const;
+    bool undo();
+    void removeEdge(NodePair node_pair, bool remove);
 
   private:
     typename EdgeRanking<Region>::type edge_ranking;
@@ -61,7 +103,6 @@ template <typename Region> bool LocalEdgePriority<Region>::isFinished()
 
 template <typename Region> void LocalEdgePriority<Region>::setEdge(NodePair node_pair, double weight)
 {
-    Region blah = boost::get<0>(node_pair);
     RagEdge<Region>* edge = (EdgePriority<Region>::rag).find_rag_edge(boost::get<0>(node_pair), boost::get<1>(node_pair));
     typename EdgeRanking<Region>::type::iterator iter;
     for (iter = edge_ranking.begin(); iter != edge_ranking.end(); ++iter) {
@@ -75,6 +116,22 @@ template <typename Region> void LocalEdgePriority<Region>::setEdge(NodePair node
     EdgePriority<Region>::setEdge(node_pair, weight);
 }
 
+template <typename Region> bool LocalEdgePriority<Region>::undo()
+{
+    bool ret = EdgePriority<Region>::undo();
+    updatePriority();
+    return ret; 
+}
+
+template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
+{
+    if (remove) {
+        EdgePriority<Region>::removeEdge(node_pair, remove);
+        updatePriority();    
+    } else {
+        setEdge(node_pair, 1.0);
+    }
+}
 
 template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region>::getTopEdge(Location& location)
 {

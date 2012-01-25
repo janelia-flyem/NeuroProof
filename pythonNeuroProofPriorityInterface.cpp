@@ -68,7 +68,7 @@ PriorityInfo get_next_edge()
 
 
 // exception throw if edge does not exist or connection probability specified is illegal
-void set_edge_result(tuple body_pair, double connection_probability)
+void set_edge_result(tuple body_pair, bool remove)
 {
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
@@ -77,7 +77,7 @@ void set_edge_result(tuple body_pair, double connection_probability)
     Label l1 = extract<Label>(body_pair[0]);
     Label l2 = extract<Label>(body_pair[1]);
     boost::tuple<Label, Label> body_pair_temp(l1, l2);
-    priority_scheduler->setEdge(body_pair_temp, connection_probability);
+    priority_scheduler->removeEdge(body_pair_temp, remove);
 }
 
 
@@ -91,12 +91,23 @@ unsigned int get_estimated_num_remaining_edges()
     return priority_scheduler->getNumRemaining();
 }
 
+bool undo()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    return priority_scheduler->undo();
+}
+
+
 BOOST_PYTHON_MODULE(libNeuroProofPriority)
 {
     def("initialize_priority_scheduler", initialize_priority_scheduler);
     def("export_priority_scheduler", export_priority_scheduler);
     def("get_next_edge", get_next_edge);
     def("set_edge_result", set_edge_result);
+    def("undo", undo);
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
 
     class_<PriorityInfo>("PriorityInfo")

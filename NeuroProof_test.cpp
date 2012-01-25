@@ -75,6 +75,8 @@ int main(int argc, char** argv)
         if (!rag) {
             throw ErrMsg("Rag could not be created");
         }
+        
+#if 0
         create_jsonfile_from_rag(rag, "temp.json");
 
         GPR<Label> gpr_metric(*rag, false);
@@ -86,29 +88,51 @@ int main(int argc, char** argv)
         }
 
         cout << "Start GPR: " << gpr << endl;
-     
+#endif
+        srand(1);
         {
             ScopeTime timer;
             cout << "Number of edges: " << rag->get_num_edges() << endl;
-            LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.5);
+            LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1);
             priority_scheduler.updatePriority();
+           
+            
+            int num_edges_orig = priority_scheduler.getNumRemaining();
             int num_edges_examined = 0;
 
+            
             while (!priority_scheduler.isFinished()) {
                 EdgePriority<Label>::Location location;
                 boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
-                priority_scheduler.setEdge(pair, 0);
+            //    priority_scheduler.setEdge(pair, 0);
+#if 1 
+                Label node1 = boost::get<0>(pair);
+                Label node2 = boost::get<1>(pair);
+                RagEdge<Label>* temp_edge = rag->find_rag_edge(node1, node2);
+                double weight = temp_edge->get_weight();
+                int weightint = int(100 * weight);
+                if ((rand() % 100) > (weightint*2)) {
+                    priority_scheduler.removeEdge(pair, true);
+                } else {
+                    priority_scheduler.removeEdge(pair, false);
+                }
+#endif
                 ++num_edges_examined;
             }
 
             cout << "Num operations: " << num_edges_examined << endl;
-            cout << "Percent edges examined: " << double(num_edges_examined) / rag->get_num_edges() * 100 << endl;
+            cout << "Num orig post-filter edges: " << num_edges_orig << endl;
+            cout << "Percent edges examined: " << double(num_edges_examined) / num_edges_orig * 100 << endl;
             double time_elapsed = double(timer.getElapsed());  
             cout << "Time per operation: " << time_elapsed/num_edges_examined << " seconds" << endl;
+            
         }
+
+#if 0
         GPR<Label> gpr_metric2(*rag, false);
         double gpr2 = gpr_metric2.calculateGPR(num_paths, num_threads);
         cout << "Finish GPR: " << gpr2 << endl;
+#endif
     } catch (ErrMsg& msg) {
         cerr << msg.str << endl;
         exit(-1);

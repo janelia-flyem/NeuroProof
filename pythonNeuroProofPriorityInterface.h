@@ -24,11 +24,12 @@ bool export_priority_scheduler(const char * json_file);
 PriorityInfo get_next_edge();
 
 // exception throw if edge does not exist or connection probability specified is illegal
-void set_edge_result(boost::python::tuple body_pair, double connection_probability);
+void set_edge_result(boost::python::tuple body_pair, bool remove);
 
 // number of edges yet to be processed in the scheduler
 unsigned int get_estimated_num_remaining_edges();
 
+bool undo();
 
 // get current threshold and spot?
 
