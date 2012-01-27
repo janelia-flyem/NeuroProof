@@ -153,7 +153,11 @@ template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region
         throw ErrMsg("Priority scheduler crashed");
     }
 
-    return NodePair(edge->get_node1()->get_node_id(), edge->get_node2()->get_node_id());
+    if (edge->get_node1()->get_size() >= edge->get_node2()->get_size()) {
+        return NodePair(edge->get_node1()->get_node_id(), edge->get_node2()->get_node_id());
+    } else {
+        return NodePair(edge->get_node2()->get_node_id(), edge->get_node1()->get_node_id());
+    }
 }
 
 

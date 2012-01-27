@@ -98,6 +98,8 @@ int main(int argc, char** argv)
            
             
             int num_edges_orig = priority_scheduler.getNumRemaining();
+            cout << "Num orig post-filter edges: " << num_edges_orig << endl;
+            
             int num_edges_examined = 0;
 
             
@@ -121,7 +123,6 @@ int main(int argc, char** argv)
             }
 
             cout << "Num operations: " << num_edges_examined << endl;
-            cout << "Num orig post-filter edges: " << num_edges_orig << endl;
             cout << "Percent edges examined: " << double(num_edges_examined) / num_edges_orig * 100 << endl;
             double time_elapsed = double(timer.getElapsed());  
             cout << "Time per operation: " << time_elapsed/num_edges_examined << " seconds" << endl;
