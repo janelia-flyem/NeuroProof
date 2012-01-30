@@ -2,12 +2,16 @@
 #include "Utilities/ErrMsg.h"
 #include "Priority/LocalEdgePriority.h"
 #include "ImportsExports/ImportExportRagPriority.h"
+#include <json/json.h>
+#include <json/value.h>
 
+#include <fstream>
 #include <boost/python.hpp>
 //#include <Python.h>
 
 using namespace NeuroProof;
 using namespace boost::python;
+using std::ifstream;
 
 static LocalEdgePriority<Label>* priority_scheduler = 0;
 Rag<Label>* rag = 0;
@@ -27,6 +31,22 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
     if (!rag) {
         return false;
     }
+
+    ifstream fin(json_file);
+    Json::Reader json_reader;
+    Json::Value json_vals;
+    if (!json_reader.parse(fin, json_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+
+    Json::Value json_range = json_vals["range"];
+    if (!json_range.empty()) {
+        min_val = json_range[(unsigned int)(0)].asDouble();
+        max_val = json_range[(unsigned int)(1)].asDouble();
+        start_val = min_val;
+    }
+
 
     priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val);
     priority_scheduler->updatePriority();
@@ -91,6 +111,22 @@ unsigned int get_estimated_num_remaining_edges()
     return priority_scheduler->getNumRemaining();
 }
 
+double get_average_prediction_error()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+    return priority_scheduler->getAveragePredictionError();
+}
+
+double get_percent_prediction_correct()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+    return priority_scheduler->getPercentPredictionCorrect();
+}
+
 bool undo()
 {
     if (!priority_scheduler) {
@@ -108,6 +144,8 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("get_next_edge", get_next_edge);
     def("set_edge_result", set_edge_result);
     def("undo", undo);
+    def("get_percent_prediction_correct", get_percent_prediction_correct);
+    def("get_average_prediction_error", get_average_prediction_error);
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
 
     class_<PriorityInfo>("PriorityInfo")

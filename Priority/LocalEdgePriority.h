@@ -13,10 +13,8 @@ class LocalEdgePriority : public EdgePriority<Region> {
     typedef boost::tuple<Region, Region> NodePair;
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_) 
-        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_)
+        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), num_processed(0), num_correct(0), cum_error(0.0)
     {
-
-
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
         for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
                 iter != ragtemp.edges_end(); ++iter) {
@@ -59,12 +57,39 @@ class LocalEdgePriority : public EdgePriority<Region> {
     bool isFinished(); 
     void setEdge(NodePair node_pair, double weight);
     unsigned int getNumRemaining() const;
-    bool undo();
     void removeEdge(NodePair node_pair, bool remove);
+    bool undo();
+    double getPercentPredictionCorrect()
+    {
+        if (num_processed) {
+            return double(num_correct)/num_processed * 100.0;
+        } else {
+            return 100.0;
+        }
+    }
+    double getAveragePredictionError()
+    {
+        if (num_processed) {
+            return cum_error/num_processed * 100.0;
+        } else {
+            return 0.0;
+        }
+    }
 
   private:
     typename EdgeRanking<Region>::type edge_ranking;
     double min_val, max_val, start_val; 
+    
+    double curr_prob;
+    int curr_decision;
+
+    int num_processed;    
+    int num_correct;
+    double cum_error;
+    
+    double last_prob;
+    int last_decision;
+
 };
 
 // -algorithms-
@@ -119,18 +144,42 @@ template <typename Region> void LocalEdgePriority<Region>::setEdge(NodePair node
 template <typename Region> bool LocalEdgePriority<Region>::undo()
 {
     bool ret = EdgePriority<Region>::undo();
-    updatePriority();
+    if (ret) {
+        curr_prob = last_prob;
+        curr_decision = last_decision;
+        --num_processed;
+        if ((((curr_prob >= 0.50) && curr_decision == 1) ||
+                    (curr_prob <= 0.50) && curr_decision == 0)) {
+            --num_correct;
+        }
+        cum_error -= (std::abs(curr_prob - curr_decision));
+
+        
+        updatePriority();
+    }
     return ret; 
 }
 
 template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
 {
+    ++num_processed;
+    last_decision = curr_decision;
+    last_prob = curr_prob;
     if (remove) {
+        curr_decision = 0;
         EdgePriority<Region>::removeEdge(node_pair, remove);
         updatePriority();    
     } else {
-        setEdge(node_pair, 1.0);
+        curr_decision = 1;
+        setEdge(node_pair, 2.0);
     }
+
+    if ((((curr_prob >= 0.50) && curr_decision == 1) ||
+        (curr_prob <= 0.50) && curr_decision == 0)) {
+        ++num_correct;
+    }
+    cum_error += (std::abs(curr_prob - curr_decision));
+
 }
 
 template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region>::getTopEdge(Location& location)
@@ -152,6 +201,9 @@ template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region
         std::cerr << msg.str << std::endl;
         throw ErrMsg("Priority scheduler crashed");
     }
+
+    last_prob = curr_prob;
+    curr_prob = edge->get_weight();
 
     if (edge->get_node1()->get_size() >= edge->get_node2()->get_size()) {
         return NodePair(edge->get_node1()->get_node_id(), edge->get_node2()->get_node_id());

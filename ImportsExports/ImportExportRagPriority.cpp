@@ -30,6 +30,7 @@ Rag<Label>* create_rag_from_jsonfile(const char * file_name)
         if (!json_reader.parse(fin, json_reader_vals)) {
             throw ErrMsg("Error: Json incorrectly formatted");
         }
+        fin.close();
 
         rag = new Rag<Label>;
         Json::Value edge_list = json_reader_vals["edge_list"];
