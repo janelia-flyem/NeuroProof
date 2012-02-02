@@ -18,7 +18,6 @@ typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
 Rag<Label>* create_rag_from_jsonfile(const char * file_name)
 {
-    Rag<Label>* rag = 0;
     try {
         Json::Reader json_reader;
         Json::Value json_reader_vals;
@@ -26,12 +25,23 @@ Rag<Label>* create_rag_from_jsonfile(const char * file_name)
         if (!fin) {
             throw ErrMsg("Error: input file: " + string(file_name) + " cannot be opened");
         }
-        
+     
         if (!json_reader.parse(fin, json_reader_vals)) {
             throw ErrMsg("Error: Json incorrectly formatted");
         }
         fin.close();
+        return create_rag_from_json(json_reader_vals);
+    } catch (ErrMsg& msg) {
+        cout << msg.str << endl;
+    }  
 
+    return 0;
+}
+
+Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
+{
+    Rag<Label>* rag = 0;
+    try {
         rag = new Rag<Label>;
         Json::Value edge_list = json_reader_vals["edge_list"];
 
@@ -102,7 +112,25 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
         if (!fout) {
             throw ErrMsg("Error: output file could not be opened");
         }
+        
+        bool status = create_json_from_rag(rag, json_writer);
+        if (!status) {
+            throw ErrMsg("Error in rag export");
+        }
 
+        fout << json_writer; 
+        fout.close();
+    } catch (ErrMsg& msg) {
+        cout << msg.str << endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer)
+{
+    try {
         unsigned int edge_num = 0;
         for (Rag<Label>::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter, ++edge_num)
@@ -131,8 +159,6 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
 
             json_writer["edge_list"][edge_num] = json_edge; 
         }
-        fout << json_writer; 
-        fout.close();
     } catch (ErrMsg& msg) {
         cout << msg.str << endl;
         return false;
@@ -140,5 +166,7 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
 
     return true;
 }
+
+
 
 }

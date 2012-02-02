@@ -11,7 +11,7 @@
 
 using namespace NeuroProof;
 using namespace boost::python;
-using std::ifstream;
+using std::ifstream; using std::ofstream; using std::cout; using std::endl;
 
 static LocalEdgePriority<Label>* priority_scheduler = 0;
 Rag<Label>* rag = 0;
@@ -26,12 +26,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
     if (!priority_scheduler) {
         delete priority_scheduler;
     }
-    
-    rag = create_rag_from_jsonfile(json_file);
-    if (!rag) {
-        return false;
-    }
-
+   
     ifstream fin(json_file);
     Json::Reader json_reader;
     Json::Value json_vals;
@@ -40,15 +35,12 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
     }
     fin.close();
 
-    Json::Value json_range = json_vals["range"];
-    if (!json_range.empty()) {
-        min_val = json_range[(unsigned int)(0)].asDouble();
-        max_val = json_range[(unsigned int)(1)].asDouble();
-        start_val = min_val;
+    rag = create_rag_from_json(json_vals);
+    if (!rag) {
+        return false;
     }
 
-
-    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val);
+    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals);
     priority_scheduler->updatePriority();
 
     return true;
@@ -61,7 +53,28 @@ bool export_priority_scheduler(const char * json_file)
         throw ErrMsg("Scheduler not initialized");
     }
     
-    return create_jsonfile_from_rag(rag, json_file);
+    try {
+        Json::Value json_writer;
+        ofstream fout(json_file);
+        if (!fout) {
+            throw ErrMsg("Error: output file could not be opened");
+        }
+
+        bool status = create_json_from_rag(rag, json_writer);
+        if (!status) {
+            throw ErrMsg("Error in rag export");
+        }
+
+        priority_scheduler->export_json(json_writer); 
+
+        fout << json_writer; 
+        fout.close();
+    } catch (ErrMsg& msg) {
+        cout << msg.str << endl;
+        return false;
+    }
+
+    return true;
 }
 
 

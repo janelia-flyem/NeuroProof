@@ -7,6 +7,8 @@
 #include <sstream>
 #include <cassert>
 #include <iostream>
+#include <json/json.h>
+#include <json/value.h>
 
 using std::cerr; using std::cout; using std::endl;
 using std::ifstream;
@@ -71,7 +73,16 @@ int main(int argc, char** argv)
         }
 #endif
 
-        Rag<Label>* rag = create_rag_from_jsonfile(argv[1]);
+        ifstream fin(argv[1]);
+        Json::Reader json_reader;
+        Json::Value json_vals;
+        if (!json_reader.parse(fin, json_vals)) {
+            throw ErrMsg("Error: Json incorrectly formatted");
+        }
+        fin.close();
+
+
+        Rag<Label>* rag = create_rag_from_json(json_vals);
         if (!rag) {
             throw ErrMsg("Rag could not be created");
         }
@@ -89,11 +100,14 @@ int main(int argc, char** argv)
 
         cout << "Start GPR: " << gpr << endl;
 #endif
+
+
+
         srand(1);
         {
             ScopeTime timer;
             cout << "Number of edges: " << rag->get_num_edges() << endl;
-            LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1);
+            LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
             priority_scheduler.updatePriority();
            
             

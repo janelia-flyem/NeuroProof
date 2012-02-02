@@ -132,19 +132,19 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 
 
 template <typename Region>
-typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val)
+typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val, int ignore_size=27)
 {
     typename EdgeRanking<Region>::type ranking;
 
     for (typename Rag<Region>::edges_iterator iter = rag.edges_begin(); iter != rag.edges_end(); ++iter) {
         double val = (*iter)->get_weight();
         if ((val <= max_val) && (val >= min_val)) {
-            if (rag_retrieve_property<Region, unsigned int>(&rag, *iter, "edge_size") > 1) {
-            if (((*iter)->get_node1()->get_size() > 27) && ((*iter)->get_node2()->get_size() > 27)) {
+//            if (rag_retrieve_property<Region, unsigned int>(&rag, *iter, "edge_size") > 1) {
+            if (((*iter)->get_node1()->get_size() > ignore_size) && ((*iter)->get_node2()->get_size() > ignore_size)) {
     //        if (((*iter)->get_node1()->node_degree() > 1) && ((*iter)->get_node2()->node_degree() > 1)) {
                 ranking.insert(std::make_pair(std::abs(val - start_val), *iter));
      //       }
-            }
+  //          }
             }
         } 
     }
