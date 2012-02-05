@@ -5,6 +5,7 @@
 #include "../Algorithms/RagAlgs.h"
 #include <iostream>
 #include <json/value.h>
+#include <set>
 
 namespace NeuroProof {
 
@@ -15,7 +16,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     
     LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_) 
-        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), num_processed(0), num_correct(0), cum_error(0.0), prune_small_edges(true), ignore_size(27)
+        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), num_processed(0), num_correct(0), cum_error(0.0), prune_small_edges(true), ignore_size(27), body_mode(false)
     {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
         for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
@@ -26,12 +27,12 @@ class LocalEdgePriority : public EdgePriority<Region> {
         } 
     }
     LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_, Json::Value& json_vals) 
-        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), num_processed(0), num_correct(0), cum_error(0.0), prune_small_edges(true), ignore_size(27)
+        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), num_processed(0), num_correct(0), cum_error(0.0), prune_small_edges(true), ignore_size(27), body_mode(false)
     {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        
         prune_small_edges = json_vals.get("prune_small_edges", true).asBool(); 
-
         if (prune_small_edges) {
-            Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
             for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
                     iter != ragtemp.edges_end(); ++iter) {
                 if ((rag_retrieve_property<Region, unsigned int>(&ragtemp, *iter, "edge_size") <= 1)) {
@@ -51,6 +52,38 @@ class LocalEdgePriority : public EdgePriority<Region> {
         num_correct = json_vals.get("num_correct", 0).asUInt(); 
         cum_error = json_vals.get("cum_error", 0.0).asDouble(); 
         ignore_size = json_vals.get("ignore_size", 27).asUInt();
+    
+        body_mode = json_vals.get("body_mode", false).asBool(); 
+
+        Json::Value json_reexamine = json_vals["reexamine_bodies"];
+        for (unsigned int i = 0; i < json_reexamine.size(); ++i) {
+            BodyRank body_rank;
+            body_rank.id = json_reexamine[i].asUInt();
+            RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
+            body_rank.size = rag_node->get_size();
+
+            if (body_rank.size <= ignore_size) {
+                continue;
+            }
+
+            bool found_one = false;
+            for (typename RagNode<Region>::edge_iterator iter = rag_node->edge_begin(); iter != rag_node->edge_end(); ++iter) {
+                if ((*iter)->get_weight() <= max_val && (*iter)->get_weight() >= min_val) {
+                    found_one = true;
+                    break;
+                }
+            }
+            
+            if (found_one) {
+                reexamine_bodies.insert(body_rank);
+            }
+        }
+
+        if (!reexamine_bodies.empty()) {
+            body_mode = true;
+            head_reexamine = *(reexamine_bodies.begin());
+        }
+
     }
     
     NodePair getTopEdge(Location& location);
@@ -84,10 +117,34 @@ class LocalEdgePriority : public EdgePriority<Region> {
         json_writer["range"][(unsigned int)(0)] = min_val;
         json_writer["range"][(unsigned int)(1)] = max_val;
         json_writer["prune_small_edges"] = prune_small_edges;
+        json_writer["body_mode"] = body_mode;
         json_writer["ignore_size"] = ignore_size;
+   
+        int i = 0; 
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        for (typename std::set<BodyRank>::iterator iter = reexamine_bodies.begin(); iter != reexamine_bodies.end(); ++iter, ++i) {
+            RagNode<Region>* rag_node = ragtemp.find_rag_node(iter->id);
+            if (!rag_node) {
+                --i;
+                continue;
+            }
+            json_writer["reexamine_bodies"][i] = iter->id;   
+        }
     }
 
   private:
+    struct BodyRank {
+        Region id;
+        unsigned long long size;
+        bool operator<(const BodyRank& br2) const
+        {
+            if ((size > br2.size) || (size == br2.size && id < br2.id)) {
+                return true;
+            }
+            return false;
+        }
+    };
+
     typename EdgeRanking<Region>::type edge_ranking;
     double min_val, max_val, start_val; 
     
@@ -101,8 +158,13 @@ class LocalEdgePriority : public EdgePriority<Region> {
     double last_prob;
     int last_decision;
 
+    BodyRank last_reexamine;
+    BodyRank head_reexamine;
+
     bool prune_small_edges;
+    bool body_mode;
     unsigned int ignore_size;
+    std::set<BodyRank> reexamine_bodies;
 };
 
 // -algorithms-
@@ -125,12 +187,19 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
 template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaining() const
 {
+    if (!reexamine_bodies.empty()) {
+        return reexamine_bodies.size();
+    }
     return (unsigned int)(edge_ranking.size());
 }
 
 template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 {
-    edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size);
+    if (!body_mode) {
+        edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size);
+    } else if (!reexamine_bodies.empty()){
+        edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size, head_reexamine.id);
+    }
     EdgePriority<Region>::setUpdated(true);
 }
 
@@ -167,7 +236,9 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
         }
         cum_error -= (std::abs(curr_prob - curr_decision));
 
-        
+        head_reexamine = last_reexamine;
+        reexamine_bodies.insert(head_reexamine);
+
         updatePriority();
     }
     return ret; 
@@ -176,13 +247,33 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
 template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
 {
     ++num_processed;
+    Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+    bool found_anchor = false;
+
     if (remove) {
         curr_decision = 0;
+        // if the larger body is not the head than that means it has already been processed
+        // and is now not an orphan
+        if (boost::get<0>(node_pair) != head_reexamine.id) {
+            found_anchor = true;
+        }
         EdgePriority<Region>::removeEdge(node_pair, remove);
+
         updatePriority();    
     } else {
         curr_decision = 1;
         setEdge(node_pair, last_prob+1.0);
+    }
+
+    if (!reexamine_bodies.empty()) {
+        last_reexamine = head_reexamine;
+        if (edge_ranking.empty() || found_anchor) {
+            do {
+                reexamine_bodies.erase(reexamine_bodies.begin());
+            } while (!reexamine_bodies.empty() && ragtemp.find_rag_node((head_reexamine = *(reexamine_bodies.begin())).id) == 0);
+
+            updatePriority();
+        }
     }
 
     if ((((curr_prob >= 0.50) && curr_decision == 1) ||

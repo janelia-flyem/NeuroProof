@@ -130,13 +130,17 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
     rag.remove_rag_node(node_remove);     
 }
 
-
+// assume that 0 body will never be added as a screen
 template <typename Region>
-typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val, int ignore_size=27)
+typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val, int ignore_size=27, Region screen_id = 0)
 {
     typename EdgeRanking<Region>::type ranking;
 
     for (typename Rag<Region>::edges_iterator iter = rag.edges_begin(); iter != rag.edges_end(); ++iter) {
+        if ((screen_id != 0) && ((*iter)->get_node1()->get_node_id() != screen_id) && ((*iter)->get_node2()->get_node_id() != screen_id)) {
+            continue;
+        }
+        
         double val = (*iter)->get_weight();
         if ((val <= max_val) && (val >= min_val)) {
 //            if (rag_retrieve_property<Region, unsigned int>(&rag, *iter, "edge_size") > 1) {
