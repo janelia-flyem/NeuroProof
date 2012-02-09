@@ -237,7 +237,9 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
         cum_error -= (std::abs(curr_prob - curr_decision));
 
         head_reexamine = last_reexamine;
-        reexamine_bodies.insert(head_reexamine);
+        if (body_mode) {
+            reexamine_bodies.insert(head_reexamine);
+        }
 
         updatePriority();
     }
