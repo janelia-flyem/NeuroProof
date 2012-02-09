@@ -197,8 +197,18 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 {
     if (!body_mode) {
         edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size);
-    } else if (!reexamine_bodies.empty()){
-        edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size, head_reexamine.id);
+    } else { // if (!reexamine_bodies.empty()){
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        edge_ranking.clear();
+        while (edge_ranking.empty() && !reexamine_bodies.empty()) {
+            head_reexamine = *(reexamine_bodies.begin()); 
+            if (ragtemp.find_rag_node(head_reexamine.id)) {
+                edge_ranking = rag_grab_edge_ranking(EdgePriority<Region>::rag, min_val, max_val, start_val, ignore_size, head_reexamine.id);
+            }
+            if (edge_ranking.empty()) {
+                reexamine_bodies.erase(reexamine_bodies.begin());
+            } 
+        }
     }
     EdgePriority<Region>::setUpdated(true);
 }
@@ -249,8 +259,11 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
 template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
 {
     ++num_processed;
-    Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
     bool found_anchor = false;
+
+    if (body_mode) {
+        last_reexamine = head_reexamine;
+    }
 
     if (remove) {
         curr_decision = 0;
@@ -261,22 +274,20 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
         }
         EdgePriority<Region>::removeEdge(node_pair, remove);
 
-        updatePriority();    
+        if (!body_mode) {
+            updatePriority(); 
+        }   
     } else {
         curr_decision = 1;
         setEdge(node_pair, last_prob+1.0);
     }
 
-    if (!reexamine_bodies.empty()) {
-        last_reexamine = head_reexamine;
-        if (edge_ranking.empty() || found_anchor) {
-            do {
-                reexamine_bodies.erase(reexamine_bodies.begin());
-            } while (!reexamine_bodies.empty() && ragtemp.find_rag_node((head_reexamine = *(reexamine_bodies.begin())).id) == 0);
-
+    if (body_mode) {
+        if (remove || edge_ranking.empty()) {
             updatePriority();
         }
     }
+
 
     if ((((curr_prob >= 0.50) && curr_decision == 1) ||
         (curr_prob <= 0.50) && curr_decision == 0)) {
