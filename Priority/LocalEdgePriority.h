@@ -62,7 +62,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
             body_rank.size = rag_node->get_size();
 
-            if (body_rank.size <= ignore_size) {
+            if (body_rank.size <= 100) { //ignore_size) {
                 continue;
             }
 
