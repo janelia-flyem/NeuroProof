@@ -16,6 +16,61 @@ class Property {
     // add serialization/deserialization interface
 };
 
+class PropertyCompute : public Property {
+  public:
+    virtual boost::shared_ptr<Property> copy() = 0;
+    virtual double get_data() = 0;
+    virtual void add_point(double val, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0) = 0;
+};
+
+#define NUM_BINS 101
+
+class PropertyMedian : public PropertyCompute {
+  public:
+    PropertyMedian() : count(0)
+    {
+        for (int i = 0; i < NUM_BINS; ++i) {
+            hist[i] = 0;
+        }
+    }
+    boost::shared_ptr<Property> copy()
+    {
+        return boost::shared_ptr<Property>(new PropertyMedian(*this));
+    }    
+    void add_point(double val, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
+    {
+        hist[int(val * 100 + 0.5)]++;
+        ++count;   
+    }
+    double get_data()
+    {
+        int mid_point1 = count / 2;
+        int mid_point2 = (count + 1)/ 2;
+    
+        int spot1 = -1;
+        int spot2 = -1;
+        int curr_count = 0;
+        for (int i = 0; i < NUM_BINS; ++i) {
+            curr_count += hist[i];
+            
+            if (curr_count >= mid_point1 && spot1 == -1) {
+                spot1 = i;   
+            }
+            if (curr_count >= mid_point2) {
+                spot2 = i;
+                break; 
+            }
+        }
+        double median_spot = (double(spot1) * spot2) / 2;
+        return (median_spot /= 100);
+    }
+        
+  private:
+    int count;
+    int hist[NUM_BINS];
+};
+
+
 template <typename T>
 class PropertyTemplate : public Property {
   public:

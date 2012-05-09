@@ -33,6 +33,31 @@ void rag_unbind_property_list(Rag<Region>* rag, std::string property_type)
    rag->unbind_property_list(property_type);
 }
 
+template <typename Region>
+void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, double pred, 
+        boost::shared_ptr<PropertyList<Region> > edge_list)
+{
+    RagNode<Region> * node1 = rag->find_rag_node(id1);
+    if (!node1) {
+        node1 = rag->insert_rag_node(id1);
+    }
+    
+    RagNode<Region> * node2 = rag->find_rag_node(id2);
+    if (!node2) {
+        node2 = rag->insert_rag_node(id2);
+    }
+    
+    RagEdge<Region>* edge = rag->find_rag_edge(node1, node2);
+    if (!edge) {
+        edge = rag->insert_rag_edge(node1, node2);
+        edge_list->add_property(edge, boost::shared_ptr<Property>(new PropertyMedian));
+    }
+
+    boost::shared_ptr<PropertyCompute> property = boost::shared_polymorphic_downcast<PropertyCompute>(edge_list->retrieve_property(edge));
+    property->add_point(pred);
+}  
+
+
 template <typename Region, typename T>
 void rag_add_property(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type, T data)
 {

@@ -4,9 +4,12 @@
 
 #include <boost/python.hpp>
 
+#include <boost/numeric/ublas/matrix.hpp>
+#include <iostream>
 
 using namespace NeuroProof;
 using namespace boost::python;
+using std::cout;
 
 typedef Rag<Label> Rag_ui;
 typedef RagNode<Label> RagNode_ui;
@@ -108,12 +111,89 @@ Rag_nodeiterator_wrapper rag_get_nodes(Rag_ui& rag) {
 }
 
 
+// ?! how to add features to RAG
+bool build_rag(Rag_ui* rag, object watershed, object prediction)
+{
+    // there will be 0 padding around image
+    unsigned width, height, depth; 
+
+    boost::python::tuple watershed_shape(watershed.attr("shape"));
+    boost::python::tuple prediction_shape(prediction.attr("shape"));
+
+    width = boost::python::extract<unsigned>(watershed_shape[0]);
+    std::cout << width << std::endl;
+    height = boost::python::extract<unsigned>(watershed_shape[1]);
+    std::cout << height << std::endl;
+    depth = boost::python::extract<unsigned>(watershed_shape[2]);
+    std::cout << depth << std::endl;
+
+    unsigned int * watershed_array = new unsigned int[width*height*depth];
+    double * prediction_array = new double[width*height*depth];
+
+    unsigned int plane_size = width * height;
+
+    for (unsigned int x = 0; x < width; ++x) {
+        for (unsigned int y = 0; y < height; ++y) {
+            for (unsigned int z = 0; z < depth; ++z) {
+                watershed_array[x+y*width+z*plane_size] =
+                    int(boost::python::extract<double>(watershed[boost::python::make_tuple(x,y,z)]));
+                prediction_array[x+y*width+z*plane_size] =
+                    boost::python::extract<double>(prediction[boost::python::make_tuple(x,y,z)]);
+            }
+        }
+    }
+
+    boost::shared_ptr<PropertyList<Label> > edge_list = EdgePropertyList<Label>::create_edge_list();
+    rag->bind_property_list("median", edge_list);
+
+    for (unsigned int x = 1; x < (width-1); ++x) {
+        for (unsigned int y = 1; y < (height-1); ++y) {
+            for (unsigned int z = 1; z < (depth-1); ++z) {
+                unsigned long long curr_spot = x + y * width + z * plane_size;
+                unsigned int spot0 = watershed_array[curr_spot];
+                unsigned int spot1 = watershed_array[curr_spot-1];
+                unsigned int spot2 = watershed_array[curr_spot+1];
+                unsigned int spot3 = watershed_array[curr_spot-width];
+                unsigned int spot4 = watershed_array[curr_spot+width];
+                unsigned int spot5 = watershed_array[curr_spot-plane_size];
+                unsigned int spot6 = watershed_array[curr_spot+plane_size];
+
+                if (spot0 != spot1) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+                if (spot0 != spot2) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+                if (spot0 != spot3) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+                if (spot0 != spot4) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+                if (spot0 != spot5) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+                if (spot0 != spot6) {
+                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                }
+
+            }
+        }
+    } 
+    return true;
+}
+
+
+
+
 BOOST_PYTHON_MODULE(libNeuroProofRag)
 {
     // (return: Rag, params: file_name)
     def("create_rag_from_jsonfile", create_rag_from_jsonfile, return_value_policy<manage_new_object>());
     // (return true/false, params: rag, file_name)
     def("create_jsonfile_from_rag", create_jsonfile_from_rag);
+
+    def("build_rag", build_rag);
 
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
     def("rag_add_property", rag_add_property_ptr1);
