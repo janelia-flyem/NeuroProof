@@ -107,13 +107,12 @@ int main(int argc, char** argv)
         {
             ScopeTime timer;
             cout << "Number of edges: " << rag->get_num_edges() << endl;
+            cout << "Number of nodes: " << rag->get_num_regions() << endl;
             LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
-            priority_scheduler.updatePriority();
-           
             
             int num_edges_orig = priority_scheduler.getNumRemaining();
-            cout << "Num orig post-filter edges: " << num_edges_orig << endl;
-            
+            cout << "Number of assignments: " << num_edges_orig << endl;           
+ 
             int num_edges_examined = 0;
 
             
@@ -124,17 +123,52 @@ int main(int argc, char** argv)
 #if 1 
                 Label node1 = boost::get<0>(pair);
                 Label node2 = boost::get<1>(pair);
+                //cout << node1 << " " << node2 << endl;
                 RagEdge<Label>* temp_edge = rag->find_rag_edge(node1, node2);
                 double weight = temp_edge->get_weight();
                 int weightint = int(100 * weight);
-                if ((rand() % 100) > (weightint*2)) {
+                if (0) { //(rand() % 100) > (weightint)) {
+                    //cout << "remove" << endl;
                     priority_scheduler.removeEdge(pair, true);
                 } else {
+                    //cout << "set" << endl;
                     priority_scheduler.removeEdge(pair, false);
                 }
 #endif
                 ++num_edges_examined;
             }
+/*
+            int total_undos = 0;
+            while (priority_scheduler.undo()) {
+                ++total_undos;
+            }
+            cout << total_undos << endl;
+            cout << "Num operations: " << num_edges_examined << endl;
+
+
+
+            while (!priority_scheduler.isFinished()) {
+                EdgePriority<Label>::Location location;
+                boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
+            //    priority_scheduler.setEdge(pair, 0);
+#if 1 
+                Label node1 = boost::get<0>(pair);
+                Label node2 = boost::get<1>(pair);
+                //cout << node1 << " " << node2 << endl;
+                RagEdge<Label>* temp_edge = rag->find_rag_edge(node1, node2);
+                double weight = temp_edge->get_weight();
+                int weightint = int(100 * weight);
+                if (0) { // (rand() % 100) > (weightint)) {
+                    //cout << "remove" << endl;
+                    priority_scheduler.removeEdge(pair, true);
+                } else {
+                    //cout << "set" << endl;
+                    priority_scheduler.removeEdge(pair, false);
+                }
+#endif
+                ++num_edges_examined;
+            }
+*/
 
             cout << "Num operations: " << num_edges_examined << endl;
             cout << "Percent edges examined: " << double(num_edges_examined) / num_edges_orig * 100 << endl;

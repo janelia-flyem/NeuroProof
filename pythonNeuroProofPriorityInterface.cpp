@@ -41,7 +41,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
     }
 
     priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals);
-    priority_scheduler->updatePriority();
+    //priority_scheduler->updatePriority();
 
     return true;
 }
@@ -77,7 +77,26 @@ bool export_priority_scheduler(const char * json_file)
     return true;
 }
 
+double get_average_prediction_error()
+{
+    return 0.0;
+}
 
+double get_percent_prediction_correct()
+{
+    return 0.0;
+}
+
+
+// number of edges yet to be processed in the scheduler
+unsigned int get_estimated_num_remaining_edges()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    return priority_scheduler->getNumRemaining();
+}
 
 
 // empty PriorityInfo if no more edges
@@ -99,7 +118,6 @@ PriorityInfo get_next_edge()
     return priority_info;
 }
 
-
 // exception throw if edge does not exist or connection probability specified is illegal
 void set_edge_result(tuple body_pair, bool remove)
 {
@@ -114,31 +132,6 @@ void set_edge_result(tuple body_pair, bool remove)
 }
 
 
-// number of edges yet to be processed in the scheduler
-unsigned int get_estimated_num_remaining_edges()
-{
-    if (!priority_scheduler) {
-        throw ErrMsg("Scheduler not initialized");
-    }
-
-    return priority_scheduler->getNumRemaining();
-}
-
-double get_average_prediction_error()
-{
-    if (!priority_scheduler) {
-        throw ErrMsg("Scheduler not initialized");
-    }
-    return priority_scheduler->getAveragePredictionError();
-}
-
-double get_percent_prediction_correct()
-{
-    if (!priority_scheduler) {
-        throw ErrMsg("Scheduler not initialized");
-    }
-    return priority_scheduler->getPercentPredictionCorrect();
-}
 
 bool undo()
 {

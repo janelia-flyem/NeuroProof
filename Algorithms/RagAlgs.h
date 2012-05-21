@@ -2,9 +2,11 @@
 #define RAGALGS_H
 
 #include "../DataStructures/Rag.h"
+#include "../DataStructures/PropertyList.h"
 #include "../DataStructures/Property.h"
 #include <map>
 #include <string>
+#include <iostream>
 
 namespace NeuroProof {
 
@@ -73,6 +75,14 @@ void rag_add_propertyptr(Rag<Region>* rag, RagEdge<Region>* edge, std::string pr
     property_list->add_property(edge, property);
 }
 
+template <typename Region>
+void rag_add_propertyptr(Rag<Region>* rag, RagNode<Region>* node, std::string property_type, boost::shared_ptr<Property> property)
+{
+    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
+    property_list->add_property(node, property);
+}
+
+
 
 template <typename Region, typename T>
 void rag_add_property(Rag<Region>* rag, RagNode<Region>* node, std::string property_type, T data)
@@ -86,16 +96,14 @@ template <typename Region, typename T>
 T rag_retrieve_property(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type)
 {
     boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    boost::shared_ptr<PropertyTemplate<T> > property = boost::shared_polymorphic_downcast<PropertyTemplate<T> >(property_list->retrieve_property(edge));
-    return property->get_data();
+    return property_list_retrieve_template_property<Region, T>(property_list, edge);
 }
 
 template <typename Region, typename T>
 T rag_retrieve_property(Rag<Region>* rag, RagNode<Region>* node, std::string property_type)
 {
     boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    boost::shared_ptr<PropertyTemplate<T> > property = boost::shared_polymorphic_downcast<PropertyTemplate<T> >(property_list->retrieve_property(node));
-    return property->get_data();
+    return property_list_retrieve_template_property<Region, T>(property_list, node);
 }
 
 template <typename Region>
@@ -104,6 +112,14 @@ boost::shared_ptr<Property> rag_retrieve_propertyptr(Rag<Region>* rag, RagEdge<R
     boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
     return property_list->retrieve_property(edge);
 }
+
+template <typename Region>
+boost::shared_ptr<Property> rag_retrieve_propertyptr(Rag<Region>* rag, RagNode<Region>* node, std::string property_type)
+{
+    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
+    return property_list->retrieve_property(node);
+}
+
 
 
 template <typename Region>
@@ -119,6 +135,18 @@ void rag_remove_property(Rag<Region>* rag, RagNode<Region>* node, std::string pr
     boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
     property_list->remove_property(node);
 }
+
+
+template <typename Region>
+unsigned long long get_rag_size(Rag<Region>* rag)
+{
+    unsigned long long total_num_voxels = 0;
+    for (typename Rag<Region>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        total_num_voxels += (*iter)->get_size();
+    }
+    return total_num_voxels;
+}
+
 
 // take smallest value edge and use that when connecting back
 template <typename Region>
@@ -157,7 +185,7 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 
 // assume that 0 body will never be added as a screen
 template <typename Region>
-typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val, int ignore_size=27, Region screen_id = 0)
+typename EdgeRanking<Region>::type rag_grab_edge_ranking(Rag<Region>& rag, double min_val, double max_val, double start_val, double ignore_size=27, Region screen_id = 0)
 {
     typename EdgeRanking<Region>::type ranking;
 
