@@ -170,6 +170,13 @@ int main(int argc, char** argv)
             }
 */
 
+            using std::ofstream;
+            Json::Value json_writer;
+            ofstream fout("temp.json");
+            create_json_from_rag(rag, json_writer);
+            fout << json_writer;
+            fout.close();
+
             cout << "Num operations: " << num_edges_examined << endl;
             cout << "Percent edges examined: " << double(num_edges_examined) / num_edges_orig * 100 << endl;
             double time_elapsed = double(timer.getElapsed());  
