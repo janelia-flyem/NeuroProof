@@ -507,10 +507,23 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                     if (!synapse_mode) { 
                         local_information_affinity = iter->weight * voi_change(head_node->get_size(), other_node->get_size(), volume_size);
                     } else {
-                        unsigned long long synapse_weight1 = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, head_node);
-                        unsigned long long synapse_weight2 = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, other_node);
-                        local_information_affinity = iter->weight *
-                        voi_change(synapse_weight1, synapse_weight2, volume_size);
+                        unsigned long long synapse_weight1 = 0;
+                        try {
+                            synapse_weight1 = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, head_node);
+                        } catch(...) {
+                            //
+                        }
+                        unsigned long long synapse_weight2 = 0;
+                        try {
+                            synapse_weight2 = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, other_node);
+                        } catch(...) {
+                            //
+                        }
+                        
+                        if (synapse_weight1 > 0 && synapse_weight2 > 0) {
+                            local_information_affinity = iter->weight *
+                                voi_change(synapse_weight1, synapse_weight2, volume_size);
+                        }
                     }
 
                     if (local_information_affinity >= biggest_change) {
@@ -583,6 +596,13 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
             BodyRank item;
             item.id = head_reexamine.id;
+            bool switching = false;
+            if (boost::get<0>(node_pair) != head_reexamine.id) {
+                switching = true;
+                cout << "switch-aroo" << endl;
+                item.id = rag_other_node->get_node_id();
+            }
+            
             if ((orphan_mode && is_orphan) || (!orphan_mode && !synapse_mode)) {
                 item.size = rag_head_node->get_size();
                 body_list->insert(item);
@@ -600,10 +620,18 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 } catch(...) {
                     //
                 }
-                property_list_add_template_property(synapse_weight_list, rag_head_node, synapse_weight_head+synapse_weight);
+                if (switching) {
+                    property_list_add_template_property(synapse_weight_list, rag_other_node, synapse_weight_head+synapse_weight);
+                } else {
+                    property_list_add_template_property(synapse_weight_list, rag_head_node, synapse_weight_head+synapse_weight);
+                }
             }
-
-            grabAffinityPairs(rag_head_node, 0, 0.01);
+            
+            if (switching) {
+                grabAffinityPairs(rag_other_node, 0, 0.01);
+            } else {
+                grabAffinityPairs(rag_head_node, 0, 0.01);
+            }
             for (typename AffinityPairsLocal::iterator iter = affinity_pairs.begin();
                     iter != affinity_pairs.end(); ++iter) {
                 Region other_id = iter->region1;
