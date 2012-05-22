@@ -43,11 +43,8 @@ class LocalEdgePriority : public EdgePriority<Region> {
         if (synapse_mode) {
             ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
         } else {
-            ignore_size = json_vals.get("ignore_size", 1000).asDouble();
+            ignore_size = json_vals.get("ignore_size", 1000.0).asDouble();
         }
-
-
-        
 
         /* -------- initial datastructures used in each mode ----------- */
 
@@ -148,6 +145,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             
            
             volume_size = get_rag_size(&ragtemp);
+            ignore_size_vol_vi_filter = ignore_size;
             ignore_size = voi_change(approx_neurite_size, ignore_size, volume_size);
           
 
