@@ -127,7 +127,7 @@ int main(int argc, char** argv)
                 RagEdge<Label>* temp_edge = rag->find_rag_edge(node1, node2);
                 double weight = temp_edge->get_weight();
                 int weightint = int(100 * weight);
-                if (0) { //(rand() % 100) > (weightint)) {
+                if ((rand() % 100) > (weightint)) {
                     //cout << "remove" << endl;
                     priority_scheduler.removeEdge(pair, true);
                 } else {
@@ -174,6 +174,7 @@ int main(int argc, char** argv)
             Json::Value json_writer;
             ofstream fout("temp.json");
             create_json_from_rag(rag, json_writer);
+            priority_scheduler.export_json(json_writer); 
             fout << json_writer;
             fout.close();
 

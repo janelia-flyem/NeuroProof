@@ -45,6 +45,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         } else {
             ignore_size = json_vals.get("ignore_size", 1000.0).asDouble();
         }
+        ignore_size_orig = ignore_size;
 
         /* -------- initial datastructures used in each mode ----------- */
 
@@ -182,7 +183,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         json_writer["prune_small_edges"] = prune_small_edges;
        
         // applicable, in different senses, to all modes 
-        json_writer["ignore_size"] = ignore_size;
+        json_writer["ignore_size"] = ignore_size_orig;
        
         // 4 modes supported currently 
         json_writer["orphan_mode"] = orphan_mode;
@@ -388,6 +389,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
     bool synapse_mode;
     bool prob_mode;
     double ignore_size;
+    double ignore_size_orig;
     BodyRankList * body_list;
     int ignore_size_vol_vi_filter;
     int approx_neurite_size;
@@ -562,18 +564,15 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
             bool is_orphan = false;
             bool synapse_weight = 0;
-            if (orphan_mode) {
-                try {
-                    is_orphan =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, rag_other_node);
-                } catch(...) {
-                    //
-                }
-            } else if (synapse_mode) {
-                try {
-                    synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node);
-                } catch(...) {
-                    //
-                }
+            try {
+                is_orphan =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, rag_other_node);
+            } catch(...) {
+                //
+            }
+            try {
+                synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node);
+            } catch(...) {
+                //
             }
 
             // remove other body from list
@@ -588,11 +587,20 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 item.size = rag_head_node->get_size();
                 body_list->insert(item);
             } else if (synapse_mode) {
-                item.size = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node) + synapse_weight;
+                item.size = head_reexamine.size + synapse_weight;
                 body_list->insert(item);
             }
-            if (orphan_mode && !is_orphan) {
+            if (!is_orphan) {
                 property_list_add_template_property(orphan_property_list, rag_head_node, false);
+            }
+            if (synapse_weight > 0) {
+                unsigned long long synapse_weight_head = 0;
+                try {
+                    synapse_weight_head = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_head_node);
+                } catch(...) {
+                    //
+                }
+                property_list_add_template_property(synapse_weight_list, rag_head_node, synapse_weight_head+synapse_weight);
             }
 
             grabAffinityPairs(rag_head_node, 0, 0.01);
@@ -610,7 +618,12 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 item.size = rag_other_node2->get_size();
 
                 if (synapse_mode) {
-                    item.size = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node2);
+                    item.size = 0;
+                    try { 
+                        item.size = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node2);
+                    } catch(...) {
+                        //
+                    }
                 }
                 body_list->insert(item); 
             }
