@@ -25,6 +25,7 @@ class EdgePriority {
     virtual void setEdge(NodePair node_pair, double weight);
     virtual bool undo();
     virtual void removeEdge(NodePair node_pair, bool remove) = 0;
+    void clear_history();
 
   protected:
     virtual void removeEdge(NodePair node_pair, bool remove, std::vector<std::string>& node_properties);
@@ -79,6 +80,12 @@ template <typename Region> void EdgePriority<Region>::setEdge(NodePair node_pair
     history_queue.push_back(history);
     edge->set_weight(weight);
 }
+
+template <typename Region> void EdgePriority<Region>::clear_history()
+{
+    history_queue.clear();
+}
+
 
 template <typename Region> bool EdgePriority<Region>::undo()
 {

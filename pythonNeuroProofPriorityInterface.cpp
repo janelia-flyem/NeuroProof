@@ -99,6 +99,52 @@ unsigned int get_estimated_num_remaining_edges()
 }
 
 
+void set_synapse_mode(double ignore_size)
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    priority_scheduler->set_synapse_mode(ignore_size);
+}
+
+void set_body_mode(double ignore_size, int depth)
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    priority_scheduler->set_body_mode(ignore_size, depth);
+}
+
+void set_orphan_mode(double ignore_size, double threshold, bool synapse_orphan)
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    priority_scheduler->set_orphan_mode(ignore_size, threshold, synapse_orphan);
+}
+
+void set_edge_mode(double lower, double upper, double start)
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    priority_scheduler->set_edge_mode(lower, upper, start);
+}
+
+
+void estimate_work()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    priority_scheduler->estimateWork();
+}
+
 // empty PriorityInfo if no more edges
 PriorityInfo get_next_edge()
 {
@@ -153,6 +199,11 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("get_percent_prediction_correct", get_percent_prediction_correct);
     def("get_average_prediction_error", get_average_prediction_error);
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
+    def("set_synapse_mode", set_synapse_mode);
+    def("set_body_mode", set_body_mode);
+    def("set_orphan_mode", set_orphan_mode);
+    def("set_edge_mode", set_edge_mode);
+    def("estimate_work", estimate_work);
 
     class_<PriorityInfo>("PriorityInfo")
         .def_readwrite("body_pair", &PriorityInfo::body_pair)

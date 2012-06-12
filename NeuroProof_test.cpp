@@ -109,10 +109,15 @@ int main(int argc, char** argv)
             cout << "Number of edges: " << rag->get_num_edges() << endl;
             cout << "Number of nodes: " << rag->get_num_regions() << endl;
             LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
-            
+        
+            //priority_scheduler.set_body_mode(25000, 0);
+            //priority_scheduler.set_edge_mode(0.1, 0.9, 0.1);
+            //priority_scheduler.set_orphan_mode(1000, 0.90, false);
+
             int num_edges_orig = priority_scheduler.getNumRemaining();
             cout << "Number of assignments: " << num_edges_orig << endl;           
- 
+
+             
             int num_edges_examined = 0;
 
             

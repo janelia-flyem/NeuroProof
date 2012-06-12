@@ -9,6 +9,12 @@
 #include <queue>
 #include <cmath>
 
+
+// ??!!allow undo when no real mode change 
+// ??!!keep body the same?! 
+// Don -- rav fix: export rag,  does config labels save?, clear undo queue on change, start session bugs
+
+
 using std::cout; using std::endl;
 namespace NeuroProof {
 
@@ -17,236 +23,160 @@ class LocalEdgePriority : public EdgePriority<Region> {
   public:
     typedef boost::tuple<Region, Region> NodePair;
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
-    
-    LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_, Json::Value& json_vals) 
-        : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), ignore_size_vol_vi_filter(1000), approx_neurite_size(25000), volume_size(0), body_list(0)
+
+    LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_, Json::Value& json_vals); 
+    void export_json(Json::Value& json_writer);
+
+    void set_synapse_mode(double ignore_size_)
     {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
-       
-        // Dead Cell -- 140 sections 10nm 14156 pixels 
+        reinitialize_scheduler();
 
-        orphan_mode = json_vals.get("orphan_mode", false).asBool(); 
-        prob_mode = json_vals.get("prob_mode", false).asBool(); 
-        synapse_mode = json_vals.get("synapse_mode", false).asBool(); 
-        
-        // set parameters from JSON (explicitly set options later) 
-        prune_small_edges = json_vals.get("prune_small_edges", true).asBool(); 
-        // prob mode and orphan mode
-        Json::Value json_range = json_vals["range"];
-        if (!json_range.empty()) {
-            min_val = json_range[(unsigned int)(0)].asDouble();
-            max_val = json_range[(unsigned int)(1)].asDouble();
-            start_val = min_val;
-        }
-        num_processed = json_vals.get("num_processed", 0).asUInt(); 
-
-        if (synapse_mode) {
-            ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
-        } else {
-            ignore_size = json_vals.get("ignore_size", 1000.0).asDouble();
-        }
-        ignore_size_orig = ignore_size;
-
-        /* -------- initial datastructures used in each mode ----------- */
-
-        node_properties.push_back("synapse_weight");
-        node_properties.push_back("orphan");
-
-        // prob mode -- cannot transfer to prob_mod
-        if (prob_mode && prune_small_edges) {
-            for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
-                    iter != ragtemp.edges_end(); ++iter) {
-                if ((rag_retrieve_property<Region, unsigned int>(&ragtemp, *iter, "edge_size") <= 1)) {
-                    (*iter)->set_weight(10.0);
-                }
-            }
+        synapse_mode = true;
+        ignore_size_orig = ignore_size_;        
+        if (body_list) {
+            delete body_list;
         } 
+        body_list = new BodyRankList(ragtemp, already_analyzed_list);
 
-        orphan_property_list = NodePropertyList<Region>::create_node_list(); 
-        synapse_weight_list = NodePropertyList<Region>::create_node_list();
-        already_analyzed_list = NodePropertyList<Region>::create_node_list();
-      
-
-
-
-        ragtemp.bind_property_list("synapse_weight", synapse_weight_list);
-        ragtemp.bind_property_list("orphan", synapse_weight_list);
-
-        // determine what has been looked at so far
-        Json::Value json_already_analyzed = json_vals["already_analyzed"];
-        for (unsigned int i = 0; i < json_already_analyzed.size(); ++i) {
-            RagNode<Region>* rag_node = ragtemp.find_rag_node(json_already_analyzed[i].asUInt());
-            property_list_add_template_property(already_analyzed_list, rag_node, true);
-        }
-
-
-        // load orphan info
-        BodyRankList body_list_orphan(ragtemp, already_analyzed_list);
-        Json::Value json_orphan = json_vals["orphan_bodies"];
-        for (unsigned int i = 0; i < json_orphan.size(); ++i) {
-            BodyRank body_rank;
-            body_rank.id = json_orphan[i].asUInt();
-            RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
-            body_rank.size = rag_node->get_size();
-
-            // add orphan property for node to orphan list
-            property_list_add_template_property(orphan_property_list, rag_node, true);
-
-            if (body_rank.size >= ignore_size) {
-                bool found_one = false;
-                for (typename RagNode<Region>::edge_iterator iter = rag_node->edge_begin(); iter != rag_node->edge_end(); ++iter) {
-                    if ((*iter)->get_weight() <= max_val && (*iter)->get_weight() >= min_val) {
-                        found_one = true;
-                        break;
-                    }
-                }
-                if (found_one) {
-                    body_list_orphan.insert(body_rank);
-                }
-            }
-        }
-
-
-
-
-        // load synapse info
-        unsigned long long num_synapses = 0; 
-        BodyRankList body_list_synapse(ragtemp, already_analyzed_list);
-        Json::Value json_synapse_weights = json_vals["synapse_bodies"];
-        for (unsigned int i = 0; i < json_synapse_weights.size(); ++i) {
-            BodyRank body_rank;
-            body_rank.id = (json_synapse_weights[i])[(unsigned int)(0)].asUInt();
-            body_rank.size = (json_synapse_weights[i])[(unsigned int)(1)].asUInt();
-            num_synapses += body_rank.size;
-            RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
-            
-            // add synapse weight property for node to synapse weight list
-            property_list_add_template_property(synapse_weight_list, rag_node, body_rank.size);
-
-            bool is_examined = false;
-            try { 
-                is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, rag_node);
-            } catch(...) {
-                //
-            }
-            if (!is_examined) {
-                body_list_synapse.insert(body_rank);
-            }
-        }
-
-        if (orphan_mode) {
-            body_list = new BodyRankList(body_list_orphan);
-        } else if (synapse_mode) {
-            body_list = new BodyRankList(body_list_synapse);
-            volume_size = num_synapses;
-            ignore_size = voi_change(ignore_size, ignore_size, volume_size);
-        } else if (!prob_mode) {
-            body_list = new BodyRankList(ragtemp, already_analyzed_list);
-
-            
-           
-            volume_size = get_rag_size(&ragtemp);
-            ignore_size_vol_vi_filter = ignore_size;
-            ignore_size = voi_change(approx_neurite_size, ignore_size, volume_size);
-          
-
-            for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
-                    iter != ragtemp.nodes_end(); ++iter) {
-                // heuristically ignore bodies below a certain size for computation reasons
-                bool is_examined = false;
-                try { 
-                    is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, (*iter));
-                } catch(...) {
-                    //
-                }
-
-                if ((!is_examined) && (*iter)->get_size() >= ignore_size_vol_vi_filter) {
-                    BodyRank body_rank;
-                    body_rank.id = (*iter)->get_node_id();
-                    body_rank.size = (*iter)->get_size();
-                    body_list->insert(body_rank);
-                }
-            }
-        }
-   
-        updatePriority();
-    }
-  
-    void export_json(Json::Value& json_writer)
-    {
-        // stats
-        json_writer["num_processed"] = num_processed;
-       
-        // probably irrelevant
-        json_writer["range"][(unsigned int)(0)] = min_val;
-        json_writer["range"][(unsigned int)(1)] = max_val;
-        json_writer["prune_small_edges"] = prune_small_edges;
-       
-        // applicable, in different senses, to all modes 
-        json_writer["ignore_size"] = ignore_size_orig;
-       
-        // 4 modes supported currently 
-        json_writer["orphan_mode"] = orphan_mode;
-        json_writer["synapse_mode"] = synapse_mode;
-        json_writer["prob_mode"] = prob_mode;
-   
-        int i = 0;
-        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
-
-        int orphan_count = 0;
-        unsigned int synapse_count = 0;
-        int examined_count = 0;
-
-        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
-                iter != ragtemp.nodes_end(); ++iter) {
-            bool is_orphan = false;
-            bool is_examined = false;
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
             unsigned long long synapse_weight = 0;
+            try {   
+                synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, (*iter));
+            } catch(...) {
+                continue;
+            }
+            volume_size += synapse_weight;
+            BodyRank body_rank;
+            body_rank.id = (*iter)->get_node_id();
+            body_rank.size = synapse_weight;
+            body_list->insert(body_rank);
+        }
 
-            try {
+        ignore_size = voi_change(ignore_size_orig, ignore_size_orig, volume_size);
+        updatePriority();
+        estimateWork();
+    }
+
+    // depth currently not set
+    void set_body_mode(double ignore_size_, int depth)
+    {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        reinitialize_scheduler();
+
+        ignore_size_orig = ignore_size_;        
+        if (body_list) {
+            delete body_list;
+        } 
+        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        
+        volume_size = get_rag_size(&ragtemp);
+        ignore_size = voi_change(approx_neurite_size, ignore_size_orig, volume_size);
+
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
+            if ((*iter)->get_size() >= ignore_size_orig) {
+                BodyRank body_rank;
+                body_rank.id = (*iter)->get_node_id();
+                body_rank.size = (*iter)->get_size();
+                body_list->insert(body_rank);
+            }        
+        }
+
+        updatePriority();
+        estimateWork();
+    }
+
+    // synapse orphan currently not used
+    void set_orphan_mode(double ignore_size_, double threshold, bool synapse_orphan)
+    {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        reinitialize_scheduler();
+        orphan_mode = true;
+        min_val = 1.0 - threshold;
+        max_val = threshold;
+        start_val = min_val;
+
+        ignore_size = ignore_size_;
+        ignore_size_orig = ignore_size_;        
+        if (body_list) {
+            delete body_list;
+        } 
+        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
+            bool is_orphan = false;
+            try { 
                 is_orphan =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, (*iter));
             } catch(...) {
                 //
             }
 
-            try {
-                synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, (*iter));
-            } catch(...) {
-                //
-            }
-
-            try {
-                is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, (*iter));
-            } catch(...) {
-                //
-            }
-
             if (is_orphan) {
-                json_writer["orphan_bodies"][orphan_count] = (*iter)->get_node_id();
-                ++orphan_count;
-            }
-       
-            if (synapse_weight > 0) {
-                json_writer["synapse_bodies"][synapse_count][(unsigned int)(0)] = (*iter)->get_node_id();
-                json_writer["synapse_bodies"][synapse_count][(unsigned int)(1)] = (unsigned int)(synapse_weight);
-                ++synapse_count;
-            }
-
-            if (is_examined) {
-                json_writer["already_analyzed"][examined_count] = (*iter)->get_node_id();
-                ++examined_count;
-            }
+                BodyRank body_rank;
+                body_rank.id = (*iter)->get_node_id();
+                body_rank.size = (*iter)->get_size();
+                body_list->insert(body_rank);
+            }        
         }
+
+        updatePriority();
+        estimateWork();
     }
 
-    double voi_change(double size1, double size2, unsigned long long total_volume)
+    // synapse orphan currently not used
+    void set_edge_mode(double lower, double upper, double start)
     {
-        double part1 = std::log(size1/total_volume)/std::log(2.0)*size1/total_volume + 
-                std::log(size2/total_volume)/std::log(2.0)*size2/total_volume;
-        double part2 = std::log((size1 + size2)/total_volume)/std::log(2.0)*(size1 + size2)/total_volume;
-        double part3 = -1 * (part1 - part2);
-        return part3;
-    }    
+        reinitialize_scheduler();
+        prob_mode = true;
+        min_val = lower;
+        max_val = upper;
+        start_val = start;
+
+        if (body_list) {
+            delete body_list;
+        }
+        body_list = 0; 
+        
+        updatePriority();
+        estimateWork();
+    }
+
+    void estimateWork()
+    {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        num_processed = 0;
+        num_est_remaining = 0;
+        
+        //srand(1); 
+        int num_edges = 0;
+        // estimate work
+        while (!isFinished()) {
+            typename EdgePriority<Region>::Location location;
+            typename boost::tuple<Region, Region> pair = getTopEdge(location);
+            //    priority_scheduler.setEdge(pair, 0);
+            Region node1 = boost::get<0>(pair);
+            Region node2 = boost::get<1>(pair);
+            //cout << node1 << " " << node2 << endl;
+            RagEdge<Region>* temp_edge = ragtemp.find_rag_edge(node1, node2);
+            double weight = temp_edge->get_weight();
+            int weightint = int(100 * weight);
+            if ((rand() % 100) > (weightint)) {
+                //cout << "remove" << endl;
+                removeEdge(pair, true);
+            } else {
+                //cout << "set" << endl;
+                removeEdge(pair, false);
+            }
+            ++num_edges;
+        }
+       
+        int num_rolls = num_edges;
+        while (num_rolls--) {
+            undo();
+        }
+        num_est_remaining = num_edges;
+        updatePriority();
+    }
 
     NodePair getTopEdge(Location& location);
     void updatePriority();
@@ -258,10 +188,13 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
   private:
     struct BodyRank {
+        //BodyRank() : top_id(false) {}
         Region id;
+        //bool top_id;
         unsigned long long size;
         bool operator<(const BodyRank& br2) const
         {
+            //if (top_id || (size > br2.size) || (size == br2.size && id < br2.id)) {
             if ((size > br2.size) || (size == br2.size && id < br2.id)) {
                 return true;
             }
@@ -374,12 +307,35 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
     void grabAffinityPairs(RagNode<Region>* rag_node_head, int path_restriction, double connection_threshold);
 
+    void reinitialize_scheduler()
+    {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        orphan_mode = false;
+        prob_mode = false;
+        synapse_mode = false;
+        already_analyzed_list = NodePropertyList<Region>::create_node_list();
+        volume_size = 0;
+        num_processed = 0;
+        EdgePriority<Region>::clear_history();
+    }
+    
+    double voi_change(double size1, double size2, unsigned long long total_volume)
+    {
+        double part1 = std::log(size1/total_volume)/std::log(2.0)*size1/total_volume + 
+                std::log(size2/total_volume)/std::log(2.0)*size2/total_volume;
+        double part2 = std::log((size1 + size2)/total_volume)/std::log(2.0)*(size1 + size2)/total_volume;
+        double part3 = -1 * (part1 - part2);
+        return part3;
+    }
+
     typename EdgeRanking<Region>::type edge_ranking;
     double min_val, max_val, start_val; 
     
     double curr_prob;
 
     unsigned int num_processed;    
+    unsigned int num_slices;
+    unsigned int num_est_remaining;    
     
     double last_prob;
     int last_decision;
@@ -391,7 +347,6 @@ class LocalEdgePriority : public EdgePriority<Region> {
     double ignore_size;
     double ignore_size_orig;
     BodyRankList * body_list;
-    int ignore_size_vol_vi_filter;
     int approx_neurite_size;
     unsigned long long volume_size;
 
@@ -421,14 +376,245 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
 };
 
+template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_, Json::Value& json_vals) : EdgePriority<Region>(rag_), min_val(min_val_), max_val(max_val_), start_val(start_val_), approx_neurite_size(100), body_list(0)
+{
+    Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+    reinitialize_scheduler();
+
+    // Dead Cell -- 140 sections 10nm 14156 pixels 
+
+    orphan_mode = json_vals.get("orphan_mode", false).asBool(); 
+    prob_mode = json_vals.get("prob_mode", true).asBool(); 
+    synapse_mode = json_vals.get("synapse_mode", false).asBool(); 
+
+    // set parameters from JSON (explicitly set options later) 
+    prune_small_edges = json_vals.get("prune_small_edges", false).asBool(); 
+    // prob mode and orphan mode
+    Json::Value json_range = json_vals["range"];
+    if (!json_range.empty()) {
+        min_val = json_range[(unsigned int)(0)].asDouble();
+        max_val = json_range[(unsigned int)(1)].asDouble();
+        start_val = min_val;
+    }
+    num_processed = json_vals.get("num_processed", 0).asUInt(); 
+    num_est_remaining = json_vals.get("num_est_remaining", 0).asUInt(); 
+    num_slices = json_vals.get("num_slices", 250).asUInt();
+
+    approx_neurite_size *= num_slices;
+
+
+    if (synapse_mode) {
+        ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
+    } else if (prob_mode) {
+        ignore_size = json_vals.get("ignore_size", 27.0).asDouble();
+    } else {
+        ignore_size = json_vals.get("ignore_size", 1000.0).asDouble();
+    }
+    ignore_size_orig = ignore_size;
+
+    /* -------- initial datastructures used in each mode ----------- */
+
+    node_properties.push_back("synapse_weight");
+    node_properties.push_back("orphan");
+
+    // prob mode -- cannot transfer to prob_mod
+    if (prob_mode && prune_small_edges) {
+        for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
+                iter != ragtemp.edges_end(); ++iter) {
+            if ((rag_retrieve_property<Region, unsigned int>(&ragtemp, *iter, "edge_size") <= 1)) {
+                (*iter)->set_weight(10.0);
+            }
+        }
+    } 
+
+    orphan_property_list = NodePropertyList<Region>::create_node_list(); 
+    synapse_weight_list = NodePropertyList<Region>::create_node_list();
+
+
+    ragtemp.bind_property_list("orphan", orphan_property_list);
+    ragtemp.bind_property_list("synapse_weight", synapse_weight_list);
+
+    // determine what has been looked at so far
+    Json::Value json_already_analyzed = json_vals["already_analyzed"];
+    for (unsigned int i = 0; i < json_already_analyzed.size(); ++i) {
+        RagNode<Region>* rag_node = ragtemp.find_rag_node(json_already_analyzed[i].asUInt());
+        property_list_add_template_property(already_analyzed_list, rag_node, true);
+    }
+
+
+    // load orphan info
+    BodyRankList body_list_orphan(ragtemp, already_analyzed_list);
+    Json::Value json_orphan = json_vals["orphan_bodies"];
+    for (unsigned int i = 0; i < json_orphan.size(); ++i) {
+        BodyRank body_rank;
+        body_rank.id = json_orphan[i].asUInt();
+        RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
+        body_rank.size = rag_node->get_size();
+
+        // add orphan property for node to orphan list
+        property_list_add_template_property(orphan_property_list, rag_node, true);
+
+        if (body_rank.size >= ignore_size) {
+            bool found_one = false;
+            for (typename RagNode<Region>::edge_iterator iter = rag_node->edge_begin(); iter != rag_node->edge_end(); ++iter) {
+                if ((*iter)->get_weight() <= max_val && (*iter)->get_weight() >= min_val) {
+                    found_one = true;
+                    break;
+                }
+            }
+            if (found_one) {
+                body_list_orphan.insert(body_rank);
+            }
+        }
+    }
+
+
+
+
+    // load synapse info
+    unsigned long long num_synapses = 0; 
+    BodyRankList body_list_synapse(ragtemp, already_analyzed_list);
+    Json::Value json_synapse_weights = json_vals["synapse_bodies"];
+    for (unsigned int i = 0; i < json_synapse_weights.size(); ++i) {
+        BodyRank body_rank;
+        body_rank.id = (json_synapse_weights[i])[(unsigned int)(0)].asUInt();
+        body_rank.size = (json_synapse_weights[i])[(unsigned int)(1)].asUInt();
+        num_synapses += body_rank.size;
+        RagNode<Region>* rag_node = ragtemp.find_rag_node(body_rank.id);
+
+        // add synapse weight property for node to synapse weight list
+        property_list_add_template_property(synapse_weight_list, rag_node, body_rank.size);
+
+        bool is_examined = false;
+        try { 
+            is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, rag_node);
+        } catch(...) {
+            //
+        }
+        if (!is_examined) {
+            body_list_synapse.insert(body_rank);
+        }
+    }
+
+    if (orphan_mode) {
+        body_list = new BodyRankList(body_list_orphan);
+    } else if (synapse_mode) {
+        body_list = new BodyRankList(body_list_synapse);
+        volume_size = num_synapses;
+        ignore_size = voi_change(ignore_size, ignore_size, volume_size);
+    } else if (!prob_mode) {
+        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+
+        volume_size = get_rag_size(&ragtemp);
+        ignore_size = voi_change(approx_neurite_size, ignore_size, volume_size);
+
+
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
+                iter != ragtemp.nodes_end(); ++iter) {
+            // heuristically ignore bodies below a certain size for computation reasons
+            bool is_examined = false;
+            try { 
+                is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, (*iter));
+            } catch(...) {
+                //
+            }
+
+            if ((!is_examined) && (*iter)->get_size() >= ignore_size_orig) {
+                BodyRank body_rank;
+                body_rank.id = (*iter)->get_node_id();
+                body_rank.size = (*iter)->get_size();
+                body_list->insert(body_rank);
+            }
+        }
+    }
+
+    updatePriority();
+    
+    if (num_est_remaining == 0) {
+        estimateWork();
+    }
+}
+
+template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Value& json_writer)
+{
+    // stats
+    json_writer["num_processed"] = num_processed;
+    json_writer["num_est_remaining"] = num_est_remaining;
+    json_writer["num_slices"] = num_slices;
+
+    // probably irrelevant
+    json_writer["range"][(unsigned int)(0)] = min_val;
+    json_writer["range"][(unsigned int)(1)] = max_val;
+    json_writer["prune_small_edges"] = prune_small_edges;
+
+    // applicable, in different senses, to all modes 
+    json_writer["ignore_size"] = ignore_size_orig;
+
+    // 4 modes supported currently 
+    json_writer["orphan_mode"] = orphan_mode;
+    json_writer["synapse_mode"] = synapse_mode;
+    json_writer["prob_mode"] = prob_mode;
+
+    int i = 0;
+    Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+
+    int orphan_count = 0;
+    unsigned int synapse_count = 0;
+    int examined_count = 0;
+
+    for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
+            iter != ragtemp.nodes_end(); ++iter) {
+        bool is_orphan = false;
+        bool is_examined = false;
+        unsigned long long synapse_weight = 0;
+
+        try {
+            is_orphan =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, (*iter));
+        } catch(...) {
+            //
+        }
+
+        try {
+            synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, (*iter));
+        } catch(...) {
+            //
+        }
+
+        try {
+            is_examined =  property_list_retrieve_template_property<Region, bool>(already_analyzed_list, (*iter));
+        } catch(...) {
+            //
+        }
+
+        if (is_orphan) {
+            json_writer["orphan_bodies"][orphan_count] = (*iter)->get_node_id();
+            ++orphan_count;
+        }
+
+        if (synapse_weight > 0) {
+            json_writer["synapse_bodies"][synapse_count][(unsigned int)(0)] = (*iter)->get_node_id();
+            json_writer["synapse_bodies"][synapse_count][(unsigned int)(1)] = (unsigned int)(synapse_weight);
+            ++synapse_count;
+        }
+
+        if (is_examined) {
+            json_writer["already_analyzed"][examined_count] = (*iter)->get_node_id();
+            ++examined_count;
+        }
+    }
+}
+
+
 
 // size is determined by edges or nodes in queue
 template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaining() const
 {
-    if (body_list && !body_list->empty()) {
+    return num_est_remaining;
+
+    /*if (body_list && !body_list->empty()) {
         return body_list->size();
     }
-    return (unsigned int)(edge_ranking.size());
+    return (unsigned int)(edge_ranking.size());*/
 }
 
 // edge list should always have next assignment unless volume hasn't been updated yet or is finished
@@ -553,7 +739,10 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
     bool ret = EdgePriority<Region>::undo();
     if (ret) {
         --num_processed;
-        body_list->undo_one();
+        ++num_est_remaining;
+        if (body_list) {
+            body_list->undo_one();
+        }
         updatePriority();
     }
     return ret; 
@@ -563,6 +752,7 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
 template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
 {
     ++num_processed;
+    --num_est_remaining;
 
     if (remove) {
         if (!prob_mode) {
@@ -599,9 +789,10 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             bool switching = false;
             if (boost::get<0>(node_pair) != head_reexamine.id) {
                 switching = true;
-                cout << "switch-aroo" << endl;
+                //cout << "switch-aroo" << endl;
                 item.id = rag_other_node->get_node_id();
             }
+            //item.top_id = true;
             
             if ((orphan_mode && is_orphan) || (!orphan_mode && !synapse_mode)) {
                 item.size = rag_head_node->get_size();
