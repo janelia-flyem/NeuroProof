@@ -17,8 +17,11 @@ FIND_PACKAGE(PythonLibs)
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 ADD_EXECUTABLE(NeuroProof_test NeuroProof_test.cpp)
+ADD_EXECUTABLE(calculate_GPR calculate_GPR.cpp)
 TARGET_LINK_LIBRARIES(NeuroProof_test ImportsExports jsonlib boost_thread-mt)
+TARGET_LINK_LIBRARIES(calculate_GPR ImportsExports jsonlib boost_thread-mt)
 get_target_property (EXE_LOC NeuroProof_test LOCATION)
+get_target_property (EXE_LOC2 calculate_GPR LOCATION)
 
 ADD_LIBRARY(NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
 TARGET_LINK_LIBRARIES(NeuroProofPriority ImportsExports jsonlib boost_thread-mt boost_python)
@@ -26,8 +29,6 @@ TARGET_LINK_LIBRARIES(NeuroProofPriority ImportsExports jsonlib boost_thread-mt 
     
 ADD_LIBRARY(NeuroProofRag SHARED pythonRagInterface.cpp)
 TARGET_LINK_LIBRARIES(NeuroProofRag ImportsExports jsonlib boost_thread-mt boost_python)
-
-
 
 add_custom_command (
     TARGET NeuroProof_test
@@ -38,3 +39,11 @@ add_custom_command (
     ARGS -E copy ${EXE_LOC} ${CMAKE_SOURCE_DIR}/bin
     )
 
+add_custom_command (
+    TARGET calculate_GPR 
+    POST_BUILD
+    COMMAND mkdir
+    ARGS -p ${CMAKE_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_COMMAND}
+    ARGS -E copy ${EXE_LOC2} ${CMAKE_SOURCE_DIR}/bin
+    )
