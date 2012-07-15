@@ -184,7 +184,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
     void updatePriority();
     bool isFinished(); 
     void setEdge(NodePair node_pair, double weight);
-    unsigned int getNumRemaining() const;
+    unsigned int getNumRemaining();
     void removeEdge(NodePair node_pair, bool remove);
     bool undo();
 
@@ -609,8 +609,11 @@ template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Val
 
 
 // size is determined by edges or nodes in queue
-template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaining() const
+template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaining() 
 {
+    if (isFinished()) {
+        return 0;        
+    }
     return num_est_remaining;
 
     /*if (body_list && !body_list->empty()) {
