@@ -44,6 +44,9 @@ class LocalEdgePriority : public EdgePriority<Region> {
             try {   
                 synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, (*iter));
             } catch(...) {
+                //
+            }
+            if (synapse_weight == 0) {
                 continue;
             }
             volume_size += synapse_weight;
@@ -693,7 +696,13 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                         other_id = iter->region2;
                     }
                     RagNode<Region>* other_node = ragtemp.find_rag_node(other_id);
-                    
+                
+                    RagEdge<Region>* rag_edge = ragtemp.find_rag_edge(head_node, other_node);
+                    if (rag_edge && (rag_edge->get_weight() > 1.0)) {
+                        //cout << "skipping local edge examined" << endl;
+                        continue;
+                    }
+
                     double local_information_affinity = 0;
                     if (!synapse_mode) { 
                         local_information_affinity = iter->weight * voi_change(head_node->get_size(), other_node->get_size(), volume_size);
@@ -718,7 +727,12 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                     }
 
                     if (local_information_affinity >= biggest_change) {
-                        strongest_affinity_node = ragtemp.find_rag_node(Region(iter->size));
+                        if (rag_edge) {
+                            //cout << "using local edge instead" << endl;
+                            strongest_affinity_node = other_node;
+                        } else {
+                            strongest_affinity_node = ragtemp.find_rag_node(Region(iter->size));
+                        }
                         biggest_change = local_information_affinity;
                     }
                     total_information_affinity += local_information_affinity;
@@ -864,11 +878,11 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
     } else {
         if (!prob_mode) {
             body_list->start_checkpoint();
-            setEdge(node_pair, 1.0);
+            setEdge(node_pair, 1.1);
             updatePriority(); 
             body_list->stop_checkpoint();
         } else {
-            setEdge(node_pair, 1.0);
+            setEdge(node_pair, 1.1);
         }
     }
 }
