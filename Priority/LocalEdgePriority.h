@@ -772,6 +772,13 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
             bool is_orphan = false;
             bool synapse_weight = 0;
+            unsigned long long synapse_weight_head = 0;
+            try {
+                synapse_weight_head = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_head_node);
+            } catch(...) {
+                //
+            }
+
             try {
                 is_orphan =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, rag_other_node);
             } catch(...) {
@@ -809,13 +816,9 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             if (!is_orphan) {
                 property_list_add_template_property(orphan_property_list, rag_head_node, false);
             }
-            if (synapse_weight > 0) {
-                unsigned long long synapse_weight_head = 0;
-                try {
-                    synapse_weight_head = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_head_node);
-                } catch(...) {
-                    //
-                }
+            
+            if ((synapse_weight + synapse_weight_head) > 0) {
+
                 if (switching) {
                     property_list_add_template_property(synapse_weight_list, rag_other_node, synapse_weight_head+synapse_weight);
                 } else {
