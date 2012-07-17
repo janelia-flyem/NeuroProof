@@ -48,7 +48,9 @@ void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, double p
     if (!node2) {
         node2 = rag->insert_rag_node(id2);
     }
-    
+   
+    assert(node1 != node2);
+
     RagEdge<Region>* edge = rag->find_rag_edge(node1, node2);
     if (!edge) {
         edge = rag->insert_rag_edge(node1, node2);
@@ -56,6 +58,7 @@ void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, double p
     }
 
     boost::shared_ptr<PropertyCompute> property = boost::shared_polymorphic_downcast<PropertyCompute>(edge_list->retrieve_property(edge));
+
     property->add_point(pred);
 }  
 
@@ -182,6 +185,55 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
     node_keep->set_size(node_keep->get_size() + node_remove->get_size());
     rag.remove_rag_node(node_remove);     
 }
+
+#include <map>
+
+typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t; 
+
+template <typename Region>
+void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> > median_properties, boost::shared_ptr<PropertyList<Region> >node_properties, EdgeRank_t& ranking)
+{
+    RagNode<Region>* node_remove = edge->get_other_node(node_keep);
+
+    for(typename RagNode<Region>::edge_iterator iter = node_remove->edge_begin(); iter != node_remove->edge_end(); ++iter) {
+        RagNode<Region>* other_node = (*iter)->get_other_node(node_remove);
+        if (other_node == node_keep) {
+            continue;
+        }
+
+        RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
+        boost::shared_ptr<PropertyMedian> median_property_other = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(*iter));
+       
+        if (temp_edge) {
+            boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(temp_edge));
+            median_property->merge_property(median_property_other); 
+            double val = median_property->get_data();
+            ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
+        } else {
+            RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
+            median_properties->add_property(new_edge, median_property_other); 
+            
+            double val = median_property_other->get_data();
+            ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
+        } 
+    }
+
+    node_keep->set_size(node_keep->get_size() + node_remove->get_size());
+    
+    bool border = false;
+    try { 
+        border = property_list_retrieve_template_property<Region, bool>(node_properties, node_remove);
+    } catch (...) {
+        //
+    }
+
+    if (border) {
+        property_list_add_template_property(node_properties, node_keep, true);
+    }
+
+    rag.remove_rag_node(node_remove);
+}
+
 
 // assume that 0 body will never be added as a screen
 template <typename Region>
