@@ -166,7 +166,7 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 
         RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
         
-        if (temp_edge && (weight < temp_edge->get_weight())) { 
+        if (temp_edge && ((weight < temp_edge->get_weight() && (temp_edge->get_weight() <= 1.0)) || (weight > 1.0)) ) { 
             temp_edge->set_weight(weight);
             for (int i = 0; i < property_names.size(); ++i) {
                 boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, *iter, property_names[i]);
