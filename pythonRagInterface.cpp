@@ -172,7 +172,7 @@ Stack* build_stack(object watershed, object prediction)
             for (unsigned int x = 0; x < width; ++x) {
                 unsigned long long curr_spot = x+y_spot+z_spot;
                 watershed_array[curr_spot] =
-                    (unsigned int)(boost::python::extract<unsigned int>(watershed[boost::python::make_tuple(z,y,x)]));
+                    (unsigned int)(boost::python::extract<int>(watershed[boost::python::make_tuple(z,y,x)]));
                 prediction_array[curr_spot] =
                     boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
             }
