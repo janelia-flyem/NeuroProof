@@ -154,11 +154,8 @@ Stack* build_stack(object watershed, object prediction)
     boost::python::tuple prediction_shape(prediction.attr("shape"));
 
     width = boost::python::extract<unsigned>(watershed_shape[2]);
-    std::cout << width << std::endl;
     height = boost::python::extract<unsigned>(watershed_shape[1]);
-    std::cout << height << std::endl;
     depth = boost::python::extract<unsigned>(watershed_shape[0]);
-    std::cout << depth << std::endl;
 
     unsigned int * watershed_array = new unsigned int[width*height*depth];
     double * prediction_array = new double[width*height*depth];
@@ -172,7 +169,7 @@ Stack* build_stack(object watershed, object prediction)
             for (unsigned int x = 0; x < width; ++x) {
                 unsigned long long curr_spot = x+y_spot+z_spot;
                 watershed_array[curr_spot] =
-                    (unsigned int)(boost::python::extract<int>(watershed[boost::python::make_tuple(z,y,x)]));
+                    (unsigned int)(boost::python::extract<double>(watershed[boost::python::make_tuple(z,y,x)]));
                 prediction_array[curr_spot] =
                     boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
             }
