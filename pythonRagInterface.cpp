@@ -1,7 +1,8 @@
-#include "Datastructures/Stack.h"
+#include "DataStructures/Stack.h"
 #include "DataStructures/Rag.h"
 #include "Algorithms/RagAlgs.h"
 #include "ImportsExports/ImportExportRagPriority.h"
+#include "Utilities/ErrMsg.h"
 
 
 
@@ -109,21 +110,39 @@ class Rag_nodeiterator_wrapper {
     Rag_ui* rag;
 };
 
-Rag_nodeiterator_wrapper rag_get_nodes(Rag_ui& rag) {
+Rag_nodeiterator_wrapper rag_get_nodes(Rag_ui& rag)
+{
     return Rag_nodeiterator_wrapper(&rag);
 }
 
-/*
-object body_volume get_label_volume(Stack* stack)
+
+void write_volume_to_buffer(Stack* stack, object np_buffer)
 {
-    unsigned int * temp_label_volume = stack->get_label_volume();
+    unsigned width, height, depth; 
+    boost::python::tuple np_buffer_shape(np_buffer.attr("shape"));
 
-    // ?! copy array over
+    width = boost::python::extract<unsigned>(np_buffer_shape[2]);
+    height = boost::python::extract<unsigned>(np_buffer_shape[1]);
+    depth = boost::python::extract<unsigned>(np_buffer_shape[0]);
 
+    if ((width != (stack->get_width()-2)) || (height != (stack->get_height()-2)) || (depth != (stack->get_depth()-2))) {
+        throw ErrMsg("Buffer has wrong dimensions"); 
+    }
+    
+    Label * temp_label_volume = stack->get_label_volume();
+    Label * temp_label_iter = temp_label_volume;
 
+    for (unsigned int z = 0; z < depth; ++z) {
+        for (unsigned int y = 0; y < height; ++y) {
+            for (unsigned int x = 0; x < width; ++x) {
+                np_buffer[boost::python::make_tuple(z,y,x)] = *(temp_label_iter);
+                ++temp_label_iter; 
+            }
+        }
+    }
+ 
     delete temp_label_volume;
 }
-*/
 
 // ?! how to add features to RAG
 Stack* build_stack(object watershed, object prediction)
@@ -153,7 +172,7 @@ Stack* build_stack(object watershed, object prediction)
             for (unsigned int x = 0; x < width; ++x) {
                 unsigned long long curr_spot = x+y_spot+z_spot;
                 watershed_array[curr_spot] =
-                    int(boost::python::extract<double>(watershed[boost::python::make_tuple(z,y,x)]));
+                    (unsigned int)(boost::python::extract<unsigned int>(watershed[boost::python::make_tuple(z,y,x)]));
                 prediction_array[curr_spot] =
                     boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
             }
@@ -175,8 +194,8 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // (return true/false, params: rag, file_name)
     def("create_jsonfile_from_rag", create_jsonfile_from_rag);
 
-    def("build_rag", build_rag);
-    def("agglomerate_rag", agglomerate_rag);
+    def("build_stack", build_stack, return_value_policy<reference_existing_object>());
+    def("write_volume_to_buffer", write_volume_to_buffer);
 
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
     def("rag_add_property", rag_add_property_ptr1);
@@ -199,9 +218,9 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     def("rag_bind_node_property_list", rag_bind_node_property_list_ptr);
 
     // initialization actually occurs within custom build for now
-    class_<Stack>("Stack", init<>())
+    class_<Stack>("Stack", no_init)
         // returns number of bodies
-        .def("num_bodies", &Stack::num_bodies)
+        .def("get_num_bodies", &Stack::get_num_bodies)
         // agglomerate to a threshold
         .def("agglomerate_rag", &Stack::agglomerate_rag)
         // build rag based on loaded features and prediction images 

@@ -9,9 +9,9 @@ typedef unsigned int Label;
 
 class Stack {
   public:
-    Stack(unsigned int* watershed_, double* prediction_array_, int depth_, int height_, int width_, int padding_=1) : watershed(watershed_), prediction_array(predictions_array_), depth(depth_), height(height_), width(width_), padding(padding_)
+    Stack(Label* watershed_, double* prediction_array_, int depth_, int height_, int width_, int padding_=1) : watershed(watershed_), prediction_array(prediction_array_), depth(depth_), height(height_), width(width_), padding(padding_)
     {
-        rag = new Rag();
+        rag = new Rag<Label>();
     }
 
     // ?!will need to add genericity for multiple pixel maps and different features
@@ -20,23 +20,60 @@ class Stack {
     void agglomerate_rag(double threshold);
 
     // ?! how to convert to numpy array
-    unsigned int * get_label_volume()
+    Label * get_label_volume()
     {
-        return 0;
+        Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
+        Label * temp_labels_iter = temp_labels;
+        unsigned int plane_size = width * height;
+
+        for (int z = padding; z < (depth - padding); ++z) {
+            int z_spot = z * plane_size;
+            for (int y = padding; y < (height - padding); ++y) {
+                int y_spot = y * width;
+                for (int x = padding; x < (width - padding); ++x) {
+                    unsigned long long curr_spot = x+y_spot+z_spot;
+                    Label sv_id = watershed[curr_spot];
+                    Label body_id;
+                    if (!watershed_to_body.empty()) {
+                        body_id = watershed_to_body[sv_id];
+                    } else {
+                        body_id = sv_id;
+                    }
+                    *temp_labels_iter = body_id;
+                    ++temp_labels_iter;
+                }
+            }
+        }
+    
+        return temp_labels;
     }
 
-    int num_bodies()
+    int get_num_bodies()
     {
         return rag->get_num_regions();        
     }
 
+    int get_width() const
+    {
+        return width;
+    }
+
+    int get_height() const
+    {
+        return height;
+    }
+
+    int get_depth() const
+    {
+        return depth;
+    }
 
   private:
     Rag<Label> * rag;
-    unsigned int* watershed;
+    Label* watershed;
     double* prediction_array;
     std::tr1::unordered_map<Label, Label> watershed_to_body; 
-    std::tr1::unordered_map<Label, vector<Label> > merge_history; 
+    std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
     int depth, height, width;
     int padding;
 };
@@ -46,6 +83,7 @@ void Stack::build_rag()
 {
     boost::shared_ptr<PropertyList<Label> > edge_list = EdgePropertyList<Label>::create_edge_list();
     rag->bind_property_list("median", edge_list);
+    unsigned int plane_size = width * height;
 
     for (unsigned int z = 1; z < (depth-1); ++z) {
         int z_spot = z * plane_size;
@@ -53,13 +91,13 @@ void Stack::build_rag()
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); ++x) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
-                unsigned int spot0 = watershed_array[curr_spot];
-                unsigned int spot1 = watershed_array[curr_spot-1];
-                unsigned int spot2 = watershed_array[curr_spot+1];
-                unsigned int spot3 = watershed_array[curr_spot-width];
-                unsigned int spot4 = watershed_array[curr_spot+width];
-                unsigned int spot5 = watershed_array[curr_spot-plane_size];
-                unsigned int spot6 = watershed_array[curr_spot+plane_size];
+                unsigned int spot0 = watershed[curr_spot];
+                unsigned int spot1 = watershed[curr_spot-1];
+                unsigned int spot2 = watershed[curr_spot+1];
+                unsigned int spot3 = watershed[curr_spot-width];
+                unsigned int spot4 = watershed[curr_spot+width];
+                unsigned int spot5 = watershed[curr_spot-plane_size];
+                unsigned int spot6 = watershed[curr_spot+plane_size];
 
                 if (spot1 && (spot0 != spot1)) {
                     rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
@@ -92,10 +130,16 @@ void Stack::build_rag()
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); x+=(width-3)) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
-                property_list_add_template_property(node_list, rag->find_rag_node(watershed_array[curr_spot]), true);
+                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
             }
         }
     }
+
+    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        Label id = (*iter)->get_node_id();
+        watershed_to_body[id] = id;
+    }
+
 }
 
 
