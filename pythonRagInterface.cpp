@@ -1,6 +1,9 @@
+#include "Datastructures/Stack.h"
 #include "DataStructures/Rag.h"
 #include "Algorithms/RagAlgs.h"
 #include "ImportsExports/ImportExportRagPriority.h"
+
+
 
 #include <boost/python.hpp>
 
@@ -110,66 +113,20 @@ Rag_nodeiterator_wrapper rag_get_nodes(Rag_ui& rag) {
     return Rag_nodeiterator_wrapper(&rag);
 }
 
-
-void agglomerate_rag(Rag_ui* rag, double threshold)
+/*
+object body_volume get_label_volume(Stack* stack)
 {
-    EdgeRank_t ranking;
-    const double Epsilon = 0.00001;
+    unsigned int * temp_label_volume = stack->get_label_volume();
 
-    boost::shared_ptr<PropertyList<Label> > median_properties = rag->retrieve_property_list("median");
-    boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
+    // ?! copy array over
 
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(*iter));
-        double val = median_property->get_data();
-        
-//        cout << val  << " " << (*iter)->get_node1()->get_node_id() << " " << (*iter)->get_node2()->get_node_id() << std::endl;
-        if (val <= threshold) {
-            ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
-        }
-    }    
-   
-    while (!ranking.empty()) {
-        EdgeRank_t::iterator first_entry = ranking.begin();
-        double curr_threshold = (*first_entry).first;
-        Label node1 = (*first_entry).second.first;
-        Label node2 = (*first_entry).second.second;
-        ranking.erase(first_entry);
 
-        //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;
-
-        if (curr_threshold > threshold) {
-            break;
-        }
-
-        RagNode<Label>* rag_node1 = rag->find_rag_node(node1); 
-        RagNode<Label>* rag_node2 = rag->find_rag_node(node2); 
-
-        if (!(rag_node1 && rag_node2)) {
-            continue;
-        }
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
-
-        if (!rag_edge) {
-            continue;
-        }
-
-        boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(rag_edge));
-        double val = median_property->get_data();
-        if (val > (curr_threshold + Epsilon)) {
-            continue;
-        } 
-
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, median_properties, node_properties, ranking);
-    }
-
-    
-
+    delete temp_label_volume;
 }
-
+*/
 
 // ?! how to add features to RAG
-bool build_rag(Rag_ui* rag, object watershed, object prediction)
+Stack* build_stack(object watershed, object prediction)
 {
     // there will be 0 padding around image
     unsigned width, height, depth; 
@@ -202,61 +159,10 @@ bool build_rag(Rag_ui* rag, object watershed, object prediction)
             }
         }
     }
-
-    boost::shared_ptr<PropertyList<Label> > edge_list = EdgePropertyList<Label>::create_edge_list();
-    rag->bind_property_list("median", edge_list);
-
-    for (unsigned int z = 1; z < (depth-1); ++z) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 1; y < (height-1); ++y) {
-            int y_spot = y * width;
-            for (unsigned int x = 1; x < (width-1); ++x) {
-                unsigned long long curr_spot = x + y_spot + z_spot;
-                unsigned int spot0 = watershed_array[curr_spot];
-                unsigned int spot1 = watershed_array[curr_spot-1];
-                unsigned int spot2 = watershed_array[curr_spot+1];
-                unsigned int spot3 = watershed_array[curr_spot-width];
-                unsigned int spot4 = watershed_array[curr_spot+width];
-                unsigned int spot5 = watershed_array[curr_spot-plane_size];
-                unsigned int spot6 = watershed_array[curr_spot+plane_size];
-
-                if (spot1 && (spot0 != spot1)) {
-                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
-                }
-                if (spot2 && (spot0 != spot2)) {
-                    rag_add_edge(rag, spot0, spot2, prediction_array[curr_spot], edge_list);
-                }
-                if (spot3 && (spot0 != spot3)) {
-                    rag_add_edge(rag, spot0, spot3, prediction_array[curr_spot], edge_list);
-                }
-                if (spot4 && (spot0 != spot4)) {
-                    rag_add_edge(rag, spot0, spot4, prediction_array[curr_spot], edge_list);
-                }
-                if (spot5 && (spot0 != spot5)) {
-                    rag_add_edge(rag, spot0, spot5, prediction_array[curr_spot], edge_list);
-                }
-                if (spot6 && (spot0 != spot6)) {
-                    rag_add_edge(rag, spot0, spot6, prediction_array[curr_spot], edge_list);
-                }
-            }
-        }
-    } 
     
-    boost::shared_ptr<PropertyList<Label> > node_list = NodePropertyList<Label>::create_node_list();
-    rag->bind_property_list("border_node", node_list);
-    
-    for (unsigned int z = 1; z < (depth-1); z+=(depth-3)) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 1; y < (height-1); y+=(height-3)) {
-            int y_spot = y * width;
-            for (unsigned int x = 1; x < (width-1); x+=(width-3)) {
-                unsigned long long curr_spot = x + y_spot + z_spot;
-                property_list_add_template_property(node_list, rag->find_rag_node(watershed_array[curr_spot]), true);
-            }
-        }
-    }
-    
-    return true;
+    Stack * stack = new Stack(watershed_array, prediction_array, depth, height, width, 1); 
+   
+    return stack;
 }
 
 
@@ -291,6 +197,16 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     def("rag_bind_edge_property_list", rag_bind_edge_property_list_ptr);
     // create and bind node property list to rag (params: <rag>, <property_string>)
     def("rag_bind_node_property_list", rag_bind_node_property_list_ptr);
+
+    // initialization actually occurs within custom build for now
+    class_<Stack>("Stack", init<>())
+        // returns number of bodies
+        .def("num_bodies", &Stack::num_bodies)
+        // agglomerate to a threshold
+        .def("agglomerate_rag", &Stack::agglomerate_rag)
+        // build rag based on loaded features and prediction images 
+        .def("build_rag", &Stack::build_rag)
+        ;
 
     // denormalized edge data structure (unique for a node pair)
     class_<RagEdge_ui>("RagEdge", no_init)
@@ -347,6 +263,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         // delete rag node and connecting edges and remove properties associated with them (params: rag_node)
         .def("remove_rag_node", &Rag_ui::remove_rag_node)
         ;
+
 
     // ------- Iterator Interface (should not be explicitly accessed by user) -----------
     // wrapper class for RagNode edge iterator
