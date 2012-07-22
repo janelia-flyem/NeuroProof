@@ -1,7 +1,12 @@
 #include <vector>
 #include <tr1/unordered_map>
+#include <tr1/unordered_set>
 #include "Rag.h"
 #include "../Algorithms/RagAlgs.h"
+#include "AffinityPair.h"
+
+#ifndef STACK_H
+#define STACK_H
 
 namespace NeuroProof {
 
@@ -19,7 +24,6 @@ class Stack {
 
     void agglomerate_rag(double threshold);
 
-    // ?! how to convert to numpy array
     Label * get_label_volume()
     {
         Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
@@ -68,7 +72,13 @@ class Stack {
         return depth;
     }
 
+    int remove_inclusions();
+
   private:
+    
+    int biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, boost::shared_ptr<PropertyList<Label> > node_properties, std::tr1::unordered_set<Label>& visited, std::tr1::unordered_map<Label, int>& node_depth, std::vector<OrderedPair<Label> >& stack, std::vector<std::vector<OrderedPair<Label> > >& biconnected_components);
+    
+    
     Rag<Label> * rag;
     Label* watershed;
     double* prediction_array;
@@ -204,7 +214,136 @@ void Stack::agglomerate_rag(double threshold)
 
 }
 
+int Stack::remove_inclusions()
+{
+    int num_removed = 0;
 
+    std::tr1::unordered_set<Label> visited;
+    std::tr1::unordered_map<Label, int> node_depth;
+    std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
+    std::vector<OrderedPair<Label> > stack;
+
+    boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
+
+    RagNode<Label>* rag_node = 0;
+    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        bool border = false;
+        try {
+            border = property_list_retrieve_template_property<Label, bool>(node_properties, *iter);
+        } catch (...) {
+            //
+        }
+
+        if (border) {
+            rag_node = *iter;
+        }
+    }
+    assert(rag_node);
+
+    biconnected_dfs(0, 0, rag_node, node_properties, visited, node_depth, stack, biconnected_components); 
+
+    // merge nodes in biconnected_components (ignore components with '0' node)
+    for (int i = 0; i < biconnected_components.size(); ++i) {
+        bool found_zero = false;
+        std::tr1::unordered_set<OrderedPair<Label>, OrderedPair<Label> > biconnected_edges;
+        std::tr1::unordered_set<Label> merge_nodes;
+        for (int j = 0; j < biconnected_components[i].size(); ++j) {
+            Label region1 = biconnected_components[i][j].region1;     
+            Label region2 = biconnected_components[i][j].region2;
+            if (!region1 || !region2) {
+                found_zero = true;
+            }
+            biconnected_edges.insert(OrderedPair<Label>(region1, region2));
+            merge_nodes.insert(region1);
+            merge_nodes.insert(region2);
+        }
+        if (!found_zero) {
+            unsigned long long total_size = 0;
+            RagNode<Label>* master_node = 0;
+            for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
+                Label region1 = *iter;
+                RagNode<Label>* rag_node = rag->find_rag_node(region1);
+                total_size += rag_node->get_size();
+
+                for (RagNode<Label>::node_iterator iter2 = rag_node->node_begin(); iter2 != rag_node->node_end(); ++iter2) {
+                    OrderedPair<Label> temp_pair(region1, (*iter2)->get_node_id());
+                    if (biconnected_edges.find(temp_pair) == biconnected_edges.end()) {
+                        master_node = rag_node;
+                    }
+                }
+            }
+            assert(master_node);
+            master_node->set_size(total_size);
+            for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
+                Label region2 = *iter;
+                RagNode<Label>* rag_node = rag->find_rag_node(region2);
+                if (master_node != rag_node) {
+                    rag->remove_rag_node(rag_node); 
+                    
+                    watershed_to_body[region2] = master_node->get_node_id();
+                    for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter) {
+                        watershed_to_body[*iter2] = master_node->get_node_id();
+                    }
+                    merge_history[master_node->get_node_id()].insert(merge_history[master_node->get_node_id()].end(), merge_history[region2].begin(), merge_history[region2].end());
+                    merge_history.erase(region2);
+                }
+            }
+
+        }
+    }
+
+    // ??!! accumulate weights through all of them and delete all nodes except for one with outside edges
+
+    return num_removed;
+}
+
+// return low point (0 is default edge)
+int Stack::biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, boost::shared_ptr<PropertyList<Label> > node_properties, std::tr1::unordered_set<Label>& visited, std::tr1::unordered_map<Label, int>& node_depth, std::vector<OrderedPair<Label> >& stack, std::vector<std::vector<OrderedPair<Label> > >& biconnected_components)
+{
+    visited.insert(rag_node->get_node_id());
+    count += 1;
+    bool border = false;
+    try {
+        border = property_list_retrieve_template_property<Label, bool>(node_properties, rag_node);
+    } catch (...) {
+        //
+    }
+    node_depth[rag_node->get_node_id()] = count;
+    int low_count = count;
+
+    for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+        if (visited.find((*iter)->get_node_id()) == visited.end()) {
+            OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+            stack.push_back(current_edge);
+            int temp_low = biconnected_dfs(count, rag_node->get_node_id(), (*iter), node_properties, visited, node_depth, stack, biconnected_components);
+            low_count = std::min(low_count, temp_low);
+            if (temp_low >= count) {
+                OrderedPair<Label> popped_edge;
+                biconnected_components.push_back(std::vector<OrderedPair<Label> >());
+                do {
+                    popped_edge = stack.back();
+                    stack.pop_back();
+                    biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
+                } while (!(popped_edge == current_edge));
+            } 
+
+        } else if ((*iter)->get_node_id() != previous) {
+            low_count = std::min(low_count, node_depth[(*iter)->get_node_id()]);
+            if (count > node_depth[(*iter)->get_node_id()]) {
+                stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
+            }
+        }
+    }
+
+    if (previous && border) {
+        low_count = 0;
+        stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
+    }
+
+    return low_count;
+}
 
 
 }
+
+#endif

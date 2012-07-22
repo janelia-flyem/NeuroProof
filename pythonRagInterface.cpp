@@ -1,4 +1,3 @@
-#include "DataStructures/Stack.h"
 #include "DataStructures/Rag.h"
 #include "Algorithms/RagAlgs.h"
 #include "ImportsExports/ImportExportRagPriority.h"
@@ -10,6 +9,8 @@
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <iostream>
+
+#include "DataStructures/Stack.h"
 
 using namespace NeuroProof;
 using namespace boost::python;
@@ -222,6 +223,8 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("agglomerate_rag", &Stack::agglomerate_rag)
         // build rag based on loaded features and prediction images 
         .def("build_rag", &Stack::build_rag)
+        // remove inclusions 
+        .def("remove_inclusions", &Stack::remove_inclusions)
         ;
 
     // denormalized edge data structure (unique for a node pair)
