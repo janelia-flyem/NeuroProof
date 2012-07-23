@@ -74,6 +74,13 @@ class Stack {
 
     int remove_inclusions();
 
+    ~Stack()
+    {
+        delete rag;
+        delete prediction_array;
+        delete watershed;
+    }
+
   private:
     
     int biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, boost::shared_ptr<PropertyList<Label> > node_properties, std::tr1::unordered_set<Label>& visited, std::tr1::unordered_map<Label, int>& node_depth, std::vector<OrderedPair<Label> >& stack, std::vector<std::vector<OrderedPair<Label> > >& biconnected_components);
@@ -208,6 +215,7 @@ void Stack::agglomerate_rag(double threshold)
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
         }
+        merge_history[node1].push_back(node2);
         merge_history[node1].insert(merge_history[node1].end(), merge_history[node2].begin(), merge_history[node2].end());
         merge_history.erase(node2);
     }
@@ -240,55 +248,76 @@ int Stack::remove_inclusions()
     }
     assert(rag_node);
 
-    biconnected_dfs(0, 0, rag_node, node_properties, visited, node_depth, stack, biconnected_components); 
+    biconnected_dfs(0, 0, rag_node, node_properties, visited, node_depth, stack, biconnected_components);
+    stack.clear();
+    std::tr1::unordered_map<Label, Label> body_to_body; 
+    std::tr1::unordered_map<Label, std::vector<Label> > merge_history2; 
 
     // merge nodes in biconnected_components (ignore components with '0' node)
     for (int i = 0; i < biconnected_components.size(); ++i) {
         bool found_zero = false;
-        std::tr1::unordered_set<OrderedPair<Label>, OrderedPair<Label> > biconnected_edges;
         std::tr1::unordered_set<Label> merge_nodes;
-        for (int j = 0; j < biconnected_components[i].size(); ++j) {
+        for (int j = 0; j < biconnected_components[i].size()-1; ++j) {
             Label region1 = biconnected_components[i][j].region1;     
             Label region2 = biconnected_components[i][j].region2;
             if (!region1 || !region2) {
                 found_zero = true;
             }
-            biconnected_edges.insert(OrderedPair<Label>(region1, region2));
+            
+            if (body_to_body.find(region1) != body_to_body.end()) {
+                region1 = body_to_body[region1];
+            }
+            if (body_to_body.find(region2) != body_to_body.end()) {
+                region2 = body_to_body[region2];
+            }
+
+            assert(region1 != region2);
+
             merge_nodes.insert(region1);
             merge_nodes.insert(region2);
         }
         if (!found_zero) {
+            Label articulation_region = biconnected_components[i][biconnected_components[i].size()-1].region1;
             unsigned long long total_size = 0;
-            RagNode<Label>* master_node = 0;
+            RagNode<Label>* articulation_node = rag->find_rag_node(articulation_region);
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region1 = *iter;
                 RagNode<Label>* rag_node = rag->find_rag_node(region1);
                 total_size += rag_node->get_size();
 
-                for (RagNode<Label>::node_iterator iter2 = rag_node->node_begin(); iter2 != rag_node->node_end(); ++iter2) {
-                    OrderedPair<Label> temp_pair(region1, (*iter2)->get_node_id());
-                    if (biconnected_edges.find(temp_pair) == biconnected_edges.end()) {
-                        master_node = rag_node;
-                    }
-                }
             }
-            assert(master_node);
-            master_node->set_size(total_size);
+            articulation_node->set_size(total_size);
+           
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region2 = *iter;
+                if (body_to_body.find(region2) != body_to_body.end()) {
+                    region2 = body_to_body[region2];
+                }
+
                 RagNode<Label>* rag_node = rag->find_rag_node(region2);
-                if (master_node != rag_node) {
+                assert(rag_node);
+                if (articulation_node != rag_node) {
                     rag->remove_rag_node(rag_node); 
                     
-                    watershed_to_body[region2] = master_node->get_node_id();
-                    for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter) {
-                        watershed_to_body[*iter2] = master_node->get_node_id();
+                    watershed_to_body[region2] = articulation_region;
+                    for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter2) {
+                        watershed_to_body[*iter2] = articulation_region;
                     }
-                    merge_history[master_node->get_node_id()].insert(merge_history[master_node->get_node_id()].end(), merge_history[region2].begin(), merge_history[region2].end());
+
+                    body_to_body[region2] = articulation_region;
+                    for (std::vector<Label>::iterator iter2 = merge_history2[region2].begin(); iter2 != merge_history2[region2].end(); ++iter2) {
+                        body_to_body[*iter2] = articulation_region;
+                    }
+
+                    merge_history[articulation_region].push_back(region2);
+                    merge_history[articulation_region].insert(merge_history[articulation_region].end(), merge_history[region2].begin(), merge_history[region2].end());
                     merge_history.erase(region2);
+                   
+                    merge_history2[articulation_region].push_back(region2); 
+                    merge_history2[articulation_region].insert(merge_history2[articulation_region].end(), merge_history2[region2].begin(), merge_history2[region2].end());
+                    merge_history2.erase(region2);
                 }
             }
-
         }
     }
 
@@ -325,6 +354,8 @@ int Stack::biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, 
                     stack.pop_back();
                     biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
                 } while (!(popped_edge == current_edge));
+                OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
+                biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
             } 
 
         } else if ((*iter)->get_node_id() != previous) {

@@ -192,7 +192,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // (return true/false, params: rag, file_name)
     def("create_jsonfile_from_rag", create_jsonfile_from_rag);
 
-    def("build_stack", build_stack, return_value_policy<reference_existing_object>());
+    def("build_stack", build_stack, return_value_policy<manage_new_object>());
     def("write_volume_to_buffer", write_volume_to_buffer);
 
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
