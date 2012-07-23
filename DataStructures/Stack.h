@@ -143,14 +143,34 @@ void Stack::build_rag()
 
     for (unsigned int z = 1; z < (depth-1); z+=(depth-3)) {
         int z_spot = z * plane_size;
+        for (unsigned int y = 1; y < (height-1); ++y) {
+            int y_spot = y * width;
+            for (unsigned int x = 1; x < (width-1); ++x) {
+                unsigned long long curr_spot = x + y_spot + z_spot;
+                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
+            }
+        }
+    }
+    for (unsigned int z = 1; z < (depth-1); ++z) {
+        int z_spot = z * plane_size;
         for (unsigned int y = 1; y < (height-1); y+=(height-3)) {
+            int y_spot = y * width;
+            for (unsigned int x = 1; x < (width-1); ++x) {
+                unsigned long long curr_spot = x + y_spot + z_spot;
+                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
+            }
+        }
+    }
+    for (unsigned int z = 1; z < (depth-1); ++z) {
+        int z_spot = z * plane_size;
+        for (unsigned int y = 1; y < (height-1); ++y) {
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); x+=(width-3)) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
                 property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
             }
         }
-    }
+    }   
 
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
