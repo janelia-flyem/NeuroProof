@@ -83,8 +83,13 @@ class Stack {
 
   private:
     
-    int biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, boost::shared_ptr<PropertyList<Label> > node_properties, std::tr1::unordered_set<Label>& visited, std::tr1::unordered_map<Label, int>& node_depth, std::vector<OrderedPair<Label> >& stack, std::vector<std::vector<OrderedPair<Label> > >& biconnected_components);
-    
+    struct DFSStack {
+        Label previous;
+        RagNode<Label>* rag_node;  
+        int count;
+    };
+
+    int biconnected_dfs(std::vector<DFSStack>& dfs_stack);
     
     Rag<Label> * rag;
     Label* watershed;
@@ -93,6 +98,15 @@ class Stack {
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
     int depth, height, width;
     int padding;
+
+    boost::shared_ptr<PropertyList<Label> > node_properties_holder;
+    std::tr1::unordered_set<Label> visited;
+    std::tr1::unordered_map<Label, int> node_depth;
+    std::tr1::unordered_map<Label, int> low_count;
+    std::tr1::unordered_map<Label, Label> prev_id;
+    std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
+    
+    std::vector<OrderedPair<Label> > stack;
 };
 
 
@@ -246,19 +260,20 @@ int Stack::remove_inclusions()
 {
     int num_removed = 0;
 
-    std::tr1::unordered_set<Label> visited;
-    std::tr1::unordered_map<Label, int> node_depth;
-    std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
-    std::vector<OrderedPair<Label> > stack;
-
-    boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
+    node_properties_holder = rag->retrieve_property_list("border_node");
+    visited.clear();
+    node_depth.clear();
+    low_count.clear();
+    prev_id.clear();
+    biconnected_components.clear();
+    stack.clear();
 
     RagNode<Label>* rag_node = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         bool border = false;
         try {
-            border = property_list_retrieve_template_property<Label, bool>(node_properties, *iter);
-        } catch (...) {
+            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, *iter);
+        } catch (ErrMsg& msg) {
             //
         }
 
@@ -268,7 +283,14 @@ int Stack::remove_inclusions()
     }
     assert(rag_node);
 
-    biconnected_dfs(0, 0, rag_node, node_properties, visited, node_depth, stack, biconnected_components);
+    DFSStack temp;
+    temp.previous = 0;
+    temp.rag_node = rag_node;
+    temp.count = 1;
+
+    std::vector<DFSStack> dfs_stack;
+    dfs_stack.push_back(temp);
+    biconnected_dfs(dfs_stack);
     stack.clear();
     std::tr1::unordered_map<Label, Label> body_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history2; 
@@ -341,57 +363,84 @@ int Stack::remove_inclusions()
         }
     }
 
-    // ??!! accumulate weights through all of them and delete all nodes except for one with outside edges
-
+    
+    visited.clear();
+    node_depth.clear();
+    low_count.clear();
+    prev_id.clear();
+    biconnected_components.clear();
+    stack.clear();
     return num_removed;
 }
 
 // return low point (0 is default edge)
-int Stack::biconnected_dfs(int count, Label previous, RagNode<Label>* rag_node, boost::shared_ptr<PropertyList<Label> > node_properties, std::tr1::unordered_set<Label>& visited, std::tr1::unordered_map<Label, int>& node_depth, std::vector<OrderedPair<Label> >& stack, std::vector<std::vector<OrderedPair<Label> > >& biconnected_components)
+int Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
 {
-    visited.insert(rag_node->get_node_id());
-    count += 1;
-    bool border = false;
-    try {
-        border = property_list_retrieve_template_property<Label, bool>(node_properties, rag_node);
-    } catch (...) {
-        //
-    }
-    node_depth[rag_node->get_node_id()] = count;
-    int low_count = count;
+    while (!dfs_stack.empty()) {
+        DFSStack entry = dfs_stack.back();
+        RagNode<Label>* rag_node = entry.rag_node;
+        Label previous = entry.previous;
+        int count = entry.count;
 
-    for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
-        if (visited.find((*iter)->get_node_id()) == visited.end()) {
-            OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
-            stack.push_back(current_edge);
-            int temp_low = biconnected_dfs(count, rag_node->get_node_id(), (*iter), node_properties, visited, node_depth, stack, biconnected_components);
-            low_count = std::min(low_count, temp_low);
-            if (temp_low >= count) {
-                OrderedPair<Label> popped_edge;
-                biconnected_components.push_back(std::vector<OrderedPair<Label> >());
-                do {
-                    popped_edge = stack.back();
-                    stack.pop_back();
-                    biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
-                } while (!(popped_edge == current_edge));
-                OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
-                biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
-            } 
+        if (visited.find(rag_node->get_node_id()) != visited.end()) {
+            bool border = false;
+            try {
+                border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, rag_node);
+            } catch (ErrMsg& msg) {
+                //
+            }
+            
+            for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+                if (prev_id[(*iter)->get_node_id()] == rag_node->get_node_id()) {
+                    OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                    int temp_low = low_count[(*iter)->get_node_id()];
+                    low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], temp_low);
+                    
+                    if (temp_low >= count) {
+                        OrderedPair<Label> popped_edge;
+                        biconnected_components.push_back(std::vector<OrderedPair<Label> >());
+                        do {
+                            popped_edge = stack.back();
+                            stack.pop_back();
+                            biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
+                        } while (!(popped_edge == current_edge));
+                        OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
+                        biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
+                    } 
+                } else if ((*iter)->get_node_id() != previous) {
+                    low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], node_depth[(*iter)->get_node_id()]);
+                    if (count > node_depth[(*iter)->get_node_id()]) {
+                        stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
+                    }
+                }
+            }
 
-        } else if ((*iter)->get_node_id() != previous) {
-            low_count = std::min(low_count, node_depth[(*iter)->get_node_id()]);
-            if (count > node_depth[(*iter)->get_node_id()]) {
-                stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
+            if (previous && border) {
+                low_count[rag_node->get_node_id()] = 0;
+                stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
+            }
+
+            dfs_stack.pop_back();
+        } else {
+            visited.insert(rag_node->get_node_id());
+            node_depth[rag_node->get_node_id()] = count;
+            low_count[rag_node->get_node_id()] = count;
+            prev_id[rag_node->get_node_id()] = previous;
+
+            for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+                if (visited.find((*iter)->get_node_id()) == visited.end()) {
+                    OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                    stack.push_back(current_edge);
+             
+                    DFSStack temp;
+                    temp.previous = rag_node->get_node_id();
+                    temp.rag_node = (*iter);
+                    temp.count = count+1;
+                    dfs_stack.push_back(temp);
+                } 
             }
         }
     }
-
-    if (previous && border) {
-        low_count = 0;
-        stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
-    }
-
-    return low_count;
 }
 
 
