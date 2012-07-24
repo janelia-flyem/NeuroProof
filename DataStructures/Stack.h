@@ -80,16 +80,15 @@ class Stack {
         delete prediction_array;
         delete watershed;
     }
-
-  private:
-    
     struct DFSStack {
         Label previous;
         RagNode<Label>* rag_node;  
         int count;
+        int start_pos;
     };
 
-    int biconnected_dfs(std::vector<DFSStack>& dfs_stack);
+  private:
+    void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
     
     Rag<Label> * rag;
     Label* watershed;
@@ -287,6 +286,7 @@ int Stack::remove_inclusions()
     temp.previous = 0;
     temp.rag_node = rag_node;
     temp.count = 1;
+    temp.start_pos = 0;
 
     std::vector<DFSStack> dfs_stack;
     dfs_stack.push_back(temp);
@@ -374,71 +374,81 @@ int Stack::remove_inclusions()
 }
 
 // return low point (0 is default edge)
-int Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
+void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
 {
     while (!dfs_stack.empty()) {
         DFSStack entry = dfs_stack.back();
         RagNode<Label>* rag_node = entry.rag_node;
         Label previous = entry.previous;
         int count = entry.count;
+        dfs_stack.pop_back();
 
-        if (visited.find(rag_node->get_node_id()) != visited.end()) {
-            bool border = false;
-            try {
-                border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, rag_node);
-            } catch (ErrMsg& msg) {
-                //
-            }
-            
-            for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
-                if (prev_id[(*iter)->get_node_id()] == rag_node->get_node_id()) {
-                    OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
-                    int temp_low = low_count[(*iter)->get_node_id()];
-                    low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], temp_low);
-                    
-                    if (temp_low >= count) {
-                        OrderedPair<Label> popped_edge;
-                        biconnected_components.push_back(std::vector<OrderedPair<Label> >());
-                        do {
-                            popped_edge = stack.back();
-                            stack.pop_back();
-                            biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
-                        } while (!(popped_edge == current_edge));
-                        OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
-                        biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
-                    } 
-                } else if ((*iter)->get_node_id() != previous) {
-                    low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], node_depth[(*iter)->get_node_id()]);
-                    if (count > node_depth[(*iter)->get_node_id()]) {
-                        stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
-                    }
-                }
-            }
-
-            if (previous && border) {
-                low_count[rag_node->get_node_id()] = 0;
-                stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
-            }
-
-            dfs_stack.pop_back();
-        } else {
+        if (visited.find(rag_node->get_node_id()) == visited.end()) {
             visited.insert(rag_node->get_node_id());
             node_depth[rag_node->get_node_id()] = count;
             low_count[rag_node->get_node_id()] = count;
             prev_id[rag_node->get_node_id()] = previous;
+        }
 
-            for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
-                if (visited.find((*iter)->get_node_id()) == visited.end()) {
-                    OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
-                    stack.push_back(current_edge);
-             
-                    DFSStack temp;
-                    temp.previous = rag_node->get_node_id();
-                    temp.rag_node = (*iter);
-                    temp.count = count+1;
-                    dfs_stack.push_back(temp);
-                } 
+        bool skip = false;
+        int curr_pos = 0;
+        for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+            if (curr_pos < entry.start_pos) {
+                ++curr_pos;
+                continue;
             }
+            if (prev_id[(*iter)->get_node_id()] == rag_node->get_node_id()) {
+                OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                int temp_low = low_count[(*iter)->get_node_id()];
+                low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], temp_low);
+
+                if (temp_low >= count) {
+                    OrderedPair<Label> popped_edge;
+                    biconnected_components.push_back(std::vector<OrderedPair<Label> >());
+                    do {
+                        popped_edge = stack.back();
+                        stack.pop_back();
+                        biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
+                    } while (!(popped_edge == current_edge));
+                    OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
+                    biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
+                } 
+            } else if (visited.find((*iter)->get_node_id()) == visited.end()) {
+                OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                stack.push_back(current_edge);
+
+                DFSStack temp;
+                temp.previous = rag_node->get_node_id();
+                temp.rag_node = (*iter);
+                temp.count = count+1;
+                temp.start_pos = 0;
+                entry.start_pos = curr_pos;
+                dfs_stack.push_back(entry);
+                dfs_stack.push_back(temp);
+                skip = true;
+                break;
+            } else if ((*iter)->get_node_id() != previous) {
+                low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], node_depth[(*iter)->get_node_id()]);
+                if (count > node_depth[(*iter)->get_node_id()]) {
+                    stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
+                }
+            }
+            ++curr_pos;
+        }
+
+        if (skip) {
+            continue;
+        }
+
+        bool border = false;
+        try {
+            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, rag_node);
+        } catch (ErrMsg& msg) {
+            //
+        }
+        if (previous && border) {
+            low_count[rag_node->get_node_id()] = 0;
+            stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
         }
     }
 }
