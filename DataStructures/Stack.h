@@ -278,6 +278,7 @@ int Stack::remove_inclusions()
 
         if (border) {
             rag_node = *iter;
+            break;
         }
     }
     assert(rag_node);
