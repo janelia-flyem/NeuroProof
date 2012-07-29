@@ -58,7 +58,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
         ignore_size = voi_change(ignore_size_orig, ignore_size_orig, volume_size);
         updatePriority();
-        estimateWork();
+        //estimateWork();
     }
 
     // depth currently not set
@@ -86,7 +86,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         }
 
         updatePriority();
-        estimateWork();
+        //estimateWork();
     }
 
     // synapse orphan currently not used
@@ -123,7 +123,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         }
 
         updatePriority();
-        estimateWork();
+        //estimateWork();
     }
 
     // synapse orphan currently not used
@@ -136,6 +136,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         start_val = start;
         ignore_size = 27;
         ignore_size_orig = ignore_size;
+        num_est_remaining = 0;
 
         if (body_list) {
             delete body_list;
@@ -143,7 +144,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         body_list = 0; 
         
         updatePriority();
-        estimateWork();
+        //estimateWork();
     }
 
     void estimateWork()
@@ -389,7 +390,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     // Dead Cell -- 140 sections 10nm 14156 pixels 
 
     orphan_mode = json_vals.get("orphan_mode", false).asBool(); 
-    prob_mode = json_vals.get("prob_mode", true).asBool(); 
+    prob_mode = json_vals.get("prob_mode", false).asBool(); 
     synapse_mode = json_vals.get("synapse_mode", false).asBool(); 
 
     // set parameters from JSON (explicitly set options later) 
@@ -413,7 +414,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     } else if (prob_mode) {
         ignore_size = json_vals.get("ignore_size", 27.0).asDouble();
     } else {
-        ignore_size = json_vals.get("ignore_size", 1000.0).asDouble();
+        ignore_size = json_vals.get("ignore_size", 25000.0).asDouble();
     }
     ignore_size_orig = ignore_size;
 
@@ -536,7 +537,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     updatePriority();
     
     if (num_est_remaining == 0) {
-        estimateWork();
+        //estimateWork();
     }
 }
 
@@ -617,12 +618,15 @@ template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaini
     if (isFinished()) {
         return 0;        
     }
-    return num_est_remaining;
 
-    /*if (body_list && !body_list->empty()) {
+    if (num_est_remaining > 0) {
+        return num_est_remaining;
+    }
+
+    if (body_list && !body_list->empty()) {
         return body_list->size();
     }
-    return (unsigned int)(edge_ranking.size());*/
+    return (unsigned int)(edge_ranking.size());
 }
 
 // edge list should always have next assignment unless volume hasn't been updated yet or is finished
