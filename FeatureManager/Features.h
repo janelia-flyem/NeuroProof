@@ -10,7 +10,7 @@ class FeatureCompute {
   public:
     virtual void * create_cache() = 0;
     virtual void delete_cache(void * cache) = 0;
-    virtual void add_point(double val, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0, void * cache) = 0;
+    virtual void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0) = 0;
     virtual void  get_feature_array(void* cache, std::vector<double>& feature_array) = 0; 
     virtual void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array) = 0; 
     // will delete second cache
@@ -18,9 +18,9 @@ class FeatureCompute {
 };
 
 
-class FeatureMedian : public FeatureCompute {
+class FeatureHist : public FeatureCompute {
   public:
-    FeatureMedian(int num_bins_, const std::vector<double>& thresholds_) : num_bins(num_bins_), thresholds(thresholds_) {} 
+    FeatureHist(int num_bins_, const std::vector<double>& thresholds_) : num_bins(num_bins_), thresholds(thresholds_) {} 
   
     void void * create_cache()
     {
@@ -32,7 +32,7 @@ class FeatureMedian : public FeatureCompute {
         delete (HistCache*)(cache);
     }
 
-    void add_point(double val, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0, void * cache)
+    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         HistCache * hist_cache = (HistCache*) cache;
         ++(hist_cache->hist[val * num_bins]);
@@ -92,7 +92,7 @@ class FeatureMedian : public FeatureCompute {
     }
         
     int num_bins;
-    vector<double> thresholds; 
+    std::vector<double> thresholds; 
 };
 
 // !! temporary support only 0, 1, 2, 3, and 4
@@ -113,7 +113,7 @@ class FeatureMoment : public FeatureCompute {
         delete (MomentCache*)(cache);
     }
 
-    void add_point(double val, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0, void * cache)
+    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         MomentCache * moment_cache = (MomentCache*) cache;
         moment_cache->count += 1;
@@ -130,8 +130,8 @@ class FeatureMoment : public FeatureCompute {
 
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
     {
-        vector<double> vals1;
-        vector<double> vals2;
+        std::vector<double> vals1;
+        std::vector<double> vals2;
         MomentCache * moment_cache1 = (MomentCache*) cache1;
         MomentCache * moment_cache2 = (MomentCache*) cache2;
         get_data(moment_cache1, vals1);
@@ -154,7 +154,7 @@ class FeatureMoment : public FeatureCompute {
     }
 
   private:
-    double get_data(MomentCache * moment_cache, vector<double>& feature_array)
+    void get_data(MomentCache * moment_cache, std::vector<double>& feature_array)
     {
         double count = double(moment_cache->count);
         feature_array.push_back(count);

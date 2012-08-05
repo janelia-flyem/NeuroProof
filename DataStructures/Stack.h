@@ -4,6 +4,7 @@
 #include "Rag.h"
 #include "../Algorithms/RagAlgs.h"
 #include "AffinityPair.h"
+#include "../FeatureMgr.h"
 
 #ifndef STACK_H
 #define STACK_H
@@ -14,7 +15,7 @@ typedef unsigned int Label;
 
 class Stack {
   public:
-    Stack(Label* watershed_, double* prediction_array_, int depth_, int height_, int width_, int padding_=1) : watershed(watershed_), prediction_array(prediction_array_), depth(depth_), height(height_), width(width_), padding(padding_)
+    Stack(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(watershed_), depth(depth_), height(height_), width(width_), padding(padding_), feature_mgr(0), median_mode(false), prediction_array(0)
     {
         rag = new Rag<Label>();
     }
@@ -23,6 +24,24 @@ class Stack {
     void build_rag();
 
     void agglomerate_rag(double threshold);
+
+    void add_prediction_channel(double * prediction_array_)
+    {
+        prediction_array.push_back(prediction_array_);
+    
+        if (feature_mgr) {
+            feature_mgr->add_channel();
+        }
+    }
+
+    FeatureMgr * get_feature_mgr()
+    {
+        return feature_mgr;
+    }
+    void set_feature_mgr(FeatureMgr * feature_mgr_)
+    {
+        feature_mgr = feature_mgr_;
+    }
 
     Label * get_label_volume()
     {
@@ -77,7 +96,12 @@ class Stack {
     ~Stack()
     {
         delete rag;
-        delete prediction_array;
+        if (prediction_array) {
+            for (unsigned int i = 0; i < prediction_array.size(); ++i) {
+                delete prediction_array[i];
+            }
+        }
+
         delete watershed;
     }
     struct DFSStack {
@@ -87,12 +111,19 @@ class Stack {
         int start_pos;
     };
 
+    ~Stack()
+    {
+        if (feature_mgr) {
+            delete feature_mgr;
+        }
+    }
+
   private:
     void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
     
     Rag<Label> * rag;
     Label* watershed;
-    double* prediction_array;
+    std::vector<double*> prediction_array;
     std::tr1::unordered_map<Label, Label> watershed_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
     int depth, height, width;
@@ -106,14 +137,22 @@ class Stack {
     std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
     
     std::vector<OrderedPair<Label> > stack;
+    
+    FeatureMgr * feature_mgr;
+    bool median_mode;
 };
 
 
 void Stack::build_rag()
 {
-    boost::shared_ptr<PropertyList<Label> > edge_list = EdgePropertyList<Label>::create_edge_list();
-    rag->bind_property_list("median", edge_list);
+    if (feature_mgr && (feature_mgr->get_num_channels() == 0)) {
+        feature_mgr->add_channel();
+        feature_mgr->add_median_feature();
+        median_mode = true; 
+    } 
+    
     unsigned int plane_size = width * height;
+    std::vector<double> predictions(prediction_array.size(), 0.0);
 
     for (unsigned int z = 1; z < (depth-1); ++z) {
         int z_spot = z * plane_size;
@@ -129,23 +168,36 @@ void Stack::build_rag()
                 unsigned int spot5 = watershed[curr_spot-plane_size];
                 unsigned int spot6 = watershed[curr_spot+plane_size];
 
+                for (unsigned int i = 0; i < prediction_array.size(); ++i) {
+                    predictions[i] = prediction_array[i][curr_spot];
+                }
+
+                if (feature_mgr && !median_mode) {
+                    RagNode<Region> * node = rag->find_rag_node(spot);
+                    if (!node) {
+                        node = rag->insert_rag_node(spot);
+                    }
+
+                    feature_mgr->add_val(predictions, node);
+                }
+
                 if (spot1 && (spot0 != spot1)) {
-                    rag_add_edge(rag, spot0, spot1, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
                 }
                 if (spot2 && (spot0 != spot2)) {
-                    rag_add_edge(rag, spot0, spot2, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot2, predictions, feature_mgr);
                 }
                 if (spot3 && (spot0 != spot3)) {
-                    rag_add_edge(rag, spot0, spot3, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot3, predictions, feature_mgr);
                 }
                 if (spot4 && (spot0 != spot4)) {
-                    rag_add_edge(rag, spot0, spot4, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot4, predictions, feature_mgr);
                 }
                 if (spot5 && (spot0 != spot5)) {
-                    rag_add_edge(rag, spot0, spot5, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot5, predictions, feature_mgr);
                 }
                 if (spot6 && (spot0 != spot6)) {
-                    rag_add_edge(rag, spot0, spot6, prediction_array[curr_spot], edge_list);
+                    rag_add_edge(rag, spot0, spot6, predictions, feature_mgr);
                 }
             }
         }
@@ -199,14 +251,11 @@ void Stack::agglomerate_rag(double threshold)
     EdgeRank_t ranking;
     const double Epsilon = 0.00001;
 
-    boost::shared_ptr<PropertyList<Label> > median_properties = rag->retrieve_property_list("median");
     boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
 
     for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(*iter));
-        double val = median_property->get_data();
+        double val = feature_mgr->get_prob(*iter);
 
-        //        cout << val  << " " << (*iter)->get_node1()->get_node_id() << " " << (*iter)->get_node2()->get_node_id() << std::endl;
         if (val <= threshold) {
             ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
         }
@@ -237,13 +286,12 @@ void Stack::agglomerate_rag(double threshold)
             continue;
         }
 
-        boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(rag_edge));
-        double val = median_property->get_data();
+        double val = feature_mgr->get_prob(rag_edge);
         if (val > (curr_threshold + Epsilon)) {
             continue;
         } 
 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, median_properties, node_properties, ranking);
+        rag_merge_edge_median(*rag, rag_edge, rag_node1, node_properties, ranking, feature_mgr);
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
