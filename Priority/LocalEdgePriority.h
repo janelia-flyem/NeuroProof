@@ -775,7 +775,9 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
 template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair node_pair, bool remove)
 {
     ++num_processed;
-    --num_est_remaining;
+    if (num_est_remaining > 0) {
+        --num_est_remaining;
+    }
 
     if (remove) {
         if (!prob_mode) {
