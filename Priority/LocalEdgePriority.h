@@ -38,6 +38,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             delete body_list;
         } 
         body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        current_depth = 0;
 
         for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
             unsigned long long synapse_weight = 0;
@@ -72,7 +73,8 @@ class LocalEdgePriority : public EdgePriority<Region> {
             delete body_list;
         } 
         body_list = new BodyRankList(ragtemp, already_analyzed_list);
-        
+       
+        current_depth = depth; 
         volume_size = get_rag_size(&ragtemp);
         ignore_size = voi_change(approx_neurite_size, ignore_size_orig, volume_size);
 
@@ -341,6 +343,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
     unsigned int num_processed;    
     unsigned int num_slices;
+    unsigned int current_depth;
     unsigned int num_est_remaining;    
     
     double last_prob;
@@ -405,6 +408,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     num_processed = json_vals.get("num_processed", 0).asUInt(); 
     num_est_remaining = json_vals.get("num_est_remaining", 0).asUInt(); 
     num_slices = json_vals.get("num_slices", 250).asUInt();
+    current_depth = json_vals.get("current_depth", 0).asUInt();
 
     approx_neurite_size *= num_slices;
 
@@ -547,6 +551,7 @@ template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Val
     json_writer["num_processed"] = num_processed;
     json_writer["num_est_remaining"] = num_est_remaining;
     json_writer["num_slices"] = num_slices;
+    json_writer["current_depth"] = current_depth;
 
     // probably irrelevant
     json_writer["range"][(unsigned int)(0)] = min_val;
@@ -688,7 +693,7 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
             if (!orphan_mode) {
                 RagNode<Region>* head_node = ragtemp.find_rag_node(head_id);
                 
-                grabAffinityPairs(head_node, 0, 0.01);
+                grabAffinityPairs(head_node, current_depth, 0.01);
                 double total_information_affinity = 0.0;
                 double biggest_change = 0.0;
                 RagNode<Region>* strongest_affinity_node = 0;
@@ -850,9 +855,9 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             }
             
             if (switching) {
-                grabAffinityPairs(rag_other_node, 0, 0.01);
+                grabAffinityPairs(rag_other_node, current_depth, 0.01);
             } else {
-                grabAffinityPairs(rag_head_node, 0, 0.01);
+                grabAffinityPairs(rag_head_node, current_depth, 0.01);
             }
             for (typename AffinityPairsLocal::iterator iter = affinity_pairs.begin();
                     iter != affinity_pairs.end(); ++iter) {
