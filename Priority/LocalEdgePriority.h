@@ -710,6 +710,9 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                     double local_information_affinity = 0;
                     if (!synapse_mode) { 
                         local_information_affinity = iter->weight * voi_change(head_node->get_size(), other_node->get_size(), volume_size);
+                        if (other_node->get_size() < 1000) {
+                            local_information_affinity = 0.0;
+                        }
                     } else {
                         unsigned long long synapse_weight1 = 0;
                         try {
