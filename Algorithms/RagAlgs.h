@@ -4,9 +4,11 @@
 #include "../DataStructures/Rag.h"
 #include "../DataStructures/PropertyList.h"
 #include "../DataStructures/Property.h"
+#include "../FeatureManager/FeatureManager.h"
 #include <map>
 #include <string>
 #include <iostream>
+
 
 namespace NeuroProof {
 
@@ -36,8 +38,8 @@ void rag_unbind_property_list(Rag<Region>* rag, std::string property_type)
 }
 
 template <typename Region>
-void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, double pred, 
-        boost::shared_ptr<PropertyList<Region> > edge_list)
+void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, std::vector<double>& preds, 
+        FeatureMgr * feature_mgr)
 {
     RagNode<Region> * node1 = rag->find_rag_node(id1);
     if (!node1) {
@@ -54,12 +56,11 @@ void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, double p
     RagEdge<Region>* edge = rag->find_rag_edge(node1, node2);
     if (!edge) {
         edge = rag->insert_rag_edge(node1, node2);
-        edge_list->add_property(edge, boost::shared_ptr<Property>(new PropertyMedian));
     }
 
-    boost::shared_ptr<PropertyCompute> property = boost::shared_polymorphic_downcast<PropertyCompute>(edge_list->retrieve_property(edge));
-
-    property->add_point(pred);
+    if (feature_mgr) {
+        feature_mgr->add_val(preds, edge);
+    }
 }  
 
 
@@ -191,29 +192,27 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t; 
 
 template <typename Region>
-void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> > median_properties, boost::shared_ptr<PropertyList<Region> >node_properties, EdgeRank_t& ranking)
+void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> >node_properties, EdgeRank_t& ranking, FeatureMgr* feature_mgr)
 {
     RagNode<Region>* node_remove = edge->get_other_node(node_keep);
-
+    
     for(typename RagNode<Region>::edge_iterator iter = node_remove->edge_begin(); iter != node_remove->edge_end(); ++iter) {
         RagNode<Region>* other_node = (*iter)->get_other_node(node_remove);
         if (other_node == node_keep) {
             continue;
         }
+        feature_mgr->merge_features(node_keep, other_node);
 
         RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
-        boost::shared_ptr<PropertyMedian> median_property_other = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(*iter));
        
         if (temp_edge) {
-            boost::shared_ptr<PropertyMedian> median_property = boost::shared_polymorphic_downcast<PropertyMedian>(median_properties->retrieve_property(temp_edge));
-            median_property->merge_property(median_property_other); 
-            double val = median_property->get_data();
+            feature_mgr->merge_features(temp_edge, (*iter));
+            double val = feature_mgr->get_prob(temp_edge);
             ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
         } else {
             RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
-            median_properties->add_property(new_edge, median_property_other); 
-            
-            double val = median_property_other->get_data();
+            feature_mgr->mv_features(*iter, new_edge); 
+            double val = feature_mgr->get_prob(new_edge);
             ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
         } 
     }

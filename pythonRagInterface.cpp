@@ -1,3 +1,4 @@
+#include "FeatureManager/FeatureManager.h"
 #include "DataStructures/Rag.h"
 #include "Algorithms/RagAlgs.h"
 #include "ImportsExports/ImportExportRagPriority.h"
@@ -7,7 +8,7 @@
 
 #include <boost/python.hpp>
 
-#include <boost/numeric/ublas/matrix.hpp>
+//#include <boost/numeric/ublas/matrix.hpp>
 #include <iostream>
 
 #include "DataStructures/Stack.h"
@@ -146,20 +147,18 @@ void write_volume_to_buffer(Stack* stack, object np_buffer)
 }
 
 // ?! how to add features to RAG
-Stack* build_stack(object watershed, object prediction)
+Stack* build_stack(object watershed)
 {
     // there will be 0 padding around image
     unsigned width, height, depth; 
 
     boost::python::tuple watershed_shape(watershed.attr("shape"));
-    boost::python::tuple prediction_shape(prediction.attr("shape"));
 
     width = boost::python::extract<unsigned>(watershed_shape[2]);
     height = boost::python::extract<unsigned>(watershed_shape[1]);
     depth = boost::python::extract<unsigned>(watershed_shape[0]);
 
     unsigned int * watershed_array = new unsigned int[width*height*depth];
-    double * prediction_array = new double[width*height*depth];
 
     unsigned int plane_size = width * height;
 
@@ -171,15 +170,40 @@ Stack* build_stack(object watershed, object prediction)
                 unsigned long long curr_spot = x+y_spot+z_spot;
                 watershed_array[curr_spot] =
                     (unsigned int)(boost::python::extract<double>(watershed[boost::python::make_tuple(z,y,x)]));
+            }
+        }
+    }
+    
+    Stack * stack = new Stack(watershed_array, depth, height, width, 1); 
+    stack->set_feature_mgr(new FeatureMgr());
+ 
+    return stack;
+}
+
+void add_prediction_channel(Stack* stack, object prediction)
+{
+    unsigned width, height, depth; 
+    boost::python::tuple prediction_shape(prediction.attr("shape"));
+    width = boost::python::extract<unsigned>(prediction_shape[2]);
+    height = boost::python::extract<unsigned>(prediction_shape[1]);
+    depth = boost::python::extract<unsigned>(prediction_shape[0]);
+
+    double * prediction_array = new double[width*height*depth];
+    unsigned int plane_size = width * height;
+
+    for (unsigned int z = 0; z < depth; ++z) {
+        int z_spot = z * plane_size;
+        for (unsigned int y = 0; y < height; ++y) {
+            int y_spot = y * width;
+            for (unsigned int x = 0; x < width; ++x) {
+                unsigned long long curr_spot = x+y_spot+z_spot;
                 prediction_array[curr_spot] =
                     boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
             }
         }
     }
-    
-    Stack * stack = new Stack(watershed_array, prediction_array, depth, height, width, 1); 
    
-    return stack;
+    stack->add_prediction_channel(prediction_array);
 }
 
 
@@ -193,6 +217,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     def("create_jsonfile_from_rag", create_jsonfile_from_rag);
 
     def("build_stack", build_stack, return_value_policy<manage_new_object>());
+    def("add_prediction_channel", add_prediction_channel, return_value_policy<manage_new_object>());
     def("write_volume_to_buffer", write_volume_to_buffer);
 
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
