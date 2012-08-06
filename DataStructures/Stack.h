@@ -19,7 +19,6 @@ class Stack {
         rag = new Rag<Label>();
     }
 
-    // ?!will need to add genericity for multiple pixel maps and different features
     void build_rag();
 
     void agglomerate_rag(double threshold);
@@ -236,6 +235,9 @@ void Stack::build_rag()
         watershed_to_body[id] = id;
     }
 
+    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+        std::cout << (*iter)->get_node1()->get_node_id() << " " << (*iter)->get_node2()->get_node_id() << " " << feature_mgr->get_prob(*iter) << std::endl; 
+    }
 }
 
 

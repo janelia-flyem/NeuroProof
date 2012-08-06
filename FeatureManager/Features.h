@@ -36,7 +36,7 @@ class FeatureHist : public FeatureCompute {
     void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         HistCache * hist_cache = (HistCache*) cache;
-        ++(hist_cache->hist[val * num_bins]);
+        ++(hist_cache->hist[std::abs(val * num_bins - 0.000001)]);
         ++(hist_cache->count);
     }
     
@@ -70,26 +70,23 @@ class FeatureHist : public FeatureCompute {
   private:
     double get_data(HistCache * hist_cache, double threshold)
     {
-        double threshold_amount = int(hist_cache->count * (threshold));
+        double threshold_amount = hist_cache->count * (threshold);
     
-        int curr_count = 0;
+        unsigned long long curr_count = 0;
         int spot = 0;
+        unsigned long long cumval = 0;
         for (int i = 0; i < num_bins; ++i) {
             curr_count += hist_cache->hist[i];
             if (curr_count >= threshold_amount) {
                 spot = i;
+                break;
             }
-        }
-       
-        unsigned long long val1 = 0;
-        if (spot > 0) {
-            val1 = hist_cache->hist[spot-1];
+            cumval += hist_cache->hist[i];
         }
         unsigned long long val2 = hist_cache->hist[spot];
-        double incr = 1.0/num_bins;
-        double slope = (val2 - val1) / incr; 
-        double median_spot = (threshold_amount - (spot*incr))/slope;
-        return (median_spot + spot*incr);
+        double slope = (curr_count - cumval);
+        double median_spot = (threshold_amount - cumval)/slope;
+        return ((median_spot + spot)/num_bins);
     }
         
     int num_bins;
