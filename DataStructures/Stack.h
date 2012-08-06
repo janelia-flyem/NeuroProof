@@ -140,7 +140,7 @@ class Stack {
 
 void Stack::build_rag()
 {
-    if (feature_mgr && (feature_mgr->get_num_channels() == 0)) {
+    if (feature_mgr && (feature_mgr->get_num_channels() == 1)) {
         feature_mgr->add_median_feature();
         median_mode = true; 
     } 
