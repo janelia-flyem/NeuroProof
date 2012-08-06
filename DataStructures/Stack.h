@@ -4,14 +4,13 @@
 #include "Rag.h"
 #include "../Algorithms/RagAlgs.h"
 #include "AffinityPair.h"
-#include "../FeatureMgr.h"
+#include "../FeatureManager/FeatureManager.h"
+#include "Glb.h"
 
 #ifndef STACK_H
 #define STACK_H
 
 namespace NeuroProof {
-
-typedef unsigned int Label;
 
 class Stack {
   public:
@@ -96,13 +95,16 @@ class Stack {
     ~Stack()
     {
         delete rag;
-        if (prediction_array) {
+        if (!prediction_array.empty()) {
             for (unsigned int i = 0; i < prediction_array.size(); ++i) {
                 delete prediction_array[i];
             }
         }
 
         delete watershed;
+        if (feature_mgr) {
+            delete feature_mgr;
+        }
     }
     struct DFSStack {
         Label previous;
@@ -110,13 +112,6 @@ class Stack {
         int count;
         int start_pos;
     };
-
-    ~Stack()
-    {
-        if (feature_mgr) {
-            delete feature_mgr;
-        }
-    }
 
   private:
     void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
@@ -173,9 +168,9 @@ void Stack::build_rag()
                 }
 
                 if (feature_mgr && !median_mode) {
-                    RagNode<Region> * node = rag->find_rag_node(spot);
+                    RagNode<Label> * node = rag->find_rag_node(spot0);
                     if (!node) {
-                        node = rag->insert_rag_node(spot);
+                        node = rag->insert_rag_node(spot0);
                     }
 
                     feature_mgr->add_val(predictions, node);

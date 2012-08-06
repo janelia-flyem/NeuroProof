@@ -4,9 +4,11 @@
 #include "../DataStructures/Rag.h"
 #include "../DataStructures/PropertyList.h"
 #include "../DataStructures/Property.h"
+#include "../FeatureManager/FeatureManager.h"
 #include <map>
 #include <string>
 #include <iostream>
+
 
 namespace NeuroProof {
 

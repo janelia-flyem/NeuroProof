@@ -2,7 +2,8 @@
 #define FEATURES_H
 
 #include "FeatureCache.h"
-#include "ErrMsg.h"
+#include "../Utilities/ErrMsg.h"
+#include <vector>
 
 namespace NeuroProof {
 
@@ -14,7 +15,7 @@ class FeatureCompute {
     virtual void  get_feature_array(void* cache, std::vector<double>& feature_array) = 0; 
     virtual void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array) = 0; 
     // will delete second cache
-    void merge_cache(void * cache1, void * cache2) = 0; 
+    virtual void merge_cache(void * cache1, void * cache2) = 0; 
 };
 
 
@@ -22,7 +23,7 @@ class FeatureHist : public FeatureCompute {
   public:
     FeatureHist(int num_bins_, const std::vector<double>& thresholds_) : num_bins(num_bins_), thresholds(thresholds_) {} 
   
-    void void * create_cache()
+    void * create_cache()
     {
         return (void*)(new HistCache(num_bins));
     }
@@ -36,7 +37,7 @@ class FeatureHist : public FeatureCompute {
     {
         HistCache * hist_cache = (HistCache*) cache;
         ++(hist_cache->hist[val * num_bins]);
-        ++(hist_cache->count)
+        ++(hist_cache->count);
     }
     
     void get_feature_array(void* cache, std::vector<double>& feature_array)
@@ -50,7 +51,7 @@ class FeatureHist : public FeatureCompute {
     // ?? difference feature -- not implemented because I am not returning histogram for now
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
     {
-        throw ErrMsg("Not implemented")
+        throw ErrMsg("Not implemented");
     } 
 
 
@@ -87,7 +88,7 @@ class FeatureHist : public FeatureCompute {
         unsigned long long val2 = hist_cache->hist[spot];
         double incr = 1.0/num_bins;
         double slope = (val2 - val1) / incr; 
-        double median_spot = (threshold_amound - (spot*incr))/slope;
+        double median_spot = (threshold_amount - (spot*incr))/slope;
         return (median_spot + spot*incr);
     }
         
@@ -103,9 +104,9 @@ class FeatureMoment : public FeatureCompute {
         assert((num_moments <= 4) && (num_moments >= 0));
     } 
   
-    void void * create_cache()
+    void * create_cache()
     {
-        return (void*)(new MomentCache(num_bins));
+        return (void*)(new MomentCache(num_moments));
     }
     
     void delete_cache(void * cache)
@@ -118,13 +119,13 @@ class FeatureMoment : public FeatureCompute {
         MomentCache * moment_cache = (MomentCache*) cache;
         moment_cache->count += 1;
         for (int i = 1; i <= num_moments; ++i) {
-            moments_cache->vals[i-1] += std::pow(val, double(i));
+            moment_cache->vals[i-1] += std::pow(val, double(i));
         } 
     }
     
     void get_feature_array(void* cache, std::vector<double>& feature_array)
     {
-        MomentCache * moment_cache = cache;
+        MomentCache * moment_cache = (MomentCache*) cache;
         get_data(moment_cache, feature_array);
     } 
 
@@ -171,15 +172,15 @@ class FeatureMoment : public FeatureCompute {
         if (num_moments > 1) {
             double var = moment_cache->vals[1] / count;
             double var_final = var - std::pow(mean, 2.0);
-            featuer_array.push_back(var_final);
+            feature_array.push_back(var_final);
         } 
     
         // skewness    
         double skew;
         if (num_moments > 2) {
             double skew = moment_cache->vals[2] / count;
-            double skew_final = sket - 3*mean*var + 2*std::pow(mean, 3.0);
-            featuer_array.push_back(skew_final);
+            double skew_final = skew - 3*mean*var + 2*std::pow(mean, 3.0);
+            feature_array.push_back(skew_final);
         } 
 
         // kurtosis
@@ -187,7 +188,7 @@ class FeatureMoment : public FeatureCompute {
         if (num_moments > 3) {
             double kurt = moment_cache->vals[3] / count;
             double kurt_final = kurt - 4*mean*skew + 6*std::pow(mean, 2.0)*var - 3*std::pow(mean, 4.0);
-            featuer_array.push_back(kurt_final);
+            feature_array.push_back(kurt_final);
         } 
     }
         
