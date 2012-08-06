@@ -152,6 +152,12 @@ class LocalEdgePriority : public EdgePriority<Region> {
     void estimateWork()
     {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        
+        unsigned int num_processed_old = num_processed; 
+        unsigned int num_syn_processed_old = num_syn_processed; 
+        unsigned int num_body_processed_old = num_body_processed; 
+        unsigned int num_orphan_processed_old = num_orphan_processed; 
+        unsigned int num_edge_processed_old = num_edge_processed; 
         num_processed = 0;
         num_est_remaining = 0;
         
@@ -184,6 +190,12 @@ class LocalEdgePriority : public EdgePriority<Region> {
         }
         num_est_remaining = num_edges;
         updatePriority();
+
+        num_processed = num_processed_old;
+        num_syn_processed = num_syn_processed_old;
+        num_body_processed = num_body_processed_old;
+        num_orphan_processed = num_orphan_processed_old;
+        num_edge_processed = num_edge_processed_old;
     }
 
     NodePair getTopEdge(Location& location);
@@ -323,7 +335,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         synapse_mode = false;
         already_analyzed_list = NodePropertyList<Region>::create_node_list();
         volume_size = 0;
-        num_processed = 0;
+        //num_processed = 0;
         EdgePriority<Region>::clear_history();
     }
     
@@ -342,6 +354,10 @@ class LocalEdgePriority : public EdgePriority<Region> {
     double curr_prob;
 
     unsigned int num_processed;    
+    unsigned int num_syn_processed;    
+    unsigned int num_body_processed;    
+    unsigned int num_edge_processed;    
+    unsigned int num_orphan_processed;    
     unsigned int num_slices;
     unsigned int current_depth;
     unsigned int num_est_remaining;    
@@ -406,6 +422,10 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
         start_val = min_val;
     }
     num_processed = json_vals.get("num_processed", 0).asUInt(); 
+    num_syn_processed = json_vals.get("num_syn_processed", 0).asUInt(); 
+    num_edge_processed = json_vals.get("num_edge_processed", 0).asUInt(); 
+    num_body_processed = json_vals.get("num_body_processed", 0).asUInt(); 
+    num_orphan_processed = json_vals.get("num_orphan_processed", 0).asUInt(); 
     num_est_remaining = json_vals.get("num_est_remaining", 0).asUInt(); 
     num_slices = json_vals.get("num_slices", 250).asUInt();
     current_depth = json_vals.get("current_depth", 0).asUInt();
@@ -549,6 +569,10 @@ template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Val
 {
     // stats
     json_writer["num_processed"] = num_processed;
+    json_writer["num_syn_processed"] = num_syn_processed;
+    json_writer["num_edge_processed"] = num_edge_processed;
+    json_writer["num_body_processed"] = num_body_processed;
+    json_writer["num_orphan_processed"] = num_orphan_processed;
     json_writer["num_est_remaining"] = num_est_remaining;
     json_writer["num_slices"] = num_slices;
     json_writer["current_depth"] = current_depth;
@@ -770,6 +794,16 @@ template <typename Region> bool LocalEdgePriority<Region>::undo()
     bool ret = EdgePriority<Region>::undo();
     if (ret) {
         --num_processed;
+        if (prob_mode) {
+            --num_edge_processed;
+        } else if (synapse_mode) {
+            --num_syn_processed;
+        } else if (orphan_mode) {
+            --num_orphan_processed;
+        } else {
+            --num_body_processed;
+        }
+
         ++num_est_remaining;
         if (body_list) {
             body_list->undo_one();
@@ -785,6 +819,16 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
     ++num_processed;
     if (num_est_remaining > 0) {
         --num_est_remaining;
+    }
+
+    if (prob_mode) {
+        ++num_edge_processed;
+    } else if (synapse_mode) {
+        ++num_syn_processed;
+    } else if (orphan_mode) {
+        ++num_orphan_processed;
+    } else {
+        ++num_body_processed;
     }
 
     if (remove) {
