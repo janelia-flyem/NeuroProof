@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 project (NeuroProof)
 
+FIND_PACKAGE(PythonLibs)
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 add_subdirectory (ImportsExports)
 add_subdirectory (FeatureManager)
@@ -14,12 +16,10 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET (CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-FIND_PACKAGE(PythonLibs)
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 ADD_EXECUTABLE(NeuroProof_test NeuroProof_test.cpp)
 ADD_EXECUTABLE(calculate_GPR calculate_GPR.cpp)
-TARGET_LINK_LIBRARIES(NeuroProof_test ImportsExports FeatureManager jsonlib boost_thread-mt)
+TARGET_LINK_LIBRARIES(NeuroProof_test ImportsExports jsonlib boost_thread-mt)
 TARGET_LINK_LIBRARIES(calculate_GPR ImportsExports jsonlib boost_thread-mt)
 get_target_property (EXE_LOC NeuroProof_test LOCATION)
 get_target_property (EXE_LOC2 calculate_GPR LOCATION)
@@ -27,9 +27,10 @@ get_target_property (EXE_LOC2 calculate_GPR LOCATION)
 ADD_LIBRARY(NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
 TARGET_LINK_LIBRARIES(NeuroProofPriority ImportsExports FeatureManager jsonlib boost_thread-mt boost_python)
 
-    
-ADD_LIBRARY(NeuroProofRag SHARED pythonRagInterface.cpp)
-TARGET_LINK_LIBRARIES(NeuroProofRag ImportsExports FeatureManager jsonlib boost_thread-mt boost_python)
+
+ADD_LIBRARY(NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp)
+TARGET_LINK_LIBRARIES(NeuroProofRag jsonlib boost_thread-mt boost_python)
+set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
 add_custom_command (
     TARGET NeuroProof_test

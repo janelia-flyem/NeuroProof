@@ -8,6 +8,10 @@
 #include <tr1/unordered_map>
 
 
+#ifdef SETPYTHON
+#include <boost/python.hpp>
+#endif
+
 
 // node features and edge features -- different amounts ??!!
 
@@ -20,7 +24,9 @@ class FeatureMgr {
     FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false) {}
     
     void add_channel();
-//    void set_python_rf_function(object pyfunc_);
+#ifdef SETPYTHON
+    void set_python_rf_function(boost::python::object pyfunc_);
+#endif
 
     unsigned int get_num_channels()
     {
@@ -155,7 +161,9 @@ class FeatureMgr {
     std::vector<std::vector<FeatureCompute*> > channels_features;
     std::vector<std::vector<std::vector<bool> > > channels_features_modes;
 
-    //object pyfunc;
+#ifdef SETPYTHON
+    boost::python::object pyfunc;
+#endif
     bool has_pyfunc;
 };
 

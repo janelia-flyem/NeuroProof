@@ -1,12 +1,14 @@
 #include "FeatureManager.h"
-#include <boost/python.hpp>
 
 using std::vector;
 using namespace NeuroProof;
+#ifdef SETPYTHON
+using namespace boost::python;
+#endif 
 
 void FeatureMgr::add_channel()
 {
-    if (!specified_features) {
+    if (specified_features) {
         throw ErrMsg("Cannot add a channel after adding features");
     }
 
@@ -62,13 +64,16 @@ void FeatureMgr::add_feature(unsigned int channel, FeatureCompute * feature, vec
     channels_features[channel].push_back(feature); 
     channels_features_modes[channel].push_back(feature_modes);
 }
-/*
+
+#ifdef SETPYTHON
+
 void FeatureMgr::set_python_rf_function(object pyfunc_)
 {
     pyfunc = pyfunc_;
     has_pyfunc = true;
-}*/
+}
 
+#endif
 
 double FeatureMgr::get_prob(RagEdge<Label>* edge)
 {
@@ -113,11 +118,19 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
 
     double prob = 0.0;
     if (has_pyfunc) {
-        /*boost::python::list pylist;
+#ifdef SETPYTHON
+        /*
+        object get_iter = iterator<vector<double> >();
+        object iter = get_iter(feature_results);
+        list pylist(iter);
+*/
+
+        boost::python::list pylist;
         for (int i = 0; feature_results.size(); ++i) {
             pylist.append(feature_results[i]);
         }
-        prob = pyfunc(pylist);*/
+        prob = extract<double>(pyfunc(pylist));
+#endif
     } else {
         prob = feature_results[0];
     }

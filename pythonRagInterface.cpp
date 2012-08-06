@@ -1,3 +1,4 @@
+#include "FeatureManager/FeatureManager.h"
 #include "DataStructures/Rag.h"
 #include "Algorithms/RagAlgs.h"
 #include "ImportsExports/ImportExportRagPriority.h"
