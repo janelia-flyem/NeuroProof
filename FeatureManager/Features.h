@@ -4,6 +4,7 @@
 #include "FeatureCache.h"
 #include "../Utilities/ErrMsg.h"
 #include <vector>
+#include <iostream>
 
 namespace NeuroProof {
 
@@ -25,7 +26,7 @@ class FeatureHist : public FeatureCompute {
   
     void * create_cache()
     {
-        return (void*)(new HistCache(num_bins));
+        return (void*)(new HistCache(num_bins+1));
     }
     
     void delete_cache(void * cache)
@@ -36,7 +37,7 @@ class FeatureHist : public FeatureCompute {
     void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         HistCache * hist_cache = (HistCache*) cache;
-        ++(hist_cache->hist[std::abs(val * num_bins - 0.000001)]);
+        ++(hist_cache->hist[val * num_bins + 0.000001]);
         ++(hist_cache->count);
     }
     
@@ -71,7 +72,10 @@ class FeatureHist : public FeatureCompute {
     double get_data(HistCache * hist_cache, double threshold)
     {
         double threshold_amount = hist_cache->count * (threshold);
-    
+ 
+        hist_cache->hist[num_bins-1] += (hist_cache->hist[num_bins]);
+        hist_cache->hist[num_bins] = 0;
+
         unsigned long long curr_count = 0;
         int spot = 0;
         unsigned long long cumval = 0;
@@ -98,7 +102,7 @@ class FeatureMoment : public FeatureCompute {
   public:
     FeatureMoment(int num_moments_) : num_moments(num_moments_)
     {
-        assert((num_moments <= 4) && (num_moments >= 0));
+        assert((num_moments <= 4) && (num_moments > 0));
     } 
   
     void * create_cache()
@@ -115,8 +119,8 @@ class FeatureMoment : public FeatureCompute {
     {
         MomentCache * moment_cache = (MomentCache*) cache;
         moment_cache->count += 1;
-        for (int i = 1; i <= num_moments; ++i) {
-            moment_cache->vals[i-1] += std::pow(val, double(i));
+        for (int i = 0; i < num_moments; ++i) {
+            moment_cache->vals[i] += std::pow(val, i+1);
         } 
     }
     
@@ -135,7 +139,7 @@ class FeatureMoment : public FeatureCompute {
         get_data(moment_cache1, vals1);
         get_data(moment_cache2, vals2);
 
-        for (int i = 0; i <= num_moments; ++i) {
+        for (int i = 0; i < num_moments; ++i) {
             feature_array.push_back(std::abs(vals1[i] - vals2[i]));
         }
     } 
@@ -145,7 +149,8 @@ class FeatureMoment : public FeatureCompute {
         MomentCache * moment_cache1 = (MomentCache*) cache1;
         MomentCache * moment_cache2 = (MomentCache*) cache2;
 
-        for (int i = 0; i <= num_moments; ++i) {
+        moment_cache1->count += moment_cache2->count;
+        for (int i = 0; i < num_moments; ++i) {
             moment_cache1->vals[i] += moment_cache2->vals[i];
         }
         delete moment_cache2;
@@ -155,19 +160,19 @@ class FeatureMoment : public FeatureCompute {
     void get_data(MomentCache * moment_cache, std::vector<double>& feature_array)
     {
         double count = double(moment_cache->count);
-        feature_array.push_back(count);
+        //feature_array.push_back(count);
       
         // mean 
         double mean;
         if (num_moments > 0) {
             mean = moment_cache->vals[0] / count;
-            feature_array.push_back(mean/count);
+            feature_array.push_back(mean);
         }
 
         // variance
         double var;
         if (num_moments > 1) {
-            double var = moment_cache->vals[1] / count;
+            var = moment_cache->vals[1] / count;
             double var_final = var - std::pow(mean, 2.0);
             feature_array.push_back(var_final);
         } 
@@ -175,13 +180,12 @@ class FeatureMoment : public FeatureCompute {
         // skewness    
         double skew;
         if (num_moments > 2) {
-            double skew = moment_cache->vals[2] / count;
+            skew = moment_cache->vals[2] / count;
             double skew_final = skew - 3*mean*var + 2*std::pow(mean, 3.0);
             feature_array.push_back(skew_final);
         } 
 
         // kurtosis
-        double kurt;
         if (num_moments > 3) {
             double kurt = moment_cache->vals[3] / count;
             double kurt_final = kurt - 4*mean*skew + 6*std::pow(mean, 2.0)*var - 3*std::pow(mean, 4.0);
@@ -191,6 +195,52 @@ class FeatureMoment : public FeatureCompute {
         
     unsigned int num_moments;
 };
+
+
+class FeatureCount : public FeatureCompute {
+  public:
+    FeatureCount() {} 
+    void * create_cache()
+    {
+        return (void*)(new CountCache());
+    }
+    
+    void delete_cache(void * cache)
+    {
+        delete (CountCache*)(cache);
+    }
+
+    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
+    {
+        CountCache * count_cache = (CountCache*) cache;
+        count_cache->count += 1;
+    }
+    
+    void get_feature_array(void* cache, std::vector<double>& feature_array)
+    {
+        CountCache * count_cache = (CountCache*) cache;
+        feature_array.push_back(count_cache->count);
+    } 
+
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
+    {
+        CountCache * count_cache1 = (CountCache*) cache1;
+        CountCache * count_cache2 = (CountCache*) cache2;
+
+        feature_array.push_back(std::abs(count_cache1->count - count_cache2->count));
+    } 
+
+    void merge_cache(void * cache1, void * cache2)
+    {
+        CountCache * count_cache1 = (CountCache*) cache1;
+        CountCache * count_cache2 = (CountCache*) cache2;
+
+        count_cache1->count += count_cache2->count;
+        delete count_cache2;
+    }
+};
+
+
 
 
 }

@@ -6,6 +6,9 @@ using namespace NeuroProof;
 using namespace boost::python;
 #endif 
 
+// ?! assume every feature is on every channel -- for now
+
+#include <iostream>
 void FeatureMgr::add_channel()
 {
     if (specified_features) {
@@ -16,10 +19,81 @@ void FeatureMgr::add_channel()
     vector<vector<bool> > features_modes_temp;   
  
     channels_features.push_back(features_temp);
+    channels_features_equal.push_back(features_temp);
     channels_features_modes.push_back(features_modes_temp);
 
     ++num_channels;
 }
+
+void FeatureMgr::compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results)
+{
+    vector<vector<bool> > examine_equal(num_channels);
+    vector<vector<unsigned int> > spot_equal(num_channels);
+
+    // !! stupid hack to put features in the 'correct' order
+    unsigned int pos = 0;
+    for (int j = 0; j < num_channels; ++j) {
+        unsigned int count = 0;
+        for (int i = 0; i < channels_features_equal[0].size(); ++i) {
+            spot_equal[j].push_back(pos);
+            if (channels_features_equal[j][i]) {
+                ++pos;
+                if (channels_features_modes[j][count][2]) {
+                    examine_equal[j].push_back(true);
+                } else {
+                    examine_equal[j].push_back(false);
+                } 
+                ++count;
+            } else {
+                examine_equal[j].push_back(false);
+            }
+        }
+    }
+
+    for (int i = 0; i < channels_features_equal[0].size(); ++i) {
+        for (int j = 0; j < num_channels; ++j) {
+            if (examine_equal[j][i]) {
+                unsigned int id = spot_equal[j][i];
+                channels_features_equal[j][i]->get_diff_feature_array((*caches1)[id], (*caches2)[id], feature_results);
+            }
+        }
+    }
+} 
+
+void FeatureMgr::compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results)
+{
+    vector<vector<bool> > examine_equal(num_channels);
+    vector<vector<unsigned int> > spot_equal(num_channels);
+
+    // !! stupid hack to put features in the 'correct' order
+    unsigned int pos = 0;
+    for (int j = 0; j < num_channels; ++j) {
+        unsigned int count = 0;
+        for (int i = 0; i < channels_features_equal[0].size(); ++i) {
+            spot_equal[j].push_back(pos);
+            if (channels_features_equal[j][i]) {
+                ++pos;
+                if (channels_features_modes[j][count][prediction_type]) {
+                    examine_equal[j].push_back(true);
+                } else {
+                    examine_equal[j].push_back(false);
+                } 
+                ++count;
+            } else {
+                examine_equal[j].push_back(false);
+            }
+        }
+    }
+
+    for (int i = 0; i < channels_features_equal[0].size(); ++i) {
+        for (int j = 0; j < num_channels; ++j) {
+            if (examine_equal[j][i]) {
+                unsigned int id = spot_equal[j][i];
+                channels_features_equal[j][i]->get_feature_array((*caches)[id], feature_results);
+            }
+        }
+    }
+} 
 
 
 void FeatureMgr::add_median_feature()
@@ -34,23 +108,43 @@ void FeatureMgr::add_median_feature()
     percentiles.push_back(0.5);
     add_feature(0, new FeatureHist(100, percentiles), feature_modes);
 }
-void FeatureMgr::add_hist_feature(unsigned int num_bins, std::vector<double>& percentiles, bool use_diff)
+
+#ifdef SETPYTHON
+void FeatureMgr::add_hist_feature(unsigned int num_bins, boost::python::list percentiles, bool use_diff)
 {
     vector<bool> feature_modes(3, true);
     feature_modes[2] = use_diff;
     
+    unsigned int num_percentiles = len(percentiles);
+
+    vector<double> percentiles_vec;
+
+    for (unsigned int i = 0; i < num_percentiles; ++i) {
+        percentiles_vec.push_back(extract<double>(percentiles[i]));
+    }
+    FeatureCompute * feature_ptr = new FeatureHist(num_bins, percentiles_vec);
     for (unsigned int i = 0; i < num_channels; ++i) {
-        add_feature(i, new FeatureHist(num_bins, percentiles), feature_modes);
+        channels_features_equal[i].push_back(feature_ptr);
+        add_feature(i, feature_ptr, feature_modes);
     }
 }
+#endif
 
 void FeatureMgr::add_moment_feature(unsigned int num_moments, bool use_diff)
 {
     vector<bool> feature_modes(3, true);
     feature_modes[2] = use_diff;
 
+    FeatureCompute * feature_ptr0 = new FeatureCount;
+    add_feature(0, feature_ptr0, feature_modes);
+    channels_features_equal[0].push_back(feature_ptr0);
+    for (unsigned int i = 1; i < num_channels; ++i) {
+        channels_features_equal[i].push_back(0);
+    }
+    FeatureCompute * feature_ptr = new FeatureMoment(num_moments);
     for (unsigned int i = 0; i < num_channels; ++i) {
-        add_feature(i, new FeatureMoment(num_moments), feature_modes);
+        channels_features_equal[i].push_back(feature_ptr);
+        add_feature(i, feature_ptr, feature_modes);
     }
 }
 
@@ -60,6 +154,7 @@ void FeatureMgr::add_feature(unsigned int channel, FeatureCompute * feature, vec
 {
     specified_features = true; 
     assert(channel < num_channels);
+    ++num_features;
 
     channels_features[channel].push_back(feature); 
     channels_features_modes[channel].push_back(feature_modes);
@@ -88,6 +183,12 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     RagNode<Label>* node1 = edge->get_node1();
     RagNode<Label>* node2 = edge->get_node2();
 
+    if (node2->get_size() < node1->get_size()) {
+        RagNode<Label>* temp_node = node2;
+        node2 = node1;
+        node1 = temp_node;
+    }
+
     if (node_caches.find(node1) != node_caches.end()) {
         node1_caches = &(node_caches[node1]);
     }
@@ -95,26 +196,12 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         node2_caches = &(node_caches[node2]);
     }
 
-    unsigned int pos = 0;
     vector<double> feature_results;
-    for (int i = 0; i < num_channels; ++i) {
-        vector<FeatureCompute*>& features = channels_features[i];
-        vector<vector<bool> >& features_modes = channels_features_modes[i];
-
-        for (int j = 0; j < features.size(); ++j) {
-            if (features_modes[j][0]) {
-                features[j]->get_feature_array((*node1_caches)[pos], feature_results);
-                features[j]->get_feature_array((*node2_caches)[pos], feature_results);
-            }
-            if (features_modes[j][1]) {
-                features[j]->get_feature_array((*edget_caches)[pos], feature_results);
-            }
-            if (features_modes[j][2]) {
-                features[j]->get_diff_feature_array((*node1_caches)[pos], (*node2_caches)[pos], feature_results);
-            }           
-            ++pos;
-        }
-    } 
+    
+    compute_features(0, node1_caches, feature_results);
+    compute_features(0, node2_caches, feature_results);
+    compute_features(1, edget_caches, feature_results);
+    compute_diff_features(node1_caches, node2_caches, feature_results);
 
     double prob = 0.0;
     if (has_pyfunc) {
@@ -124,9 +211,8 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         object iter = get_iter(feature_results);
         list pylist(iter);
 */
-
         boost::python::list pylist;
-        for (int i = 0; feature_results.size(); ++i) {
+        for (unsigned int i = 0; i < feature_results.size(); ++i) {
             pylist.append(feature_results[i]);
         }
         prob = extract<double>(pyfunc(pylist));
@@ -134,6 +220,12 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     } else {
         prob = feature_results[0];
     }
+
+    std::cout << edge->get_node1()->get_node_id() << " " << edge->get_node2()->get_node_id() << std::endl;
+    for (int i = 0; i < feature_results.size(); ++i) {
+        std::cout << feature_results[i] << " ";
+    }
+    std::cout << prob << std::endl;
 
     return prob;
 }

@@ -20,10 +20,14 @@ namespace NeuroProof {
 
 class FeatureMgr {
   public:
-    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false) {}
-    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false) {}
+    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), num_features(0) {}
+    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false), num_features(0) {}
     
     void add_channel();
+    unsigned int get_num_features()
+    {
+        return num_features;
+    }
 #ifdef SETPYTHON
     void set_python_rf_function(boost::python::object pyfunc_);
 #endif
@@ -99,7 +103,10 @@ class FeatureMgr {
     void merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2);
 
     void add_median_feature();
-    void add_hist_feature(unsigned int num_bins, std::vector<double>& percentiles, bool use_diff);
+
+#ifdef SETPYTHON
+    void add_hist_feature(unsigned int num_bins, boost::python::list percentiles, bool use_diff);
+#endif
     void add_moment_feature(unsigned int num_moments, bool use_diff);
 
     double get_prob(RagEdge<Label>* edge);
@@ -107,6 +114,9 @@ class FeatureMgr {
     ~FeatureMgr();
 
   private:
+    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results);
+     
+    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {
@@ -154,11 +164,13 @@ class FeatureMgr {
 
     EdgeCaches edge_caches;
     NodeCaches node_caches;
+    unsigned int num_features;
 
     bool specified_features;
     unsigned int num_channels;
 
     std::vector<std::vector<FeatureCompute*> > channels_features;
+    std::vector<std::vector<FeatureCompute*> > channels_features_equal;
     std::vector<std::vector<std::vector<bool> > > channels_features_modes;
 
 #ifdef SETPYTHON

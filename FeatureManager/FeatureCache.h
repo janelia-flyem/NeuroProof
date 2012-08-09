@@ -5,6 +5,11 @@
 
 namespace NeuroProof {
 
+struct CountCache {
+    CountCache() : count(0) {}
+    signed long long count; 
+};
+
 struct MomentCache {
     MomentCache(unsigned int num_moments) : count(0), vals(num_moments, 0) {}
     unsigned long long count; 

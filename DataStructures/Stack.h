@@ -139,7 +139,7 @@ class Stack {
 
 void Stack::build_rag()
 {
-    if (feature_mgr && (feature_mgr->get_num_channels() == 1)) {
+    if (feature_mgr && (feature_mgr->get_num_features() == 0)) {
         feature_mgr->add_median_feature();
         median_mode = true; 
     } 
@@ -170,6 +170,7 @@ void Stack::build_rag()
                     if (!node) {
                         node = rag->insert_rag_node(spot0);
                     }
+                    node->incr_size();
 
                     feature_mgr->add_val(predictions, node);
                 }

@@ -24,6 +24,11 @@ class RagNode {
     void set_size(unsigned long long size_);
     void set_node_id(Region region);
 
+    void incr_size()
+    {
+        ++size;
+    }
+
     size_t node_degree() const;
     void insert_edge(RagEdge<Region>* edge);
     void remove_edge(RagEdge<Region>* edge);

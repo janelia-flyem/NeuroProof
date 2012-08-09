@@ -240,7 +240,14 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // create and bind node property list to rag (params: <rag>, <property_string>)
     def("rag_bind_node_property_list", rag_bind_node_property_list_ptr);
 
-    // initialization actually occurs within custom build for now
+    // initialization actually occurs within custom build
+    class_<FeatureMgr>("FeatureMgr", no_init)
+        .def("set_python_rf_function", &FeatureMgr::set_python_rf_function)
+        .def("add_hist_feature", &FeatureMgr::add_hist_feature)
+        .def("add_moment_feature", &FeatureMgr::add_moment_feature)
+        ;
+
+    // initialization actually occurs within custom build
     class_<Stack>("Stack", no_init)
         // returns number of bodies
         .def("get_num_bodies", &Stack::get_num_bodies)
@@ -248,9 +255,13 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("agglomerate_rag", &Stack::agglomerate_rag)
         // build rag based on loaded features and prediction images 
         .def("build_rag", &Stack::build_rag)
+        .def("get_feature_mgr", &Stack::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
         .def("remove_inclusions", &Stack::remove_inclusions)
         ;
+
+
+
 
     // denormalized edge data structure (unique for a node pair)
     class_<RagEdge_ui>("RagEdge", no_init)
