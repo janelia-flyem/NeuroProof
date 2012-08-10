@@ -950,6 +950,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
 template<typename Region> void LocalEdgePriority<Region>::grabAffinityPairs(RagNode<Region>* rag_node_head, int path_restriction, double connection_threshold)
 {
+    Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
     best_node_head.rag_node_curr = rag_node_head;
     best_node_head.rag_edge_curr = 0;
     best_node_head.weight= 1.0;
@@ -988,6 +989,11 @@ template<typename Region> void LocalEdgePriority<Region>::grabAffinityPairs(RagN
                     continue;
                 }
 
+                RagEdge<Region>* rag_edge_temp = ragtemp.find_rag_edge(rag_node_head, other_node); 
+                if (rag_edge_temp && rag_edge_temp->get_weight() > 1.0) {
+                    continue;
+                }
+
                 double edge_prob = 1.0 - (*edge_iter)->get_weight();
                 if (edge_prob < 0.000001) {
                     continue;
@@ -1011,6 +1017,10 @@ template<typename Region> void LocalEdgePriority<Region>::grabAffinityPairs(RagN
                 } else {
                     best_node_new.second_node = best_node_new.rag_node_curr->get_node_id();
                 }
+                if (rag_edge_temp) {
+                    best_node_new.second_node = best_node_new.rag_node_curr->get_node_id();
+                }
+
                 best_node_queue.push(best_node_new);
             }
             affinity_pair_curr.weight = best_node_curr.weight;
