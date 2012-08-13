@@ -771,14 +771,14 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                 } else if (orphan_mode) {
                     bool orphan1 = false;
                     try {
-                        orphan1 = property_list_retrieve_template_property<Region, unsigned long long>(orphan_property_list, head_node);
+                        orphan1 = property_list_retrieve_template_property<Region, bool>(orphan_property_list, head_node);
                     } catch(...) {
                         //
                     }
 
                     bool orphan2 = false;
                     try {
-                        orphan2 = property_list_retrieve_template_property<Region, unsigned long long>(orphan_property_list, other_node);
+                        orphan2 = property_list_retrieve_template_property<Region, bool>(orphan_property_list, other_node);
                     } catch(...) {
                         //
                     }
@@ -895,7 +895,8 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             // remove other body from list
             body_list->remove(rag_other_node->get_node_id());
             body_list->remove(head_reexamine.id);
-           
+        
+
             EdgePriority<Region>::removeEdge(node_pair, true, node_properties);
 
             BodyRank item;

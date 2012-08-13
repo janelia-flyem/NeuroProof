@@ -46,10 +46,16 @@ class EdgePriority {
         NodePropertyMap node_properties2;
         std::vector<double> edge_weight1;
         std::vector<double> edge_weight2;
+        std::vector<bool> preserve_edge1;
+        std::vector<bool> preserve_edge2;
+        std::vector<bool> false_edge1;
+        std::vector<bool> false_edge2;
         std::vector<std::vector<boost::shared_ptr<Property> > > property_list1;
         std::vector<std::vector<boost::shared_ptr<Property> > > property_list2;
         bool remove;
         double weight;
+        bool false_edge;
+        bool preserve_edge;
         std::vector<boost::shared_ptr<Property> > property_list_curr;
     };
 
@@ -76,6 +82,8 @@ template <typename Region> void EdgePriority<Region>::setEdge(NodePair node_pair
     history.node2 = boost::get<1>(node_pair);
     RagEdge<Region>* edge = rag.find_rag_edge(history.node1, history.node2);
     history.weight = edge->get_weight();
+    history.preserve_edge = edge->is_preserve();
+    history.false_edge = edge->is_false_edge();
     history.remove = false;
     history_queue.push_back(history);
     edge->set_weight(weight);
@@ -105,18 +113,24 @@ template <typename Region> bool EdgePriority<Region>::undo()
         for (int i = 0; i < history.node_list1.size(); ++i) {
             RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node1, rag.find_rag_node(history.node_list1[i]));
             temp_edge->set_weight(history.edge_weight1[i]);
+            temp_edge->set_preserve(history.preserve_edge1[i]);
+            temp_edge->set_false_edge(history.false_edge1[i]);
             rag_add_propertyptr(&rag, temp_edge, "location", history.property_list1[i][0]);
             rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list1[i][1]);
         } 
         for (int i = 0; i < history.node_list2.size(); ++i) {
             RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node2, rag.find_rag_node(history.node_list2[i]));
             temp_edge->set_weight(history.edge_weight2[i]);
+            temp_edge->set_preserve(history.preserve_edge2[i]);
+            temp_edge->set_false_edge(history.false_edge2[i]);
             rag_add_propertyptr(&rag, temp_edge, "location", history.property_list2[i][0]);
             rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list2[i][1]);
         }
 
         RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node1, temp_node2);
         temp_edge->set_weight(history.weight);
+        temp_edge->set_preserve(history.preserve_edge); 
+        temp_edge->set_false_edge(history.false_edge); 
         rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
         rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
         
@@ -136,6 +150,8 @@ template <typename Region> bool EdgePriority<Region>::undo()
 
         RagEdge<Region>* temp_edge = rag.find_rag_edge(temp_node1, temp_node2);
         temp_edge->set_weight(history.weight);
+        temp_edge->set_preserve(history.preserve_edge); 
+        temp_edge->set_false_edge(history.false_edge); 
         //rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
         //rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
     }
@@ -154,6 +170,8 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
     history.node2 = boost::get<1>(node_pair);
     RagEdge<Region>* edge = rag.find_rag_edge(history.node1, history.node2);
     history.weight = edge->get_weight();
+    history.preserve_edge = edge->is_preserve();
+    history.false_edge = edge->is_false_edge();
     history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "location"));
     history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "edge_size"));
 
@@ -185,6 +203,9 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
         if (other_node != node2) {
             history.node_list1.push_back(other_node->get_node_id());
             history.edge_weight1.push_back((*iter)->get_weight());
+            history.preserve_edge1.push_back((*iter)->is_preserve());
+            history.false_edge1.push_back((*iter)->is_false_edge());
+
 
             std::vector<boost::shared_ptr<Property> > property_list;
             property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
@@ -198,6 +219,8 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
         if (other_node != node1) {
             history.node_list2.push_back(other_node->get_node_id());
             history.edge_weight2.push_back((*iter)->get_weight());
+            history.preserve_edge2.push_back((*iter)->is_preserve());
+            history.false_edge2.push_back((*iter)->is_false_edge());
 
             std::vector<boost::shared_ptr<Property> > property_list;
             property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
