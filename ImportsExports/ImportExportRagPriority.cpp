@@ -60,13 +60,13 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
             RagNode<Label>* rag_node1 = rag->find_rag_node(node1);
             if (!rag_node1) {
                 rag_node1 = rag->insert_rag_node(node1);
+                rag_node1->set_size(size1);
             }
-            rag_node1->set_size(size1);
             RagNode<Label>* rag_node2 = rag->find_rag_node(node2);
             if (!rag_node2) {
                 rag_node2 = rag->insert_rag_node(node2);
+                rag_node2->set_size(size2);
             }
-            rag_node2->set_size(size2);
            
             if (!rag->find_rag_edge(rag_node1, rag_node2)) {
                 RagEdge<Label>* rag_edge = rag->insert_rag_edge(rag_node1, rag_node2);

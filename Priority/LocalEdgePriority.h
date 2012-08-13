@@ -133,7 +133,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             body_list->insert(body_rank);
         }
 
-        ignore_size = ignore_size_orig;
+        ignore_size = 0;
         updatePriority();
     }
 
@@ -533,7 +533,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
             //
         }
 
-        if (body_rank.size >= ignore_size || (synapse_weight > 0)) {
+        if (body_rank.size >= ignore_size_orig || (synapse_weight > 0)) {
             body_list_orphan.insert(body_rank);
         }
     }
@@ -543,6 +543,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     if (orphan_mode) {
         body_list = new BodyRankList(body_list_orphan);
         volume_size = 0;
+        ignore_size = 0;
     } else if (synapse_mode) {
         body_list = new BodyRankList(body_list_synapse);
         volume_size = num_synapses;
@@ -736,7 +737,7 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 
             grabAffinityPairs(head_node, current_depth, 0.01, !orphan_mode);
             double total_information_affinity = 0.0;
-            double biggest_change = 0.0;
+            double biggest_change = -1.0;
             RagNode<Region>* strongest_affinity_node = 0;
 
             for (typename AffinityPairsLocal::iterator iter = affinity_pairs.begin();
@@ -749,7 +750,7 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 
                 RagEdge<Region>* rag_edge = ragtemp.find_rag_edge(head_node, other_node);
                 
-                double local_information_affinity = 0;
+                double local_information_affinity = -1;
                 if (synapse_mode) { 
                     unsigned long long synapse_weight1 = 0;
                     try {
@@ -964,7 +965,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                         //
                     }
                     
-                    if (!is_orphan2 || ((item.size < ignore_size) && synapse_weight == 0)) {
+                    if (!is_orphan2 || ((item.size < ignore_size_orig) && synapse_weight == 0)) {
                         continue;
                     }  
                 }
