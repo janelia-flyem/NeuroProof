@@ -106,7 +106,10 @@ void FeatureMgr::add_median_feature()
     feature_modes[1] = true;
     std::vector<double> percentiles;
     percentiles.push_back(0.5);
-    add_feature(0, new FeatureHist(100, percentiles), feature_modes);
+
+    FeatureCompute * feature_ptr = new FeatureHist(100, percentiles);
+    channels_features_equal[0].push_back(feature_ptr);
+    add_feature(0, feature_ptr, feature_modes);
 }
 
 #ifdef SETPYTHON
