@@ -52,6 +52,10 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
             unsigned int size2 = edge_list[i].get("size2", 1).asUInt();
             double weight = edge_list[i].get("weight", 0.0).asDouble();
             unsigned int edge_size = edge_list[i].get("edge_size", 1).asUInt();
+            
+            bool preserve = edge_list[i].get("preserve", false).asUInt();
+            bool false_edge = edge_list[i].get("false_edge", false).asUInt();
+
 
             RagNode<Label>* rag_node1 = rag->find_rag_node(node1);
             if (!rag_node1) {
@@ -82,6 +86,9 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
                     }
                     rag_add_property(rag, rag_edge, "location", Location(x,y,z));
                 }
+
+                rag_edge->set_preserve(preserve);
+                rag_edge->set_false_edge(false_edge);
 
                 try {
                         rag->retrieve_property_list("edge_size");
@@ -141,7 +148,9 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer)
             json_edge["size1"] = (unsigned int)((*iter)->get_node1()->get_size());
             json_edge["size2"] = (unsigned int)((*iter)->get_node2()->get_size());
             json_edge["weight"] = (*iter)->get_weight();
-            
+            json_edge["preserve"] = (*iter)->is_preserve();           
+            json_edge["false_edge"] = (*iter)->is_false_edge();           
+
             try {
                 Location location = rag_retrieve_property<Label, Location>(rag, *iter, "location");
                 json_edge["location"][(unsigned int)(0)] = boost::get<0>(location); 

@@ -166,13 +166,16 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
         }
 
         RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
-        
+       
+        RagEdge<Region>* final_edge = 0;
+
         if (temp_edge && ((weight < temp_edge->get_weight() && (temp_edge->get_weight() <= 1.0)) || (weight > 1.0)) ) { 
             temp_edge->set_weight(weight);
             for (int i = 0; i < property_names.size(); ++i) {
                 boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, *iter, property_names[i]);
                 rag_add_propertyptr(&rag, temp_edge, property_names[i], property);
             }
+            final_edge = temp_edge;
         } else if (!temp_edge) {
             RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
             new_edge->set_weight(weight);
@@ -180,7 +183,16 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
                 boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, *iter, property_names[i]);
                 rag_add_propertyptr(&rag, new_edge, property_names[i], property);
             }
-         }
+            final_edge = new_edge;
+        }
+    
+        if ((*iter)->is_preserve()) {
+            final_edge->set_preserve(true);
+        }
+
+        if ((*iter)->is_false_edge() && (!temp_edge || final_edge->is_false_edge())) {
+            final_edge->set_false_edge(true);
+        } 
     }
 
     node_keep->set_size(node_keep->get_size() + node_remove->get_size());

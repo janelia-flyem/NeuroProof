@@ -14,6 +14,27 @@ class RagEdge {
         return new RagEdge(node1, node2);  
     }
 
+    void set_false_edge(bool false_edge_)
+    {
+        false_edge = false_edge_;
+    }
+
+    void set_preserve(bool preserve_)
+    {
+        preserve = preserve_;
+    }
+
+    bool is_preserve() const
+    {
+        return preserve;
+    }
+
+    bool is_false_edge() const
+    {
+        return false_edge;
+    }
+
+
     RagNode<Region>* get_node1() const;
     RagNode<Region>* get_node2() const;
     RagNode<Region>* get_other_node(RagNode<Region>* node) const;
@@ -36,9 +57,11 @@ class RagEdge {
     RagNode<Region>* node1;
     RagNode<Region>* node2;
     double weight;
+    bool preserve;
+    bool false_edge;
 };
 
-template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0) 
+template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), preserve(false), false_edge(false) 
 {
     RagNodePtrCmp<Region> cmp;
     if (cmp(node1_, node2_)) { 
