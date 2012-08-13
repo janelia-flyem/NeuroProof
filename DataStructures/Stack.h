@@ -253,7 +253,7 @@ void Stack::agglomerate_rag(double threshold)
     for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         double val = feature_mgr->get_prob(*iter);
 
-        if (val < threshold) {
+        if (val <= threshold) {
             ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
         }
     }    
