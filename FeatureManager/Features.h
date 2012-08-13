@@ -4,7 +4,6 @@
 #include "FeatureCache.h"
 #include "../Utilities/ErrMsg.h"
 #include <vector>
-#include <iostream>
 
 namespace NeuroProof {
 
@@ -37,7 +36,7 @@ class FeatureHist : public FeatureCompute {
     void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         HistCache * hist_cache = (HistCache*) cache;
-        ++(hist_cache->hist[val * num_bins + 0.000001]);
+        ++(hist_cache->hist[val * num_bins]);
         ++(hist_cache->count);
     }
     
@@ -62,7 +61,7 @@ class FeatureHist : public FeatureCompute {
         HistCache * hist_cache2 = (HistCache*) cache2;
 
         hist_cache1->count += (hist_cache2->count);
-        for (int i = 0; i < num_bins; ++i) {
+        for (int i = 0; i <= num_bins; ++i) {
             hist_cache1->hist[i] += hist_cache2->hist[i];
         }
         delete hist_cache2;
@@ -87,6 +86,7 @@ class FeatureHist : public FeatureCompute {
             }
             cumval += hist_cache->hist[i];
         }
+
         unsigned long long val2 = hist_cache->hist[spot];
         double slope = (curr_count - cumval);
         double median_spot = (threshold_amount - cumval)/slope;

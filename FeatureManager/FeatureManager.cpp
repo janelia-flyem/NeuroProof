@@ -175,7 +175,7 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     std::vector<void*>* edget_caches = 0;
     std::vector<void*>* node1_caches = 0;
     std::vector<void*>* node2_caches = 0;
- 
+
     if (edge_caches.find(edge) != edge_caches.end()) {
         edget_caches = &(edge_caches[edge]);
     }
@@ -220,12 +220,6 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     } else {
         prob = feature_results[0];
     }
-
-    std::cout << edge->get_node1()->get_node_id() << " " << edge->get_node2()->get_node_id() << std::endl;
-    for (int i = 0; i < feature_results.size(); ++i) {
-        std::cout << feature_results[i] << " ";
-    }
-    std::cout << prob << std::endl;
 
     return prob;
 }

@@ -206,13 +206,13 @@ template <typename Region>
 void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> >node_properties, EdgeRank_t& ranking, FeatureMgr* feature_mgr)
 {
     RagNode<Region>* node_remove = edge->get_other_node(node_keep);
+    feature_mgr->merge_features(node_keep, node_remove);
     
     for(typename RagNode<Region>::edge_iterator iter = node_remove->edge_begin(); iter != node_remove->edge_end(); ++iter) {
         RagNode<Region>* other_node = (*iter)->get_other_node(node_remove);
         if (other_node == node_keep) {
             continue;
         }
-        feature_mgr->merge_features(node_keep, other_node);
 
         RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
        
