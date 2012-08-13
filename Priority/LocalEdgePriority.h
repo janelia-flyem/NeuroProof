@@ -874,7 +874,8 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             RagNode<Region>* rag_other_node = rag_edge->get_other_node(rag_head_node);
 
             bool is_orphan = false;
-            bool synapse_weight = 0;
+            bool is_orphan_head = false;
+            unsigned long long  synapse_weight = 0;
             unsigned long long synapse_weight_head = 0;
             try {
                 synapse_weight_head = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_head_node);
@@ -888,6 +889,13 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 //
             }
             try {
+                is_orphan_head =  property_list_retrieve_template_property<Region, bool>(orphan_property_list, rag_head_node);
+            } catch(...) {
+                //
+            }
+
+
+            try {
                 synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, rag_other_node);
             } catch(...) {
                 //
@@ -900,25 +908,30 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
             EdgePriority<Region>::removeEdge(node_pair, true, node_properties);
 
-            BodyRank item;
-            item.id = head_reexamine.id;
+            BodyRank master_item;
+            master_item.id = head_reexamine.id;
             bool switching = false;
             if (boost::get<0>(node_pair) != head_reexamine.id) {
+                //assert(orphan_mode || synapse_mode);
                 switching = true;
                 //cout << "switch-aroo" << endl;
-                item.id = rag_other_node->get_node_id();
+                master_item.id = rag_other_node->get_node_id();
+                master_item.size = rag_other_node->get_size();
             }
             //item.top_id = true;
             
-            if ((orphan_mode && is_orphan) || (!orphan_mode && !synapse_mode)) {
-                item.size = rag_head_node->get_size();
-                body_list->insert(item);
+            if ((orphan_mode && (is_orphan && is_orphan_head)) || (!orphan_mode && !synapse_mode)) {
+                body_list->insert(master_item);
             } else if (synapse_mode) {
-                item.size = head_reexamine.size + synapse_weight;
-                body_list->insert(item);
+                master_item.size = head_reexamine.size + synapse_weight;
+                body_list->insert(master_item);
             }
-            if (!is_orphan) {
-                property_list_add_template_property(orphan_property_list, rag_head_node, false);
+            if (!is_orphan && !is_orphan_head) {
+                if (switching) {
+                    property_list_add_template_property(orphan_property_list, rag_other_node, false);
+                } else {
+                    property_list_add_template_property(orphan_property_list, rag_head_node, false);
+                }
             }
             
             if ((synapse_weight + synapse_weight_head) > 0) {
@@ -938,7 +951,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             for (typename AffinityPairsLocal::iterator iter = affinity_pairs.begin();
                     iter != affinity_pairs.end(); ++iter) {
                 Region other_id = iter->region1;
-                if (head_reexamine.id == other_id) {
+                if (master_item.id == other_id) {
                     other_id = iter->region2;
                 }
                 RagNode<Region>* rag_other_node2 = ragtemp.find_rag_node(other_id);
