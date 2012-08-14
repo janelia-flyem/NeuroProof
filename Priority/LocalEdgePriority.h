@@ -926,7 +926,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 master_item.size = head_reexamine.size + synapse_weight;
                 body_list->insert(master_item);
             }
-            if (!is_orphan && !is_orphan_head) {
+            if ((!is_orphan) || (!is_orphan_head)) {
                 if (switching) {
                     property_list_add_template_property(orphan_property_list, rag_other_node, false);
                 } else {
