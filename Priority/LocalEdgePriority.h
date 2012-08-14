@@ -1072,8 +1072,10 @@ template<typename Region> void LocalEdgePriority<Region>::grabAffinityPairs(RagN
                     continue;
                 }
 
-                if (rag_edge_temp && preserve && rag_edge_temp->is_preserve()) {
-                    continue;
+                if (preserve) {
+                    if ((rag_edge_temp && rag_edge_temp->is_preserve()) || (!rag_edge_temp && ((*edge_iter)->is_preserve()))) {
+                        continue;
+                    }
                 }
 
                 if (rag_edge_temp && rag_edge_temp->is_false_edge()) {
