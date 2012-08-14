@@ -4,6 +4,7 @@
 #include "ImportsExports/ImportExportRagPriority.h"
 #include <json/json.h>
 #include <json/value.h>
+#include <vector>
 
 #include <fstream>
 #include <boost/python.hpp>
@@ -12,6 +13,7 @@
 using namespace NeuroProof;
 using namespace boost::python;
 using std::ifstream; using std::ofstream; using std::cout; using std::endl;
+using std::vector;
 
 static LocalEdgePriority<Label>* priority_scheduler = 0;
 Rag<Label>* rag = 0;
@@ -164,6 +166,25 @@ PriorityInfo get_next_edge()
     return priority_info;
 }
 
+boost::python::list get_qa_violators(unsigned int threshold)
+{
+    PriorityInfo priority_info;
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    vector<Label> violators = priority_scheduler->getQAViolators(threshold);
+
+    boost::python::list violators_np;
+
+    for (unsigned int i = 0; i < violators.size(); ++i) {
+        violators_np.append(violators[i]);
+    }
+
+    return violators_np;
+}
+
+
 // exception throw if edge does not exist or connection probability specified is illegal
 void set_edge_result(tuple body_pair, bool remove)
 {
@@ -194,6 +215,7 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("initialize_priority_scheduler", initialize_priority_scheduler);
     def("export_priority_scheduler", export_priority_scheduler);
     def("get_next_edge", get_next_edge);
+    def("get_qa_violators", get_qa_violators);
     def("set_edge_result", set_edge_result);
     def("undo", undo);
     def("get_percent_prediction_correct", get_percent_prediction_correct);

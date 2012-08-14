@@ -29,6 +29,35 @@ class LocalEdgePriority : public EdgePriority<Region> {
     LocalEdgePriority(Rag<Region>& rag_, double min_val_, double max_val_, double start_val_, Json::Value& json_vals); 
     void export_json(Json::Value& json_writer);
 
+    
+    std::vector<Region> getQAViolators(unsigned int threshold)
+    {
+        Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+
+        std::vector<Region> violators;
+
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
+            unsigned long long synapse_weight = 0;
+            try {   
+                synapse_weight = property_list_retrieve_template_property<Region, unsigned long long>(synapse_weight_list, (*iter));
+            } catch(...) {
+                //
+            }
+
+            bool is_orphan = false;
+            try {   
+                is_orphan = property_list_retrieve_template_property<Region, bool>(orphan_property_list, (*iter));
+            } catch(...) {
+                //
+            }
+
+            if (is_orphan && ( (synapse_weight > 0) || ((*iter)->get_size() >= threshold) )) {
+                violators.push_back((*iter)->get_node_id());
+            }
+        } 
+        return violators;
+    }
+
     void set_synapse_mode(double ignore_size_)
     {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
