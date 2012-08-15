@@ -221,7 +221,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             }
             ++num_edges;
         }
-       
+      
         int num_rolls = num_edges;
         while (num_rolls--) {
             undo();
@@ -777,7 +777,7 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                 }
                 RagNode<Region>* other_node = ragtemp.find_rag_node(other_id);
 
-                RagEdge<Region>* rag_edge = ragtemp.find_rag_edge(head_node, other_node);
+                RagEdge<Region>* rag_edge = 0; //ragtemp.find_rag_edge(head_node, other_node);
                 
                 double local_information_affinity = -1;
                 if (synapse_mode) { 
