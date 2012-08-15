@@ -814,7 +814,7 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                     }
 
                     if (orphan1 && !orphan2) {
-                        local_information_affinity = other_node->get_size() * iter->weight;
+                        local_information_affinity = iter->weight; //other_node->get_size() * iter->weight;
                     }
                 } else {
                    
