@@ -186,22 +186,22 @@ class LocalEdgePriority : public EdgePriority<Region> {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
         debug_mode = true;  
         edge_ranking.clear();
+        debug_queue.clear();
         double count = 0;
+        debug_count = 0;
 
         for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
                         iter != ragtemp.edges_end(); ++iter, count+=1.0) {
+            RagNode<Region>* node1 = (*iter)->get_node1();
+            RagNode<Region>* node2 = (*iter)->get_node2();
             if (!reset) {
-                if (!(*iter)->is_false_edge()) {
-                    edge_ranking.insert(std::make_pair(count, *iter));
-                }
+                debug_queue.push_back(OrderedPair<Region>(node1->get_node_id(), node2->get_node_id()));
             } else {
                 if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
                     (*iter)->set_preserve(false);
                     continue;
                 }
                 bool examined = false;
-                RagNode<Region>* node1 = (*iter)->get_node1();
-                RagNode<Region>* node2 = (*iter)->get_node2();
 
                 // is body mode
                 double local_info = voi_change(node1->get_size(), node2->get_size(), volume_body);
@@ -542,6 +542,13 @@ class LocalEdgePriority : public EdgePriority<Region> {
     BestNode best_node_head;
     BestNodeQueue best_node_queue; 
     bool debug_mode;
+    unsigned int debug_count;
+
+    Json::Value json_body_edges;
+    Json::Value json_synapse_edges;
+    Json::Value json_orphan_edges;
+
+    std::vector<OrderedPair<Region> > debug_queue;
     std::vector<RagEdge<Region>* > body_edges;
     std::vector<RagEdge<Region>* > synapse_edges;
     std::vector<RagEdge<Region>* > orphan_edges;
@@ -579,6 +586,9 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
     approx_neurite_size *= num_slices;
 
+    Json::Value json_body_edges = json_vals["body_edges"];
+    Json::Value json_synapse_edges = json_vals["synapse_edges"];
+    Json::Value json_orphan_edges = json_vals["orphan_edges"];
 
     if (synapse_mode) {
         ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
@@ -722,23 +732,35 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Value& json_writer)
 {
     if (debug_mode) {
-        for (int i = 0; i < body_edges.size(); ++i) {
-            Json::Value edge;
-            edge["node1"] = body_edges[i]->get_node1()->get_node_id();
-            edge["node2"] = body_edges[i]->get_node2()->get_node_id();
-            json_writer["body_edges"][i] = edge; 
-        }
-        for (int i = 0; i < synapse_edges.size(); ++i) {
-            Json::Value edge;
-            edge["node1"] = synapse_edges[i]->get_node1()->get_node_id();
-            edge["node2"] = synapse_edges[i]->get_node2()->get_node_id();
-            json_writer["synapse_edges"][i] = edge; 
-        }
-        for (int i = 0; i < orphan_edges.size(); ++i) {
-            Json::Value edge;
-            edge["node1"] = orphan_edges[i]->get_node1()->get_node_id();
-            edge["node2"] = orphan_edges[i]->get_node2()->get_node_id();
-            json_writer["orphan_edges"][i] = edge; 
+        if (body_edges.empty() && synapse_edges.empty() && orphan_edges.empty()) {
+            if (!json_body_edges.isNull()) {
+                json_writer["body_edges"] = json_body_edges; 
+            }
+            if (!json_synapse_edges.isNull()) {
+                json_writer["synapse_edges"] = json_synapse_edges; 
+            }
+            if (!json_orphan_edges.isNull()) {
+                json_writer["orphan_edges"] = json_orphan_edges; 
+            }
+        } else {
+            for (int i = 0; i < body_edges.size(); ++i) {
+                Json::Value edge;
+                edge["node1"] = body_edges[i]->get_node1()->get_node_id();
+                edge["node2"] = body_edges[i]->get_node2()->get_node_id();
+                json_writer["body_edges"][i] = edge; 
+            }
+            for (int i = 0; i < synapse_edges.size(); ++i) {
+                Json::Value edge;
+                edge["node1"] = synapse_edges[i]->get_node1()->get_node_id();
+                edge["node2"] = synapse_edges[i]->get_node2()->get_node_id();
+                json_writer["synapse_edges"][i] = edge; 
+            }
+            for (int i = 0; i < orphan_edges.size(); ++i) {
+                Json::Value edge;
+                edge["node1"] = orphan_edges[i]->get_node1()->get_node_id();
+                edge["node2"] = orphan_edges[i]->get_node2()->get_node_id();
+                json_writer["orphan_edges"][i] = edge; 
+            }
         }
     }
     
@@ -831,7 +853,7 @@ template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaini
     }
     
     if (debug_mode) {
-        return (unsigned int)(edge_ranking.size());
+        return (unsigned int)(debug_queue.size() - debug_count);
     }
 
     if (num_est_remaining > 0) {
@@ -847,15 +869,18 @@ template <typename Region> unsigned int LocalEdgePriority<Region>::getNumRemaini
 // edge list should always have next assignment unless volume hasn't been updated yet or is finished
 template <typename Region> bool LocalEdgePriority<Region>::isFinished()
 {
+    if (debug_mode) {
+        if ((debug_queue.size() - debug_count)) {
+            return false;
+        }
+        return true;
+    }
     return (edge_ranking.empty());
 }
 
 template <typename Region> void LocalEdgePriority<Region>::setEdge(NodePair node_pair, double weight)
 {
     RagEdge<Region>* edge = (EdgePriority<Region>::rag).find_rag_edge(boost::get<0>(node_pair), boost::get<1>(node_pair));
-    if (debug_mode) {
-        edge->set_false_edge(true);
-    }
 
     typename EdgeRanking<Region>::type::iterator iter;
     for (iter = edge_ranking.begin(); iter != edge_ranking.end(); ++iter) {
@@ -874,12 +899,22 @@ template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region
 {
     RagEdge<Region>* edge;
     try {
-        if (edge_ranking.empty()) {
-            throw ErrMsg("Priority queue is empty");
-        }
-        edge = edge_ranking.begin()->second;
-       
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
+        if (debug_mode) {
+            if (debug_queue.size() == debug_count) {
+                throw ErrMsg("Debug queue is empty");
+            }
+            edge = ragtemp.find_rag_edge(debug_queue[debug_count].region1, debug_queue[debug_count].region2);
+            if (!edge) {
+                throw ErrMsg("Edge not found in debug queue");
+            }
+        } else {
+            if (edge_ranking.empty()) {
+                throw ErrMsg("Priority queue is empty");
+            }
+            edge = edge_ranking.begin()->second;
+        }
+       
         location = rag_retrieve_property<Region, Location>(&ragtemp, edge, "location");
     } catch(ErrMsg& msg) {
         std::cerr << msg.str << std::endl;
@@ -996,14 +1031,13 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 
 template <typename Region> bool LocalEdgePriority<Region>::undo()
 {
-    RagEdge<Region>** temp_edge;
-    bool ret = EdgePriority<Region>::undo(temp_edge);
+    bool ret = EdgePriority<Region>::undo();
     if (ret) {
         --num_processed;
     
         if (debug_mode) {
-            (*temp_edge)->set_false_edge(false);
-            set_debug_mode(temp_edge);
+            assert(debug_count > 0);
+            --debug_count;
             return true;
         }   
     
@@ -1049,6 +1083,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
     if (remove) {
         if (debug_mode) {
             setEdge(node_pair, 0.0);
+            ++debug_count;
         } else if (!prob_mode) {
             body_list->start_checkpoint();
             BodyRank head_reexamine = body_list->first();
@@ -1200,6 +1235,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
     } else {
         if (debug_mode) {
             setEdge(node_pair, 1.0);
+            ++debug_count;
         } else if (!prob_mode) {
             body_list->start_checkpoint();
             setEdge(node_pair, 1.2);

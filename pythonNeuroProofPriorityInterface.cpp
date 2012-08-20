@@ -179,6 +179,25 @@ PriorityInfo get_next_edge()
     return priority_info;
 }
 
+double get_edge_val(PriorityInfo priority_info)
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+
+    Label l1 = extract<Label>(priority_info.body_pair[0]);
+    Label l2 = extract<Label>(priority_info.body_pair[1]);
+
+    RagEdge<Label>* edge = rag->find_rag_edge(l1, l2);
+
+    if (!edge) {
+        throw ErrMsg("Edge not found");
+    }
+    return edge->get_weight();
+}
+
+
+
 boost::python::list get_qa_violators(unsigned int threshold)
 {
     if (DebugMode) {
@@ -243,6 +262,7 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("set_body_mode", set_body_mode);
     def("set_orphan_mode", set_orphan_mode);
     def("set_edge_mode", set_edge_mode);
+    def("get_edge_val", get_edge_val);
     def("estimate_work", estimate_work);
 
     class_<PriorityInfo>("PriorityInfo")

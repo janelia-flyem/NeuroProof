@@ -23,7 +23,7 @@ class EdgePriority {
     virtual void updatePriority() = 0;
     // low weight == no connection
     virtual void setEdge(NodePair node_pair, double weight);
-    virtual bool undo(RagEdge<Region>** edge = 0);
+    virtual bool undo();
     virtual void removeEdge(NodePair node_pair, bool remove) = 0;
     void clear_history();
 
@@ -95,7 +95,7 @@ template <typename Region> void EdgePriority<Region>::clear_history()
 }
 
 
-template <typename Region> bool EdgePriority<Region>::undo(RagEdge<Region>** edge)
+template <typename Region> bool EdgePriority<Region>::undo()
 {
     if (history_queue.empty()) {
         return false;
@@ -144,9 +144,6 @@ template <typename Region> bool EdgePriority<Region>::undo(RagEdge<Region>** edg
                 ++iter) {
             rag_add_propertyptr(&rag, temp_node2, iter->first, iter->second);
         }
-        if (edge) {
-            *edge = temp_edge;
-        }
     } else {
         RagNode<Region>* temp_node1 = rag.find_rag_node(history.node1);
         RagNode<Region>* temp_node2 = rag.find_rag_node(history.node2);
@@ -155,9 +152,6 @@ template <typename Region> bool EdgePriority<Region>::undo(RagEdge<Region>** edg
         temp_edge->set_weight(history.weight);
         temp_edge->set_preserve(history.preserve_edge); 
         temp_edge->set_false_edge(history.false_edge); 
-        if (edge) {
-            *edge = temp_edge;
-        }
         //rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
         //rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
     }
