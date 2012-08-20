@@ -15,7 +15,7 @@ struct PriorityInfo {
 
 // false if file does not exist or json is not properly formatted
 // exception thrown if min, max, or start val are illegal
-bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val, bool debug_mode = false);
+bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val);
 
 // false if file cannot be written
 bool export_priority_scheduler(const char * json_file);
