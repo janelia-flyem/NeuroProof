@@ -21,9 +21,8 @@ bool DebugMode = false;
 
 // false if file does not exist or json is not properly formatted
 // exception thrown if min, max, or start val are illegal
-bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val, bool debug_mode)
+bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val)
 {
-    DebugMode = debug_mode;
     if ((min_val < 0) || (max_val > 1.0) || (min_val > max_val) || (start_val > max_val) || (start_val < min_val) ) {
         throw ErrMsg("Priority scheduler filter bounds not properly set");  
     }
@@ -44,7 +43,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
         return false;
     }
 
-    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals, debug_mode);
+    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals);
     //priority_scheduler->updatePriority();
 
     return true;
