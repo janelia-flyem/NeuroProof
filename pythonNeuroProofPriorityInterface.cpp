@@ -239,6 +239,7 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("get_average_prediction_error", get_average_prediction_error);
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
     def("set_synapse_mode", set_synapse_mode);
+    def("set_debug_mode", set_debug_mode);
     def("set_body_mode", set_body_mode);
     def("set_orphan_mode", set_orphan_mode);
     def("set_edge_mode", set_edge_mode);

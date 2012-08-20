@@ -152,8 +152,12 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_
             json_edge["size1"] = (unsigned int)((*iter)->get_node1()->get_size());
             json_edge["size2"] = (unsigned int)((*iter)->get_node2()->get_size());
             json_edge["weight"] = (*iter)->get_weight();
+            if (debug_mode) {
+                json_edge["false_edge"] = false;           
+            } else {
+                json_edge["false_edge"] = (*iter)->is_false_edge();           
+            }
             json_edge["preserve"] = (*iter)->is_preserve();           
-            json_edge["false_edge"] = (*iter)->is_false_edge();           
 
             try {
                 Location location = rag_retrieve_property<Label, Location>(rag, *iter, "location");

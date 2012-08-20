@@ -191,8 +191,9 @@ class LocalEdgePriority : public EdgePriority<Region> {
         for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
                         iter != ragtemp.edges_end(); ++iter, count+=1.0) {
             if (!reset) {
-                edge_ranking.insert(std::make_pair(count, *iter));
-            
+                if (!(*iter)->is_false_edge()) {
+                    edge_ranking.insert(std::make_pair(count, *iter));
+                }
             } else {
                 if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
                     (*iter)->set_preserve(false);
@@ -234,8 +235,9 @@ class LocalEdgePriority : public EdgePriority<Region> {
                 }
 
                 // is orphan edge    
-                if (!examined) {
+                if (!examined && ((*iter)->get_weight() <= 0.99)) {
                     bool orphan1 = false;
+         
                     try {
                         orphan1 = property_list_retrieve_template_property<Region, bool>(orphan_property_list, node1);
                     } catch(...) {
@@ -758,6 +760,13 @@ template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Val
     // applicable, in different senses, to all modes 
     json_writer["ignore_size"] = ignore_size_orig;
 
+    if (debug_mode) {
+        json_writer["orphan_mode"] = false;
+        json_writer["synapse_mode"] = false; 
+        json_writer["prob_mode"] = false;
+        return;
+    }
+
     // 4 modes supported currently 
     json_writer["orphan_mode"] = orphan_mode;
     json_writer["synapse_mode"] = synapse_mode;
@@ -844,6 +853,10 @@ template <typename Region> bool LocalEdgePriority<Region>::isFinished()
 template <typename Region> void LocalEdgePriority<Region>::setEdge(NodePair node_pair, double weight)
 {
     RagEdge<Region>* edge = (EdgePriority<Region>::rag).find_rag_edge(boost::get<0>(node_pair), boost::get<1>(node_pair));
+    if (debug_mode) {
+        edge->set_false_edge(true);
+    }
+
     typename EdgeRanking<Region>::type::iterator iter;
     for (iter = edge_ranking.begin(); iter != edge_ranking.end(); ++iter) {
         if (iter->second == edge) {
@@ -983,9 +996,17 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
 
 template <typename Region> bool LocalEdgePriority<Region>::undo()
 {
-    bool ret = EdgePriority<Region>::undo();
+    RagEdge<Region>** temp_edge;
+    bool ret = EdgePriority<Region>::undo(temp_edge);
     if (ret) {
         --num_processed;
+    
+        if (debug_mode) {
+            (*temp_edge)->set_false_edge(false);
+            set_debug_mode(temp_edge);
+            return true;
+        }   
+    
         if (prob_mode) {
             --num_edge_processed;
         } else if (synapse_mode) {
@@ -1015,6 +1036,8 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
     if (prob_mode) {
         ++num_edge_processed;
+    } else if (debug_mode) {
+        //   
     } else if (synapse_mode) {
         ++num_syn_processed;
     } else if (orphan_mode) {
