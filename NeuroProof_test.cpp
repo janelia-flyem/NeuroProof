@@ -120,7 +120,7 @@ int main(int argc, char** argv)
              
             int num_edges_examined = 0;
 
-            
+            #if 0        
             while (!priority_scheduler.isFinished()) {
                 EdgePriority<Label>::Location location;
                 boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
@@ -142,7 +142,13 @@ int main(int argc, char** argv)
 #endif
                 ++num_edges_examined;
             }
-/*
+
+            #endif
+    
+            priority_scheduler.set_debug_mode(true);
+
+            
+            /*
             int total_undos = 0;
             while (priority_scheduler.undo()) {
                 ++total_undos;
@@ -178,7 +184,7 @@ int main(int argc, char** argv)
             using std::ofstream;
             Json::Value json_writer;
             ofstream fout("temp.json");
-            create_json_from_rag(rag, json_writer);
+            create_json_from_rag(rag, json_writer, true);
             priority_scheduler.export_json(json_writer); 
             fout << json_writer;
             fout.close();

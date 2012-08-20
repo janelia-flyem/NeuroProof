@@ -135,13 +135,17 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
     return true;
 }
 
-bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer)
+bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_mode)
 {
     try {
-        unsigned int edge_num = 0;
+        int edge_num = -1;
         for (Rag<Label>::edges_iterator iter = rag->edges_begin();
-            iter != rag->edges_end(); ++iter, ++edge_num)
+            iter != rag->edges_end(); ++iter)
         {
+            if (debug_mode && !((*iter)->is_preserve())) {
+                continue;
+            }
+            ++edge_num;
             Json::Value json_edge;
             json_edge["node1"] = (*iter)->get_node1()->get_node_id();
             json_edge["node2"] = (*iter)->get_node2()->get_node_id();

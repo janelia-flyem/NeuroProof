@@ -17,11 +17,13 @@ using std::vector;
 
 static LocalEdgePriority<Label>* priority_scheduler = 0;
 Rag<Label>* rag = 0;
+bool DebugMode = false;
 
 // false if file does not exist or json is not properly formatted
 // exception thrown if min, max, or start val are illegal
-bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val)
+bool initialize_priority_scheduler(const char * json_file, double min_val, double max_val, double start_val, bool debug_mode)
 {
+    DebugMode = debug_mode;
     if ((min_val < 0) || (max_val > 1.0) || (min_val > max_val) || (start_val > max_val) || (start_val < min_val) ) {
         throw ErrMsg("Priority scheduler filter bounds not properly set");  
     }
@@ -42,7 +44,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
         return false;
     }
 
-    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals);
+    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals, debug_mode);
     //priority_scheduler->updatePriority();
 
     return true;
@@ -62,7 +64,7 @@ bool export_priority_scheduler(const char * json_file)
             throw ErrMsg("Error: output file could not be opened");
         }
 
-        bool status = create_json_from_rag(rag, json_writer);
+        bool status = create_json_from_rag(rag, json_writer, DebugMode);
         if (!status) {
             throw ErrMsg("Error in rag export");
         }
@@ -98,6 +100,15 @@ unsigned int get_estimated_num_remaining_edges()
     }
 
     return priority_scheduler->getNumRemaining();
+}
+
+void set_debug_mode()
+{
+    if (!priority_scheduler) {
+        throw ErrMsg("Scheduler not initialized");
+    }
+    DebugMode = true;
+    priority_scheduler->set_debug_mode();
 }
 
 
@@ -140,6 +151,9 @@ void set_edge_mode(double lower, double upper, double start)
 
 void estimate_work()
 {
+    if (DebugMode) {
+        return;
+    }
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
@@ -168,6 +182,10 @@ PriorityInfo get_next_edge()
 
 boost::python::list get_qa_violators(unsigned int threshold)
 {
+    if (DebugMode) {
+        boost::python::list violators_np;
+        return violators_np;
+    }
     PriorityInfo priority_info;
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
