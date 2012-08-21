@@ -586,9 +586,9 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
     approx_neurite_size *= num_slices;
 
-    Json::Value json_body_edges = json_vals["body_edges"];
-    Json::Value json_synapse_edges = json_vals["synapse_edges"];
-    Json::Value json_orphan_edges = json_vals["orphan_edges"];
+    json_body_edges = json_vals["body_edges"];
+    json_synapse_edges = json_vals["synapse_edges"];
+    json_orphan_edges = json_vals["orphan_edges"];
 
     if (synapse_mode) {
         ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
