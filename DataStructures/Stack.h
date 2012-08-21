@@ -384,8 +384,9 @@ int Stack::remove_inclusions()
                 RagNode<Label>* rag_node = rag->find_rag_node(region2);
                 assert(rag_node);
                 if (articulation_node != rag_node) {
+                    feature_mgr->merge_features(articulation_node, rag_node); 
                     rag->remove_rag_node(rag_node); 
-                    
+
                     watershed_to_body[region2] = articulation_region;
                     for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter2) {
                         watershed_to_body[*iter2] = articulation_region;
