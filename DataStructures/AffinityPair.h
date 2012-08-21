@@ -74,18 +74,18 @@ struct AffinityPair : public OrderedPair<Region> {
 
         bool operator<(const AffinityPair& affinity_pair2) const
         {
-            return is_less(affinity_pair2);
+            return this->is_less(affinity_pair2);
         }
 
         bool operator==(const AffinityPair& affinity_pair2) const
         {
-            return is_equal(affinity_pair2);;
+            return this->is_equal(affinity_pair2);;
         }
 
         // hash function
         size_t operator()(const AffinityPair& affinity_pair) const
         {
-            return get_hash(affinity_pair);
+            return this->get_hash(affinity_pair);
         }
         
         // fundamental datastructure for using AffinityPairs
