@@ -36,10 +36,11 @@ class Stack {
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z)
     {
         x += padding;
-        y += padding;
+        //y += padding;
+        y = height - y - 1 - padding;
         z += padding;
         unsigned int plane_size = width * height;
-        unsigned long long curr_spot = x + y * width + z * height; 
+        unsigned long long curr_spot = x + y * width + z * plane_size; 
         Label body_id = watershed[curr_spot];
         if (!watershed_to_body.empty()) {
             body_id = watershed_to_body[body_id];
