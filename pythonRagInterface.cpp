@@ -258,6 +258,8 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("get_feature_mgr", &Stack::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
         .def("remove_inclusions", &Stack::remove_inclusions)
+        // set edge constraints, will create false edges
+        .def("add_edge_constraint", &Stack::add_edge_constraint)
         ;
 
 

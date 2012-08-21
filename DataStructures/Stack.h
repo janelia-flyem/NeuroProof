@@ -6,6 +6,7 @@
 #include "AffinityPair.h"
 #include "../FeatureManager/FeatureManager.h"
 #include "Glb.h"
+#include <boost/python.hpp>
 
 #ifndef STACK_H
 #define STACK_H
@@ -30,6 +31,44 @@ class Stack {
         if (feature_mgr) {
             feature_mgr->add_channel();
         }
+    }
+
+    Label get_body_id(unsigned int x, unsigned int y, unsigned int z)
+    {
+        x += padding;
+        y += padding;
+        z += padding;
+        unsigned int plane_size = width * height;
+        unsigned long long curr_spot = x + y * width + z * height; 
+        Label body_id = watershed[curr_spot];
+        if (!watershed_to_body.empty()) {
+            body_id = watershed_to_body[body_id];
+        }
+        return body_id;
+    }
+
+    bool add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
+    {
+        Label body1 = get_body_id(boost::python::extract<int>(loc1[0]), boost::python::extract<int>(loc1[1]),
+                                boost::python::extract<int>(loc1[2]));    
+        Label body2 = get_body_id(boost::python::extract<int>(loc2[0]), boost::python::extract<int>(loc2[1]),
+                                boost::python::extract<int>(loc2[2]));    
+
+        if (body1 == body2) {
+            return false;
+        }
+
+        RagEdge<Label>* edge = rag->find_rag_edge(body1, body2);
+
+        if (!edge) {
+            RagNode<Label>* node1 = rag->find_rag_node(body1);
+            RagNode<Label>* node2 = rag->find_rag_node(body2);
+            edge = rag->insert_rag_edge(node1, node2);
+            edge->set_false_edge(true);
+        }
+        edge->set_preserve(true);
+
+        return true;
     }
 
     FeatureMgr * get_feature_mgr()
