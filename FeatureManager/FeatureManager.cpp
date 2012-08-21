@@ -291,6 +291,10 @@ void FeatureMgr::merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2)
 FeatureMgr::~FeatureMgr()
 {
     for (EdgeCaches::iterator iter = edge_caches.begin(); iter != edge_caches.end(); ++iter) {
+        // creation of empty feature
+        if (iter->second.size() == 0) {
+            continue;
+        }
         unsigned int pos = 0;
         for (int i = 0; i < num_channels; ++i) {
         vector<FeatureCompute*>& features = channels_features[i];
@@ -302,6 +306,10 @@ FeatureMgr::~FeatureMgr()
     }
 
     for (NodeCaches::iterator iter = node_caches.begin(); iter != node_caches.end(); ++iter) {
+        // creation of empty feature
+        if (iter->second.size() == 0) {
+            continue;
+        }
         unsigned int pos = 0;
         for (int i = 0; i < num_channels; ++i) {
         vector<FeatureCompute*>& features = channels_features[i];
