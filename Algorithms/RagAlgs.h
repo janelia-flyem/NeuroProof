@@ -218,19 +218,34 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
         if (other_node == node_keep) {
             continue;
         }
-
+        
         RagEdge<Region>* temp_edge = rag.find_rag_edge(node_keep, other_node);
-       
+
+        bool preserve = (*iter)->is_preserve();
+        bool false_edge = (*iter)->is_false_edge();
         if (temp_edge) {
-            feature_mgr->merge_features(temp_edge, (*iter));
+            preserve = preserve || temp_edge->is_preserve(); 
+            false_edge = false_edge && temp_edge->is_false_edge(); 
+        }
+
+        RagEdge<Region>* new_edge = temp_edge;
+        if (temp_edge) {
+            if (temp_edge->is_false_edge()) {
+                feature_mgr->mv_features(*iter, temp_edge); 
+            } else if (!((*iter)->is_false_edge())) {
+                feature_mgr->merge_features(temp_edge, (*iter));
+            }
             //double val = feature_mgr->get_prob(temp_edge);
             //ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
         } else {
-            RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
+            new_edge = rag.insert_rag_edge(node_keep, other_node);
             feature_mgr->mv_features(*iter, new_edge); 
             //double val = feature_mgr->get_prob(new_edge);
             //ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
         } 
+   
+        new_edge->set_preserve(preserve); 
+        new_edge->set_false_edge(false_edge); 
     }
 
     node_keep->set_size(node_keep->get_size() + node_remove->get_size());
@@ -249,6 +264,10 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
     rag.remove_rag_node(node_remove);
 
     for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {
+        if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
+            assert((*iter)->is_preserve());
+            continue;
+        }
         double val = feature_mgr->get_prob(*iter);
         ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
     }

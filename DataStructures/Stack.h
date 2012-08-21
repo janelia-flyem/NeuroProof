@@ -290,6 +290,11 @@ void Stack::agglomerate_rag(double threshold)
     boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
 
     for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+        if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
+            assert((*iter)->is_preserve());
+            continue;
+        }
+        
         double val = feature_mgr->get_prob(*iter);
 
         if (val <= threshold) {
@@ -412,8 +417,36 @@ int Stack::remove_inclusions()
                 total_size += rag_node->get_size();
 
             }
+          
+            bool found_preserve = false; 
+            for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
+                Label region2 = *iter;
+                if (body_to_body.find(region2) != body_to_body.end()) {
+                    region2 = body_to_body[region2];
+                }
+
+                RagNode<Label>* rag_node = rag->find_rag_node(region2);
+                assert(rag_node);
+                if (articulation_node != rag_node) {
+                    for (RagNode<Label>::edge_iterator edge_iter = rag_node->edge_begin();
+                        edge_iter != rag_node->edge_end(); ++edge_iter) {
+                        if ((*edge_iter)->is_preserve()) {
+                            found_preserve = true;
+                            break;
+                        }
+                    } 
+                }
+
+                if (found_preserve) {
+                    break;
+                }
+            }
+
+            if (found_preserve) {
+                continue;
+            }
+            
             articulation_node->set_size(total_size);
-           
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region2 = *iter;
                 if (body_to_body.find(region2) != body_to_body.end()) {
@@ -478,6 +511,11 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
         bool skip = false;
         int curr_pos = 0;
         for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+            RagEdge<Label>* rag_edge = rag->find_rag_edge(rag_node, *iter);
+            if (rag_edge->is_false_edge()) {
+                continue;
+            }
+            
             if (curr_pos < entry.start_pos) {
                 ++curr_pos;
                 continue;
