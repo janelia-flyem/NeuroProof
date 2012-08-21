@@ -223,13 +223,13 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
        
         if (temp_edge) {
             feature_mgr->merge_features(temp_edge, (*iter));
-            double val = feature_mgr->get_prob(temp_edge);
-            ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
+            //double val = feature_mgr->get_prob(temp_edge);
+            //ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
         } else {
             RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
             feature_mgr->mv_features(*iter, new_edge); 
-            double val = feature_mgr->get_prob(new_edge);
-            ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
+            //double val = feature_mgr->get_prob(new_edge);
+            //ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
         } 
     }
 
@@ -247,6 +247,11 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
     }
 
     rag.remove_rag_node(node_remove);
+
+    for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {
+        double val = feature_mgr->get_prob(*iter);
+        ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
+    }
 }
 
 
