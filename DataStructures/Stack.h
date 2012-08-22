@@ -7,6 +7,7 @@
 #include "../FeatureManager/FeatureManager.h"
 #include "Glb.h"
 #include <boost/python.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #ifndef STACK_H
 #define STACK_H
@@ -53,6 +54,72 @@ class Stack {
 
     void determine_edge_locations()
     {
+        best_edge_z.clear();
+        best_edge_loc.clear();
+
+        unsigned int plane_size = width * height;
+
+        for (unsigned int z = 1; z < (depth-1); ++z) {
+            int z_spot = z * plane_size;
+
+            EdgeCount curr_edge_z;
+            EdgeLoc curr_edge_loc;
+             
+
+            for (unsigned int y = 1; y < (height-1); ++y) {
+                int y_spot = y * width;
+                for (unsigned int x = 1; x < (width-1); ++x) {
+                    unsigned long long curr_spot = x + y_spot + z_spot;
+                    unsigned int spot0 = watershed_to_body[(watershed[curr_spot])];
+                    unsigned int spot1 = watershed_to_body[(watershed[curr_spot-1])];
+                    unsigned int spot2 = watershed_to_body[(watershed[curr_spot+1])];
+                    unsigned int spot3 = watershed_to_body[(watershed[curr_spot-width])];
+                    unsigned int spot4 = watershed_to_body[(watershed[curr_spot+width])];
+                    unsigned int spot5 = watershed_to_body[(watershed[curr_spot-plane_size])];
+                    unsigned int spot6 = watershed_to_body[(watershed[curr_spot+plane_size])];
+
+                    if (spot1 && (spot0 != spot1)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot1);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                    if (spot2 && (spot0 != spot2)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot2);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                    if (spot3 && (spot0 != spot3)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot3);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                    if (spot4 && (spot0 != spot4)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot4);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                    if (spot5 && (spot0 != spot5)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot5);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                    if (spot6 && (spot0 != spot6)) {
+                        RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot6);
+                        curr_edge_z[edge] += 1;  
+                        curr_edge_loc[edge] = Location(x,y,z);  
+                    }
+                }
+            }
+        
+            for (EdgeCount::iterator iter = curr_edge_z.begin(); iter != curr_edge_z.end(); ++iter) {
+                if (iter->second > best_edge_z[iter->first]) {
+                    best_edge_z[iter->first] = iter->second;
+                    best_edge_loc[iter->first] = curr_edge_loc[iter->first];
+                }
+            }
+        } 
+        
+        
         return;
     }
 
@@ -63,7 +130,15 @@ class Stack {
 
     boost::python::tuple get_edge_loc(RagEdge<Label>* edge)
     {
-        return boost::python::make_tuple(0, 0, 0); 
+        if (best_edge_loc.find(edge) == best_edge_loc.end()) {
+            throw ErrMsg("Edge location was not loaded!");
+        }
+        Location loc = best_edge_loc[edge];
+        unsigned int x = boost::get<0>(loc) - padding;
+        unsigned int y = boost::get<1>(loc) - padding; //height - boost::get<1>(loc) - 1 - padding;
+        unsigned int z = boost::get<2>(loc) - padding;
+
+        return boost::python::make_tuple(x, y, z); 
     }
 
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z)
@@ -193,6 +268,10 @@ class Stack {
     std::vector<double*> prediction_array;
     std::tr1::unordered_map<Label, Label> watershed_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
+    typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
+    typedef std::tr1::unordered_map<RagEdge<Label>*, unsigned long long> EdgeCount; 
+    typedef std::tr1::unordered_map<RagEdge<Label>*, Location> EdgeLoc; 
+    
     int depth, height, width;
     int padding;
 
@@ -204,7 +283,10 @@ class Stack {
     std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
     
     std::vector<OrderedPair<Label> > stack;
-    
+   
+    EdgeCount best_edge_z;
+    EdgeLoc best_edge_loc;
+
     FeatureMgr * feature_mgr;
     bool median_mode;
 };
@@ -304,6 +386,7 @@ void Stack::build_rag()
         }
     }   
 
+    watershed_to_body[0] = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
