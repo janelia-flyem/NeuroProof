@@ -33,6 +33,39 @@ class Stack {
         }
     }
 
+    bool is_orphan(RagNode<Label>* node)
+    {
+        node_properties_holder = rag->retrieve_property_list("border_node");
+        bool border = false;
+        try {
+            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, node);
+        } catch (ErrMsg& msg) {
+            //
+        }
+
+        return !border;
+    }
+        
+    Rag<Label>* get_rag()
+    {
+        return rag;
+    }
+
+    void determine_edge_locations()
+    {
+        return;
+    }
+
+    double get_edge_weight(RagEdge<Label>* edge)
+    {
+        return feature_mgr->get_prob(edge);
+    }
+
+    boost::python::tuple get_edge_loc(RagEdge<Label>* edge)
+    {
+        return boost::python::make_tuple(0, 0, 0); 
+    }
+
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z)
     {
         x += padding;
@@ -325,6 +358,10 @@ void Stack::agglomerate_rag(double threshold)
         RagEdge<Label>* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
 
         if (!rag_edge) {
+            continue;
+        }
+
+        if (rag_edge->is_preserve() || rag_edge->is_false_edge()) {
             continue;
         }
 

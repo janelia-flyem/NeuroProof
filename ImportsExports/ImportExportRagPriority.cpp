@@ -51,7 +51,7 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
             unsigned int size1 = edge_list[i].get("size1", 1).asUInt();
             unsigned int size2 = edge_list[i].get("size2", 1).asUInt();
             double weight = edge_list[i].get("weight", 0.0).asDouble();
-            unsigned int edge_size = edge_list[i].get("edge_size", 1).asUInt();
+            unsigned int edge_size = edge_list[i].get("edge_size", 5).asUInt();
             
             bool preserve = edge_list[i].get("preserve", false).asUInt();
             bool false_edge = edge_list[i].get("false_edge", false).asUInt();

@@ -260,6 +260,12 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("remove_inclusions", &Stack::remove_inclusions)
         // set edge constraints, will create false edges
         .def("add_edge_constraint", &Stack::add_edge_constraint)
+        .def("get_rag", &Stack::get_rag, return_value_policy<reference_existing_object>())
+        .def("get_body_id", &Stack::get_body_id)
+        .def("determine_edge_locations", &Stack::determine_edge_locations)
+        .def("get_edge_weight", &Stack::get_edge_weight)
+        .def("get_edge_loc", &Stack::get_edge_loc)
+        .def("is_orphan", &Stack::is_orphan)
         ;
 
 
@@ -275,6 +281,8 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("get_weight", &RagEdge_ui::get_weight) 
         // set a double value for the weight
         .def("set_weight", &RagEdge_ui::set_weight)
+        .def("is_preserve", &RagEdge_ui::is_preserve)
+        .def("is_false_edge", &RagEdge_ui::is_false_edge)
         ;
     
     // denormalized node data structure (unique for a node id)
@@ -290,6 +298,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         // returns an iterator to the connected edges
         .def("get_edges", ragnode_get_edges)
         // returns an iterator to the connected nodes
+        .def("set_size", &RagNode_ui::set_size)
         .def("__iter__", range<return_value_policy<reference_existing_object> >(&RagNode_ui::node_begin, &RagNode_ui::node_end))
         ;
  

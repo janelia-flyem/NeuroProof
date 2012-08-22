@@ -243,7 +243,10 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
             //double val = feature_mgr->get_prob(new_edge);
             //ranking.insert(std::make_pair(val, std::make_pair(new_edge->get_node1()->get_node_id(), new_edge->get_node2()->get_node_id())));
         } 
-   
+  
+        Region node1 = new_edge->get_node1()->get_node_id();
+        Region node2 = new_edge->get_node2()->get_node_id();
+
         new_edge->set_preserve(preserve); 
         new_edge->set_false_edge(false_edge); 
     }
