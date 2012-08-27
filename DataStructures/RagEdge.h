@@ -52,6 +52,20 @@ class RagEdge {
     void set_weight(double weight_);
     void set_edge(RagNode<Region>* region1, RagNode<Region>* region2);
 
+    unsigned long long get_size()
+    {
+        return edge_size;
+    }
+
+    void set_size(unsigned long long size)
+    {
+        edge_size = size;
+    }
+
+    void incr_size(unsigned long long incr = 1)
+    {
+        edge_size += incr;
+    }
 
     bool operator<(const RagEdge<Region>& edge2) const;
     bool operator==(const RagEdge<Region>& edge2) const;
@@ -67,12 +81,13 @@ class RagEdge {
     RagNode<Region>* node1;
     RagNode<Region>* node2;
     double weight;
+    unsigned long long edge_size;
     bool preserve;
     bool false_edge;
     bool dirty;
 };
 
-template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), preserve(false), false_edge(false), dirty(false) 
+template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false) 
 {
     RagNodePtrCmp<Region> cmp;
     if (cmp(node1_, node2_)) { 

@@ -12,8 +12,8 @@ class FeatureCompute {
     virtual void * create_cache() = 0;
     virtual void delete_cache(void * cache) = 0;
     virtual void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0) = 0;
-    virtual void  get_feature_array(void* cache, std::vector<double>& feature_array) = 0; 
-    virtual void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array) = 0; 
+    virtual void  get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature) = 0; 
+    virtual void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge) = 0; 
     // will delete second cache
     virtual void merge_cache(void * cache1, void * cache2) = 0; 
 };
@@ -40,7 +40,7 @@ class FeatureHist : public FeatureCompute {
         ++(hist_cache->count);
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
     {
         HistCache * hist_cache = (HistCache*) cache;
         for (unsigned int i = 0; i < thresholds.size(); ++i) {
@@ -49,7 +49,7 @@ class FeatureHist : public FeatureCompute {
     } 
 
     // ?? difference feature -- not implemented because I am not returning histogram for now
-    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge)
     {
         throw ErrMsg("Not implemented");
     } 
@@ -124,13 +124,13 @@ class FeatureMoment : public FeatureCompute {
         } 
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
     {
         MomentCache * moment_cache = (MomentCache*) cache;
         get_data(moment_cache, feature_array);
     } 
 
-    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge)
     {
         std::vector<double> vals1;
         std::vector<double> vals2;
@@ -216,13 +216,13 @@ class FeatureCount : public FeatureCompute {
         count_cache->count += 1;
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
     {
         CountCache * count_cache = (CountCache*) cache;
         feature_array.push_back(count_cache->count);
     } 
 
-    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array)
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge)
     {
         CountCache * count_cache1 = (CountCache*) cache1;
         CountCache * count_cache2 = (CountCache*) cache2;

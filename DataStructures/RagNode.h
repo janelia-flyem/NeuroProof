@@ -24,9 +24,9 @@ class RagNode {
     void set_size(unsigned long long size_);
     void set_node_id(Region region);
 
-    void incr_size()
+    void incr_size(unsigned long long incr = 1)
     {
-        ++size;
+        size += incr;
     }
 
     size_t node_degree() const;

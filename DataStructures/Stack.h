@@ -533,7 +533,6 @@ int Stack::remove_inclusions()
                 continue;
             }
             
-            articulation_node->set_size(total_size);
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region2 = *iter;
                 if (body_to_body.find(region2) != body_to_body.end()) {

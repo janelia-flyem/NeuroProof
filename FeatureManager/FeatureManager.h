@@ -39,6 +39,7 @@ class FeatureMgr {
 
     void add_val(double val, RagNode<Label>* node)
     {
+        node->incr_size();
         unsigned int starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
             add_val(val, 0, starting_pos, node_caches[node]);
@@ -50,6 +51,7 @@ class FeatureMgr {
     
     void add_val(double val, RagEdge<Label>* edge)
     {
+        edge->incr_size();
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
             add_val(val, 0, starting_pos, edge_caches[edge]);
@@ -95,6 +97,7 @@ class FeatureMgr {
 
     void mv_features(RagEdge<Label>* edge2, RagEdge<Label>* edge1)
     {
+        edge2->set_size(edge1->get_size());
         edge_caches[edge1] = edge_caches[edge2];
         edge_caches.erase(edge2);        
     } 
@@ -114,9 +117,9 @@ class FeatureMgr {
     ~FeatureMgr();
 
   private:
-    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results);
+    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
      
-    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results);
+    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {
