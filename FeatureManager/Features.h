@@ -4,6 +4,7 @@
 #include "FeatureCache.h"
 #include "../Utilities/ErrMsg.h"
 #include <vector>
+#include <set>
 
 namespace NeuroProof {
 
@@ -12,7 +13,7 @@ class FeatureCompute {
     virtual void * create_cache() = 0;
     virtual void delete_cache(void * cache) = 0;
     virtual void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0) = 0;
-    virtual void  get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature) = 0; 
+    virtual void  get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num) = 0; 
     virtual void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge) = 0; 
     // will delete second cache
     virtual void merge_cache(void * cache1, void * cache2) = 0; 
@@ -40,7 +41,7 @@ class FeatureHist : public FeatureCompute {
         ++(hist_cache->count);
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num)
     {
         HistCache * hist_cache = (HistCache*) cache;
         for (unsigned int i = 0; i < thresholds.size(); ++i) {
@@ -124,7 +125,7 @@ class FeatureMoment : public FeatureCompute {
         } 
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num)
     {
         MomentCache * moment_cache = (MomentCache*) cache;
         get_data(moment_cache, feature_array);
@@ -197,6 +198,128 @@ class FeatureMoment : public FeatureCompute {
 };
 
 
+class FeatureInclusiveness : public FeatureCompute {
+  public:
+    FeatureInclusiveness() {} 
+    void * create_cache()
+    {
+        return 0;
+    }
+    
+    void delete_cache(void * cache)
+    {
+        return;
+    }
+
+    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
+    {
+        return;
+    }
+    
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num)
+    {
+        RagNode<Label>* node1 = edge->get_node1();
+        RagNode<Label>* node2 = edge->get_node2();
+
+        if (node2->get_size() < node1->get_size()) {
+            RagNode<Label>* temp_node = node2;
+            node2 = node1;
+            node1 = temp_node;
+        }            
+       
+        if (node_num == 1) {
+            get_node_features(node1, feature_array);
+            return;
+        } else if (node_num == 2) {
+            get_node_features(node2, feature_array);
+            return;
+        }
+
+        std::set<unsigned long long> lengths1;
+        std::set<unsigned long long> lengths2;
+        
+        unsigned long long tot1 = get_lengths(node1, lengths1); 
+        unsigned long long tot2 = get_lengths(node2, lengths2); 
+        unsigned long long edge_tot = edge->get_size();
+
+        double f1 = double(edge_tot)/tot1;
+        double f2 = double(edge_tot)/tot2;
+
+        if (f1 < f2) {
+            feature_array.push_back(f1);
+            feature_array.push_back(f2);
+        } else {
+            feature_array.push_back(f2);
+            feature_array.push_back(f1);
+        }
+
+        double fm1 = double(edge_tot)/(*(lengths1.rbegin()));
+        double fm2 = double(edge_tot)/(*(lengths2.rbegin()));
+
+        if (fm1 < fm2) {
+            feature_array.push_back(fm1);
+            feature_array.push_back(fm2);
+        } else {
+            feature_array.push_back(fm2);
+            feature_array.push_back(fm1);
+        }
+    } 
+
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge)
+    {
+        RagNode<Label>* node1 = edge->get_node1();
+        RagNode<Label>* node2 = edge->get_node2();
+
+        if (node2->get_size() < node1->get_size()) {
+            RagNode<Label>* temp_node = node2;
+            node2 = node1;
+            node1 = temp_node;
+        }            
+        std::vector<double> temp_features1;
+        std::vector<double> temp_features2;
+
+        get_node_features(node1, temp_features1);
+        get_node_features(node2, temp_features2);
+    
+        feature_array.push_back(temp_features1[0]-temp_features2[0]);
+        feature_array.push_back(temp_features1[1]-temp_features2[1]);
+    } 
+
+    void merge_cache(void * cache1, void * cache2)
+    {
+        return;
+    }
+
+  private:
+    unsigned long long get_lengths(RagNode<Label>* node, std::set<unsigned long long>& lengths)
+    {
+        unsigned long long count = 0;
+        for (RagNode<Label>::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
+            count += (*iter)->get_size();
+            lengths.insert((*iter)->get_size()); 
+        }
+        count += (node->get_border_size());
+        lengths.insert(node->get_border_size());
+    }
+
+    void get_node_features(RagNode<Label>* node, std::vector<double>& features)
+    {
+        std::set<unsigned long long> lengths;
+        unsigned long long tot = get_lengths(node, lengths);
+        
+        std::set<unsigned long long>::reverse_iterator iter = lengths.rbegin();
+        unsigned long long max_val = *iter;
+        ++iter;
+        unsigned long long second_max_val = *iter;
+
+        features.push_back(double(max_val)/tot);
+        features.push_back(double(second_max_val)/max_val);
+    }
+
+
+};
+
+
 class FeatureCount : public FeatureCompute {
   public:
     FeatureCount() {} 
@@ -216,7 +339,7 @@ class FeatureCount : public FeatureCompute {
         count_cache->count += 1;
     }
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, bool node_feature)
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num)
     {
         CountCache * count_cache = (CountCache*) cache;
         feature_array.push_back(count_cache->count);

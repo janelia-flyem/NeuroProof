@@ -22,11 +22,25 @@ class RagNode {
     Region get_node_id() const;
     unsigned long long get_size() const;
     void set_size(unsigned long long size_);
+    void set_border_size(unsigned long long size_)
+    {
+        border_size = size_;
+    }
     void set_node_id(Region region);
 
     void incr_size(unsigned long long incr = 1)
     {
         size += incr;
+    }
+
+    void incr_border_size(unsigned long long incr = 1)
+    {
+        border_size += incr;
+    }
+
+    unsigned long long get_border_size()
+    {
+        return border_size;
     }
 
     size_t node_degree() const;
@@ -172,13 +186,19 @@ class RagNode {
     {
         return node_iterator(this, edges.end());
     }
-  
+ 
+    bool is_border()
+    {
+        return (border_size != 0);
+    }
+
   private:
 
-    RagNode(Region node_int_) : node_int(node_int_), size(0) {}
+    RagNode(Region node_int_) : node_int(node_int_), size(0), border_size(0) {}
     unsigned long long size;
-    Region node_int;
+    unsigned long long border_size;
     RagEdgeList edges;
+    Region node_int;
     
 
 };

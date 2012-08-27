@@ -208,7 +208,7 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t; 
 
 template <typename Region>
-void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> >node_properties, MergePriority* priority, FeatureMgr* feature_mgr)
+void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, MergePriority* priority, FeatureMgr* feature_mgr)
 {
     RagNode<Region>* node_remove = edge->get_other_node(node_keep);
     feature_mgr->merge_features(node_keep, node_remove);
@@ -253,17 +253,6 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
 
     node_keep->set_size(node_keep->get_size() + node_remove->get_size());
     
-    bool border = false;
-    try { 
-        border = property_list_retrieve_template_property<Region, bool>(node_properties, node_remove);
-    } catch (...) {
-        //
-    }
-
-    if (border) {
-        property_list_add_template_property(node_properties, node_keep, true);
-    }
-
     rag.remove_rag_node(node_remove);
 
     for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {

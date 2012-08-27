@@ -39,7 +39,6 @@ class FeatureMgr {
 
     void add_val(double val, RagNode<Label>* node)
     {
-        node->incr_size();
         unsigned int starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
             add_val(val, 0, starting_pos, node_caches[node]);
@@ -51,7 +50,6 @@ class FeatureMgr {
     
     void add_val(double val, RagEdge<Label>* edge)
     {
-        edge->incr_size();
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
             add_val(val, 0, starting_pos, edge_caches[edge]);
@@ -63,6 +61,7 @@ class FeatureMgr {
 
     void add_val(std::vector<double>& vals, RagNode<Label>* node)
     {
+        node->incr_size();
         assert(vals.size() == num_channels);
         unsigned starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
@@ -80,6 +79,7 @@ class FeatureMgr {
 
     void add_val(std::vector<double>& vals, RagEdge<Label>* edge)
     { 
+        edge->incr_size();
         assert(vals.size() == num_channels);
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
@@ -111,6 +111,8 @@ class FeatureMgr {
     void add_hist_feature(unsigned int num_bins, boost::python::list percentiles, bool use_diff);
 #endif
     void add_moment_feature(unsigned int num_moments, bool use_diff);
+    
+    void add_inclusiveness_feature(bool use_diff);
 
     double get_prob(RagEdge<Label>* edge);
 
@@ -119,7 +121,7 @@ class FeatureMgr {
   private:
     void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
      
-    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge);
+    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_num);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {

@@ -37,15 +37,7 @@ class Stack {
 
     bool is_orphan(RagNode<Label>* node)
     {
-        node_properties_holder = rag->retrieve_property_list("border_node");
-        bool border = false;
-        try {
-            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, node);
-        } catch (ErrMsg& msg) {
-            //
-        }
-
-        return !border;
+        return !(node->is_border());
     }
         
     Rag<Label>* get_rag()
@@ -326,8 +318,6 @@ void Stack::build_rag()
                     if (!node) {
                         node = rag->insert_rag_node(spot0);
                     }
-                    node->incr_size();
-
                     feature_mgr->add_val(predictions, node);
                 }
 
@@ -353,16 +343,13 @@ void Stack::build_rag()
         }
     } 
 
-    boost::shared_ptr<PropertyList<Label> > node_list = NodePropertyList<Label>::create_node_list();
-    rag->bind_property_list("border_node", node_list);
-
     for (unsigned int z = 1; z < (depth-1); z+=(depth-3)) {
         int z_spot = z * plane_size;
         for (unsigned int y = 1; y < (height-1); ++y) {
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); ++x) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
-                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
+                rag->find_rag_node(watershed[curr_spot])->incr_border_size();
             }
         }
     }
@@ -372,7 +359,7 @@ void Stack::build_rag()
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); ++x) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
-                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
+                rag->find_rag_node(watershed[curr_spot])->incr_border_size();
             }
         }
     }
@@ -382,7 +369,7 @@ void Stack::build_rag()
             int y_spot = y * width;
             for (unsigned int x = 1; x < (width-1); x+=(width-3)) {
                 unsigned long long curr_spot = x + y_spot + z_spot;
-                property_list_add_template_property(node_list, rag->find_rag_node(watershed[curr_spot]), true);
+                rag->find_rag_node(watershed[curr_spot])->incr_border_size();
             }
         }
     }   
@@ -405,8 +392,6 @@ void Stack::agglomerate_rag(double threshold)
     MergePriority* priority = new ProbPriority(feature_mgr, rag);
     priority->initialize_priority(threshold);
 
-    boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
-
     while (!(priority->empty())) {
 
         RagEdge<Label>* rag_edge = priority->get_top_edge();
@@ -419,7 +404,7 @@ void Stack::agglomerate_rag(double threshold)
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
         Label node1 = rag_node1->get_node_id(); 
         Label node2 = rag_node2->get_node_id(); 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, node_properties, priority, feature_mgr);
+        rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
@@ -434,7 +419,6 @@ int Stack::remove_inclusions()
 {
     int num_removed = 0;
 
-    node_properties_holder = rag->retrieve_property_list("border_node");
     visited.clear();
     node_depth.clear();
     low_count.clear();
@@ -444,12 +428,7 @@ int Stack::remove_inclusions()
 
     RagNode<Label>* rag_node = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-        bool border = false;
-        try {
-            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, *iter);
-        } catch (ErrMsg& msg) {
-            //
-        }
+        bool border = (*iter)->is_border();
 
         if (border) {
             rag_node = *iter;
@@ -649,12 +628,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
             continue;
         }
 
-        bool border = false;
-        try {
-            border = property_list_retrieve_template_property<Label, bool>(node_properties_holder, rag_node);
-        } catch (ErrMsg& msg) {
-            //
-        }
+        bool border = rag_node->is_border();
         if (previous && border) {
             low_count[rag_node->get_node_id()] = 0;
             stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
