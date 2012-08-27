@@ -300,6 +300,7 @@ class FeatureInclusiveness : public FeatureCompute {
         }
         count += (node->get_border_size());
         lengths.insert(node->get_border_size());
+        return count;
     }
 
     void get_node_features(RagNode<Label>* node, std::vector<double>& features)

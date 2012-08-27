@@ -157,10 +157,11 @@ void FeatureMgr::add_inclusiveness_feature(bool use_diff)
     vector<bool> feature_modes(3, true);
     feature_modes[2] = use_diff;
  
-    FeatureCompute * feature_ptr = new FeatureInclusiveness;
-    for (unsigned int i = 0; i < num_channels; ++i) {
-        channels_features_equal[i].push_back(feature_ptr);
-        add_feature(i, feature_ptr, feature_modes);
+    FeatureInclusiveness * feature_ptr0 = new FeatureInclusiveness;
+    add_feature(0, feature_ptr0, feature_modes);
+    channels_features_equal[0].push_back(feature_ptr0);
+    for (unsigned int i = 1; i < num_channels; ++i) {
+        channels_features_equal[i].push_back(0);
     }
 }
 
@@ -216,7 +217,11 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     compute_features(0, node2_caches, feature_results, edge, 2);
     compute_features(1, edget_caches, feature_results, edge, 0);
     compute_diff_features(node1_caches, node2_caches, feature_results, edge);
-
+/*    std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
+    for (int i = 0; i < feature_results.size(); ++i) {
+        std::cout << feature_results[i] << " ";
+    }
+    std::cout << std::endl;*/
     double prob = 0.0;
     if (has_pyfunc) {
 #ifdef SETPYTHON
