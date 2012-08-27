@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 #include <iostream>
-
+#include "MergePriorityFunction.h"
 
 namespace NeuroProof {
 
@@ -208,7 +208,7 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t; 
 
 template <typename Region>
-void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> >node_properties, EdgeRank_t& ranking, FeatureMgr* feature_mgr)
+void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, boost::shared_ptr<PropertyList<Region> >node_properties, MergePriority* priority, FeatureMgr* feature_mgr)
 {
     RagNode<Region>* node_remove = edge->get_other_node(node_keep);
     feature_mgr->merge_features(node_keep, node_remove);
@@ -267,12 +267,7 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
     rag.remove_rag_node(node_remove);
 
     for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {
-        if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
-            assert((*iter)->is_preserve());
-            continue;
-        }
-        double val = feature_mgr->get_prob(*iter);
-        ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
+        priority->add_dirty_edge(*iter);
     }
 }
 

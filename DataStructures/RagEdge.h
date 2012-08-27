@@ -24,6 +24,16 @@ class RagEdge {
         preserve = preserve_;
     }
 
+    void set_dirty(bool dirty_)
+    {
+        dirty = dirty_;
+    }
+
+    bool is_dirty() const
+    {
+        return dirty;
+    }
+
     bool is_preserve() const
     {
         return preserve;
@@ -59,9 +69,10 @@ class RagEdge {
     double weight;
     bool preserve;
     bool false_edge;
+    bool dirty;
 };
 
-template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), preserve(false), false_edge(false) 
+template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), preserve(false), false_edge(false), dirty(false) 
 {
     RagNodePtrCmp<Region> cmp;
     if (cmp(node1_, node2_)) { 

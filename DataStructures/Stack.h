@@ -8,6 +8,7 @@
 #include "Glb.h"
 #include <boost/python.hpp>
 #include <boost/tuple/tuple.hpp>
+#include "../Algorithms/MergePriorityFunction.h"
 
 #ifndef STACK_H
 #define STACK_H
@@ -401,59 +402,24 @@ void Stack::build_rag()
 
 void Stack::agglomerate_rag(double threshold)
 {
-    EdgeRank_t ranking;
-    const double Epsilon = 0.00001;
+    MergePriority* priority = new ProbPriority(feature_mgr, rag);
+    priority->initialize_priority(threshold);
 
     boost::shared_ptr<PropertyList<Label> > node_properties = rag->retrieve_property_list("border_node");
 
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        if ((*iter)->is_preserve() || (*iter)->is_false_edge()) {
-            assert((*iter)->is_preserve());
-            continue;
-        }
-        
-        double val = feature_mgr->get_prob(*iter);
+    while (!(priority->empty())) {
 
-        if (val <= threshold) {
-            ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
-        }
-    }    
-
-    while (!ranking.empty()) {
-        EdgeRank_t::iterator first_entry = ranking.begin();
-        double curr_threshold = (*first_entry).first;
-        Label node1 = (*first_entry).second.first;
-        Label node2 = (*first_entry).second.second;
-        ranking.erase(first_entry);
-
-        //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;
-
-        if (curr_threshold > threshold) {
-            break;
-        }
-
-        RagNode<Label>* rag_node1 = rag->find_rag_node(node1); 
-        RagNode<Label>* rag_node2 = rag->find_rag_node(node2); 
-
-        if (!(rag_node1 && rag_node2)) {
-            continue;
-        }
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
+        RagEdge<Label>* rag_edge = priority->get_top_edge();
 
         if (!rag_edge) {
             continue;
         }
 
-        if (rag_edge->is_preserve() || rag_edge->is_false_edge()) {
-            continue;
-        }
-
-        double val = feature_mgr->get_prob(rag_edge);
-        if (val > (curr_threshold + Epsilon)) {
-            continue;
-        } 
-
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, node_properties, ranking, feature_mgr);
+        RagNode<Label>* rag_node1 = rag_edge->get_node1();
+        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        Label node1 = rag_node1->get_node_id(); 
+        Label node2 = rag_node2->get_node_id(); 
+        rag_merge_edge_median(*rag, rag_edge, rag_node1, node_properties, priority, feature_mgr);
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
