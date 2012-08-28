@@ -295,6 +295,9 @@ class FeatureInclusiveness : public FeatureCompute {
     {
         unsigned long long count = 0;
         for (RagNode<Label>::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
+            if ((*iter)->is_false_edge()) {
+                continue;
+            }
             count += (*iter)->get_size();
             lengths.insert((*iter)->get_size()); 
         }
