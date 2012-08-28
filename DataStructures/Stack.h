@@ -294,6 +294,7 @@ void Stack::build_rag()
     
     unsigned int plane_size = width * height;
     std::vector<double> predictions(prediction_array.size(), 0.0);
+    std::tr1::unordered_set<Label> labels;
 
     for (unsigned int z = 1; z < (depth-1); ++z) {
         int z_spot = z * plane_size;
@@ -312,37 +313,49 @@ void Stack::build_rag()
                 for (unsigned int i = 0; i < prediction_array.size(); ++i) {
                     predictions[i] = prediction_array[i][curr_spot];
                 }
-
+                
+                RagNode<Label> * node = rag->find_rag_node(spot0);
+                if (!node) {
+                    node = rag->insert_rag_node(spot0);
+                }
                 if (feature_mgr && !median_mode) {
-                    RagNode<Label> * node = rag->find_rag_node(spot0);
-                    if (!node) {
-                        node = rag->insert_rag_node(spot0);
-                    }
                     feature_mgr->add_val(predictions, node);
                 }
 
                 if (spot1 && (spot0 != spot1)) {
                     rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
+                    labels.insert(spot1);
                 }
-                if (spot2 && (spot0 != spot2)) {
+                if (spot2 && (spot0 != spot2) && (labels.find(spot2) == labels.end())) {
                     rag_add_edge(rag, spot0, spot2, predictions, feature_mgr);
+                    labels.insert(spot2);
                 }
-                if (spot3 && (spot0 != spot3)) {
+                if (spot3 && (spot0 != spot3) && (labels.find(spot3) == labels.end())) {
                     rag_add_edge(rag, spot0, spot3, predictions, feature_mgr);
+                    labels.insert(spot3);
                 }
-                if (spot4 && (spot0 != spot4)) {
+                if (spot4 && (spot0 != spot4) && (labels.find(spot4) == labels.end())) {
                     rag_add_edge(rag, spot0, spot4, predictions, feature_mgr);
+                    labels.insert(spot4);
                 }
-                if (spot5 && (spot0 != spot5)) {
+                if (spot5 && (spot0 != spot5) && (labels.find(spot5) == labels.end())) {
                     rag_add_edge(rag, spot0, spot5, predictions, feature_mgr);
+                    labels.insert(spot5);
                 }
-                if (spot6 && (spot0 != spot6)) {
+                if (spot6 && (spot0 != spot6) && (labels.find(spot6) == labels.end())) {
                     rag_add_edge(rag, spot0, spot6, predictions, feature_mgr);
                 }
+
+                if (!spot1 || !spot2 || !spot3 || !spot4 || !spot5 || !spot6) {
+                    node->incr_border_size();
+                }
+                labels.clear();
+
             }
         }
     } 
 
+/*
     for (unsigned int z = 1; z < (depth-1); z+=(depth-3)) {
         int z_spot = z * plane_size;
         for (unsigned int y = 1; y < (height-1); ++y) {
@@ -373,6 +386,7 @@ void Stack::build_rag()
             }
         }
     }   
+*/
 
     watershed_to_body[0] = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {

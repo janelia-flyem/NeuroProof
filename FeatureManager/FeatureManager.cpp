@@ -217,11 +217,10 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     compute_features(0, node2_caches, feature_results, edge, 2);
     compute_features(1, edget_caches, feature_results, edge, 0);
     compute_diff_features(node1_caches, node2_caches, feature_results, edge);
-/*    std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
-    for (int i = 0; i < feature_results.size(); ++i) {
-        std::cout << feature_results[i] << " ";
-    }
-    std::cout << std::endl;*/
+    //std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
+    //for (int i = 0; i < feature_results.size(); ++i) {
+    //    std::cout << feature_results[i] << " ";
+    //}
     double prob = 0.0;
     if (has_pyfunc) {
 #ifdef SETPYTHON
@@ -239,6 +238,7 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     } else {
         prob = feature_results[0];
     }
+    //std::cout << prob << std::endl;
 
     return prob;
 }

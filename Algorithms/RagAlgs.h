@@ -257,6 +257,11 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
 
     for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {
         priority->add_dirty_edge(*iter);
+    
+        RagNode<Region>* node = (*iter)->get_other_node(node_keep);
+        for(typename RagNode<Region>::edge_iterator iter2 = node->edge_begin(); iter2 != node->edge_end(); ++iter2) {
+            priority->add_dirty_edge(*iter2);
+        } 
     }
 }
 
