@@ -97,7 +97,7 @@ class FeatureMgr {
 
     void mv_features(RagEdge<Label>* edge2, RagEdge<Label>* edge1)
     {
-        edge2->set_size(edge1->get_size());
+        edge1->set_size(edge2->get_size());
         edge_caches[edge1] = edge_caches[edge2];
         edge_caches.erase(edge2);        
     } 

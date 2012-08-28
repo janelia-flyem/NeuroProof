@@ -129,7 +129,9 @@ class ProbPriority : public MergePriority {
 
         double val = rag_edge->get_weight();
 
+        bool dirty = false;
         if (rag_edge->is_dirty()) {
+            dirty = true;
             val = feature_mgr->get_prob(rag_edge);
             rag_edge->set_weight(val);
             rag_edge->set_dirty(false);
@@ -137,6 +139,9 @@ class ProbPriority : public MergePriority {
         }
 
         if (val > (curr_threshold + Epsilon)) {
+            if (dirty && (val <= threshold)) {
+                ranking.insert(std::make_pair(val, std::make_pair(node1, node2)));
+            }
             return 0;
         }
         return rag_edge; 
