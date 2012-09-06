@@ -116,6 +116,7 @@ void set_synapse_mode(double ignore_size)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
+    DebugMode = false;
 
     priority_scheduler->set_synapse_mode(ignore_size);
 }
@@ -125,6 +126,7 @@ void set_body_mode(double ignore_size, int depth)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
+    DebugMode = false;
 
     priority_scheduler->set_body_mode(ignore_size, depth);
 }
@@ -134,6 +136,7 @@ void set_orphan_mode(double ignore_size, double threshold, bool synapse_orphan)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
+    DebugMode = false;
 
     priority_scheduler->set_orphan_mode(ignore_size, threshold, synapse_orphan);
 }
@@ -143,6 +146,7 @@ void set_edge_mode(double lower, double upper, double start)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
+    DebugMode = false;
 
     priority_scheduler->set_edge_mode(lower, upper, start);
 }
