@@ -129,7 +129,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         reinitialize_scheduler();
         orphan_mode = true;
         
-        ignore_size_orig = BIGBODY10NM;    
+        ignore_size_orig = ignore_size_;    
 
         if (body_list) {
             delete body_list;

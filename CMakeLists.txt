@@ -18,10 +18,13 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 
 ADD_EXECUTABLE(NeuroProof_test NeuroProof_test.cpp)
+ADD_EXECUTABLE(generate_stats generate_stats.cpp)
 ADD_EXECUTABLE(calculate_GPR calculate_GPR.cpp)
 TARGET_LINK_LIBRARIES(NeuroProof_test ImportsExports jsonlib boost_thread-mt)
+TARGET_LINK_LIBRARIES(generate_stats ImportsExports jsonlib boost_thread-mt)
 TARGET_LINK_LIBRARIES(calculate_GPR ImportsExports jsonlib boost_thread-mt)
 get_target_property (EXE_LOC NeuroProof_test LOCATION)
+get_target_property (EXE_LOC1 generate_stats LOCATION)
 get_target_property (EXE_LOC2 calculate_GPR LOCATION)
 
 ADD_LIBRARY(NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
@@ -39,6 +42,15 @@ add_custom_command (
     ARGS -p ${CMAKE_SOURCE_DIR}/bin
     COMMAND ${CMAKE_COMMAND}
     ARGS -E copy ${EXE_LOC} ${CMAKE_SOURCE_DIR}/bin
+    )
+
+add_custom_command (
+    TARGET generate_stats
+    POST_BUILD
+    COMMAND mkdir
+    ARGS -p ${CMAKE_SOURCE_DIR}/bin
+    COMMAND ${CMAKE_COMMAND}
+    ARGS -E copy ${EXE_LOC1} ${CMAKE_SOURCE_DIR}/bin
     )
 
 add_custom_command (
