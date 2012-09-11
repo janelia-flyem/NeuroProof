@@ -45,6 +45,10 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
         rag = new Rag<Label>;
         Json::Value edge_list = json_reader_vals["edge_list"];
 
+        if (edge_list.size() == 0) {
+            return 0;
+        }
+
         for (int i = 0; i < edge_list.size(); ++i) {
             Label node1 = edge_list[i]["node1"].asUInt();
             Label node2 = edge_list[i]["node2"].asUInt();
