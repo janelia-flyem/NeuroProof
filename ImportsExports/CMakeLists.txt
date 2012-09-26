@@ -13,3 +13,4 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 set (SOURCES ImportExportRagPriority.cpp)
 
 add_library (ImportsExports SHARED ${SOURCES})
+add_dependencies (ImportsExports jsoncpp)
