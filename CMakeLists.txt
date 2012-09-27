@@ -6,8 +6,11 @@ include (ExternalProject)
 FIND_PACKAGE(PythonLibs)
 include_directories (${PYTHON_INCLUDE_PATH})
 
-# Setup FlyEM build caches where we can download code hopefully once
 set (FLYEM_GIT_REPOS "/groups/flyem/proj/code/git-repos")
+
+# Setup FlyEM build caches where we can download code hopefully once
+set (em_INSTALL_DIR None CACHE STRING "Select prefix path for CMake installs/downloads")
+if (em_INSTALL_DIR STREQUAL "None")
 if ("$ENV{USERNAME}" STREQUAL "")
     if ("$ENV{USER}" STREQUAL "")
         if ("$ENV{LOGNAME}" STREQUAL "")
@@ -23,9 +26,10 @@ else ()
 endif ()
 
 if (EXISTS /groups/flyem/home/${USERNAME})
-    set (em_INSTALL_DIR  "/groups/flyem/home/${USERNAME}/builds" CACHE TYPE STRING)
+    set (em_INSTALL_DIR  "/groups/flyem/home/${USERNAME}/builds")
 else ()
-    set (em_INSTALL_DIR  "/home/${USERNAME}/builds" CACHE TYPE STRING)
+    set (em_INSTALL_DIR  "${CMAKE_CURRENT_BINARY_DIR}/builds")
+endif ()
 endif ()
 message("Installation directory for ${PROJECT_NAME} include files and libraries: ${em_INSTALL_DIR}")
 
