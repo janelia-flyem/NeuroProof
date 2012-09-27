@@ -100,6 +100,7 @@ ExternalProject_Add(${jsoncpp_NAME}
 )
 add_custom_command (TARGET ${jsoncpp_NAME}
                     POST_BUILD
+                    COMMAND mkdir -p ${em_ARCH_INSTALL_DIR}/lib
                     COMMAND cp ${jsoncpp_SRC_DIR}/libs/linux-gcc-*/libjson_linux-gcc-*_libmt.so ${em_ARCH_INSTALL_DIR}/lib/libjsoncpp.so
                     COMMENT "Copied jsoncpp library to ${em_ARCH_INSTALL_DIR}/lib")
 set (json_LIB ${em_ARCH_INSTALL_DIR}/lib/libjsoncpp.so)
