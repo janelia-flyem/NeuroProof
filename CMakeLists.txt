@@ -62,9 +62,6 @@ set (em_LIB_DIRS "-L${em_ARCH_INSTALL_DIR}/lib -L/usr/local/lib")
 message ("Shared libraries will be placed here: ${em_ARCH_INSTALL_DIR}/lib")
 ## -- finish with FlyEM build cache spec
 
-add_subdirectory (ImportsExports)
-add_subdirectory (FeatureManager)
-
 IF(NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release)
 ENDIF(NOT CMAKE_BUILD_TYPE)
@@ -85,8 +82,8 @@ set (${TARGET_ABBREV}_SRC_DIR "${em_ARCH_INSTALL_DIR}/src/${TARGET_NAME}")
 endmacro (set_src_dir)
 
 set_src_dir(jsoncpp ${jsoncpp_NAME})
-#include_directories (${jsoncpp_SRC_DIR}/include/json)
-message ("Including JSON include files from here: ${jsoncpp_SRC_DIR}/include/json")
+include_directories (${jsoncpp_SRC_DIR}/include)
+message ("Including JSON include files from here: ${jsoncpp_SRC_DIR}/include")
 
 ExternalProject_Add(${jsoncpp_NAME}
     PREFIX ${em_ARCH_INSTALL_DIR}
@@ -104,6 +101,9 @@ add_custom_command (TARGET ${jsoncpp_NAME}
                     COMMAND cp ${jsoncpp_SRC_DIR}/libs/linux-gcc-*/libjson_linux-gcc-*_libmt.so ${em_ARCH_INSTALL_DIR}/lib/libjsoncpp.so
                     COMMENT "Copied jsoncpp library to ${em_ARCH_INSTALL_DIR}/lib")
 set (json_LIB ${em_ARCH_INSTALL_DIR}/lib/libjsoncpp.so)
+
+add_subdirectory (ImportsExports)
+add_subdirectory (FeatureManager)
 
 #add_library (jsoncpp STATIC IMPORTED)
 #add_dependencies (jsoncpp ${jsoncpp_NAME})
