@@ -17,7 +17,7 @@ set (CMAKE_DEBUG_POSTFIX "-g")
 ################################################################################
 # Uncomment if you want to use cached downloads, useful for multiple test runs.
 
-set (TEST_DOWNLOAD_CACHE_DIR /tmp)
+#set (TEST_DOWNLOAD_CACHE_DIR /tmp)
 
 
 ################################################################################
@@ -58,24 +58,25 @@ else ()
     set (CMAKE_MODULE_PATH ${FLYEM_BUILD_REPO_DIR})
     message("Using cmake modules from ${FLYEM_BUILD_REPO_DIR}")
 
-    # Download and compile jsoncpp dependency
+    # Download and compile dependencies
     include (python)
     include (jsoncpp)
+    include (boost)
 
     # Compile NeuroProof components
 
     add_subdirectory (ImportsExports)
     add_subdirectory (FeatureManager)
 
-    include_directories (${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
+    include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 
     # Handle all of NeuroProof sources and dependent code
     add_executable (NeuroProof_test NeuroProof_test.cpp)
     add_executable (generate_stats generate_stats.cpp)
     add_executable (calculate_GPR calculate_GPR.cpp)
-    target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} boost_thread-mt)
-    target_link_libraries (generate_stats ImportsExports ${json_LIB} boost_thread-mt)
-    target_link_libraries (calculate_GPR ImportsExports ${json_LIB} boost_thread-mt)
+    target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} boost_thread-mt boost_system)
+    target_link_libraries (generate_stats ImportsExports ${json_LIB} boost_thread-mt boost_system)
+    target_link_libraries (calculate_GPR ImportsExports ${json_LIB} boost_thread-mt boost_system)
     add_dependencies (NeuroProof_test ${jsoncpp_NAME})
     add_dependencies (generate_stats ${jsoncpp_NAME})
     add_dependencies (calculate_GPR ${jsoncpp_NAME})
