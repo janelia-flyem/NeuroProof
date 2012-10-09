@@ -1,12 +1,19 @@
-BUILD instructions:
+------------------
+BUILD instructions
+------------------
 
-1. make a link to libjsonlib.so in a default library directory
-2. make a link to the 'json' directory in the default include directory
-3. go in NeuroProof directory and mkdir 'build'
-4. cd build; cmake ..; make
-5. make link to build/libNeuroProofPriority.so to a default python directory to use the Python libraries
+1. go in NeuroProof directory and mkdir 'build'
+2. cd build; cmake -DFLYEM_BUILD_DIR=/path/to/os-specific-build-dir ..; make
+3. if you had not previously installed flyem-build, you'll need to rerun #2 above
+4. set your environment variables to use python in /path/to/os-specific-build-dir/bin and possibly PYTHONPATH
 
-GPR Example:
+The build directory specified above is where all the downloads, includes, and binaries are placed for FlyEM
+software.  It should be specific to your OS, architecture, and compiler versions.  It should be used when
+independently building software where "./configure --prefix=/path/to/os-specific-build-dir"
+
+-----------
+GPR Example
+-----------
 
 Call sample program:
 
