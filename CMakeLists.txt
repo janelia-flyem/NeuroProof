@@ -15,12 +15,6 @@ set (CMAKE_DEBUG_POSTFIX "-g")
 
 
 ################################################################################
-# Uncomment if you want to use cached downloads, useful for multiple test runs.
-
-#set (TEST_DOWNLOAD_CACHE_DIR /tmp)
-
-
-################################################################################
 # Check if FLYEM_BUILD_DIR has already been assigned.  If not, create a default.
 set (FLYEM_BUILD_DIR "None" CACHE TYPE STRING)
 
@@ -35,7 +29,7 @@ message ("FlyEM downloads and builds will be placed here: ${FLYEM_BUILD_DIR}")
 ###############################################################################
 # Download and install flyem-build, if it isn't already in FLYEM_BUILD_DIR.
 set (FLYEM_BUILD_REPO_DIR ${FLYEM_BUILD_DIR}/src/flyem-build)
-if (NOT EXISTS ${FLYEM_BUILD_REPO_DIR})
+if (NOT EXISTS ${FLYEM_BUILD_REPO_DIR}/python.cmake)
     message ("Installing flyem-build repo...")
     ExternalProject_Add(flyem-build
         PREFIX ${FLYEM_BUILD_DIR}
