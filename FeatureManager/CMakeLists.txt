@@ -12,4 +12,7 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES FeatureManager.cpp)
 
+include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
+
 add_library (FeatureManager SHARED ${SOURCES})
+add_dependencies (FeatureManager  ${boost_NAME})

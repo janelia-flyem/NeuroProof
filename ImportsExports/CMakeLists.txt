@@ -7,8 +7,8 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 set (SOURCES ImportExportRagPriority.cpp)
 
-include_directories (${FLYEM_BUILD_DIR}/include)
+include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 include (jsoncpp)
 
 add_library (ImportsExports SHARED ${SOURCES})
-add_dependencies (ImportsExports ${jsoncpp_NAME})
+add_dependencies (ImportsExports ${jsoncpp_NAME} ${boost_NAME})
