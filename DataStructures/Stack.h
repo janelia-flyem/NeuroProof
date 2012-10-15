@@ -318,6 +318,11 @@ void Stack::build_rag()
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
                 }
+    
+                if (!spot0) {
+                    continue;
+                }
+
                 if (feature_mgr && !median_mode) {
                     feature_mgr->add_val(predictions, node);
                 }
