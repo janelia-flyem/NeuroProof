@@ -33,7 +33,7 @@ if (NOT EXISTS ${FLYEM_BUILD_REPO_DIR}/python.cmake)
     message ("Installing flyem-build repo...")
     ExternalProject_Add(flyem-build
         PREFIX ${FLYEM_BUILD_DIR}
-        GIT_REPOSITORY https://github.com/janelia-flyem/flyem-build.git
+        GIT_REPOSITORY http://github.com/janelia-flyem/flyem-build.git
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         CONFIGURE_COMMAND "" 
