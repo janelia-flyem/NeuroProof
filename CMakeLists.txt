@@ -15,25 +15,25 @@ set (CMAKE_DEBUG_POSTFIX "-g")
 
 
 ################################################################################
-# Check if FLYEM_BUILD_DIR has already been assigned.  If not, create a default.
-set (FLYEM_BUILD_DIR "None" CACHE TYPE STRING)
+# Check if BUILDEM_DIR has already been assigned.  If not, create a default.
+set (BUILDEM_DIR "None" CACHE TYPE STRING)
 
-if (${FLYEM_BUILD_DIR} STREQUAL "None")
-    message (FATAL_ERROR "ERROR: FlyEM build directory (for all downloads & builds) should be specified via -DFLYEM_BUILD_DIR=<path> on cmake command line.")
+if (${BUILDEM_DIR} STREQUAL "None")
+    message (FATAL_ERROR "ERROR: Buildem directory (for all downloads & builds) should be specified via -DBUILDEM_DIR=<path> on cmake command line.")
 endif ()
 
-message ("FlyEM downloads and builds will be placed here: ${FLYEM_BUILD_DIR}")
+message ("FlyEM downloads and builds will be placed here: ${BUILDEM_DIR}")
 
 ###############################################################################
 
 ###############################################################################
-# Download and install flyem-build, if it isn't already in FLYEM_BUILD_DIR.
-set (FLYEM_BUILD_REPO_DIR ${FLYEM_BUILD_DIR}/src/flyem-build)
-if (NOT EXISTS ${FLYEM_BUILD_REPO_DIR}/python.cmake)
-    message ("Installing flyem-build repo...")
-    ExternalProject_Add(flyem-build
-        PREFIX ${FLYEM_BUILD_DIR}
-        GIT_REPOSITORY http://github.com/janelia-flyem/flyem-build.git
+# Download and install buildem, if it isn't already in BUILDEM_DIR.
+set (BUILDEM_REPO_DIR ${BUILDEM_DIR}/src/buildem)
+if (NOT EXISTS ${BUILDEM_REPO_DIR}/python.cmake)
+    message ("Installing buildem repo...")
+    ExternalProject_Add(buildem
+        PREFIX ${BUILDEM_DIR}
+        GIT_REPOSITORY http://github.com/janelia-flyem/buildem.git
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         CONFIGURE_COMMAND "" 
@@ -43,14 +43,14 @@ if (NOT EXISTS ${FLYEM_BUILD_REPO_DIR}/python.cmake)
     )
     message ("\n**********************************************************\n")
     message ("\nAfter running make, you must re-run the cmake command once")
-    message ("flyem-build has been downloaded!\n")
+    message ("buildem has been downloaded!\n")
     message ("\n***********************************************************\n")
 else ()
     ###############################################################################
 
-    # Use modules from the downloaded flyem-build
-    set (CMAKE_MODULE_PATH ${FLYEM_BUILD_REPO_DIR})
-    message("Using cmake modules from ${FLYEM_BUILD_REPO_DIR}")
+    # Use modules from the downloaded buildem
+    set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
+    message("Using cmake modules from ${BUILDEM_REPO_DIR}")
 
     # Download and compile dependencies
     include (python)
@@ -62,7 +62,7 @@ else ()
     add_subdirectory (ImportsExports)
     add_subdirectory (FeatureManager)
 
-    include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
+    include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
 
     # Handle all of NeuroProof sources and dependent code
     add_executable (NeuroProof_test NeuroProof_test.cpp)
@@ -94,33 +94,33 @@ else ()
     add_custom_command (
         TARGET NeuroProofPriority
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FLYEM_BUILD_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${FLYEM_BUILD_DIR}/lib)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${BUILDEM_DIR}/lib)
 
     add_custom_command (
         TARGET NeuroProofRag
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FLYEM_BUILD_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${FLYEM_BUILD_DIR}/lib)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${BUILDEM_DIR}/lib)
 
     add_custom_command (
         TARGET NeuroProof_test
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FLYEM_BUILD_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProof_test_exe} ${FLYEM_BUILD_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProof_test_exe} ${BUILDEM_DIR}/bin)
 
     add_custom_command (
         TARGET generate_stats
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FLYEM_BUILD_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${generate_stats_exe} ${FLYEM_BUILD_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${generate_stats_exe} ${BUILDEM_DIR}/bin)
 
     add_custom_command (
         TARGET calculate_GPR 
         POST_BUILD
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FLYEM_BUILD_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${calculate_GPR_exe} ${FLYEM_BUILD_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${calculate_GPR_exe} ${BUILDEM_DIR}/bin)
 
     ###############################################################################
 endif()
