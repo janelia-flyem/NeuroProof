@@ -313,16 +313,16 @@ void Stack::build_rag()
                 for (unsigned int i = 0; i < prediction_array.size(); ++i) {
                     predictions[i] = prediction_array[i][curr_spot];
                 }
-                
+ 
+                if (!spot0) {
+                    continue;
+                }
+
                 RagNode<Label> * node = rag->find_rag_node(spot0);
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
                 }
     
-                if (!spot0) {
-                    continue;
-                }
-
                 if (feature_mgr && !median_mode) {
                     feature_mgr->add_val(predictions, node);
                 }
