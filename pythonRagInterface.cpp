@@ -146,12 +146,15 @@ void write_volume_to_buffer(Stack* stack, object np_buffer)
     delete temp_label_volume;
 }
 
-// ?! how to add features to RAG
-Stack* build_stack(object watershed)
+Stack* init_stack()
 {
-    // there will be 0 padding around image
-    unsigned width, height, depth; 
+    Stack * stack = new Stack; 
+    stack->set_feature_mgr(new FeatureMgr());
+    return stack;
+}
 
+unsigned int* init_watershed(object watershed, unsigned int& width, unsigned int& height, unsigned int& depth)
+{
     boost::python::tuple watershed_shape(watershed.attr("shape"));
 
     width = boost::python::extract<unsigned>(watershed_shape[2]);
@@ -173,14 +176,32 @@ Stack* build_stack(object watershed)
             }
         }
     }
-    
-    Stack * stack = new Stack(watershed_array, depth, height, width, 1); 
-    stack->set_feature_mgr(new FeatureMgr());
- 
-    return stack;
+    return watershed_array; 
+
 }
 
-void add_prediction_channel(Stack* stack, object prediction)
+
+// ?! how to add features to RAG
+void reinit_stack(Stack* stack, object watershed)
+{
+    // there will be 0 padding around image
+    unsigned int width, height, depth; 
+    unsigned int * watershed_array = init_watershed(watershed, width, height, depth);
+   
+    stack->reinit_stack(watershed_array, depth, height, width, 1);
+}
+
+void reinit_stack2(Stack* stack, object watershed)
+{
+    // there will be 0 padding around image
+    unsigned int width, height, depth; 
+    unsigned int * watershed_array = init_watershed(watershed, width, height, depth);
+   
+    stack->reinit_stack2(watershed_array, depth, height, width, 1);
+}
+
+
+double * create_prediction(object prediction)
 {
     unsigned width, height, depth; 
     boost::python::tuple prediction_shape(prediction.attr("shape"));
@@ -202,11 +223,20 @@ void add_prediction_channel(Stack* stack, object prediction)
             }
         }
     }
-   
+    return prediction_array;
+}   
+
+void add_prediction_channel(Stack* stack, object prediction)
+{
+    double * prediction_array = create_prediction(prediction);
     stack->add_prediction_channel(prediction_array);
 }
 
-
+void add_prediction_channel2(Stack* stack, object prediction)
+{
+    double * prediction_array = create_prediction(prediction);
+    stack->add_prediction_channel(prediction_array);
+}
 
 
 BOOST_PYTHON_MODULE(libNeuroProofRag)
@@ -216,8 +246,11 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // (return true/false, params: rag, file_name)
     def("create_jsonfile_from_rag", create_jsonfile_from_rag);
 
-    def("build_stack", build_stack, return_value_policy<manage_new_object>());
-    def("add_prediction_channel", add_prediction_channel, return_value_policy<manage_new_object>());
+    def("reinit_stack", reinit_stack);
+    def("reinit_stack2", reinit_stack2);
+    def("init_stack", init_stack, return_value_policy<manage_new_object>());
+    def("add_prediction_channel", add_prediction_channel);
+    def("add_prediction_channel2", add_prediction_channel2);
     def("write_volume_to_buffer", write_volume_to_buffer);
 
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
@@ -256,6 +289,10 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("agglomerate_rag", &Stack::agglomerate_rag)
         // build rag based on loaded features and prediction images 
         .def("build_rag", &Stack::build_rag)
+        .def("build_rag_border", &Stack::build_rag_border)
+        .def("add_empty_channel", &Stack::add_empty_channel)
+        .def("get_transformations", &Stack::get_transformations)
+        .def("disable_nonborder_edges", &Stack::disable_nonborder_edges)
         .def("get_feature_mgr", &Stack::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
         .def("remove_inclusions", &Stack::remove_inclusions)
