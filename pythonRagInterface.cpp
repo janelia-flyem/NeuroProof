@@ -235,7 +235,7 @@ void add_prediction_channel(Stack* stack, object prediction)
 void add_prediction_channel2(Stack* stack, object prediction)
 {
     double * prediction_array = create_prediction(prediction);
-    stack->add_prediction_channel(prediction_array);
+    stack->add_prediction_channel2(prediction_array);
 }
 
 
@@ -293,6 +293,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("add_empty_channel", &Stack::add_empty_channel)
         .def("get_transformations", &Stack::get_transformations)
         .def("disable_nonborder_edges", &Stack::disable_nonborder_edges)
+        .def("enable_nonborder_edges", &Stack::enable_nonborder_edges)
         .def("get_feature_mgr", &Stack::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
         .def("remove_inclusions", &Stack::remove_inclusions)

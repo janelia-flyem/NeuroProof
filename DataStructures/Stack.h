@@ -23,7 +23,7 @@ class Stack {
         reinit_stack(watershed_, depth_, height_, width_, padding_);
     }
     
-    Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false)
+    Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0)
     {
         rag = new Rag<Label>();
     }
@@ -52,7 +52,7 @@ class Stack {
     void reinit_stack2(Label* watershed_, int depth_, int height_, int width_, int padding_)
     {
         if (!prediction_array2.empty()) {
-            for (unsigned int i = 0; i < prediction_array.size(); ++i) {
+            for (unsigned int i = 0; i < prediction_array2.size(); ++i) {
                 delete prediction_array2[i];
             }
             prediction_array2.clear();
@@ -114,6 +114,10 @@ class Stack {
 
         unsigned int plane_size = width * height;
 
+        if (depth == 0 || height == 0 || width == 0) {
+            return;
+        }
+
         for (unsigned int z = 1; z < (depth-1); ++z) {
             int z_spot = z * plane_size;
 
@@ -173,7 +177,6 @@ class Stack {
                 }
             }
         } 
-        
         
         return;
     }
@@ -364,8 +367,8 @@ void Stack::build_rag_border()
     std::vector<double> predictions2(prediction_array.size(), 0.0);
 
     for (unsigned int y = 1; y < (height-1); ++y) {
-        int y_spot = y * width;
-        for (unsigned int x = 1; x < (width-1); ++x) {
+        int y_spot = y * depth;
+        for (unsigned int x = 1; x < (depth-1); ++x) {
             unsigned long long curr_spot = x + y_spot;
             unsigned int spot0 = watershed[curr_spot];
             unsigned int spot1 = watershed2[curr_spot];
@@ -603,8 +606,8 @@ boost::python::list Stack::get_transformations()
            iter != watershed_to_body.end(); ++iter)
     {
         if (iter->first != iter->second) {
-            boost::tuple<Label, Label> mapping(iter->first, iter->second);
-            transforms.append(mapping);
+            //boost::python::tuple<Label, Label> mapping(iter->first, iter->second);
+            transforms.append(boost::python::make_tuple(iter->first, iter->second));
         }
     } 
 
