@@ -183,11 +183,29 @@ int main(int argc, char** argv)
 
             using std::ofstream;
             Json::Value json_writer;
-            ofstream fout("temp.json");
+            ofstream fout("body_debug.json");
+            priority_scheduler.set_debug_bodies();
             create_json_from_rag(rag, json_writer, true);
             priority_scheduler.export_json(json_writer); 
             fout << json_writer;
             fout.close();
+
+
+            Json::Value json_writer2;
+            ofstream fout2("synapse_debug.json");
+            priority_scheduler.set_debug_synapses();
+            create_json_from_rag(rag, json_writer2, true);
+            priority_scheduler.export_json(json_writer2); 
+            fout2 << json_writer2;
+            fout2.close();
+
+            Json::Value json_writer3;
+            ofstream fout3("orphan_debug.json");
+            priority_scheduler.set_debug_orphans();
+            create_json_from_rag(rag, json_writer3, true);
+            priority_scheduler.export_json(json_writer3); 
+            fout3 << json_writer3;
+            fout3.close();
 
             cout << "Num operations: " << num_edges_examined << endl;
             cout << "Percent edges examined: " << double(num_edges_examined) / num_edges_orig * 100 << endl;

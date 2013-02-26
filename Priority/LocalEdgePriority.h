@@ -58,6 +58,43 @@ class LocalEdgePriority : public EdgePriority<Region> {
         return violators;
     }
 
+    void set_debug_bodies()
+    {
+        for (int i = 0; i < body_edges.size(); ++i) {
+            body_edges[i]->set_preserve(true);
+        }
+        for (int i = 0; i < synapse_edges.size(); ++i) {
+            synapse_edges[i]->set_preserve(false);
+        }
+        for (int i = 0; i < orphan_edges.size(); ++i) {
+            orphan_edges[i]->set_preserve(false);
+        }
+    }
+    void set_debug_synapses()
+    {
+        for (int i = 0; i < body_edges.size(); ++i) {
+            body_edges[i]->set_preserve(false);
+        }
+        for (int i = 0; i < synapse_edges.size(); ++i) {
+            synapse_edges[i]->set_preserve(true);
+        }
+        for (int i = 0; i < orphan_edges.size(); ++i) {
+            orphan_edges[i]->set_preserve(false);
+        }
+    }
+    void set_debug_orphans()
+    {
+        for (int i = 0; i < body_edges.size(); ++i) {
+            body_edges[i]->set_preserve(false);
+        }
+        for (int i = 0; i < synapse_edges.size(); ++i) {
+            synapse_edges[i]->set_preserve(false);
+        }
+        for (int i = 0; i < orphan_edges.size(); ++i) {
+            orphan_edges[i]->set_preserve(true);
+        }
+    }
+
     void set_synapse_mode(double ignore_size_)
     {
         Rag<Region>& ragtemp = (EdgePriority<Region>::rag);
@@ -449,7 +486,6 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
             history.pop_back(); 
         }
-
 
 
       private:
