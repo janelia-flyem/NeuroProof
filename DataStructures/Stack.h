@@ -588,7 +588,7 @@ void Stack::agglomerate_rag(double threshold)
 
     EdgeHash border_edges2 = border_edges;
     border_edges.clear();
-    for (typename EdgeHash::iterator iter = border_edges2.begin(); iter != border_edges2.end(); ++iter) {
+    for (EdgeHash::iterator iter = border_edges2.begin(); iter != border_edges2.end(); ++iter) {
         Label body1 = watershed_to_body[(*iter)->get_node1()->get_node_id()];
         Label body2 = watershed_to_body[(*iter)->get_node2()->get_node_id()];
 
