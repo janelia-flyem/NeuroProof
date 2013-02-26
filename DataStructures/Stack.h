@@ -225,6 +225,10 @@ class Stack {
             return false;
         }
 
+        if (!body1 || !body2) {
+            return true;
+        }
+
         RagEdge<Label>* edge = rag->find_rag_edge(body1, body2);
 
         if (!edge) {
