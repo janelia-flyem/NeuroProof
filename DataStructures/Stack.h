@@ -370,48 +370,52 @@ void Stack::build_rag_border()
     std::vector<double> predictions(prediction_array.size(), 0.0);
     std::vector<double> predictions2(prediction_array.size(), 0.0);
 
-    for (unsigned int y = 1; y < (height-1); ++y) {
-        int y_spot = y * depth;
-        for (unsigned int x = 1; x < (depth-1); ++x) {
-            unsigned long long curr_spot = x + y_spot;
-            unsigned int spot0 = watershed[curr_spot];
-            unsigned int spot1 = watershed2[curr_spot];
+    unsigned int plane_size = width * height;
+    for (unsigned int z = 1; z < (depth-1); ++z) {
+        int z_spot = z * plane_size;
+        for (unsigned int y = 1; y < (height-1); ++y) {
+            int y_spot = y * width;
+            for (unsigned int x = 1; x < (width-1); ++x) {
+                unsigned long long curr_spot = x + y_spot + z_spot;
+                unsigned int spot0 = watershed[curr_spot];
+                unsigned int spot1 = watershed2[curr_spot];
 
-            if (!spot0 || !spot1) {
-                continue;
+                if (!spot0 || !spot1) {
+                    continue;
+                }
+
+                assert(spot0 != spot1);
+
+                RagNode<Label> * node = rag->find_rag_node(spot0);
+                if (!node) {
+                    node = rag->insert_rag_node(spot0);
+                }
+
+                RagNode<Label> * node2 = rag->find_rag_node(spot1);
+                if (!node2) {
+                    node2 = rag->insert_rag_node(spot1);
+                }
+
+                for (unsigned int i = 0; i < prediction_array.size(); ++i) {
+                    predictions[i] = prediction_array[i][curr_spot];
+                }
+                for (unsigned int i = 0; i < prediction_array2.size(); ++i) {
+                    predictions2[i] = prediction_array2[i][curr_spot];
+                }
+
+                if (feature_mgr && !median_mode) {
+                    feature_mgr->add_val(predictions, node);
+                    feature_mgr->add_val(predictions2, node2);
+                }
+
+                rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
+                rag_add_edge(rag, spot0, spot1, predictions2, feature_mgr);
+
+                node->incr_border_size();
+                node2->incr_border_size();
+
+                border_edges.insert(rag->find_rag_edge(node, node2));
             }
-
-            assert(spot0 != spot1);
-
-            RagNode<Label> * node = rag->find_rag_node(spot0);
-            if (!node) {
-                node = rag->insert_rag_node(spot0);
-            }
-
-            RagNode<Label> * node2 = rag->find_rag_node(spot1);
-            if (!node2) {
-                node2 = rag->insert_rag_node(spot1);
-            }
-
-            for (unsigned int i = 0; i < prediction_array.size(); ++i) {
-                predictions[i] = prediction_array[i][curr_spot];
-            }
-            for (unsigned int i = 0; i < prediction_array2.size(); ++i) {
-                predictions2[i] = prediction_array2[i][curr_spot];
-            }
-
-            if (feature_mgr && !median_mode) {
-                feature_mgr->add_val(predictions, node);
-                feature_mgr->add_val(predictions2, node2);
-            }
-
-            rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
-            rag_add_edge(rag, spot0, spot1, predictions2, feature_mgr);
-
-            node->incr_border_size();
-            node2->incr_border_size();
-        
-            border_edges.insert(rag->find_rag_edge(node, node2));
         }
     }
 
