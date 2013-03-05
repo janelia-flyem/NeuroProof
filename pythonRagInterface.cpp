@@ -276,6 +276,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // initialization actually occurs within custom build
     class_<FeatureMgr>("FeatureMgr", no_init)
         .def("set_python_rf_function", &FeatureMgr::set_python_rf_function)
+        .def("set_overlap_function", &FeatureMgr::set_overlap_function)
         .def("add_hist_feature", &FeatureMgr::add_hist_feature)
         .def("add_moment_feature", &FeatureMgr::add_moment_feature)
         .def("add_inclusiveness_feature", &FeatureMgr::add_inclusiveness_feature)

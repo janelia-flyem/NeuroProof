@@ -602,6 +602,30 @@ void Stack::agglomerate_rag(double threshold)
 
         if (body1 != body2) {
             border_edges.insert(rag->find_rag_edge(body1, body2)); 
+        
+            /*
+            RagNode<Label>* n1 = rag->find_rag_node(body1);
+            RagNode<Label>* n2 = rag->find_rag_node(body2);
+            // print info on edges
+            RagEdge<Label>* temp_edge = rag->find_rag_edge(body1, body2);
+            unsigned long long edge_size = temp_edge->get_size();
+            unsigned long long total_edge_size1 = 0;
+            unsigned long long total_edge_size2 = 0;
+
+            for (RagNode<Label>::edge_iterator eiter = n1->edge_begin(); eiter != n1->edge_end(); ++eiter) {
+                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
+                    total_edge_size1 += (*eiter)->get_size();
+                }
+            }
+            for (RagNode<Label>::edge_iterator eiter = n2->edge_begin(); eiter != n2->edge_end(); ++eiter) {
+                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
+                    total_edge_size2 += (*eiter)->get_size();
+                }
+            }
+            double prob1 = edge_size / double(total_edge_size1);
+            double prob2 = edge_size / double(total_edge_size2);
+            std::cout << "Body 1: " << body1 << " Body 2: " << body2 << " Size: " << edge_size << " overlap: " << prob1 << " " << prob2 << std::endl;
+            */
         }
     }
 }

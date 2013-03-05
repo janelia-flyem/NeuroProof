@@ -20,8 +20,8 @@ namespace NeuroProof {
 
 class FeatureMgr {
   public:
-    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), num_features(0) {}
-    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false), num_features(0) {}
+    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), overlap(false), num_features(0) {}
+    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false), overlap(false), num_features(0) {}
     
     void add_channel();
     unsigned int get_num_features()
@@ -31,6 +31,7 @@ class FeatureMgr {
 #ifdef SETPYTHON
     void set_python_rf_function(boost::python::object pyfunc_);
 #endif
+    void set_overlap_function();
 
     unsigned int get_num_channels()
     {
@@ -182,6 +183,7 @@ class FeatureMgr {
     boost::python::object pyfunc;
 #endif
     bool has_pyfunc;
+    bool overlap;
 };
 
 

@@ -184,6 +184,12 @@ void FeatureMgr::set_python_rf_function(object pyfunc_)
 
 #endif
 
+
+void FeatureMgr::set_overlap_function()
+{
+    overlap = true;
+}
+
 double FeatureMgr::get_prob(RagEdge<Label>* edge)
 {
     std::vector<void*>* edget_caches = 0;
@@ -234,6 +240,32 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         }
         prob = extract<double>(pyfunc(pylist));
 #endif
+    } else if (overlap) {
+        unsigned long long edge_size = edge->get_size();
+        unsigned long long total_edge_size1 = 0;
+        unsigned long long total_edge_size2 = 0;
+
+        for (RagNode<Label>::edge_iterator eiter = node1->edge_begin(); eiter != node1->edge_end(); ++eiter) {
+            if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
+                total_edge_size1 += (*eiter)->get_size();
+            }
+        }
+        for (RagNode<Label>::edge_iterator eiter = node2->edge_begin(); eiter != node2->edge_end(); ++eiter) {
+            if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
+                total_edge_size2 += (*eiter)->get_size();
+            }
+        }
+        double prob1 = edge_size / double(total_edge_size1);
+        double prob2 = edge_size / double(total_edge_size2);
+        prob = prob1;
+        if (prob2 > prob) {
+            prob = prob2;
+        }
+        if (edge_size < 500) {
+            prob = 0.0;
+        }
+
+        prob = 1-prob;
     } else {
         prob = feature_results[0];
     }
