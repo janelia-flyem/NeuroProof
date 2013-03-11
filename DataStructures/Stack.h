@@ -392,6 +392,7 @@ void Stack::build_rag_border()
                 }
 
                 RagNode<Label> * node2 = rag->find_rag_node(spot1);
+
                 if (!node2) {
                     node2 = rag->insert_rag_node(spot1);
                 }
@@ -569,8 +570,13 @@ void Stack::build_rag()
 
 void Stack::agglomerate_rag(double threshold)
 {
+    if (threshold == 0.0) {
+        return;
+    }
+
     MergePriority* priority = new ProbPriority(feature_mgr, rag);
     priority->initialize_priority(threshold);
+
 
     while (!(priority->empty())) {
 
