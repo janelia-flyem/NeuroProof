@@ -80,17 +80,42 @@ int main(int argc, char** argv)
             LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
         
             vector<Label> violators = priority_scheduler.getQAViolators(ignore_size);
-            cout << "Num QA violators: " << violators.size() << endl; 
+            cout << "Num QA violators (thres 25K): " << violators.size() << endl; 
+            violators = priority_scheduler.getQAViolators(UINT_MAX);
+            cout << "Num synapse orphans (thres UINT_MAX): " << violators.size() << endl; 
         
             priority_scheduler.set_body_mode(ignore_size, 0);
             int num_bodyedges_examined = run_estimator(priority_scheduler, rag);
-            cout << "Estimated num body operations: " << num_bodyedges_examined << endl;
+            cout << "Estimated num body operations (25K entropy threshold): " << num_bodyedges_examined << endl;
           
             int total_undos = 0; 
             while (priority_scheduler.undo()) {
                 ++total_undos;
             }
             assert(total_undos == num_bodyedges_examined);
+
+            priority_scheduler.set_body_mode(ignore_size, 1);
+            int num_bodyedges_examined_path = run_estimator(priority_scheduler, rag);
+            cout << "Estimated num body operations (25K entropy threshold) with path length = 1: "
+                << num_bodyedges_examined_path << endl;
+          
+            total_undos = 0; 
+            while (priority_scheduler.undo()) {
+                ++total_undos;
+            }
+            assert(total_undos == num_bodyedges_examined_path);
+
+            priority_scheduler.set_edge_mode(0, 0.9, 0);
+            int num_bodyedges_examined_edge = run_estimator(priority_scheduler, rag);
+            cout << "Estimated num body operations using just edge confidence to 90 percent: "
+                << num_bodyedges_examined_edge << endl;
+          
+            total_undos = 0; 
+            while (priority_scheduler.undo()) {
+                ++total_undos;
+            }
+            assert(total_undos == num_bodyedges_examined_edge);
+
 
             priority_scheduler.set_synapse_mode(0.1);
             int num_synapseedges_examined = run_estimator(priority_scheduler, rag);
