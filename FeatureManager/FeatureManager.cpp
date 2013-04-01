@@ -258,7 +258,9 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         double prob1 = edge_size / double(total_edge_size1);
         double prob2 = edge_size / double(total_edge_size2);
         prob = prob1;
-        if (prob2 > prob) {
+        if (overlap_max && (prob2 > prob)) {
+            prob = prob2;
+        } else if (!overlap_max && (prob2 < prob)) {
             prob = prob2;
         }
         if (edge_size < overlap_threshold) {
