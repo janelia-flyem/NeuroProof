@@ -56,7 +56,10 @@ else ()
     include (python)
     include (jsoncpp)
     include (boost)
-
+    include (vigra)
+    include (hdf5)
+    include (opencv)
+    
     # Compile NeuroProof components
 
     add_subdirectory (ImportsExports)
@@ -68,10 +71,10 @@ else ()
     add_executable (NeuroProof_test NeuroProof_test.cpp)
     add_executable (generate_stats generate_stats.cpp)
     add_executable (calculate_GPR calculate_GPR.cpp)
-    target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} boost_thread boost_system)
+    target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
     target_link_libraries (generate_stats ImportsExports ${json_LIB} boost_thread boost_system)
     target_link_libraries (calculate_GPR ImportsExports ${json_LIB} boost_thread boost_system)
-    add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME})
+    add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     add_dependencies (generate_stats ${jsoncpp_NAME} ${boost_NAME})
     add_dependencies (calculate_GPR ${jsoncpp_NAME} ${boost_NAME})
 
