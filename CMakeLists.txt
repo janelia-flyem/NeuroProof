@@ -68,19 +68,13 @@ else ()
     include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
 
     # Handle all of NeuroProof sources and dependent code
-    add_executable (NeuroProof_test NeuroProof_test.cpp)
-    add_executable (generate_stats generate_stats.cpp)
-    add_executable (calculate_GPR calculate_GPR.cpp)
-    target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
-    target_link_libraries (generate_stats ImportsExports ${json_LIB} boost_thread boost_system)
-    target_link_libraries (calculate_GPR ImportsExports ${json_LIB} boost_thread boost_system)
-    add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
-    add_dependencies (generate_stats ${jsoncpp_NAME} ${boost_NAME})
-    add_dependencies (calculate_GPR ${jsoncpp_NAME} ${boost_NAME})
+    add_executable (analyze_segmentation_graph analyze_segmentation_graph.cpp)
+#target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
+    target_link_libraries (analyze_segmentation_graph ImportsExports ${json_LIB} boost_thread boost_system boost_program_options)
+    #add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+    add_dependencies (analyze_segmentation_graph ${jsoncpp_NAME} ${boost_NAME})
 
-    get_target_property (NeuroProof_test_exe NeuroProof_test LOCATION)
-    get_target_property (generate_stats_exe generate_stats LOCATION)
-    get_target_property (calculate_GPR_exe calculate_GPR LOCATION)
+    get_target_property (analyze_segmentation_graph_exe analyze_segmentation_graph LOCATION)
 
     add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
     target_link_libraries (NeuroProofPriority ImportsExports FeatureManager ${json_LIB} boost_thread boost_python)
@@ -107,23 +101,11 @@ else ()
         COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${BUILDEM_DIR}/lib)
 
     add_custom_command (
-        TARGET NeuroProof_test
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProof_test_exe} ${BUILDEM_DIR}/bin)
-
-    add_custom_command (
-        TARGET generate_stats
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${generate_stats_exe} ${BUILDEM_DIR}/bin)
-
-    add_custom_command (
-        TARGET calculate_GPR 
+        TARGET analyze_segmentation_graph 
         POST_BUILD
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${calculate_GPR_exe} ${BUILDEM_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E copy ${analyze_segmentation_graph_exe} ${BUILDEM_DIR}/bin)
 
     ###############################################################################
 endif()
