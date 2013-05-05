@@ -198,7 +198,7 @@ int get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Rag<Label>* rag)
     return edges_examined;
 }
 
-/*
+/*!
  * Explore different strategies for estimating the number of uncertain
  * edges in the graph.
  * \param rag graph where uncertain edges are analyzed
@@ -261,7 +261,7 @@ void est_edit_distance(Rag<Label>* rag, int node_threshold, double synapse_thres
     }
 }
 
-/*
+/*!
  * Main function for analyzing segmentation graph
  * \param argc
  * \param argv
