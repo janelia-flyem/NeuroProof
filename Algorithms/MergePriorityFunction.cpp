@@ -1,6 +1,4 @@
-
 #include "MergePriorityFunction.h"
-
 
 using namespace NeuroProof;
 
