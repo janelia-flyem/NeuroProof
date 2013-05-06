@@ -10,9 +10,9 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET(CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-set (SOURCES FeatureManager.cpp Features.cpp)
+set (SOURCES opencvABclassifier.cpp opencvRFclassifier.cpp opencvSVMclassifier.cpp vigraRFclassifier.cpp)
 
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
-add_library (FeatureManager SHARED ${SOURCES})
-add_dependencies (FeatureManager  ${boost_NAME})
+add_library (Classifier SHARED ${SOURCES})
+add_dependencies (Classifier)

@@ -64,23 +64,40 @@ else ()
 
     add_subdirectory (ImportsExports)
     add_subdirectory (FeatureManager)
+    add_subdirectory (Algorithms)
+    add_subdirectory (Classifier)
+    add_subdirectory (DataStructures)
+
+    set (NEUROPROOF_PKGS ImportExports FeatureManager Algorithms Classifier DataStructures)
 
     include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
 
     # Handle all of NeuroProof sources and dependent code
-    add_executable (analyze_segmentation_graph analyze_segmentation_graph.cpp)
-#target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
-    target_link_libraries (analyze_segmentation_graph ImportsExports ${json_LIB} boost_thread boost_system boost_program_options)
+    add_executable (neuroproof_graph_analyze neuroproof_graph_analyze.cpp)
+    add_executable (neuroproof_graph_learn neuroproof_graph_learn.cpp)
+    add_executable (neuroproof_graph_predict neuroproof_graph_predict.cpp)
+   
+    #target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
     #add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
-    add_dependencies (analyze_segmentation_graph ${jsoncpp_NAME} ${boost_NAME})
 
-    get_target_property (analyze_segmentation_graph_exe analyze_segmentation_graph LOCATION)
+    target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_PKGS} ${json_LIB} boost_thread boost_system boost_program_options)
+    target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_PKGS} ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_system boost_program_options)
+    target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_PKGS} ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_system boost_program_options)
+    
+    add_dependencies (neuroproof_graph_analyze ${jsoncpp_NAME} ${boost_NAME})
+    add_dependencies (neuroproof_graph_learn ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+    add_dependencies (neuroproof_graph_predict ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+
+    get_target_property (neuroproof_graph_analyze_exe neuroproof_graph_analyze LOCATION)
+    get_target_property (neuroproof_graph_learn_exe neuroproof_graph_learn LOCATION)
+    get_target_property (neuroproof_graph_predict_exe neuroproof_graph_predict LOCATION)
 
     add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
-    target_link_libraries (NeuroProofPriority ImportsExports FeatureManager ${json_LIB} boost_thread boost_python)
+    target_link_libraries (NeuroProofPriority ${NEUROPROOF_PKGS} ${json_LIB} boost_thread boost_python)
     add_dependencies (NeuroProofPriority ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
 
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp)
+    # need to build components separately to set python flag
+    add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStrutures/Stack.cpp)
     target_link_libraries (NeuroProofRag ${json_LIB} boost_thread boost_python)
     add_dependencies (NeuroProofRag ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
@@ -101,11 +118,27 @@ else ()
         COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${BUILDEM_DIR}/lib)
 
     add_custom_command (
-        TARGET analyze_segmentation_graph 
+        TARGET neuroproof_graph_analyze 
         POST_BUILD
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${analyze_segmentation_graph_exe} ${BUILDEM_DIR}/bin)
+        COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_analyze_exe} ${BUILDEM_DIR}/bin)
+
+    add_custom_command (
+        TARGET neuroproof_graph_learn 
+        POST_BUILD
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_learn_exe} ${BUILDEM_DIR}/bin)
+    
+    add_custom_command (
+        TARGET neuroproof_graph_predict 
+        POST_BUILD
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_predict_exe} ${BUILDEM_DIR}/bin)
+
+
 
     ###############################################################################
 endif()

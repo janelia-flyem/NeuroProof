@@ -37,7 +37,7 @@ class FeatureHist : public FeatureCompute {
     void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num);
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge);
     void merge_cache(void * cache1, void * cache2);
-    void print_name() {cout << endl << "Histogram Feature" << endl;}	
+    void print_name() {std::cout << std::endl << "Histogram Feature" << std::endl;}	
     void print_cache(void* pcache);
 
   private:
@@ -62,7 +62,7 @@ class FeatureMoment : public FeatureCompute {
     void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num);
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge);
     void merge_cache(void * cache1, void * cache2);
-    void print_name(){cout << endl << "Moment Feature" << endl;}
+    void print_name(){std::cout << std::endl << "Moment Feature" << std::endl;}
     void print_cache(void* pcache);
 
   private:
@@ -99,7 +99,7 @@ class FeatureInclusiveness : public FeatureCompute {
         return;
     }
     
-    void print_name(){cout << endl << "Inclusiveness Feature" << endl;}
+    void print_name(){std::cout << std::endl << "Inclusiveness Feature" << std::endl;}
     void print_cache(void* pcache){}		
 
   private:
@@ -151,7 +151,7 @@ class FeatureCount : public FeatureCompute {
         count_cache1->count += count_cache2->count;
         delete count_cache2;
     }
-    void print_name(){cout << endl << "Count Feature" << endl;}
+    void print_name(){std::cout << std::endl << "Count Feature" << std::endl;}
     void print_cache(void *pcache){}	
 };
 
