@@ -12,16 +12,24 @@
 #include <boost/python.hpp>
 #endif
 
+#include "../Classifier/vigraRFclassifier.h"
+#include "../Classifier/opencvRFclassifier.h"
+#include "../Classifier/opencvABclassifier.h"
+#include "../Classifier/opencvSVMclassifier.h"
+
 
 // node features and edge features -- different amounts ??!!
 
 
 namespace NeuroProof {
+    
+typedef std::tr1::unordered_map<RagEdge<Label>*, std::vector<void *>, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> > EdgeCaches; 
+typedef std::tr1::unordered_map<RagNode<Label>*, std::vector<void *>, RagNodePtrHash<Label>, RagNodePtrEq<Label> > NodeCaches; 
 
 class FeatureMgr {
   public:
-    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true) {}
-    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true) {}
+    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true), eclfr(0) {}
+    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true), eclfr(0) {}
     
     void add_channel();
     unsigned int get_num_features()
@@ -118,13 +126,33 @@ class FeatureMgr {
     } 
 
     void merge_features(RagNode<Label>* node1, RagNode<Label>* node2);
+    void merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, RagEdge<Label>* edge );
     void merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2);
+
+    void set_classifier(EdgeClassifier* pclfr)
+    {
+        eclfr = pclfr;
+    }
+
+    EdgeClassifier* get_classifier()
+    {
+        return eclfr;
+    }  	
+
+    //void set_tree_weights(std::vector<double>& pwts){
+    //	eclfr->set_tree_weights(pwts);
+    //}
+
+
 
     void add_median_feature();
 
 #ifdef SETPYTHON
     void add_hist_feature(unsigned int num_bins, boost::python::list percentiles, bool use_diff);
+#else
+    void add_hist_feature(unsigned int num_bins, std::vector<double> percentiles, bool use_diff);
 #endif
+
     void add_moment_feature(unsigned int num_moments, bool use_diff);
     
     void add_inclusiveness_feature(bool use_diff);
@@ -133,10 +161,30 @@ class FeatureMgr {
 
     ~FeatureMgr();
 
+    void get_responses(RagEdge<Label>* edge, vector<double>& responses);
+
+    void compute_all_features(RagEdge<Label>* edge, std::vector<double>&);
+    void compute_node_features(RagNode<Label>* edge, std::vector<double>&);
+
+    void copy_channel_features(FeatureMgr *pfmgr);   	
+
+    void copy_cache(std::vector<void*>& src_edge_cache, RagEdge<Label>* edge);	
+    void copy_cache(std::vector<void*>& src_node_cache, RagNode<Label>* node);	
+
+    void print_cache(RagEdge<Label>* edge);	
+    void print_cache(RagNode<Label>* node);	
+
+    std::vector<std::vector<FeatureCompute*> >& get_channel_features(){return channels_features;}; 	
+    EdgeCaches& get_edge_cache(){return edge_caches;};  		
+    NodeCaches& get_node_cache(){return node_caches;};  		
+
+
   private:
     void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
+    void compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
      
     void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_num);
+    void compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_num);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {
@@ -179,8 +227,6 @@ class FeatureMgr {
 
     void add_feature(unsigned int channel, FeatureCompute * feature, std::vector<bool>& feature_modes);
 
-    typedef std::tr1::unordered_map<RagEdge<Label>*, std::vector<void *>, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> > EdgeCaches; 
-    typedef std::tr1::unordered_map<RagNode<Label>*, std::vector<void *>, RagNodePtrHash<Label>, RagNodePtrEq<Label> > NodeCaches; 
 
     EdgeCaches edge_caches;
     NodeCaches node_caches;
@@ -200,6 +246,7 @@ class FeatureMgr {
     bool overlap;
     bool overlap_max;
     int overlap_threshold;
+    EdgeClassifier* eclfr;	 
 };
 
 

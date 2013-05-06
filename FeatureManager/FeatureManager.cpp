@@ -59,6 +59,33 @@ void FeatureMgr::compute_diff_features(std::vector<void*>* caches1, std::vector<
     }
 } 
 
+void FeatureMgr::compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge)
+{
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; i++) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); j++) {
+            features[j]->get_diff_feature_array((*caches2)[pos],(*caches1)[pos],feature_results, edge);
+            pos++;
+        } 
+    }
+}
+
+
+void FeatureMgr::compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_number)
+{
+
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; i++) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); j++) {
+            features[j]->get_feature_array((*caches)[pos],feature_results, edge, node_number);
+            pos++;
+        } 
+    }
+
+}
+
 void FeatureMgr::compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_number)
 {
     vector<vector<bool> > examine_equal(num_channels);
@@ -131,6 +158,19 @@ void FeatureMgr::add_hist_feature(unsigned int num_bins, boost::python::list per
         add_feature(i, feature_ptr, feature_modes);
     }
 }
+#else
+void FeatureMgr::add_hist_feature(unsigned int num_bins, vector<double> percentiles, bool use_diff)
+{
+    vector<bool> feature_modes(3, true);
+    feature_modes[2] = use_diff;
+    
+
+    FeatureCompute * feature_ptr = new FeatureHist(num_bins, percentiles);
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        channels_features_equal[i].push_back(feature_ptr);
+        add_feature(i, feature_ptr, feature_modes);
+    }
+}
 #endif
 
 void FeatureMgr::add_moment_feature(unsigned int num_moments, bool use_diff)
@@ -184,6 +224,66 @@ void FeatureMgr::set_python_rf_function(object pyfunc_)
 
 #endif
 
+void FeatureMgr::compute_node_features(RagNode<Label>* node, vector<double>& feature_results){
+
+    std::vector<void*>* node1_caches = 0;
+
+
+    if (node_caches.find(node) != node_caches.end()) {
+        node1_caches = &(node_caches[node]);
+    }
+
+    compute_features2(0, node1_caches, feature_results, NULL, 1);
+
+}
+
+void FeatureMgr::compute_all_features(RagEdge<Label>* edge, vector<double>& feature_results){
+
+    std::vector<void*>* edget_caches = 0;
+    std::vector<void*>* node1_caches = 0;
+    std::vector<void*>* node2_caches = 0;
+
+    if (edge_caches.find(edge) != edge_caches.end()) {
+        edget_caches = &(edge_caches[edge]);
+    }
+
+    RagNode<Label>* node1 = edge->get_node1();
+    RagNode<Label>* node2 = edge->get_node2();
+
+    if (node2->get_size() < node1->get_size()) {
+        RagNode<Label>* temp_node = node2;
+        node2 = node1;
+        node1 = temp_node;
+    }
+
+    if (node_caches.find(node1) != node_caches.end()) {
+        node1_caches = &(node_caches[node1]);
+    }
+    if (node_caches.find(node2) != node_caches.end()) {
+        node2_caches = &(node_caches[node2]);
+    }
+
+    compute_features2(0, node1_caches, feature_results, edge, 1);
+
+    compute_features2(0, node2_caches, feature_results, edge, 2);
+
+    compute_features2(1, edget_caches, feature_results, edge, 0);
+
+    compute_diff_features2(node1_caches, node2_caches, feature_results, edge);
+
+
+}
+
+void FeatureMgr::get_responses(RagEdge<Label>* edge, vector<double>& responses){
+	
+    vector<double> feature_results;
+    
+    compute_all_features(edge,feature_results);	
+
+    eclfr->get_tree_responses(feature_results, responses);
+}
+
+
 
 void FeatureMgr::set_overlap_function()
 {
@@ -222,6 +322,8 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     compute_features(0, node2_caches, feature_results, edge, 2);
     compute_features(1, edget_caches, feature_results, edge, 0);
     compute_diff_features(node1_caches, node2_caches, feature_results, edge);
+    
+
     /*std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
     for (int i = 0; i < feature_results.size(); ++i) {
         std::cout << feature_results[i] << " ";
@@ -240,6 +342,8 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         }
         prob = extract<double>(pyfunc(pylist));
 #endif
+    } else if (eclfr){
+        prob = eclfr->predict(feature_results);
     } else if (overlap) {
         unsigned long long edge_size = edge->get_size();
         unsigned long long total_edge_size1 = 0;
@@ -275,6 +379,53 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
 
     return prob;
 }
+
+void FeatureMgr::merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, RagEdge<Label>* edgeb)
+{
+    std::vector<void*>* node1_caches = 0; 
+    std::vector<void*>* node2_caches = 0;
+    std::vector<void*>* edgeb_caches = 0;
+
+	
+    node1->incr_size(node2->get_size()+edgeb->get_size());
+    node1->incr_border_size(node2->get_border_size());
+
+    if (node_caches.find(node1) != node_caches.end()) {
+        node1_caches = &(node_caches[node1]);
+    }
+    if (node_caches.find(node2) != node_caches.end()) {
+        node2_caches = &(node_caches[node2]);
+    }
+    if (edge_caches.find(edgeb) != edge_caches.end()) {
+        edgeb_caches = &(edge_caches[edgeb]);
+    }
+    if (!node1_caches && !node2_caches) {
+        return;
+    }
+
+    unsigned int pos = 0;
+    vector<double> feature_results;
+    for (int i = 0; i < num_channels; ++i) {
+        vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); ++j) {
+            if ((*node1_caches)[pos] && (*node2_caches)[pos]) {
+                features[j]->merge_cache((*node1_caches)[pos], (*node2_caches)[pos]);
+            }
+	    if (edgeb_caches && (*edgeb_caches)[pos] && (*node1_caches)[pos])
+                features[j]->merge_cache((*node1_caches)[pos], (*edgeb_caches)[pos]);
+	
+            ++pos;
+        }
+    }
+
+    if (node2_caches) {
+        node_caches.erase(node2);
+    }
+    if (edgeb_caches)
+	edge_caches.erase(edgeb);	
+}
+
+
 
 void FeatureMgr::merge_features(RagNode<Label>* node1, RagNode<Label>* node2)
 {
@@ -340,6 +491,117 @@ void FeatureMgr::merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2)
         edge_caches.erase(edge2);
     }
 }
+
+void FeatureMgr::copy_channel_features(FeatureMgr *pfmgr){
+
+    std::vector<std::vector<FeatureCompute*> >& pfmgr_channel_features = pfmgr->get_channel_features();
+
+    num_channels = pfmgr->get_num_channels();		
+
+    channels_features.resize(pfmgr_channel_features.size()); 	
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        channels_features[i].resize(pfmgr_channel_features[i].size());
+	for (int j = 0; j < channels_features[i].size(); ++j) {
+	    channels_features[i][j] = pfmgr_channel_features[i][j];
+        } 
+    }
+
+}
+
+void FeatureMgr::copy_cache(std::vector<void*>& src_edge_caches, RagEdge<Label>* edge){
+    
+
+    bool cache_exists=false;	
+    if (edge_caches.find(edge) != edge_caches.end()) {
+        cache_exists=true;
+    }
+    else
+	edge_caches[edge] = std::vector<void*>();		
+
+    std::vector<void*>& dest_edge_caches = edge_caches[edge]; 
+
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); ++j) {
+	    if (cache_exists){
+		features[j]->delete_cache(dest_edge_caches[pos]);
+		dest_edge_caches[pos] = features[j]->create_cache(); 
+	    }	
+	    else	
+                dest_edge_caches.push_back(features[j]->create_cache());
+
+	    features[j]->copy_cache(src_edge_caches[pos],dest_edge_caches[pos]);	
+            ++pos;
+        } 
+    }
+
+}	
+
+void FeatureMgr::copy_cache(std::vector<void*>& src_node_caches , RagNode<Label>* node1){
+    
+
+    bool cache_exists=false;	
+    if (node_caches.find(node1) != node_caches.end()) {
+        cache_exists=true;
+    }
+    else	
+        node_caches[node1] = std::vector<void*>();
+
+    std::vector<void*>& dest_node_caches = node_caches[node1]; 
+		
+	
+
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); ++j) {
+	    if (cache_exists){	
+ 	        features[j]->delete_cache(dest_node_caches[pos]);
+		dest_node_caches[pos] = features[j]->create_cache();
+	    }	
+	    else	
+ 	        dest_node_caches.push_back(features[j]->create_cache());
+
+	    features[j]->copy_cache(src_node_caches[pos],dest_node_caches[pos]);	
+            ++pos;
+        } 
+    }
+
+}	
+
+
+void FeatureMgr::print_cache(RagEdge<Label>* edge){
+
+    std::vector<void*>& dest_edge_caches = edge_caches[edge]; 
+
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); ++j) {
+	    features[j]->print_name();		
+	    features[j]->print_cache(dest_edge_caches[pos]);	
+            ++pos;
+        } 
+    }
+
+}	
+void FeatureMgr::print_cache(RagNode<Label>* node){
+
+    std::vector<void*>& dest_node_caches = node_caches[node]; 
+
+    unsigned int pos = 0;
+    for (unsigned int i = 0; i < num_channels; ++i) {
+        std::vector<FeatureCompute*>& features = channels_features[i];
+        for (int j = 0; j < features.size(); ++j) {
+	    features[j]->print_name();		
+	    features[j]->print_cache(dest_node_caches[pos]);	
+            ++pos;
+        } 
+    }
+
+}
+
 
 FeatureMgr::~FeatureMgr()
 {
