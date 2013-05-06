@@ -2,10 +2,14 @@
 #define RAGNODE_H
 
 #include "RagEdge.h"
+#include "NodeType.h"
 #include <vector>
 #include <algorithm>
+#include <map>
+#include <set>
 
 namespace NeuroProof {
+
 
 template <typename Region>
 class RagEdge;
@@ -48,6 +52,11 @@ class RagNode {
     void remove_edge(RagEdge<Region>* edge);
     RagEdge<Region>* find_edge(RagEdge<Region>* edge);
 
+
+    NodeType<Region>* get_type_decider(){return &type_decider;};	
+    Region get_node_type(){return type_decider.get_node_type();};	
+    unsigned long long compute_border_length();
+ 	
 
     // overloaded operators for user convenience
     bool operator<(const RagNode<Region>& node2) const;
@@ -192,6 +201,7 @@ class RagNode {
         return (border_size != 0);
     }
 
+
   private:
 
     RagNode(Region node_int_) : node_int(node_int_), size(0), border_size(0) {}
@@ -199,10 +209,26 @@ class RagNode {
     unsigned long long border_size;
     RagEdgeList edges;
     Region node_int;
-    
+
+    // FIX: unacceptable addition to datastructure    
+    NodeType<Region> type_decider;	
 
 };
- 
+template<typename Region> unsigned long long RagNode<Region>::compute_border_length()  {
+    unsigned long long count = 0;
+    for (RagNode<Region>::edge_iterator iter = this->edge_begin(); iter != this->edge_end(); ++iter) {
+        if ((*iter)->is_false_edge()) {
+            continue;
+        }
+        count += (*iter)->get_size();
+    }
+    count += (get_border_size());
+
+    return count;
+
+}
+
+
 template<typename Region> inline Region RagNode<Region>::get_node_id() const
 {
     return node_int;

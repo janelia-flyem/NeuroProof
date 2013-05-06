@@ -76,6 +76,18 @@ class RagEdge {
     bool is_equal(const RagEdge<Region>* edge2) const;
     std::size_t compute_hash(const RagEdge<Region>* edge) const;
 
+    void reassign_qloc(int pqloc){qloc=pqloc;};	
+    int get_qloc(){return qloc;}; 	
+
+    void set_cc_id(int pid){cc_id = pid;}; 	
+    int get_cc_id(){return cc_id;}; 	
+
+    void print_edge();
+    double mito_boundary_ratio();
+    
+    void set_edge_id(int pid){ edge_id = pid;};
+    int get_edge_id(){return edge_id;};
+
   private:
     RagEdge(RagNode<Region>* node1_, RagNode<Region>* node_);
     RagNode<Region>* node1;
@@ -85,9 +97,50 @@ class RagEdge {
     bool preserve;
     bool false_edge;
     bool dirty;
-};
 
-template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false) 
+    // FIX: potential bad additions to datastructure
+    int qloc;	
+    int cc_id;	
+    int edge_id;	
+};
+template<typename Region> void RagEdge<Region>::print_edge()
+{
+    printf("edge : (%d, %d)\n", node1->get_node_id(), node2->get_node_id());
+}	
+
+template<typename Region> double RagEdge<Region>::mito_boundary_ratio(){
+
+   RagNode<Region>* mito_node = NULL;		
+   RagNode<Region>* other_node = NULL;		
+
+   if ((node1->get_node_type() == 2) && (node2->get_node_type() == 1) ){
+	mito_node = node1;
+	other_node = node2;
+   }	
+   else if((node2->get_node_type() == 2) && (node1->get_node_type() == 1) ){
+	mito_node = node2;
+	other_node = node1;
+   }
+   else 
+	return 0.0; 	
+
+   if (mito_node->get_size() > other_node->get_size())
+	return 0.0;
+
+   unsigned long long mito_node_border_len = mito_node->compute_border_length();		
+
+   double ratio = edge_size*1.0/mito_node_border_len; 
+
+   if (ratio > 1.0){
+	printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());
+	return 0.0;
+   }
+
+   return ratio;
+
+}
+
+template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false), qloc(-1)
 {
     RagNodePtrCmp<Region> cmp;
     if (cmp(node1_, node2_)) { 
@@ -109,6 +162,8 @@ template<typename Region> inline RagNode<Region>* RagEdge<Region>::get_node2() c
 {
     return node2;
 }
+
+
 
 template<typename Region> inline RagNode<Region>* RagEdge<Region>::get_other_node(RagNode<Region>* node) const
 {
