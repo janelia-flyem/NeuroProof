@@ -12,7 +12,7 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES BatchMergeMRFh.cpp MergePriorityFunction.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
+include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 
 add_library (Algorithms SHARED ${SOURCES})
 add_dependencies (Algorithms ${boost_NAME} ${vigra_NAME})

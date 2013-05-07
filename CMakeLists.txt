@@ -80,7 +80,7 @@ else ()
     #target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
     #add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
 
-    set (NEUROPROOF_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system boost_program_options boost_python)
+    set (NEUROPROOF_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
     target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS})
     target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS})

@@ -12,7 +12,7 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES FeatureManager.cpp Features.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
+include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 
 add_library (FeatureManager SHARED ${SOURCES})
 add_dependencies (FeatureManager ${boost_NAME} ${opencv_NAME})

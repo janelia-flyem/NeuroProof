@@ -8,9 +8,7 @@
 #include <tr1/unordered_map>
 
 
-#ifdef SETPYTHON
 #include <boost/python.hpp>
-#endif
 
 #include "../Classifier/vigraRFclassifier.h"
 #include "../Classifier/opencvRFclassifier.h"
