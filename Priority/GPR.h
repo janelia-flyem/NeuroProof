@@ -117,7 +117,7 @@ template<typename Region> double GPR<Region>::calculateGPR(int num_paths, int nu
     for (typename Rag<Region>::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
         node_list.push_back(*iter);
     }
-    calculateGPR(num_paths, num_threads, node_list);
+    return calculateGPR(num_paths, num_threads, node_list);
 }
 
 
