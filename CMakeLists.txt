@@ -68,7 +68,9 @@ else ()
     add_subdirectory (Classifier)
     add_subdirectory (DataStructures)
 
-    set (NEUROPROOF_PKGS ImportsExports FeatureManager Algorithms Classifier DataStructures)
+    set (NEUROPROOF_INT_LIBS ImportsExports FeatureManager Algorithms Classifier DataStructures)
+    set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
+    set (NEUROPROOF_DEPS ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
 
     include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
 
@@ -76,32 +78,27 @@ else ()
     add_executable (neuroproof_graph_analyze neuroproof_graph_analyze.cpp)
     add_executable (neuroproof_graph_learn neuroproof_graph_learn.cpp)
     add_executable (neuroproof_graph_predict neuroproof_graph_predict.cpp)
-   
-    #target_link_libraries (NeuroProof_test ImportsExports ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} boost_thread boost_system)
-    #add_dependencies (NeuroProof_test ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
 
-    set (NEUROPROOF_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
-
-    target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS})
-    target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS})
-    target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS})
+    target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+    target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+    target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     
-    add_dependencies (neuroproof_graph_analyze ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
-    add_dependencies (neuroproof_graph_learn ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
-    add_dependencies (neuroproof_graph_predict ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+    add_dependencies (neuroproof_graph_analyze ${NEUROPROOF_DEPS})
+    add_dependencies (neuroproof_graph_learn ${NEUROPROOF_DEPS})
+    add_dependencies (neuroproof_graph_predict ${NEUROPROOF_DEPS})
 
     get_target_property (neuroproof_graph_analyze_exe neuroproof_graph_analyze LOCATION)
     get_target_property (neuroproof_graph_learn_exe neuroproof_graph_learn LOCATION)
     get_target_property (neuroproof_graph_predict_exe neuroproof_graph_predict LOCATION)
 
     add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
-    target_link_libraries (NeuroProofPriority ${NEUROPROOF_PKGS} ${NEUROPROOF_LIBS} boost_python)
-    add_dependencies (NeuroProofPriority ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
+    target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+    add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 
     # need to build components separately to set python flag
     add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp)
-    target_link_libraries (NeuroProofRag ${NEUROPROOF_LIBS} boost_python)
-    add_dependencies (NeuroProofRag ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
+    target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
+    add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
     get_target_property (NeuroProofPriority_lib NeuroProofPriority LOCATION)
@@ -139,7 +136,6 @@ else ()
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_predict_exe} ${BUILDEM_DIR}/bin)
-
 
 
     ###############################################################################
