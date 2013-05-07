@@ -1,7 +1,7 @@
 #ifndef FEATURECACHE_H
 #define FEATURECACHE_H
 
-#include <iosfwd>
+#include <vector>
 
 namespace NeuroProof {
 

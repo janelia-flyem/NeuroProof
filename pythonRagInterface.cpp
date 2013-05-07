@@ -307,7 +307,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("get_body_id", &Stack::get_body_id)
         .def("determine_edge_locations", &Stack::determine_edge_locations)
         .def("get_edge_weight", &Stack::get_edge_weight)
-        .def("get_edge_loc", &Stack::get_edge_loc)
+        .def("get_edge_loc", &Stack::get_edge_loc2)
         .def("is_orphan", &Stack::is_orphan)
         ;
 

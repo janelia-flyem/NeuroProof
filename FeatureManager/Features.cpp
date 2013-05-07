@@ -1,9 +1,10 @@
-
 #include "Features.h"
+#include <iostream>
 
 using namespace NeuroProof;
+using std::cout;
+using std::endl;
 
-  
 void* FeatureHist::create_cache(){
         return (void*)(new HistCache(num_bins+1));
 }
@@ -21,12 +22,11 @@ void FeatureHist::copy_cache(void * src, void* dest) {
 void FeatureHist::print_cache(void* pcache ){
 
     HistCache* hc = (HistCache*) pcache	;
-
-    printf("count : %d\n",hc->count);	
-    printf("histogram: ");	
+    cout << "count : " << hc->count << endl;
+    cout << "histogram: ";
     for(int i=0; i< hc->hist.size(); i++)
-	printf("%d, ", hc->hist[i]);	
-    printf("\n");	
+	cout << hc->hist[i] << ", ";
+    cout << endl;
 }
 
 void FeatureHist::delete_cache(void * cache) {
@@ -114,11 +114,11 @@ void FeatureMoment::print_cache(void* pcache ){
 
     MomentCache* hc = (MomentCache*) pcache	;
 
-    printf("count : %d\n",hc->count);	
-    printf("vals: ");	
+    cout << "count : " << hc->count << endl;
+    cout << "vals: ";
     for(int i=0; i< hc->vals.size(); i++)
-	printf("%.3f, ", hc->vals[i]);	
-    printf("\n");	
+        cout << hc->vals[i] << ", ";
+    cout << endl;
 }
 
 

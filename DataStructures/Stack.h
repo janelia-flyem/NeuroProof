@@ -1,3 +1,6 @@
+#ifndef STACK_H
+#define STACK_H
+
 #include <vector>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
@@ -18,8 +21,6 @@
 
 #include "../Algorithms/RagAlgs.h"
 
-#ifndef STACK_H
-#define STACK_H
 
 namespace NeuroProof {
 class LabelCount;
@@ -79,7 +80,7 @@ class Stack {
 
     Label * get_label_volume();
     
-    boost::python::tuple get_edge_loc(RagEdge<Label>* edge);
+    boost::python::tuple get_edge_loc2(RagEdge<Label>* edge);
     void get_edge_loc(RagEdge<Label>* edge, Label& x, Label& y, Label& z);
 
     void build_rag();
@@ -126,7 +127,9 @@ class Stack {
         return feature_mgr->get_prob(edge);
     }
 
+#ifndef SETPYTHON
     void set_basic_features();
+#endif
 
     void set_groundtruth(Label* pgt) {gtruth = pgt; }
     void compute_groundtruth_assignment();     			
@@ -236,174 +239,6 @@ class Stack {
 };
 
 
-void Stack::build_rag_border()
-{
-    if (feature_mgr && (feature_mgr->get_num_features() == 0)) {
-        feature_mgr->add_median_feature();
-        median_mode = true; 
-    } 
-    
-    std::vector<double> predictions(prediction_array.size(), 0.0);
-    std::vector<double> predictions2(prediction_array.size(), 0.0);
-
-    unsigned int plane_size = width * height;
-    for (unsigned int z = 1; z < (depth-1); ++z) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 1; y < (height-1); ++y) {
-            int y_spot = y * width;
-            for (unsigned int x = 1; x < (width-1); ++x) {
-                unsigned long long curr_spot = x + y_spot + z_spot;
-                unsigned int spot0 = watershed[curr_spot];
-                unsigned int spot1 = watershed2[curr_spot];
-
-                if (!spot0 || !spot1) {
-                    continue;
-                }
-
-                assert(spot0 != spot1);
-
-                RagNode<Label> * node = rag->find_rag_node(spot0);
-                if (!node) {
-                    node = rag->insert_rag_node(spot0);
-                }
-
-                RagNode<Label> * node2 = rag->find_rag_node(spot1);
-
-                if (!node2) {
-                    node2 = rag->insert_rag_node(spot1);
-                }
-
-                for (unsigned int i = 0; i < prediction_array.size(); ++i) {
-                    predictions[i] = prediction_array[i][curr_spot];
-                }
-                for (unsigned int i = 0; i < prediction_array2.size(); ++i) {
-                    predictions2[i] = prediction_array2[i][curr_spot];
-                }
-
-                if (feature_mgr && !median_mode) {
-                    feature_mgr->add_val(predictions, node);
-                    feature_mgr->add_val(predictions2, node2);
-                }
-
-                rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
-                rag_add_edge(rag, spot0, spot1, predictions2, feature_mgr);
-
-                node->incr_border_size();
-                node2->incr_border_size();
-
-                border_edges.insert(rag->find_rag_edge(node, node2));
-            }
-        }
-    }
-
-    watershed_to_body[0] = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-        Label id = (*iter)->get_node_id();
-        watershed_to_body[id] = id;
-    }
-}
-
-void Stack::disable_nonborder_edges()
-{
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        if (border_edges.find(*iter) == border_edges.end()) {
-            (*iter)->set_false_edge(true);
-        }
-    }
-}
-
-void Stack::enable_nonborder_edges()
-{
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        if (!((*iter)->is_preserve())) {
-            (*iter)->set_false_edge(false);
-        }
-    }
-}
-
-void Stack::agglomerate_rag(double threshold)
-{
-    if (threshold == 0.0) {
-        return;
-    }
-
-    MergePriority* priority = new ProbPriority(feature_mgr, rag);
-    priority->initialize_priority(threshold);
-
-
-    while (!(priority->empty())) {
-
-        RagEdge<Label>* rag_edge = priority->get_top_edge();
-
-        if (!rag_edge) {
-            continue;
-        }
-
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
-        Label node1 = rag_node1->get_node_id(); 
-        Label node2 = rag_node2->get_node_id(); 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
-        watershed_to_body[node2] = node1;
-        for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
-            watershed_to_body[*iter] = node1;
-        }
-        merge_history[node1].push_back(node2);
-        merge_history[node1].insert(merge_history[node1].end(), merge_history[node2].begin(), merge_history[node2].end());
-        merge_history.erase(node2);
-    }
-
-    EdgeHash border_edges2 = border_edges;
-    border_edges.clear();
-    for (EdgeHash::iterator iter = border_edges2.begin(); iter != border_edges2.end(); ++iter) {
-        Label body1 = watershed_to_body[(*iter)->get_node1()->get_node_id()];
-        Label body2 = watershed_to_body[(*iter)->get_node2()->get_node_id()];
-
-        if (body1 != body2) {
-            border_edges.insert(rag->find_rag_edge(body1, body2)); 
-        
-            /*
-            RagNode<Label>* n1 = rag->find_rag_node(body1);
-            RagNode<Label>* n2 = rag->find_rag_node(body2);
-            // print info on edges
-            RagEdge<Label>* temp_edge = rag->find_rag_edge(body1, body2);
-            unsigned long long edge_size = temp_edge->get_size();
-            unsigned long long total_edge_size1 = 0;
-            unsigned long long total_edge_size2 = 0;
-
-            for (RagNode<Label>::edge_iterator eiter = n1->edge_begin(); eiter != n1->edge_end(); ++eiter) {
-                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
-                    total_edge_size1 += (*eiter)->get_size();
-                }
-            }
-            for (RagNode<Label>::edge_iterator eiter = n2->edge_begin(); eiter != n2->edge_end(); ++eiter) {
-                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
-                    total_edge_size2 += (*eiter)->get_size();
-                }
-            }
-            double prob1 = edge_size / double(total_edge_size1);
-            double prob2 = edge_size / double(total_edge_size2);
-            std::cout << "Body 1: " << body1 << " Body 2: " << body2 << " Size: " << edge_size << " overlap: " << prob1 << " " << prob2 << std::endl;
-            */
-        }
-    }
-}
-
-boost::python::list Stack::get_transformations()
-{
-    boost::python::list transforms;
-
-    for (std::tr1::unordered_map<Label, Label>::iterator iter = watershed_to_body.begin();
-           iter != watershed_to_body.end(); ++iter)
-    {
-        if (iter->first != iter->second) {
-            //boost::python::tuple<Label, Label> mapping(iter->first, iter->second);
-            transforms.append(boost::python::make_tuple(iter->first, iter->second));
-        }
-    } 
-
-    return transforms;
-}
 
 class StackLearn: public Stack{
 
@@ -443,19 +278,6 @@ public:
       LabelCount(): lbl(0), count(0) {};	 	 		
       LabelCount(Label plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
 };
-
-
-
-class LabelCount{
-public:
-      Label lbl;
-      size_t count;
-      LabelCount(): lbl(0), count(0) {};	 	 		
-      LabelCount(Label plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
-};
-
-
-
 
 }
 

@@ -2,6 +2,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <cmath>
+
 // #include <dai/alldai.h>  // Include main libDAI header file
 // #include <dai/bp.h>  // Include main libDAI header file
 // #include <dai/util.h>  // Include main libDAI header file
