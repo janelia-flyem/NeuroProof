@@ -323,6 +323,7 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     compute_features(1, edget_caches, feature_results, edge, 0);
     compute_diff_features(node1_caches, node2_caches, feature_results, edge);
     
+    //compute_all_features(edge,feature_results);
 
     /*std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
     for (int i = 0; i < feature_results.size(); ++i) {
