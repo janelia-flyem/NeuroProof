@@ -295,16 +295,16 @@ int main(int argc, char** argv)
 
 
 
-    if (watershed_data)  	
-	delete[] watershed_data;
-    delete[] zp_watershed_data;
+    //if (watershed_data)  	
+	//delete[] watershed_data;
+//    delete[] zp_watershed_data;
 	
-    if (prediction_data)  	
-	delete[] prediction_data;
-    delete[] prediction_single_ch;
+//    if (prediction_data)  	
+//	delete[] prediction_data;
+  //  delete[] prediction_single_ch;
 
-    if (groundtruth_data)  	
-	delete[] groundtruth_data;
+    //if (groundtruth_data)  	
+	//delete[] groundtruth_data;
 
      	
 
