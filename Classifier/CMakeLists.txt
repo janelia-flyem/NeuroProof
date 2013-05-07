@@ -15,4 +15,4 @@ set (SOURCES opencvABclassifier.cpp opencvRFclassifier.cpp opencvSVMclassifier.c
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
 add_library (Classifier SHARED ${SOURCES})
-add_dependencies (Classifier)
+add_dependencies (Classifier ${vigra_NAME} ${opencv_NAME})

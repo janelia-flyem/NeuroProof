@@ -15,4 +15,4 @@ set (SOURCES FeatureManager.cpp Features.cpp)
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
 add_library (FeatureManager SHARED ${SOURCES})
-add_dependencies (FeatureManager  ${boost_NAME})
+add_dependencies (FeatureManager ${boost_NAME} ${opencv_NAME})

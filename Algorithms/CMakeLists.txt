@@ -10,9 +10,9 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET(CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-set (SOURCES BachMergeMRFh.cpp MergePriorityFunction.cpp)
+set (SOURCES BatchMergeMRFh.cpp MergePriorityFunction.cpp)
 
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
 add_library (Algorithms SHARED ${SOURCES})
-add_dependencies (Algorithms ${boost_NAME})
+add_dependencies (Algorithms ${boost_NAME} ${vigra_NAME})

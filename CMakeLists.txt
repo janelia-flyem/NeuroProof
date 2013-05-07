@@ -97,7 +97,7 @@ else ()
     add_dependencies (NeuroProofPriority ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
 
     # need to build components separately to set python flag
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStrutures/Stack.cpp)
+    add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp)
     target_link_libraries (NeuroProofRag ${json_LIB} boost_thread boost_python)
     add_dependencies (NeuroProofRag ${python_NAME} ${jsoncpp_NAME} ${boost_NAME})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")

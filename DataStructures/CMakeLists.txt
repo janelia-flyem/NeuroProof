@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-project (FeatureManaager)
+project (DataStructures)
 
 IF(NOT CMAKE_BUILD_TYPE)
     SET (CMAKE_BUILD_TYPE Release)
@@ -15,4 +15,4 @@ set (SOURCES Stack.cpp StackLearn.cpp StackPredict.cpp)
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
 add_library (DataStructures SHARED ${SOURCES})
-add_dependencies (DataStructures)
+add_dependencies (DataStructures ${python_NAME} ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
