@@ -292,6 +292,11 @@ void FeatureMgr::set_overlap_function()
 
 double FeatureMgr::get_prob(RagEdge<Label>* edge)
 {
+    vector<double> feature_results;
+    RagNode<Label>* node1 = edge->get_node1();
+    RagNode<Label>* node2 = edge->get_node2();
+
+#ifdef SETPYTHON
     std::vector<void*>* edget_caches = 0;
     std::vector<void*>* node1_caches = 0;
     std::vector<void*>* node2_caches = 0;
@@ -299,9 +304,6 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     if (edge_caches.find(edge) != edge_caches.end()) {
         edget_caches = &(edge_caches[edge]);
     }
-
-    RagNode<Label>* node1 = edge->get_node1();
-    RagNode<Label>* node2 = edge->get_node2();
 
     if (node2->get_size() < node1->get_size()) {
         RagNode<Label>* temp_node = node2;
@@ -315,15 +317,14 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     if (node_caches.find(node2) != node_caches.end()) {
         node2_caches = &(node_caches[node2]);
     }
-
-    vector<double> feature_results;
     
     compute_features(0, node1_caches, feature_results, edge, 1);
     compute_features(0, node2_caches, feature_results, edge, 2);
     compute_features(1, edget_caches, feature_results, edge, 0);
     compute_diff_features(node1_caches, node2_caches, feature_results, edge);
-    
-    //compute_all_features(edge,feature_results);
+#else
+    compute_all_features(edge,feature_results);
+#endif
 
     /*std::cout << node1->get_node_id() << " " << node2->get_node_id() << std::endl;
     for (int i = 0; i < feature_results.size(); ++i) {
