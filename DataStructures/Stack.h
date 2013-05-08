@@ -267,7 +267,7 @@ public:
 
     void merge_mitochondria_a();
     void absorb_small_regions(double* prediction_vol, Label* label_vol);
-    void absorb_small_regions2(double* prediction_vol, Label* label_vol);
+    void absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold);
 
 };
 

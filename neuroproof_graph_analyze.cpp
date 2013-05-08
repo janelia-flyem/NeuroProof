@@ -31,6 +31,9 @@
 // utilties for importing rags
 #include "ImportsExports/ImportExportRagPriority.h"
 
+// utitlies for parsing options
+#include "Utilities/ParseOptions.h"
+
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -69,6 +72,22 @@ void parse_options(int argc, char** argv, int& num_threads,
         int& random_seed, bool& calc_gpr,
         bool& est_edit_distance)
 {
+    OptionParser parser("Program that quantifies the uncertainty found in the segmentation graph");
+    parser.add_option(num_threads, "num-threads",
+            "Number of threads used in computing GPR"); 
+    parser.add_option(calc_gpr, "calc-gpr,g",
+            "Calculate the uncertainty in the graph using GPR"); 
+    parser.add_option(est_edit_distance, "est-edit-distance,b",
+            "Estimate the number of operations to prevent large errors in the graph"); 
+    parser.add_option(node_threshold, "node-size-threshold",
+            "Size threshold below which errors are considered insignificant"); 
+    parser.add_option(node_threshold, "synapse-size-threshold",
+            "Size threshold based on the number of synapse in the node below which are considered insignificant");
+    parser.add_positional(graph_file, "graph-file", "graph file"); 
+    parser.add_option(random_seed, "random-seed", "Set seed for random computation", true, false, true);
+    parser.parse_options(argc, argv);
+    
+    /*
     string prgm_message = "analyze_segmentation_graph [graph-file]\n\tProgram that quantifies the uncertainty found in the segmentation graph";
     options_description generic_options("Options");
     generic_options.add_options()
@@ -113,6 +132,7 @@ void parse_options(int argc, char** argv, int& num_threads,
         cout << generic_options <<endl;
         exit(-1);
     }
+    */
 }
 
 /*!

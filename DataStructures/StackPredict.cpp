@@ -424,7 +424,7 @@ void StackPredict::absorb_small_regions(double* prediction_vol, Label* label_vol
     
 }
 
-void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vol){
+void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold){
 
     std::map<Label, unsigned long long> regions_sz;
 
@@ -443,7 +443,7 @@ void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vo
     
     std::set<Label> small_regions;
     for(it = regions_sz.begin(); it != regions_sz.end(); it++)
-	if ((it->second) < 100)
+	if ((it->second) < threshold)
 	    small_regions.insert(it->first);
 
 	
