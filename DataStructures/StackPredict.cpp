@@ -314,7 +314,7 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
 	modify_assignment_after_merge(node1,node2);
 
     }
-    printf("# edges driven out %d\n",priority->get_kout()); 	
+    //printf("# edges driven out %d\n",priority->get_kout()); 	
     if(gtruth)	
         printf("# false merges %.2f\n",error); 	
 
@@ -376,7 +376,7 @@ void StackPredict::merge_mitochondria_a()
 
     }
 
-    printf("# edges driven out %d\n",priority->get_kout()); 	
+    //printf("# edges driven out %d\n",priority->get_kout()); 	
     if(gtruth)	
         printf("# false merges %.2f\n",error); 	
 
@@ -387,7 +387,7 @@ void StackPredict::merge_mitochondria_a()
 	if((*iter)->get_node_type()==2)
 	    not_merged_total++;
     }
-    printf("Total mito not merged %d\n", not_merged_total);	
+    //printf("Total mito not merged %d\n", not_merged_total);	
 }
 
 
@@ -455,7 +455,7 @@ void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vo
 	    nnz++;	
 	}
     } 
-    printf("total zeros: %d\n",nnz);
+    //printf("total zeros: %d\n",nnz);
     VigraWatershed wshed(depth-2*padding,height-2*padding,width-2*padding);
     wshed.run_watershed(prediction_vol,label_vol);
 

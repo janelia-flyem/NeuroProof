@@ -82,7 +82,7 @@ public:
 		}	
 	    }	 	
 	}
-    	printf("total #zeros in vol before and after wshed: %lu,  %lu\n",nnz, nnz2);
+    	//printf("total #zeros in vol before and after wshed: %lu,  %lu\n",nnz, nnz2);
     }	
 };
 

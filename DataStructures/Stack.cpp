@@ -602,10 +602,10 @@ Label* Stack::get_label_volume_reverse(){
     Label * temp_labels_iter = temp_labels;
     unsigned int plane_size = width * height;
 
-    for (int x = padding; x < (depth - padding); ++x) {
+    for (int x = padding; x < (width - padding); ++x) {
         for (int y = padding; y < (height - padding); ++y) {
             int y_spot = y * width;
-            for (int z = padding; z < (width - padding); ++z) {
+            for (int z = padding; z < (depth - padding); ++z) {
                 int z_spot = z * plane_size;
                 unsigned long long curr_spot = x+y_spot+z_spot;
                 Label sv_id = watershed[curr_spot];
@@ -970,8 +970,8 @@ void Stack::write_graph_json(Json::Value& json_writer)
     id = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         if (is_orphan(*iter)) {
-            ++id;
             json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
+            ++id;
         } 
     }
 }

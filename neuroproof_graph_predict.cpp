@@ -94,7 +94,7 @@ struct PredictOptions
                 "json file that contains synapse annotations that are used as constraints in merging"); 
         parser.add_option(output_filename, "output-file",
                 "h5 file that will contain the output segmentation (z,y,x) and body mappings"); 
-        parser.add_option(graph_filename, "graph_file",
+        parser.add_option(graph_filename, "graph-file",
                 "json file that will contain the output graph"); 
         parser.add_option(threshold, "threshold",
                 "segmentation threshold"); 
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     int          i, j, k;
     
     PredictOptions options(argc, argv);
-    
+   
     // options not set by the command line
     string groundtruth_filename="";
     bool read_off_rwts = false;
@@ -145,11 +145,11 @@ int main(int argc, char** argv)
 
     // read transforms from watershed/segmentation file
     H5Read * transforms = new H5Read(options.watershed_filename.c_str(), "transforms");
-    Label* transform_data=NULL;	
+    unsigned long long* transform_data=0;	
     transforms->readData(&transform_data);	
     int transform_height = transforms->dim()[0];
     int transform_width = transforms->dim()[1];
-    delete[] transforms;
+    delete transforms;
 
     // create sp to body map
     int tpos = 0;
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
     for (int i = 0; i < transform_height; ++i, tpos+=2) {
         sp2body[(transform_data[tpos])] = transform_data[tpos+1];
     }
-    delete transform_data;
+    delete[] transform_data;
 
     H5Read * watershed = new H5Read(options.watershed_filename.c_str(),SEG_DATASET_NAME);	
     Label* watershed_data=NULL;	
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     dims[0] = depth;
     dims[1] = height;
     dims[2] = width;
-    delete[] watershed; 
+    delete watershed; 
 
     // map supervoxel ids to body ids
     unsigned long int total_size = depth * height * width;
@@ -181,8 +181,7 @@ int main(int argc, char** argv)
     int pad_len=1;
     Label *zp_watershed_data=NULL;
     padZero(watershed_data, dims,pad_len,&zp_watershed_data);	
-    delete watershed_data;
-
+    delete[] watershed_data;
 
 
     StackPredict* stackp = new StackPredict(zp_watershed_data, depth+2*pad_len, height+2*pad_len, width+2*pad_len, pad_len);
@@ -196,7 +195,6 @@ int main(int argc, char** argv)
     double* prediction_single_ch = new double[depth*height*width];
     double* prediction_ch0 = new double[depth*height*width];
     	
-
     size_t cube_size, plane_size, element_size=prediction.dim()[prediction.total_dim()-1];
     size_t position, count;		    	
     for (int ch=0; ch < element_size; ch++){
@@ -243,9 +241,7 @@ int main(int argc, char** argv)
     cout<<"Building RAG ..."; 	
     stackp->build_rag();
     cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
-    cout<<"Inclusion removal ..."; 
     stackp->remove_inclusions();
-    cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
 
     stackp->compute_vi();  	
     stackp->compute_groundtruth_assignment();
@@ -257,29 +253,29 @@ int main(int argc, char** argv)
 
     switch (options.agglo_type) {
         case 0: 
-            cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ...\n"; 
+            cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
             stackp->agglomerate_rag_flat(options.threshold);	
             break;
         case 1:
-            cout<<"Agglomerating (agglo) upto threshold "<< options.threshold<< " ...\n"; 
-            stackp->agglomerate_rag(options.threshold, false);	
+            cout<<"Agglomerating (agglo) upto threshold "<< options.threshold<< " ..."; 
+            stackp->agglomerate_rag(options.threshold, false);
+            break;        
         case 2:
-            cout<<"Agglomerating (mrf) upto threshold "<< options.threshold<< " ...\n"; 
+            cout<<"Agglomerating (mrf) upto threshold "<< options.threshold<< " ..."; 
             stackp->agglomerate_rag_mrf(options.threshold, read_off_rwts,
                     options.output_filename, options.classifier_filename);	
             break;
         case 3:
-            cout<<"Agglomerating (queue) upto threshold "<< options.threshold<< " ...\n"; 
+            cout<<"Agglomerating (queue) upto threshold "<< options.threshold<< " ..."; 
             stackp->agglomerate_rag_queue(options.threshold, false);	
             break;
         case 4:
-            cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ...\n"; 
+            cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
             stackp->agglomerate_rag_flat(options.threshold, false, options.output_filename,
                     options.classifier_filename);	
             break;
         default: throw ErrMsg("Illegal agglomeration type specified");
     }
-
     cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
 
     remove_inclusions(stackp);
@@ -296,8 +292,10 @@ int main(int argc, char** argv)
     // ?? is this oritented correctly (seems like z,y,z in the original)
     dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
     Label * temp_label_volume1D = stackp->get_label_volume();       	    
+    cout << "Removing small bodies ... ";
     stackp->absorb_small_regions2(prediction_ch0, temp_label_volume1D,
             options.watershed_threshold);
+    cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
     delete[] temp_label_volume1D;	
 
     // recompute rag
@@ -311,9 +309,16 @@ int main(int argc, char** argv)
     	eclfr = new VigraRFclassifier(options.postseg_classifier_filename.c_str());	
     else if (ends_with(options.postseg_classifier_filename, ".xml")) 	
 	eclfr = new OpencvRFclassifier(options.postseg_classifier_filename.c_str());	
+    
     stackp->get_feature_mgr()->set_classifier(eclfr);   	 
     stackp->build_rag();
 
+    Rag<Label>* rag = stackp->get_rag();
+    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+           iter != rag->edges_end(); ++iter) {
+        double val = stackp->get_edge_weight((*iter));
+        (*iter)->set_weight(val);
+    }
 
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
@@ -336,18 +341,11 @@ int main(int argc, char** argv)
     fout.close();
 
 
-    // write out label volume
-    temp_label_volume1D = stackp->get_label_volume_reverse();       	    
-    H5Write(options.output_filename.c_str(),SEG_DATASET_NAME,3,dims_out, temp_label_volume1D);
-    delete[] temp_label_volume1D;	
-
-    
     // write out transforms (identity)
-    Rag<Label>* rag = stackp->get_rag();
     hsize_t dims_out2[2];
     dims_out2[0] = rag->get_num_regions() + 1;
     dims_out2[1] = 2;
-    transform_data = new Label[(rag->get_num_regions()+1) * 2];
+    transform_data = new unsigned long long [(rag->get_num_regions()+1) * 2];
     transform_data[0] = 0;
     transform_data[1] = 0;
     tpos = 2;
@@ -355,10 +353,18 @@ int main(int argc, char** argv)
            iter != rag->nodes_end(); ++iter, tpos+=2) {
         transform_data[tpos] = (*iter)->get_node_id();
         transform_data[tpos+1] = (*iter)->get_node_id();
-    } 
-    H5Write(options.output_filename.c_str(),"transforms",2,dims_out2, transform_data);
-    delete[] transform_data;
+    }
+
+    // write out label volume
+    temp_label_volume1D = stackp->get_label_volume_reverse();       	    
+
+    H5Write(options.output_filename.c_str(),SEG_DATASET_NAME,3,dims_out, temp_label_volume1D,
+        "transforms",2,dims_out2, transform_data,
+        options.output_filename == options.watershed_filename);
     
+    
+    delete[] temp_label_volume1D;
+    delete[] transform_data;
     
     printf("Output written to %s, dataset %s\n",options.output_filename.c_str(),SEG_DATASET_NAME);	
 

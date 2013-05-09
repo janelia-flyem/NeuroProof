@@ -186,6 +186,13 @@ class Stack {
     void reinit_rag()
     {
         delete rag;
+        if (!watershed_to_body.empty()) {
+            unsigned long long max_id = width * height * depth;
+            for (unsigned long long i = 0; i < max_id; ++i) {
+                watershed[i] = watershed_to_body[(watershed[i])];
+            }
+        }
+        watershed_to_body.clear();
         rag = new Rag<Label>();
     }
 
