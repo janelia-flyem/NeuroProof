@@ -38,6 +38,8 @@ using std::tr1::unordered_map;
 const char * SEG_DATASET_NAME = "stack";
 const char * PRED_DATASET_NAME = "volume/predictions";
 
+typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
+
 void remove_inclusions(StackPredict* stackp)
 {
     cout<<"Inclusion removal ..."; 
@@ -313,25 +315,39 @@ int main(int argc, char** argv)
     stackp->get_feature_mgr()->set_classifier(eclfr);   	 
     stackp->build_rag();
 
-    Rag<Label>* rag = stackp->get_rag();
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
-           iter != rag->edges_end(); ++iter) {
-        double val = stackp->get_edge_weight((*iter));
-        (*iter)->set_weight(val);
-    }
-
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
         stackp->set_exclusions(options.synapse_filename);
     }
     stackp->determine_edge_locations();
-    
+   
+    // set edge properties for export 
+    Rag<Label>* rag = stackp->get_rag();
+    rag_bind_edge_property_list(rag, "location");
+    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+           iter != rag->edges_end(); ++iter) {
+        if (!((*iter)->is_false_edge())) {
+            double val = stackp->get_edge_weight((*iter));
+            (*iter)->set_weight(val);
+        }
+        Label x = 0;
+        Label y = 0;
+        Label z = 0;
+        try {
+            stackp->get_edge_loc((*iter), x, y, z);
+        } catch (ErrMsg& msg) {
+            //
+        }
+        rag_add_property(rag, (*iter), "location", Location(x,y,z));
+    }
+
     // write out graph json
     Json::Value json_writer;
     ofstream fout(options.graph_filename.c_str());
     if (!fout) {
         throw ErrMsg("Error: output file " + options.graph_filename + " could not be opened");
     }
+    
     bool status = create_json_from_rag(stackp->get_rag(), json_writer, false);
     if (!status) {
         throw ErrMsg("Error in rag export");

@@ -573,7 +573,7 @@ void Stack::set_exclusions(std::string synapse_json)
             all_locations.push_back(loc);
             locations.push_back(loc);
         }
-        Json::Value psds = synapses["partners"];
+        Json::Value psds = synapses[i]["partners"];
         for (int i = 0; i < psds.size(); ++i) {
             Json::Value location = psds[i]["location"];
             if (!location.empty()) {
@@ -593,7 +593,6 @@ void Stack::set_exclusions(std::string synapse_json)
             }
         }
     }
-
 }
 
 Label* Stack::get_label_volume_reverse(){
