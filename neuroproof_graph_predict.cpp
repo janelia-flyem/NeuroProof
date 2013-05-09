@@ -356,7 +356,7 @@ int main(int argc, char** argv)
     }
 
     // write out label volume
-    temp_label_volume1D = stackp->get_label_volume_reverse();       	    
+    temp_label_volume1D = stackp->get_label_volume();       	    
 
     H5Write(options.output_filename.c_str(),SEG_DATASET_NAME,3,dims_out, temp_label_volume1D,
         "transforms",2,dims_out2, transform_data,
