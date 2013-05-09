@@ -604,8 +604,7 @@ void FeatureMgr::print_cache(RagNode<Label>* node){
 
 }
 
-
-FeatureMgr::~FeatureMgr()
+void FeatureMgr::clear_features()
 {
     for (EdgeCaches::iterator iter = edge_caches.begin(); iter != edge_caches.end(); ++iter) {
         // creation of empty feature
@@ -614,13 +613,14 @@ FeatureMgr::~FeatureMgr()
         }
         unsigned int pos = 0;
         for (int i = 0; i < num_channels; ++i) {
-        vector<FeatureCompute*>& features = channels_features[i];
+            vector<FeatureCompute*>& features = channels_features[i];
             for (int j = 0; j < features.size(); ++j) {
                 features[j]->delete_cache(iter->second[pos]);
                 ++pos;
             } 
         }
     }
+    edge_caches.clear();
 
     for (NodeCaches::iterator iter = node_caches.begin(); iter != node_caches.end(); ++iter) {
         // creation of empty feature
@@ -629,14 +629,19 @@ FeatureMgr::~FeatureMgr()
         }
         unsigned int pos = 0;
         for (int i = 0; i < num_channels; ++i) {
-        vector<FeatureCompute*>& features = channels_features[i];
+            vector<FeatureCompute*>& features = channels_features[i];
             for (int j = 0; j < features.size(); ++j) {
                 features[j]->delete_cache(iter->second[pos]);
                 ++pos;
             } 
         }
     }
+    node_caches.clear();
+}
 
+FeatureMgr::~FeatureMgr()
+{
+    clear_features();
 }
 
 

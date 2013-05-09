@@ -15,4 +15,4 @@ set (SOURCES Stack.cpp StackLearn.cpp StackPredict.cpp)
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 
 add_library (DataStructures SHARED ${SOURCES})
-add_dependencies (DataStructures ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
+add_dependencies (DataStructures ${jsoncpp_NAME} ${boost_NAME} ${vigra_NAME} ${opencv_NAME})

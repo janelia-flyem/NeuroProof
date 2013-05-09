@@ -13,13 +13,17 @@
 
 #include "Utilities/h5read.h"
 #include "Utilities/h5write.h"
-#include "Utilities/ParseOptions.h"
+#include "Utilities/OptionParser.h"
 
 #include <ctime>
 #include <cmath>
 #include <cstring>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <tr1/unordered_map>
+
+#include <json/json.h>
+#include <json/value.h>
 
 using std::cerr; using std::cout; using std::endl;
 using std::ifstream;
@@ -29,6 +33,7 @@ using namespace NeuroProof;
 using std::vector;
 using namespace boost::algorithm;
 
+using std::tr1::unordered_map;
 
 const char * SEG_DATASET_NAME = "stack";
 const char * PRED_DATASET_NAME = "volume/predictions";
@@ -72,7 +77,7 @@ struct PredictOptions
 {
     PredictOptions(int argc, char** argv) : synapse_filename(""), output_filename("segmentation.h5"),
         graph_filename("graph.json"), threshold(0.2), watershed_threshold(100),
-        merge_mito(true), agglo_type(1)
+        merge_mito(true), agglo_type(1), postseg_classifier_filename("")
     {
         OptionParser parser("Program that predicts edge confidence for a graph and merges confident edges");
 
@@ -95,6 +100,8 @@ struct PredictOptions
                 "segmentation threshold"); 
         parser.add_option(watershed_threshold, "watershed-threshold",
                 "threshold used for removing small bodies as a post-process step"); 
+        parser.add_option(postseg_classifier_filename, "postseg-classifier-file",
+                "opencv or vigra agglomeration classifier to be used after agglomeration to assign confidence to the graph edges -- classifier-file used if not specified"); 
 
         // invisible arguments
         parser.add_option(merge_mito, "merge-mito",
@@ -117,6 +124,7 @@ struct PredictOptions
 
     double threshold;
     int watershed_threshold; // might be able to increase default to 500
+    string postseg_classifier_filename;
 
     // hidden options (with default values)
     bool merge_mito;
@@ -135,18 +143,46 @@ int main(int argc, char** argv)
 
     ScopeTime timer;
 
-    // ?! read mapping if it exists
-    H5Read watershed(options.watershed_filename.c_str(),SEG_DATASET_NAME);	
-    Label* watershed_data=NULL;	
-    watershed.readData(&watershed_data);	
-    int depth =	 watershed.dim()[0];
-    int height = watershed.dim()[1];
-    int width =	 watershed.dim()[2];
+    // read transforms from watershed/segmentation file
+    H5Read * transforms = new H5Read(options.watershed_filename.c_str(), "transforms");
+    Label* transform_data=NULL;	
+    transforms->readData(&transform_data);	
+    int transform_height = transforms->dim()[0];
+    int transform_width = transforms->dim()[1];
+    delete[] transforms;
 
-	
+    // create sp to body map
+    int tpos = 0;
+    unordered_map<Label, Label> sp2body;
+    sp2body[0] = 0;
+    for (int i = 0; i < transform_height; ++i, tpos+=2) {
+        sp2body[(transform_data[tpos])] = transform_data[tpos+1];
+    }
+    delete transform_data;
+
+    H5Read * watershed = new H5Read(options.watershed_filename.c_str(),SEG_DATASET_NAME);	
+    Label* watershed_data=NULL;	
+    watershed->readData(&watershed_data);	
+    int depth =	 watershed->dim()[0];
+    int height = watershed->dim()[1];
+    int width =	 watershed->dim()[2];
+    size_t dims[3];
+    dims[0] = depth;
+    dims[1] = height;
+    dims[2] = width;
+    delete[] watershed; 
+
+    // map supervoxel ids to body ids
+    unsigned long int total_size = depth * height * width;
+    for (int i = 0; i < total_size; ++i) {
+        watershed_data[i] = sp2body[(watershed_data[i])];
+    }
+
     int pad_len=1;
     Label *zp_watershed_data=NULL;
-    padZero(watershed_data, watershed.dim(),pad_len,&zp_watershed_data);	
+    padZero(watershed_data, dims,pad_len,&zp_watershed_data);	
+    delete watershed_data;
+
 
 
     StackPredict* stackp = new StackPredict(zp_watershed_data, depth+2*pad_len, height+2*pad_len, width+2*pad_len, pad_len);
@@ -178,7 +214,7 @@ int main(int argc, char** argv)
 	}
 	
 	double* zp_prediction_single_ch = NULL;
-	padZero(prediction_single_ch,watershed.dim(),pad_len,&zp_prediction_single_ch);
+	padZero(prediction_single_ch,dims,pad_len,&zp_prediction_single_ch);
 	if (ch == 0)
 	    memcpy(prediction_ch0, prediction_single_ch, depth*height*width*sizeof(double));	
 
@@ -214,7 +250,10 @@ int main(int argc, char** argv)
     stackp->compute_vi();  	
     stackp->compute_groundtruth_assignment();
     
-    // ?! add synapse constraints (send json to stack function)
+    // add synapse constraints (send json to stack function)
+    if (options.synapse_filename != "") {   
+        stackp->set_exclusions(options.synapse_filename);
+    }
 
     switch (options.agglo_type) {
         case 0: 
@@ -254,26 +293,74 @@ int main(int argc, char** argv)
     } 	
 
     hsize_t dims_out[3];
+    // ?? is this oritented correctly (seems like z,y,z in the original)
+    dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
     Label * temp_label_volume1D = stackp->get_label_volume();       	    
     stackp->absorb_small_regions2(prediction_ch0, temp_label_volume1D,
             options.watershed_threshold);
     delete[] temp_label_volume1D;	
 
+    // recompute rag
+    stackp->reinit_rag();
+    stackp->get_feature_mgr()->clear_features();
+    if (options.postseg_classifier_filename == "") {
+        options.postseg_classifier_filename = options.classifier_filename;
+    }
 
-    // ?! delete rag, delete feature caches
-    // ?! plug in new classifier (if it exists)
-    // ?! rebuild graph
-    // ?! add synapse constraints (send json to stack function)
+    if (ends_with(options.postseg_classifier_filename, ".h5"))
+    	eclfr = new VigraRFclassifier(options.postseg_classifier_filename.c_str());	
+    else if (ends_with(options.postseg_classifier_filename, ".xml")) 	
+	eclfr = new OpencvRFclassifier(options.postseg_classifier_filename.c_str());	
+    stackp->get_feature_mgr()->set_classifier(eclfr);   	 
+    stackp->build_rag();
+
+
+    // add synapse constraints (send json to stack function)
+    if (options.synapse_filename != "") {   
+        stackp->set_exclusions(options.synapse_filename);
+    }
     stackp->determine_edge_locations();
-    // ?! print graph to json -- import / export json + priority export (redo in stack) -- send synaspe json to count synapse bodies properly
+    
+    // write out graph json
+    Json::Value json_writer;
+    ofstream fout(options.graph_filename.c_str());
+    if (!fout) {
+        throw ErrMsg("Error: output file " + options.graph_filename + " could not be opened");
+    }
+    bool status = create_json_from_rag(stackp->get_rag(), json_writer, false);
+    if (!status) {
+        throw ErrMsg("Error in rag export");
+    }
+    stackp->write_graph_json(json_writer);
+    fout << json_writer;
+    fout.close();
 
 
-    // ?! implement reverse
-    //temp_label_volume1D = stackp->get_label_volume_reverse();       	    
-    // ?! add mapping output to h5write optionally, add H5F_ACC_RDWR for append
+    // write out label volume
+    temp_label_volume1D = stackp->get_label_volume_reverse();       	    
     H5Write(options.output_filename.c_str(),SEG_DATASET_NAME,3,dims_out, temp_label_volume1D);
-    printf("Output written to %s, dataset %s\n",options.output_filename.c_str(),SEG_DATASET_NAME);	
     delete[] temp_label_volume1D;	
+
+    
+    // write out transforms (identity)
+    Rag<Label>* rag = stackp->get_rag();
+    hsize_t dims_out2[2];
+    dims_out2[0] = rag->get_num_regions() + 1;
+    dims_out2[1] = 2;
+    transform_data = new Label[(rag->get_num_regions()+1) * 2];
+    transform_data[0] = 0;
+    transform_data[1] = 0;
+    tpos = 2;
+    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+           iter != rag->nodes_end(); ++iter, tpos+=2) {
+        transform_data[tpos] = (*iter)->get_node_id();
+        transform_data[tpos+1] = (*iter)->get_node_id();
+    } 
+    H5Write(options.output_filename.c_str(),"transforms",2,dims_out2, transform_data);
+    delete[] transform_data;
+    
+    
+    printf("Output written to %s, dataset %s\n",options.output_filename.c_str(),SEG_DATASET_NAME);	
 
     return 0;
 }

@@ -32,7 +32,7 @@
 #include "ImportsExports/ImportExportRagPriority.h"
 
 // utitlies for parsing options
-#include "Utilities/ParseOptions.h"
+#include "Utilities/OptionParser.h"
 
 #include <vector>
 #include <fstream>

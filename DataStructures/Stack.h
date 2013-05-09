@@ -21,6 +21,8 @@
 
 #include "../Algorithms/RagAlgs.h"
 
+#include <json/json.h>
+#include <json/value.h>
 
 namespace NeuroProof {
 class LabelCount;
@@ -79,6 +81,7 @@ class Stack {
     } 
 
     Label * get_label_volume();
+    Label * get_label_volume_reverse();
     
     boost::python::tuple get_edge_loc2(RagEdge<Label>* edge);
     void get_edge_loc(RagEdge<Label>* edge, Label& x, Label& y, Label& z);
@@ -144,6 +147,8 @@ class Stack {
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z);
 
     bool add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2);
+    bool add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int z1,
+        unsigned int x2, unsigned int y2, unsigned int z2);
 
     FeatureMgr * get_feature_mgr()
     {
@@ -174,7 +179,15 @@ class Stack {
         return depth;
     }
 
+    void write_graph_json(Json::Value& json_writer);
+    void set_exclusions(std::string synapse_json);
     int remove_inclusions();
+
+    void reinit_rag()
+    {
+        delete rag;
+        rag = new Rag<Label>();
+    }
 
     ~Stack()
     {
@@ -232,7 +245,9 @@ class Stack {
     FeatureMgr * feature_mgr;
     bool median_mode;
     EdgeHash border_edges;
-    
+   
+    std::vector<std::vector<unsigned int> > all_locations;
+
     Label* gtruth; 	// both derived classes may use groundtruth for either learning or validation
     std::multimap<Label, Label>	assignment;
     std::multimap<Label, std::vector<LabelCount> > contingency;	

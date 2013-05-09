@@ -27,7 +27,7 @@ public:
 	 * default file creation properties, and default file
 	 * access properties.
 	 */
-	file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	file = H5Fcreate(filename, H5F_ACC_RDWR, H5P_DEFAULT, H5P_DEFAULT);
 	if (file<0){
 	    printf("H5 file could not be opened for writing\n");	
 	    return;	

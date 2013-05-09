@@ -157,6 +157,8 @@ class FeatureMgr {
 
     double get_prob(RagEdge<Label>* edge);
 
+    void clear_features();
+
     ~FeatureMgr();
 
     void get_responses(RagEdge<Label>* edge, vector<double>& responses);

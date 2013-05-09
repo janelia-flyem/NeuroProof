@@ -3,6 +3,8 @@
 using namespace NeuroProof;
 using namespace std;
 
+
+
 Label find_max(Label* data, const size_t* dims)
 {
     Label max=0;  	
@@ -542,6 +544,87 @@ Label* Stack::get_label_volume(){
 }
 
 
+void Stack::set_exclusions(std::string synapse_json)
+{
+    Json::Reader json_reader;
+    Json::Value json_reader_vals;
+    ifstream fin(synapse_json.c_str());
+    if (!fin) {
+        throw ErrMsg("Error: input file: " + synapse_json + " cannot be opened");
+    }
+
+    if (!json_reader.parse(fin, json_reader_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+ 
+    all_locations.clear();
+
+    Json::Value synapses = json_reader_vals["data"];
+
+    for (int i = 0; i < synapses.size(); ++i) {
+        vector<vector<unsigned int> > locations;
+        Json::Value location = synapses[i]["T-bar"]["location"];
+        if (!location.empty()) {
+            vector<unsigned int> loc;
+            loc.push_back(location[(unsigned int)(0)].asUInt());
+            loc.push_back(location[(unsigned int)(1)].asUInt());
+            loc.push_back(location[(unsigned int)(2)].asUInt());
+            all_locations.push_back(loc);
+            locations.push_back(loc);
+        }
+        Json::Value psds = synapses["partners"];
+        for (int i = 0; i < psds.size(); ++i) {
+            Json::Value location = psds[i]["location"];
+            if (!location.empty()) {
+                vector<unsigned int> loc;
+                loc.push_back(location[(unsigned int)(0)].asUInt());
+                loc.push_back(location[(unsigned int)(1)].asUInt());
+                loc.push_back(location[(unsigned int)(2)].asUInt());
+                all_locations.push_back(loc);
+                locations.push_back(loc);
+            }
+        }
+
+        for (int iter1 = 0; iter1 < locations.size(); ++iter1) {
+            for (int iter2 = (iter1 + 1); iter2 < locations.size(); ++iter2) {
+                add_edge_constraint2(locations[iter1][0], locations[iter1][1], locations[iter1][2],
+                    locations[iter2][0], locations[iter2][1], locations[iter2][2]);           
+            }
+        }
+    }
+
+}
+
+Label* Stack::get_label_volume_reverse(){
+
+    Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
+    Label * temp_labels_iter = temp_labels;
+    unsigned int plane_size = width * height;
+
+    for (int x = padding; x < (depth - padding); ++x) {
+        for (int y = padding; y < (height - padding); ++y) {
+            int y_spot = y * width;
+            for (int z = padding; z < (width - padding); ++z) {
+                int z_spot = z * plane_size;
+                unsigned long long curr_spot = x+y_spot+z_spot;
+                Label sv_id = watershed[curr_spot];
+                Label body_id;
+                if (!watershed_to_body.empty()) {
+                    body_id = watershed_to_body[sv_id];
+                } else {
+                    body_id = sv_id;
+                }
+                *temp_labels_iter = body_id;
+                ++temp_labels_iter;
+            }
+        }
+    }
+
+    return temp_labels;
+}
+
+
 void Stack::determine_edge_locations()
 {
     best_edge_z.clear();
@@ -617,12 +700,11 @@ void Stack::determine_edge_locations()
     return;
 }
 
-bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
+bool Stack::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int z1,
+        unsigned int x2, unsigned int y2, unsigned int z2)
 {
-    Label body1 = get_body_id(boost::python::extract<int>(loc1[0]), boost::python::extract<int>(loc1[1]),
-            boost::python::extract<int>(loc1[2]));    
-    Label body2 = get_body_id(boost::python::extract<int>(loc2[0]), boost::python::extract<int>(loc2[1]),
-            boost::python::extract<int>(loc2[2]));    
+    Label body1 = get_body_id(x1, y1, z1);    
+    Label body2 = get_body_id(x2, y2, z2);    
 
     if (body1 == body2) {
         return false;
@@ -631,8 +713,6 @@ bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple 
     if (!body1 || !body2) {
         return true;
     }
-
-
 
     RagEdge<Label>* edge = rag->find_rag_edge(body1, body2);
 
@@ -645,6 +725,15 @@ bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple 
     edge->set_preserve(true);
 
     return true;
+}
+
+
+bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
+{
+    return add_edge_constraint2(boost::python::extract<int>(loc1[0]),
+            boost::python::extract<int>(loc1[1]), boost::python::extract<int>(loc1[2]),
+            boost::python::extract<int>(loc2[0]), boost::python::extract<int>(loc2[1]),
+            boost::python::extract<int>(loc2[2]));    
 }
 
 Label Stack::get_body_id(unsigned int x, unsigned int y, unsigned int z)
@@ -856,6 +945,36 @@ boost::python::list Stack::get_transformations()
     return transforms;
 }
 
+void Stack::write_graph_json(Json::Value& json_writer)
+{
+    std::tr1::unordered_map<Label, int> synapse_bodies;
+    for (int i = 0; i < all_locations.size(); ++i) {
+        Label body_id = get_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
+        if (body_id) {
+            if (synapse_bodies.find(body_id) == synapse_bodies.end()) {
+                synapse_bodies[body_id] = 0;
+            }
+            synapse_bodies[body_id]++;
+        }
+    }
+
+    int id = 0;
+    for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_bodies.begin();
+        iter != synapse_bodies.end(); ++iter, ++id) {
+        Json::Value synapse_pair;
+        synapse_pair[(unsigned int)(0)] = iter->first;
+        synapse_pair[(unsigned int)(1)] = iter->second;
+        json_writer["synapse_bodies"][id] =  synapse_pair;
+    }
+
+    id = 0;
+    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        if (is_orphan(*iter)) {
+            ++id;
+            json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
+        } 
+    }
+}
 
 void Stack::write_graph(string output_path)
 {
