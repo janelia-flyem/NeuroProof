@@ -79,7 +79,7 @@ struct PredictOptions
 {
     PredictOptions(int argc, char** argv) : synapse_filename(""), output_filename("segmentation.h5"),
         graph_filename("graph.json"), threshold(0.2), watershed_threshold(100),
-        merge_mito(true), agglo_type(1), postseg_classifier_filename("")
+        merge_mito(true), agglo_type(1), enable_transforms(true),  postseg_classifier_filename("")
     {
         OptionParser parser("Program that predicts edge confidence for a graph and merges confident edges");
 
@@ -110,6 +110,8 @@ struct PredictOptions
                 "perform separate mitochondrion merge phase", true, false, true); 
         parser.add_option(agglo_type, "agglo-type",
                 "merge mode used", true, false, true); 
+        parser.add_option(enable_transforms, "transforms",
+                "enables using the transforms table when reading the segmentation", true, false, true); 
 
         parser.parse_options(argc, argv);
     }
@@ -130,7 +132,8 @@ struct PredictOptions
 
     // hidden options (with default values)
     bool merge_mito;
-    int agglo_type;		
+    int agglo_type;
+    bool enable_transforms;
 };
 
 int main(int argc, char** argv) 
@@ -145,22 +148,24 @@ int main(int argc, char** argv)
 
     ScopeTime timer;
 
-    // read transforms from watershed/segmentation file
-    H5Read * transforms = new H5Read(options.watershed_filename.c_str(), "transforms");
-    unsigned long long* transform_data=0;	
-    transforms->readData(&transform_data);	
-    int transform_height = transforms->dim()[0];
-    int transform_width = transforms->dim()[1];
-    delete transforms;
-
-    // create sp to body map
-    int tpos = 0;
     unordered_map<Label, Label> sp2body;
-    sp2body[0] = 0;
-    for (int i = 0; i < transform_height; ++i, tpos+=2) {
-        sp2body[(transform_data[tpos])] = transform_data[tpos+1];
+    if (options.enable_transforms) {
+        // read transforms from watershed/segmentation file
+        H5Read * transforms = new H5Read(options.watershed_filename.c_str(), "transforms");
+        unsigned long long* transform_data=0;	
+        transforms->readData(&transform_data);	
+        int transform_height = transforms->dim()[0];
+        int transform_width = transforms->dim()[1];
+        delete transforms;
+
+        // create sp to body map
+        int tpos = 0;
+        sp2body[0] = 0;
+        for (int i = 0; i < transform_height; ++i, tpos+=2) {
+            sp2body[(transform_data[tpos])] = transform_data[tpos+1];
+        }
+        delete[] transform_data;
     }
-    delete[] transform_data;
 
     H5Read * watershed = new H5Read(options.watershed_filename.c_str(),SEG_DATASET_NAME);	
     Label* watershed_data=NULL;	
@@ -176,8 +181,10 @@ int main(int argc, char** argv)
 
     // map supervoxel ids to body ids
     unsigned long int total_size = depth * height * width;
-    for (int i = 0; i < total_size; ++i) {
-        watershed_data[i] = sp2body[(watershed_data[i])];
+    if (options.enable_transforms) {
+        for (int i = 0; i < total_size; ++i) {
+            watershed_data[i] = sp2body[(watershed_data[i])];
+        }
     }
 
     int pad_len=1;
@@ -361,10 +368,10 @@ int main(int argc, char** argv)
     hsize_t dims_out2[2];
     dims_out2[0] = rag->get_num_regions() + 1;
     dims_out2[1] = 2;
-    transform_data = new unsigned long long [(rag->get_num_regions()+1) * 2];
+    unsigned long long * transform_data = new unsigned long long [(rag->get_num_regions()+1) * 2];
     transform_data[0] = 0;
     transform_data[1] = 0;
-    tpos = 2;
+    int tpos = 2;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
            iter != rag->nodes_end(); ++iter, tpos+=2) {
         transform_data[tpos] = (*iter)->get_node_id();
