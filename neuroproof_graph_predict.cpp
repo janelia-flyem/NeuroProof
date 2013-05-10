@@ -208,12 +208,12 @@ int main(int argc, char** argv)
     size_t position, count;		    	
     for (int ch=0; ch < element_size; ch++){
 	count = 0;
-	for(i=0; i<depth; i++){
-	    cube_size = height*width*element_size;	
+        for(i=0; i<depth; i++){
+	    cube_size = height*depth*element_size;	
 	    for(j=0; j<height; j++){
-		plane_size = width*element_size;
+		plane_size = depth*element_size;
 		for(k=0; k<width; k++){
-		    position = i*cube_size + j*plane_size + k*element_size + ch;
+		    position = k*cube_size + j*plane_size + i*element_size + ch;
 		    prediction_single_ch[count] = prediction_data[position];
 		    count++;					
 		}		
