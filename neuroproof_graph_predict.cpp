@@ -35,8 +35,8 @@ using namespace boost::algorithm;
 
 using std::tr1::unordered_map;
 
-const char * SEG_DATASET_NAME = "stack";
-const char * PRED_DATASET_NAME = "volume/predictions";
+static const char * SEG_DATASET_NAME = "stack";
+static const char * PRED_DATASET_NAME = "volume/predictions";
 
 typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
@@ -143,7 +143,6 @@ int main(int argc, char** argv)
     PredictOptions options(argc, argv);
    
     // options not set by the command line
-    string groundtruth_filename="";
     bool read_off_rwts = false;
 
     ScopeTime timer;
@@ -239,21 +238,12 @@ int main(int argc, char** argv)
 
     stackp->get_feature_mgr()->set_classifier(eclfr);   	 
 
-    Label* groundtruth_data=NULL;
-    if (groundtruth_filename.size()>0){  	
-	H5Read groundtruth(groundtruth_filename.c_str(),SEG_DATASET_NAME);	
-        groundtruth.readData(&groundtruth_data);	
-        stackp->set_groundtruth(groundtruth_data);
-    }	
-	
-
     cout<<"Building RAG ..."; 	
     stackp->build_rag();
     cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
     stackp->remove_inclusions();
 
     stackp->compute_vi();  	
-    stackp->compute_groundtruth_assignment();
     
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
@@ -298,7 +288,6 @@ int main(int argc, char** argv)
     } 	
 
     hsize_t dims_out[3];
-    // ?? is this oritented correctly (seems like z,y,z in the original)
     dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
     Label * temp_label_volume1D = stackp->get_label_volume();       	    
     cout << "Removing small bodies ... ";
