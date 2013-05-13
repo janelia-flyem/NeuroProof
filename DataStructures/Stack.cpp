@@ -39,6 +39,10 @@ void Stack::compute_contingency_table()
     for(unsigned long itr=0; itr<ws_size ; itr++){
         Label wlabel = watershed_data[itr];
         Label glabel = gtruth[itr];
+
+        if (!wlabel || !glabel) {
+            continue;
+        } 
         multimap<Label, vector<LabelCount> >::iterator mit;
         mit = contingency.find(wlabel);
         if (mit != contingency.end()){
@@ -992,6 +996,34 @@ void Stack::enable_nonborder_edges()
     }
 }
 
+// merge node 2 onto node 1
+void Stack::merge_nodes(Label node1, Label node2, bool rag_updated)
+{
+    if (!rag_updated) {
+        vector<string> property_names;
+        rag_merge_edge(*rag, rag->find_rag_edge(node1, node2),
+                rag->find_rag_node(node1), property_names);
+    }
+    watershed_to_body[node2] = node1;
+    for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
+        watershed_to_body[*iter] = node1;
+    }
+
+    merge_history[node1].push_back(node2);
+    merge_history[node1].insert(merge_history[node1].end(), merge_history[node2].begin(), merge_history[node2].end());
+    merge_history.erase(node2);
+
+    if (exclusion_set.find(node2) != exclusion_set.end()) {
+        exclusion_set.insert(node1);
+        exclusion_set.erase(node2);
+    }
+}
+
+bool Stack::is_excluded(Label node)
+{
+    return (exclusion_set.find(node) != exclusion_set.end());    
+}
+
 void Stack::agglomerate_rag(double threshold)
 {
     if (threshold == 0.0) {
@@ -1076,9 +1108,8 @@ boost::python::list Stack::get_transformations()
     return transforms;
 }
 
-void Stack::write_graph_json(Json::Value& json_writer)
+void Stack::load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies)
 {
-    std::tr1::unordered_map<Label, int> synapse_bodies;
     for (int i = 0; i < all_locations.size(); ++i) {
         Label body_id = get_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
         if (body_id) {
@@ -1088,6 +1119,13 @@ void Stack::write_graph_json(Json::Value& json_writer)
             synapse_bodies[body_id]++;
         }
     }
+
+}
+
+void Stack::write_graph_json(Json::Value& json_writer)
+{
+    std::tr1::unordered_map<Label, int> synapse_bodies;
+    load_synapse_counts(synapse_bodies);
 
     int id = 0;
     for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_bodies.begin();

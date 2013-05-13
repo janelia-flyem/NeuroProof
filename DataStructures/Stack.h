@@ -147,6 +147,9 @@ class Stack {
     void compute_contingency_table();
     void compute_vi();
     void modify_assignment_after_merge(Label node_keep, Label node_remove);
+    void load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies);
+    bool is_excluded(Label node);
+    void merge_nodes(Label node1, Label node2, bool rag_updated);
     void write_graph(string);
     int decide_edge_label(RagNode<Label>* node1, RagNode<Label>* node2);
 
