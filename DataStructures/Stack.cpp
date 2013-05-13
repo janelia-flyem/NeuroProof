@@ -206,6 +206,59 @@ void Stack::modify_assignment_after_merge(Label node_keep, Label node_remove)
 
 /*********************************************************************************/
 
+void Stack::create_0bounds()
+{
+    unsigned int plane_size = width * height;
+    std::tr1::unordered_set<Label> labels;
+
+    // initialize new label array to all 0
+    Label * new_vol = new Label[width*height*depth]();
+
+    for (unsigned int z = 1; z < (depth-1); ++z) {
+        int z_spot = z * plane_size;
+        for (unsigned int y = 1; y < (height-1); ++y) {
+            int y_spot = y * width;
+            for (unsigned int x = 1; x < (width-1); ++x) {
+                unsigned long long curr_spot = x + y_spot + z_spot;
+                unsigned int spot0 = watershed[curr_spot];
+                unsigned int spot1 = watershed[curr_spot-1];
+                unsigned int spot2 = watershed[curr_spot+1];
+                unsigned int spot3 = watershed[curr_spot-width];
+                unsigned int spot4 = watershed[curr_spot+width];
+                unsigned int spot5 = watershed[curr_spot-plane_size];
+                unsigned int spot6 = watershed[curr_spot+plane_size];
+
+                new_vol[curr_spot] = spot0;
+
+                if (!spot0) {
+                    continue;
+                }
+
+                if (spot1 && (spot0 != spot1)) {
+                    new_vol[curr_spot] = 0;
+                }
+                if (spot2 && (spot0 != spot2)) {
+                    new_vol[curr_spot] = 0;
+                }
+                if (spot3 && (spot0 != spot3)) {
+                    new_vol[curr_spot] = 0;
+                }
+                if (spot4 && (spot0 != spot4)) {
+                    new_vol[curr_spot] = 0;
+                }
+                if (spot5 && (spot0 != spot5)) {
+                    new_vol[curr_spot] = 0;
+                }
+                if (spot6 && (spot0 != spot6)) {
+                    new_vol[curr_spot] = 0;
+                }
+            }
+        }
+    } 
+
+    delete watershed;
+    watershed = new_vol;
+}
 
 
 void Stack::build_rag()
@@ -543,6 +596,62 @@ Label* Stack::get_label_volume(){
     return temp_labels;
 }
 
+void Stack::set_body_exclusions(string exclusions_json)
+{
+    assert(watershed_to_body.size() > 0);
+    Json::Reader json_reader;
+    Json::Value json_vals;
+    exclusion_set.clear();
+    
+    ifstream fin(exclusions_json.c_str());
+    if (!fin) {
+        throw ErrMsg("Error: input file: " + exclusions_json + " cannot be opened");
+    }
+    if (!json_reader.parse(fin, json_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+    
+    Json::Value exclusions = json_vals["exclusions"];
+    for (unsigned int i = 0; i < json_vals["exclusions"].size(); ++i) {
+        exclusion_set.insert(exclusions[i].asUInt());
+    }
+
+    // assume watershed has already been built
+    for (std::tr1::unordered_map<Label, Label>::iterator iter = watershed_to_body.begin();
+           iter != watershed_to_body.end(); ++iter) {
+        if (exclusion_set.find(iter->second) != exclusion_set.end()) {
+            watershed_to_body[iter->first] = 0;
+        }
+    } 
+}
+
+void Stack::set_gt_exclusions()
+{
+    assert(watershed_to_body.size() > 0);
+    exclusion_set.clear();
+    
+    Label *watershed_data = get_label_volume(); 		
+    const size_t dimn[]={depth-2*padding,height-2*padding,width-2*padding};
+
+    unsigned long int ws_size = dimn[0]*dimn[1]*dimn[2];	
+    
+    std::tr1::unordered_map<Label, unsigned long int> body_excl_count;
+
+    for (unsigned long int iter = 0; iter < ws_size; ++iter) {
+        if (!(gtruth[iter])) {
+            body_excl_count[(watershed_to_body[(watershed_data[iter])])]++;
+        }
+    }
+
+    for (std::tr1::unordered_map<Label, unsigned long int>::iterator iter = body_excl_count.begin();
+            iter != body_excl_count.end(); ++iter) {
+        RagNode<Label>* node = rag->find_rag_node(iter->first);
+        if (iter->second > (node->get_size() / 2)) {
+            exclusion_set.insert(iter->first);
+        }
+    }
+}
 
 void Stack::set_exclusions(std::string synapse_json)
 {
@@ -594,6 +703,17 @@ void Stack::set_exclusions(std::string synapse_json)
         }
     }
 }
+
+void Stack::compute_synapse_volume(vector<Label>& seg_labels, vector<Label>& gt_labels)
+{
+    for (int i = 0; i < all_locations.size(); ++i) {
+        Label body_id = get_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
+        seg_labels.push_back(body_id);
+        body_id = get_gt_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
+        gt_labels.push_back(body_id);
+    }
+}
+
 
 Label* Stack::get_label_volume_reverse(){
 
@@ -747,6 +867,18 @@ Label Stack::get_body_id(unsigned int x, unsigned int y, unsigned int z)
     if (!watershed_to_body.empty()) {
         body_id = watershed_to_body[body_id];
     }
+    return body_id;
+}
+
+Label Stack::get_gt_body_id(unsigned int x, unsigned int y, unsigned int z)
+{
+    unsigned int w2 = width - 2*padding;
+    unsigned int h2 = height - 2*padding;
+    unsigned int d2 = depth - 2*padding;
+    y = h2 - y - 1;
+    unsigned int plane_size = w2 * h2;
+    unsigned long long curr_spot = x + y * w2 + z * plane_size; 
+    Label body_id = gtruth[curr_spot];
     return body_id;
 }
 

@@ -80,6 +80,7 @@ class Stack {
         padding2 = padding_;
     } 
 
+    void compute_synapse_volume(std::vector<Label>& seg_labels, std::vector<Label>& gt_labels);
     Label * get_label_volume();
     Label * get_label_volume_reverse();
     
@@ -87,6 +88,7 @@ class Stack {
     void get_edge_loc(RagEdge<Label>* edge, Label& x, Label& y, Label& z);
 
     void build_rag();
+    void create_0bounds();
     void build_rag_border();
     void determine_edge_locations();
     boost::python::list get_transformations();
@@ -134,7 +136,13 @@ class Stack {
     void set_basic_features();
 #endif
 
-    void set_groundtruth(Label* pgt) {gtruth = pgt; }
+    void set_groundtruth(Label* pgt)
+    {
+        if (gtruth) {
+            delete gtruth;   
+        }
+        gtruth = pgt;
+    }
     void compute_groundtruth_assignment();     			
     void compute_contingency_table();
     void compute_vi();
@@ -145,6 +153,7 @@ class Stack {
 
     
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z);
+    Label get_gt_body_id(unsigned int x, unsigned int y, unsigned int z);
 
     bool add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2);
     bool add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int z1,
@@ -181,6 +190,8 @@ class Stack {
 
     void write_graph_json(Json::Value& json_writer);
     void set_exclusions(std::string synapse_json);
+    void set_gt_exclusions();
+    void set_body_exclusions(string exclusions_json);
     int remove_inclusions();
 
     void reinit_rag()
@@ -252,6 +263,7 @@ class Stack {
     FeatureMgr * feature_mgr;
     bool median_mode;
     EdgeHash border_edges;
+    std::tr1::unordered_set<Label> exclusion_set;
    
     std::vector<std::vector<unsigned int> > all_locations;
 

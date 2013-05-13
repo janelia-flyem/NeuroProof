@@ -181,7 +181,7 @@ int main(int argc, char** argv)
     // map supervoxel ids to body ids
     unsigned long int total_size = depth * height * width;
     if (options.enable_transforms) {
-        for (int i = 0; i < total_size; ++i) {
+        for (unsigned long int i = 0; i < total_size; ++i) {
             watershed_data[i] = sp2body[(watershed_data[i])];
         }
     }
