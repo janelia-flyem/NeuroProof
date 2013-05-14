@@ -36,7 +36,7 @@ class MergePriority {
         } else {
             if (edge->is_false_edge()) {
                 return false;
-            } else if ((edge->get_size() < 400) && edge->is_preserve()) {
+            } else if ((edge->get_size() < 625) && edge->is_preserve()) {
                 return false;
             }
             return true;
