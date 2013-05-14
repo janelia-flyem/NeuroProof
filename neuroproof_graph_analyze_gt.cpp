@@ -235,8 +235,6 @@ Label* get_label_volume(string label_filename, bool enable_transforms, int& dept
     }
 
     H5Read watershed(label_filename.c_str(),SEG_DATASET_NAME);	
-    Label* watershed_data=NULL;	
-    watershed.readData(&watershed_data);	
     depth =	 watershed.dim()[0];
     height = watershed.dim()[1];
     width =	 watershed.dim()[2];
@@ -245,6 +243,20 @@ Label* get_label_volume(string label_filename, bool enable_transforms, int& dept
     dims[1] = height;
     dims[2] = width;
 
+    Label* watershed_data=0;	
+    if (watershed.get_size() == sizeof(unsigned long long)) {
+        unsigned long long * temp_data = 0;
+        watershed.readData(&temp_data);
+        unsigned long long total_size = depth*height*width;
+        watershed_data = new Label[total_size];
+        for (unsigned long long i = 0; i < total_size; ++i) {
+            watershed_data[i] = temp_data[i];
+        }
+        delete [] temp_data;
+    } else {
+        watershed.readData(&watershed_data);
+    }        
+    
     // map supervoxel ids to body ids
     unsigned long int total_size = depth * height * width;
     if (enable_transforms) {
@@ -348,7 +360,7 @@ int num_body_errors(Rag<Label>* rag, int threshold)
     int body_errors = 0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
-        if (!((*iter)->is_border()) && (*iter)->get_size() >= threshold) {
+        if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
             ++body_errors;
         }
     }
@@ -383,7 +395,8 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
             " synapse annotations : " << synapse_errors << endl;   
     }
 
-    
+   
+    // ?! percentage of total size >25k, percentage misassigned and orphan (same with synapses) 
     // ?! print bodies (on both sides) that are off by threshold size
     // ?! print number of body/synapse errors above size threshold -- print path affinity/note exclusions
     // ?! print number of body/synapse errors that cumulatively cause problems
@@ -597,26 +610,29 @@ int main(int argc, char** argv)
         int depth, height, width;
         Label* zp_labels = get_label_volume(options.label_filename,
                 options.enable_transforms, depth, height, width);
+        cout << "Read label stack" << endl;
 
         int depth2, height2, width2;
         Label* zp_gt_labels = get_label_volume(options.groundtruth_filename,
                 options.enable_transforms, depth2, height2, width2);
+        cout << "Read GT stack" << endl;
 
         if ((depth != depth2) || (height != height2) || (width != width2)) {
             throw ErrMsg("Mismatch in dimension sizes");
         }
-       
+      
         // create GT stack to get GT rag
         Stack* gt_stack = new Stack(zp_gt_labels, depth + 2*PADDING,
               height + 2*PADDING, width + 2*PADDING, PADDING);  
         gt_stack->build_rag();
+        cout << "Built GT RAG" << endl;
         Rag<Label>* gt_rag = gt_stack->get_rag();  
         
-
         // create seg stack
         Stack* seg_stack = new Stack(zp_labels, depth + 2*PADDING,
               height + 2*PADDING, width + 2*PADDING, PADDING);  
         seg_stack->build_rag();
+        cout << "Built label RAG" << endl;
         Rag<Label>* seg_rag = seg_stack->get_rag();
        
         seg_stack->set_groundtruth(gt_stack->get_label_volume());
@@ -667,7 +683,8 @@ int main(int argc, char** argv)
                 syn_labels2[i] = seg_synapse_labels[i];
                 gt_labels2[i] = gt_synapse_labels[i]; 
             }
-            synapse_stack = new Stack(syn_labels2, 1, 1, seg_synapse_labels.size(), 1);
+            synapse_stack = new Stack(syn_labels2, 1, 1, seg_synapse_labels.size(), 0);
+            synapse_stack->init_mappings();
             synapse_stack->set_groundtruth(gt_labels2);
         }
 
@@ -681,6 +698,7 @@ int main(int argc, char** argv)
 
         // dilate edges for vi comparison
         if (options.gt_dilation > 0) {
+            cout << "Create gt boundaries" << endl;
             gt_stack->create_0bounds();
             for (int i = 1; i < options.gt_dilation; ++i) {
                 // TODO: run dilation
@@ -689,11 +707,11 @@ int main(int argc, char** argv)
         } 
         if (options.label_dilation > 0) {
             seg_stack->create_0bounds();
+            cout << "Created label boundaries" << endl;
             for (int i = 1; i < options.label_dilation; ++i) {
                 // TODO: run dilation
             }
         }        
-        delete gt_stack;
 
 
         // print different statistics by default
@@ -703,13 +721,13 @@ int main(int argc, char** argv)
         dump_differences(seg_stack, synapse_stack, gt_stack, options);
 
         // find gt body errors
-        int body_errors = num_body_errors(seg_rag, options.body_error_size);
+        int body_errors = num_body_errors(gt_rag, options.body_error_size);
         cout << "Number of GT orphan bodies with more than " << options.body_error_size << 
             " voxels : " << body_errors << endl;
 
         // find gt synapse errors
         if (synapse_stack) { 
-            int synapse_errors = num_synapse_errors(seg_stack, seg_rag, options.synapse_error_size); 
+            int synapse_errors = num_synapse_errors(gt_stack, gt_rag, options.synapse_error_size); 
             cout << "Number of GT orphan bodies with more than " << options.synapse_error_size << 
                 " synapse annotations : " << synapse_errors << endl;   
         }
@@ -730,6 +748,8 @@ int main(int argc, char** argv)
                 //stack->dump_vi_differences(options, vi_threshold);
             }
         }
+        
+        delete gt_stack;
     } catch (ErrMsg& err) {
         cerr << err.str << endl;
     }

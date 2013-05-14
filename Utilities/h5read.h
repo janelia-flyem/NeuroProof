@@ -41,7 +41,11 @@ public:
     H5Read(char* h5filename, char *datasetname, bool pverbose=false){
 	Initiate(h5filename,datasetname, pverbose);
     }
-	
+
+    unsigned int get_size()
+    {
+        return size;
+    }    
     void Initiate(char* h5filename, char *datasetname, bool pverbose=false){
 	verbose = pverbose;	
 

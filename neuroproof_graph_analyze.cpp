@@ -140,11 +140,10 @@ void parse_options(int argc, char** argv, int& num_threads,
  * \param graph_file file in json format that contains graph
  * \return a pointer to a RAG
 */ 
-Rag<Label>* read_graph(string graph_file)
+Rag<Label>* read_graph(string graph_file, Json::Value& json_vals)
 {
     ifstream fin(graph_file.c_str());
     Json::Reader json_reader;
-    Json::Value json_vals;
     if (!json_reader.parse(fin, json_vals)) {
         throw ErrMsg("Error: Json incorrectly formatted");
     }
@@ -224,8 +223,10 @@ int get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Rag<Label>* rag)
  * \param rag graph where uncertain edges are analyzed
  * \param node_threshold threshold that determines which node size change is impactful
  * \param synapse_threshold threshold that determines which synape size change is impactful
+ * \param json_vals json data parsed from graph
 */
-void est_edit_distance(Rag<Label>* rag, int node_threshold, double synapse_threshold)
+void est_edit_distance(Rag<Label>* rag, int node_threshold,
+        double synapse_threshold, Json::Value& json_vals)
 {
     try {
         ScopeTime timer;
@@ -233,7 +234,6 @@ void est_edit_distance(Rag<Label>* rag, int node_threshold, double synapse_thres
         cout << "Node size threshold: " << node_threshold << endl;
         cout << "Synapse size threshold: " << synapse_threshold << endl;
 
-        Json::Value json_vals;
         LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
 
         // determine the number of node above a certain size that do not
@@ -304,7 +304,8 @@ int main(int argc, char** argv)
             random_seed, enable_calc_gpr, enable_est_edit_distance);
 
     // always display the size of the graph
-    Rag<Label>* rag = read_graph(graph_file);        
+    Json::Value json_vals;
+    Rag<Label>* rag = read_graph(graph_file, json_vals);        
     cout << "Graph edges: " << rag->get_num_edges() << endl;
     cout << "Graph nodes: " << rag->get_num_regions() << endl;
 
@@ -324,7 +325,7 @@ int main(int argc, char** argv)
         srand(random_seed);
         cout << endl;
         cout << "********Compute Edit Distances********" << endl;
-        est_edit_distance(rag, node_threshold, synapse_threshold);
+        est_edit_distance(rag, node_threshold, synapse_threshold, json_vals);
         cout << "***Finished Compute Edit Distances****" << endl;
         cout << endl;
     }

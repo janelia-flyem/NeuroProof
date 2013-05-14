@@ -64,6 +64,8 @@ void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, std::vec
 
     if (feature_mgr) {
         feature_mgr->add_val(preds, edge);
+    } else {
+        edge->incr_size();
     }
 }  
 

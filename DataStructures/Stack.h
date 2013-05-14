@@ -94,6 +94,7 @@ class Stack {
     boost::python::list get_transformations();
     void disable_nonborder_edges();
     void enable_nonborder_edges();
+    void init_mappings();
 
     void agglomerate_rag(double threshold);
 

@@ -72,7 +72,6 @@ void Stack::compute_vi()
         return;		
 
     int j, k;
-
     compute_contingency_table();
 
     double sum_all=0;
@@ -154,8 +153,7 @@ void Stack::compute_groundtruth_assignment()
         assignment.insert(make_pair(i,max_label));
     }	
 
-
-    printf("gt label determined for %d nodes\n", assignment.size());
+    //printf("gt label determined for %d nodes\n", assignment.size());
 }
 void Stack::modify_assignment_after_merge(Label node_keep, Label node_remove)
 {
@@ -305,9 +303,13 @@ void Stack::build_rag()
 
                 if (feature_mgr && !median_mode) {
                     feature_mgr->add_val(predictions, node);
+                } else {
+                    node->incr_size();
                 }
 
-                node->get_type_decider()->update(predictions); 
+                if (!predictions.empty()) {
+                    node->get_type_decider()->update(predictions); 
+                }
 
                 if (spot1 && (spot0 != spot1)) {
                     rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
@@ -346,10 +348,19 @@ void Stack::build_rag()
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
-        (*iter)->get_type_decider()->set_type();
+        if (!predictions.empty()) {
+            (*iter)->get_type_decider()->set_type();
+        }
     }
 }
 
+void Stack::init_mappings()
+{
+    unsigned long long total_size = width*height*depth;
+    for (unsigned long long i = 0; i < total_size; ++i) {
+        watershed_to_body[(watershed[i])] = watershed[i];
+    }
+}
 
 int Stack::remove_inclusions()
 {
