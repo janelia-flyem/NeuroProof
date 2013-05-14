@@ -316,7 +316,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         min_val = lower;
         max_val = upper;
         start_val = start;
-        ignore_size = 27;
+        ignore_size = 1;
         ignore_size_orig = ignore_size;
         num_est_remaining = 0;
 

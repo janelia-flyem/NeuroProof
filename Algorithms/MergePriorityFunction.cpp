@@ -1,5 +1,7 @@
 #include "MergePriorityFunction.h"
 
+#include <cstdio>
+
 using namespace NeuroProof;
 
 void ProbPriority::initialize_priority(double threshold_, bool use_edge_weight)
