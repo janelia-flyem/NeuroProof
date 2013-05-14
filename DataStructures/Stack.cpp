@@ -854,6 +854,7 @@ bool Stack::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int 
         RagNode<Label>* node1 = rag->find_rag_node(body1);
         RagNode<Label>* node2 = rag->find_rag_node(body2);
         edge = rag->insert_rag_edge(node1, node2);
+        edge->set_weight(1.0);
         edge->set_false_edge(true);
     }
     edge->set_preserve(true);
@@ -1008,13 +1009,8 @@ void Stack::enable_nonborder_edges()
 }
 
 // merge node 2 onto node 1
-void Stack::merge_nodes(Label node1, Label node2, bool rag_updated)
+void Stack::merge_nodes(Label node1, Label node2)
 {
-    if (!rag_updated) {
-        vector<string> property_names;
-        rag_merge_edge(*rag, rag->find_rag_edge(node1, node2),
-                rag->find_rag_node(node1), property_names);
-    }
     watershed_to_body[node2] = node1;
     for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
         watershed_to_body[*iter] = node1;

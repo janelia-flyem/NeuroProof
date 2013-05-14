@@ -64,6 +64,7 @@ static const char * SEG_DATASET_NAME = "stack";
 // padding around images
 static const int PADDING = 1;
 
+typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
 /* Container for analysis options
  * The basic options are to compute Variance of Information statistics
@@ -296,13 +297,12 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
         if (weight < 0.00001) {
             ++num_modified;
             priority_scheduler.removeEdge(pair, true);
-
             // update rags and watersheds as appropriate
             vector<string> property_names;
             rag_merge_edge(*opt_rag, temp_edge, opt_rag->find_rag_node(node1), property_names); 
-            seg_stack->merge_nodes(node1, node2, true);
+            seg_stack->merge_nodes(node1, node2);
             // no rag maintained for synapse stack
-            synapse_stack->merge_nodes(node1, node2, true);   
+            synapse_stack->merge_nodes(node1, node2);   
             merged = true;
         } else {
             priority_scheduler.removeEdge(pair, false);
@@ -310,25 +310,29 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
        
         // set body exclusions if they exist
         bool exclusion_found = false;
-        if (!merged && (seg_stack->is_excluded(node2))) {
-            ++num_exclusions;
-            exclusion_found = true;
-            RagNode<Label>* rnode2 = rag->find_rag_node(node2);
-            for (RagNode<Label>::edge_iterator iter = rnode2->edge_begin();
-                    iter != rnode2->edge_end(); ++iter) {
-                (*iter)->set_preserve(true);
+        if (use_exclusions) {
+            if (!merged && (seg_stack->is_excluded(node2))) {
+                ++num_exclusions;
+                exclusion_found = true;
+                RagNode<Label>* rnode2 = rag->find_rag_node(node2);
+                for (RagNode<Label>::edge_iterator iter = rnode2->edge_begin();
+                        iter != rnode2->edge_end(); ++iter) {
+                    (*iter)->set_preserve(true);
+                }
+            }
+            if (seg_stack->is_excluded(node1)) {
+                ++num_exclusions;
+                exclusion_found = true;
+                RagNode<Label>* rnode1 = rag->find_rag_node(node1);
+                for (RagNode<Label>::edge_iterator iter = rnode1->edge_begin();
+                        iter != rnode1->edge_end(); ++iter) {
+                    (*iter)->set_preserve(true);
+                }
+            }
+            if (exclusion_found) {
+                priority_scheduler.updatePriority();
             }
         }
-        if (seg_stack->is_excluded(node1)) {
-            ++num_exclusions;
-            exclusion_found = true;
-            RagNode<Label>* rnode1 = rag->find_rag_node(node1);
-            for (RagNode<Label>::edge_iterator iter = rnode1->edge_begin();
-                    iter != rnode1->edge_end(); ++iter) {
-                (*iter)->set_preserve(true);
-            }
-        }
-        priority_scheduler.updatePriority();
         
         ++num_examined;
     }
@@ -478,7 +482,7 @@ void run_edge(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_val
 {
     double lower = json_vals.get("lower-prob", 0.0).asDouble();
     double upper = json_vals.get("upper-prob", 0.9).asDouble();
-    double starting = json_vals.get("upper-prob", 0.9).asDouble();
+    double starting = json_vals.get("starting-prob", 0.0).asDouble();
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
     num_examined = 0;
@@ -537,6 +541,16 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
             orphan_bodies[id++] = (*iter)->get_node_id(); 
         }
     }
+    
+    // load default information
+    rag_bind_edge_property_list(rag, "location");
+    rag_bind_edge_property_list(rag, "edge_size");
+    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+            iter != rag->edges_end(); ++iter) {
+        rag_add_property(rag, (*iter), "location", Location(0,0,0));
+        rag_add_property(rag, (*iter), "edge_size", (*iter)->get_size());
+    }
+    
     json_vals_priority["orphan_bodies"] = orphan_bodies;
 
     // load synapse information
@@ -656,6 +670,7 @@ int main(int argc, char** argv)
                     edge->set_weight(prob);
                 }
             }
+            delete seg_rag_probs;
         } else {
             // use optimal probs
             set_rag_probs(seg_stack, seg_rag);
