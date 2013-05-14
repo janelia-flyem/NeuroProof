@@ -275,12 +275,12 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
 
 
 
-void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, string output_path, string classifier_path)
+void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, string output_path, string classifier_path, bool synapse_mode)
 {
   
     double error=0;  	
     
-    MergePriority* priority = new ProbPriority(feature_mgr, rag);
+    MergePriority* priority = new ProbPriority(feature_mgr, rag, synapse_mode);
     priority->initialize_priority(threshold, use_edge_weight);
 
     while (!(priority->empty())) {

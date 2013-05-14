@@ -11,8 +11,13 @@ namespace NeuroProof {
 class MergePriority {
   public:
     MergePriority(FeatureMgr* feature_mgr_, Rag<Label>* rag_) : 
-                        feature_mgr(feature_mgr_), rag(rag_), kicked_out(0) {} 
+                        feature_mgr(feature_mgr_), rag(rag_), synapse_mode(false),
+                        kicked_out(0) {} 
 
+    MergePriority(FeatureMgr* feature_mgr_, Rag<Label>* rag_, bool synapse_mode_) : 
+                        feature_mgr(feature_mgr_), rag(rag_), synapse_mode(synapse_mode_),
+                        kicked_out(0) {} 
+    
     virtual void initialize_priority(double threshold, bool use_edge_weight=false) = 0;
 
     virtual void initialize_random(double pthreshold) {}
@@ -23,10 +28,19 @@ class MergePriority {
 
     bool valid_edge(RagEdge<Label>* edge)
     {
-        if (edge->is_preserve() || edge->is_false_edge()) {
-            return false;
+        if (!synapse_mode) {
+            if (edge->is_preserve() || edge->is_false_edge()) {
+                return false;
+            }
+            return true;
+        } else {
+            if (edge->is_false_edge()) {
+                return false;
+            } else if ((edge->get_size() < 400) && edge->is_preserve()) {
+                return false;
+            }
+            return true;
         }
-        return true;
     }
 
     virtual bool empty() = 0;
@@ -37,7 +51,10 @@ class MergePriority {
   protected:
     Rag<Label>* rag;
     FeatureMgr* feature_mgr;
-    int kicked_out;	
+    int kicked_out;
+
+  private:
+    bool synapse_mode;    
 
 };
 
@@ -46,6 +63,9 @@ class ProbPriority : public MergePriority {
     ProbPriority(FeatureMgr* feature_mgr_, Rag<Label>* rag_) :
                     MergePriority(feature_mgr_, rag_), Epsilon(0.00001), kicked_fid(NULL) {}
 
+    ProbPriority(FeatureMgr* feature_mgr_, Rag<Label>* rag_, bool synapse_mode_) :
+                    MergePriority(feature_mgr_, rag_, synapse_mode_),
+                    Epsilon(0.00001), kicked_fid(NULL) {}
     void initialize_priority(double threshold_, bool use_edge_weight=false);
     void initialize_random(double pthreshold);
     void clear_dirty();

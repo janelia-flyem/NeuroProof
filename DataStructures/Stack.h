@@ -297,7 +297,7 @@ public:
 
     StackPredict(Label* watershed_, int depth_, int height_, int width_, int padding_=1): Stack(watershed_, depth_, height_, width_, padding_){}
     
-    void agglomerate_rag(double threshold, bool use_edge_weight, string output_path="", string classifier_path="");
+    void agglomerate_rag(double threshold, bool use_edge_weight, string output_path="", string classifier_path="", bool synapse_mode = false);
     void agglomerate_rag_queue(double threshold, bool use_edge_weight=false, string output_path="", string classifier_path="");     			
     void agglomerate_rag_flat(double threshold, bool use_edge_weight=false, string output_path="", string classifier_path="");
     void agglomerate_rag_mrf(double threshold, bool read_off, string output_path, string classifier_path);

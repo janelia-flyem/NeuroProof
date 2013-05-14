@@ -78,7 +78,7 @@ void padZero(T* data, const size_t* dims, int pad_length, T** ppadded_data){
 struct PredictOptions
 {
     PredictOptions(int argc, char** argv) : synapse_filename(""), output_filename("segmentation.h5"),
-        graph_filename("graph.json"), threshold(0.2), watershed_threshold(100),
+        graph_filename("graph.json"), threshold(0.2), watershed_threshold(100), post_synapse_threshold(0.0),
         merge_mito(true), agglo_type(1), enable_transforms(true),  postseg_classifier_filename("")
     {
         OptionParser parser("Program that predicts edge confidence for a graph and merges confident edges");
@@ -104,6 +104,8 @@ struct PredictOptions
                 "threshold used for removing small bodies as a post-process step"); 
         parser.add_option(postseg_classifier_filename, "postseg-classifier-file",
                 "opencv or vigra agglomeration classifier to be used after agglomeration to assign confidence to the graph edges -- classifier-file used if not specified"); 
+        parser.add_option(post_synapse_threshold, "post-synapse-threshold",
+                "Merge synapses indepedent of constraints"); 
 
         // invisible arguments
         parser.add_option(merge_mito, "merge-mito",
@@ -129,6 +131,7 @@ struct PredictOptions
     double threshold;
     int watershed_threshold; // might be able to increase default to 500
     string postseg_classifier_filename;
+    double post_synapse_threshold;
 
     // hidden options (with default values)
     bool merge_mito;
@@ -241,15 +244,15 @@ int main(int argc, char** argv)
     cout<<"Building RAG ..."; 	
     stackp->build_rag();
     cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
-    stackp->remove_inclusions();
-
-    stackp->compute_vi();  	
     
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
         stackp->set_exclusions(options.synapse_filename);
     }
 
+    remove_inclusions(stackp);
+    stackp->compute_vi();  	
+    
     switch (options.agglo_type) {
         case 0: 
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
@@ -277,6 +280,15 @@ int main(int argc, char** argv)
     }
     cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
 
+    if (options.post_synapse_threshold > 0.00001) {
+        cout << "Agglomerating (agglo) ignoring synapse constraints upto threshold "
+            << options.post_synapse_threshold << endl;
+        string dummy1, dummy2;
+        stackp->agglomerate_rag(options.post_synapse_threshold, false,
+                dummy1, dummy2, true);
+        cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
+    }
+    
     remove_inclusions(stackp);
 
     if (options.merge_mito){
