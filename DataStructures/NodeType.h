@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <map>
-
+#include <cstdio>
 
 template <typename Region>
 class NodeType {
@@ -51,7 +51,7 @@ template<typename Region> void NodeType<Region>::update(std::vector<double>& pre
     //node_itr = type_list.find(ntype);	
 
     	if(type_itr == type_list.end()){
-	    type_list.insert(make_pair(ntype,1));
+	    type_list.insert(std::make_pair(ntype,1));
     	} 	
     	else{
 	    (type_itr->second) += 1;	
