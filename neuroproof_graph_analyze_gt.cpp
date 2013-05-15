@@ -11,7 +11,7 @@
  * correct errors in the segmentation graph.  This file is similar
  * to the anaylze_segmentation_graph except that results are tied to
  * ground truth rather than just being estimates.  Most of this work
- * assumes that the label volume is an over segmentation of the
+ * assumes that the segmentation volume is an over segmentation of the
  * ground truth.  If there is under segmentation, the analysis contained
  * here will be of less value since edit distance is more accurately
  * measured in terms of merges to be made.
@@ -72,11 +72,11 @@ typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
  * the largest violators.  A metric of edit distance shows the number of
  * 'fixes' required required to make both label volumes 'equal' and the
  * percentage of volume that changes.  The options also allow a user to specify
- * a set of actions that can be performed to improve the label volume (the
+ * a set of actions that can be performed to improve the segmentation volume (the
  * types of actions will depend on the underlying functions supported).
  * If these actions are performed, the amount of work and VI achieved is reported.
  * Regardless of editing performed, VI and a report on types of discrepancies
- * are provided on the final label volume.  This analysis is performed
+ * are provided on the final segmentation volume.  This analysis is performed
  * over the synapse graph as well (including edit distance eventually) if a
  * synapse file is provided.
 */
@@ -87,8 +87,8 @@ struct AnalyzeGTOptions
      * \param argc Number of arguments in passed array
      * \param argv Array of strings
     */
-    AnalyzeGTOptions(int argc, char** argv) : gt_dilation(1), label_dilation(0),
-    dump_split_merge_bodies(false), vi_threshold(0.01), synapse_filename(""),
+    AnalyzeGTOptions(int argc, char** argv) : gt_dilation(1), seg_dilation(0),
+    dump_split_merge_bodies(false), vi_threshold(0.02), synapse_filename(""),
     clear_synapse_exclusions(false), body_error_size(25000), synapse_error_size(1),
     graph_filename(""), exclusions_filename(""), recipe_filename(""),
     random_seed(1), enable_transforms(true)
@@ -96,16 +96,16 @@ struct AnalyzeGTOptions
         OptionParser parser("Program analyzes a segmentation graph with respect to ground truth");
 
         // positional arguments
-        parser.add_positional(label_filename, "label-file",
-                "h5 file with label volume (z,y,x) and body mappings"); 
+        parser.add_positional(seg_filename, "seg-file",
+                "h5 file with segmentation label volume (z,y,x) and body mappings"); 
         parser.add_positional(groundtruth_filename, "groundtruth-file",
                 "h5 file with groundtruth label volume (z,y,x) and body mappings"); 
 
         // optional arguments
         parser.add_option(gt_dilation, "gt-dilation",
                 "Dilation factor for the ground truth volume boundaries"); 
-        parser.add_option(label_dilation, "label-dilation",
-                "Dilation factor for the label volume boundaries"); 
+        parser.add_option(seg_dilation, "seg-dilation",
+                "Dilation factor for the segmentation volume boundaries"); 
         parser.add_option(dump_split_merge_bodies, "dump-split-merge-bodies",
                 "Output all large VI differences at program completion"); 
         parser.add_option(vi_threshold, "vi-threshold",
@@ -135,16 +135,17 @@ struct AnalyzeGTOptions
     }
 
     // manadatory positionals -- basic VI comparison
-    string label_filename;
+    string seg_filename;
     string groundtruth_filename;
 
     // optional (with default values) 
     int gt_dilation; //! dilation of ground truth boundaries
-    int label_dilation; //! dilation of label volume boundaries
+    int seg_dilation; //! dilation of segmentation volume boundaries
     bool dump_split_merge_bodies; //! dump all body differences at the end
     double vi_threshold; //! below which body differences are not reported
 
-    /*! Synapse json file that contains all synapses in the volume.
+    /*!
+     * Synapse json file that contains all synapses in the volume.
      * If specified, a synapse label to body label array is made where a contigency
      * table can be made just as in the body VI mode.  If there is no
      * graph file, exclusions are automatically set in the main stack and
@@ -620,11 +621,11 @@ int main(int argc, char** argv)
 
         ScopeTime timer;
 
-        //label_filename, groundtruth_filename 
+        //seg_filename, groundtruth_filename 
         int depth, height, width;
-        Label* zp_labels = get_label_volume(options.label_filename,
+        Label* zp_labels = get_label_volume(options.seg_filename,
                 options.enable_transforms, depth, height, width);
-        cout << "Read label stack" << endl;
+        cout << "Read seg stack" << endl;
 
         int depth2, height2, width2;
         Label* zp_gt_labels = get_label_volume(options.groundtruth_filename,
@@ -646,7 +647,7 @@ int main(int argc, char** argv)
         Stack* seg_stack = new Stack(zp_labels, depth + 2*PADDING,
               height + 2*PADDING, width + 2*PADDING, PADDING);  
         seg_stack->build_rag();
-        cout << "Built label RAG" << endl;
+        cout << "Built seg RAG" << endl;
         Rag<Label>* seg_rag = seg_stack->get_rag();
        
         seg_stack->set_groundtruth(gt_stack->get_label_volume());
@@ -713,17 +714,17 @@ int main(int argc, char** argv)
 
         // dilate edges for vi comparison
         if (options.gt_dilation > 0) {
-            cout << "Create gt boundaries" << endl;
+            cout << "Create gt 0 boundaries" << endl;
             gt_stack->create_0bounds();
             for (int i = 1; i < options.gt_dilation; ++i) {
                 // TODO: run dilation
             }
             seg_stack->set_groundtruth(gt_stack->get_label_volume());
         } 
-        if (options.label_dilation > 0) {
+        if (options.seg_dilation > 0) {
             seg_stack->create_0bounds();
-            cout << "Created label boundaries" << endl;
-            for (int i = 1; i < options.label_dilation; ++i) {
+            cout << "Created seg 0 boundaries" << endl;
+            for (int i = 1; i < options.seg_dilation; ++i) {
                 // TODO: run dilation
             }
         }        
@@ -756,11 +757,10 @@ int main(int argc, char** argv)
         // dump final list of bad bodies if option is specified 
         if (options.dump_split_merge_bodies) {
             cout << "Showing body VI differences" << endl;
-            // ?! dump vi differences
-            //stack->dump_vi_differences(options, vi_threshold);
+            seg_stack->dump_vi_differences(options.vi_threshold);
             if (synapse_stack) {
                 cout << "Showing synapse body VI differences" << endl;
-                //stack->dump_vi_differences(options, vi_threshold);
+                synapse_stack->dump_vi_differences(options.vi_threshold);
             }
         }
         

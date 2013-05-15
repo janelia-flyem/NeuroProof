@@ -147,6 +147,7 @@ class Stack {
     void compute_groundtruth_assignment();     			
     void compute_contingency_table();
     void compute_vi();
+    void dump_vi_differences(double threshold);
     void modify_assignment_after_merge(Label node_keep, Label node_remove);
     void load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies);
     bool is_excluded(Label node);
@@ -274,6 +275,11 @@ class Stack {
     Label* gtruth; 	// both derived classes may use groundtruth for either learning or validation
     std::multimap<Label, Label>	assignment;
     std::multimap<Label, std::vector<LabelCount> > contingency;	
+    std::multimap<double, Label> seg_overmerge_ranked;
+    std::multimap<double, Label> gt_overmerge_ranked;
+
+    double merge_vi;
+    double split_vi;
 };
 
 

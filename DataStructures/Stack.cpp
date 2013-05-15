@@ -104,6 +104,9 @@ void Stack::compute_vi()
     double HgivenW=0;
     double HgivenG=0;
 
+    std::tr1::unordered_map<Label, double> seg_overmerge;
+    std::tr1::unordered_map<Label, double> gt_overmerge;
+
     for(multimap<Label, vector<LabelCount> >::iterator mit = contingency.begin(); mit != contingency.end(); ++mit){
         Label i = mit->first;
         vector<LabelCount>& gt_vec = mit->second; 	
@@ -115,16 +118,62 @@ void Stack::compute_vi()
             double p_w = wp.find(i)->second/sum_all; 	
 
             HgivenW += p_wg* log(p_w/p_wg);
+            seg_overmerge[i] += p_wg* log(p_w/p_wg);
 
             double p_g = gp.find(gtlabel)->second/sum_all;	
 
             HgivenG += p_wg * log(p_g/p_wg);	
-
+            gt_overmerge[gtlabel] += p_wg * log(p_g/p_wg);
         }
     }
 
-    printf("MergeSplit: (%f, %f)\n",HgivenW, HgivenG); 		
+    seg_overmerge_ranked.clear();
+    gt_overmerge_ranked.clear();
+
+    for (std::tr1::unordered_map<Label, double>::iterator iter = seg_overmerge.begin();
+            iter != seg_overmerge.end(); ++iter) {
+        seg_overmerge_ranked.insert(make_pair(iter->second, iter->first));
+    }
+    for (std::tr1::unordered_map<Label, double>::iterator iter = gt_overmerge.begin();
+            iter != gt_overmerge.end(); ++iter) {
+        gt_overmerge_ranked.insert(make_pair(iter->second, iter->first));
+    }
+        
+    printf("MergeSplit: (%f, %f)\n",HgivenW, HgivenG);
+    merge_vi = HgivenW;
+    split_vi = HgivenG;
 }
+
+void Stack::dump_vi_differences(double threshold)
+{
+    cout << "Dumping VI differences to threshold: " << threshold << " where MergeSplit: ("
+        << merge_vi << ", " << split_vi << ")" << endl;
+
+    double totalS = 0.0;
+    double totalG = 0.0;
+    cout << endl << "******Seg Merged Bodies*****" << endl;
+    for (multimap<double, Label>::reverse_iterator iter = seg_overmerge_ranked.rbegin();
+            iter != seg_overmerge_ranked.rend(); ++iter) {
+        if (merge_vi < threshold) {
+            break;
+        }
+        cout << iter->second << " " << iter->first << endl;
+        merge_vi -= iter->first;
+    }
+    cout << endl; 
+
+    cout << endl << "******GT Merged Bodies*****" << endl;
+    for (multimap<double, Label>::reverse_iterator iter = gt_overmerge_ranked.rbegin();
+            iter != gt_overmerge_ranked.rend(); ++iter) {
+        if (split_vi < threshold) {
+            break;
+        }
+        cout << iter->second << " " << iter->first << endl;
+        split_vi -= iter->first;
+    }
+    cout << endl; 
+}
+
 
 void Stack::compute_groundtruth_assignment()
 {
