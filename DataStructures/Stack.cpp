@@ -117,13 +117,13 @@ void Stack::compute_vi()
             double p_wg = count/sum_all;
             double p_w = wp.find(i)->second/sum_all; 	
 
-            HgivenW += p_wg* log(p_w/p_wg);
-            seg_overmerge[i] += p_wg* log(p_w/p_wg);
+            HgivenW += p_wg* log(p_w/p_wg)/log(2.0);
+            seg_overmerge[i] += p_wg* log(p_w/p_wg)/log(2.0);
 
             double p_g = gp.find(gtlabel)->second/sum_all;	
 
-            HgivenG += p_wg * log(p_g/p_wg);	
-            gt_overmerge[gtlabel] += p_wg * log(p_g/p_wg);
+            HgivenG += p_wg * log(p_g/p_wg)/log(2.0);	
+            gt_overmerge[gtlabel] += p_wg * log(p_g/p_wg)/log(2.0);
         }
     }
 
