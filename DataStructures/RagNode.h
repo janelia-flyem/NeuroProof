@@ -1,7 +1,15 @@
+/*
+ * Interface and definition of the node element that is a fundamental
+ * unit of the Region Adjancency Graph (RAG).
+ * 
+ * \author Stephen Plaza (plaza.stephen@gmail.com)
+*/
+
+
 #ifndef RAGNODE_H
 #define RAGNODE_H
 
-#include "RagEdge.h"
+// TODO: remove this include
 #include "NodeType.h"
 #include <vector>
 #include <algorithm>
@@ -10,49 +18,97 @@
 
 namespace NeuroProof {
 
-
+// forward declaration of RagEdge
 template <typename Region>
 class RagEdge;
 
+/*!
+ * Fundamental node element used in the RAG.  It is expected that each
+ * node is created on the heap.  Pointers with global scope is 
+ * is necessary for traversing edges and other nodes.  User-defined
+ * datatypes can be used as the fundamental data stored at the node.
+ * Operators must be overload to handle the operations used in this class.
+*/ 
 template <typename Region>
 class RagNode {
   public:
+    //! Static creation of nodes on the heap only
     static RagNode<Region>* New(Region node_int)
     {
         return new RagNode(node_int);
     }
 
-    // node information
+    /*!
+     * Retrieve the main Region element/id associated with this node 
+     * \return Region associated with this node
+    */
     Region get_node_id() const;
+
+    /*!
+     * Retrieve size associated with the current node
+     * \return Size of node
+    */
     unsigned long long get_size() const;
+    
+    /*!
+     * Set the size of the node
+     * \param size_ the size desired for node
+    */ 
     void set_size(unsigned long long size_);
+    
+   
+    // TODO: remove from interface 
     void set_border_size(unsigned long long size_)
     {
         border_size = size_;
     }
+
+    /*!
+     * Reset the Region element/id associated with the node
+     * \param region a region type
+    */ 
     void set_node_id(Region region);
 
+    /*!
+     * Increase the size of the node by certain increment
+     * \param incr size of the increment
+    */ 
     void incr_size(unsigned long long incr = 1)
     {
         size += incr;
     }
 
+    // TODO: remove from interface
     void incr_border_size(unsigned long long incr = 1)
     {
         border_size += incr;
     }
 
+    // TODO: remove from 
     unsigned long long get_border_size()
     {
         return border_size;
     }
 
+    /*!
+     * Determined the number of nodes immediately connected to this node
+     * \return the degree of the node
+    */ 
     size_t node_degree() const;
+    
+    /*!
+     * Adds pointer to an edge to the node.  Nodes can have >=0 edges.
+     * \param edge pointer to rag edge
+    */ 
     void insert_edge(RagEdge<Region>* edge);
+    
+    /*!
+     * Removes pointer to edge from list of node edges
+     * \param edge pointer to rag edge
+    */ 
     void remove_edge(RagEdge<Region>* edge);
-    RagEdge<Region>* find_edge(RagEdge<Region>* edge);
-
-
+    
+   
     NodeType<Region>* get_type_decider(){return &type_decider;};	
     Region get_node_type(){return type_decider.get_node_type();};	
     unsigned long long compute_border_length();
@@ -204,13 +260,13 @@ class RagNode {
 
   private:
 
-    RagNode(Region node_int_) : node_int(node_int_), size(0), border_size(0) {}
+    RagNode(Region node_int_) : size(0), border_size(0), node_int(node_int_) {}
     unsigned long long size;
     unsigned long long border_size;
     RagEdgeList edges;
     Region node_int;
 
-    // FIX: unacceptable addition to datastructure    
+    //! TODO: used for mito detection -- should be refactored
     NodeType<Region> type_decider;	
 
 };
@@ -248,17 +304,6 @@ template<typename Region> inline void RagNode<Region>::set_node_id(Region region
 {
     node_int = region;
 }
-
-template<typename Region> RagEdge<Region>* RagNode<Region>::find_edge(RagEdge<Region>* edge)
-{
-    typename RagEdgeList::iterator iter = std::find(edges.begin(), edges.end(), edge);
-    RagEdge<Region>* actual_edge = 0;
-    if (iter != edges.end()) {
-        actual_edge = *iter;
-    }
-    return actual_edge;
-}
-
 
 template<typename Region> size_t RagNode<Region>::node_degree() const
 {

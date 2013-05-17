@@ -18,7 +18,7 @@ class NodeType {
     int mthd;    
  
 public:
-    NodeType() : sum_mitop(0), npixels(0), node_type(0), mthd(MEAN_PROB){ type_list.clear();};	
+    NodeType() : node_type(0), sum_mitop(0), npixels(0), mthd(MEAN_PROB){ type_list.clear();};	
 
     void update(std::vector<double>& predictions);	
     void set_type();	
