@@ -2,3 +2,4 @@ build
 build-*
 bin
 *.swp
+integration_tests/temp_data

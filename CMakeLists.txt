@@ -108,6 +108,7 @@ else ()
     get_target_property (NeuroProofPriority_lib NeuroProofPriority LOCATION)
     get_target_property (NeuroProofRag_lib NeuroProofRag LOCATION)
 
+    # copy executables
     add_custom_command (
         TARGET NeuroProofPriority
         POST_BUILD
@@ -149,5 +150,36 @@ else ()
         COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_predict_exe} ${BUILDEM_DIR}/bin)
 
 
+    # ctests
+    enable_testing()
+
+    add_test("test1_sample1_fullpredict"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/test1.py
+        ${BUILDEM_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
+
+    add_test("test2_sample1_nooppredict"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/test2.py
+        ${BUILDEM_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
+
+    add_test("test3_sample1_fullanalyze"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/test3.py
+        ${BUILDEM_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
+    
+    add_test("test4_sample1_fullanalyzegt"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/test4.py
+        ${BUILDEM_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
+    
     ###############################################################################
 endif()

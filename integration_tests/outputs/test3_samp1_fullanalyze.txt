@@ -1,0 +1,20 @@
+Graph edges: 793
+Graph nodes: 228
+
+*********Begin GPR Processing*********
+GPR: 28.8694
+*******Finished GPR Processing********
+
+
+********Compute Edit Distances********
+Node size threshold: 1000
+Synapse size threshold: 0.1
+Num nodes not touching boundary: 5
+Num nodes with synapses not touching boundary: 0
+Estimated num edge operations (node entropy threshold): 62
+Estimated num edge operations (node entropy threshold with path length = 1): 62
+Estimated num edge operations (edge confidence to 90 percent): 276
+Estimated num edge operations (synpase entropy threshold): 3
+Estimated num edge operations to connect orphans to a boundary: 9
+***Finished Compute Edit Distances****
+

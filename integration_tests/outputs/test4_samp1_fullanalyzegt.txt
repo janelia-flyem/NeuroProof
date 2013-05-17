@@ -1,0 +1,109 @@
+Read seg stack
+Read GT stack
+Built GT RAG
+Built seg RAG
+Create gt 0 boundaries
+************Printing Statistics**************
+Graph edges: 793
+Graph nodes: 228
+Body VI: MergeSplit: (0.085185, 0.519574)
+Number of orphan bodies with more than 1000 voxels : 5
+Synapse VI: MergeSplit: (0.000000, 0.400000)
+Number of orphan bodies with more than 1 synapse annotations : 0
+************Finished Printing Statistics**************
+Number of GT orphan bodies with more than 1000 voxels : 0
+Number of GT orphan bodies with more than 1 synapse annotations : 0
+
+Starting body mode with threshold 1000 and path length 0
+edges examined: 212
+edges modified: 19
+
+************Printing Statistics**************
+Graph edges: 681
+Graph nodes: 209
+Body VI: MergeSplit: (0.108094, 0.361055)
+Number of orphan bodies with more than 1000 voxels : 0
+Synapse VI: MergeSplit: (0.000000, 0.400000)
+Number of orphan bodies with more than 1 synapse annotations : 0
+************Finished Printing Statistics**************
+
+Starting synapse mode with threshold 0.1
+edges examined: 1
+edges modified: 0
+
+************Printing Statistics**************
+Graph edges: 681
+Graph nodes: 209
+Body VI: MergeSplit: (0.108094, 0.361055)
+Number of orphan bodies with more than 1000 voxels : 0
+Synapse VI: MergeSplit: (0.000000, 0.400000)
+Number of orphan bodies with more than 1 synapse annotations : 0
+************Finished Printing Statistics**************
+
+Starting orphan mode with threshold 1000
+edges examined: 0
+edges modified: 0
+
+************Printing Statistics**************
+Graph edges: 681
+Graph nodes: 209
+Body VI: MergeSplit: (0.108094, 0.361055)
+Number of orphan bodies with more than 1000 voxels : 0
+Synapse VI: MergeSplit: (0.000000, 0.400000)
+Number of orphan bodies with more than 1 synapse annotations : 0
+************Finished Printing Statistics**************
+Total edges examined: 213
+Total edges modified: 19
+Showing body VI differences
+Dumping VI differences to threshold: 0.02 where MergeSplit: (0.108094, 0.361055)
+
+******Seg Merged Bodies*****
+93 0.0268331
+267 0.0173759
+388 0.00892746
+181 0.00571952
+5 0.00525917
+233 0.00489665
+1615 0.00472427
+954 0.00313416
+5139 0.00303926
+234 0.00298852
+2510 0.00222057
+274 0.00169735
+300 0.00159753
+
+
+******GT Merged Bodies*****
+105 0.109557
+449 0.0723395
+1820 0.036527
+2050 0.0119929
+324 0.0115711
+239 0.010564
+34 0.010271
+15 0.0100401
+2167 0.00959544
+135 0.00775532
+1235 0.00621165
+196 0.00592801
+2084 0.00550927
+697 0.00477509
+182 0.00474827
+2325 0.00459944
+3640 0.00370547
+5 0.00332322
+3363 0.00304665
+570 0.00296663
+50 0.00275293
+70 0.00270854
+2499 0.00255046
+
+Showing synapse body VI differences
+Dumping VI differences to threshold: 0.02 where MergeSplit: (0, 0.4)
+
+******Seg Merged Bodies*****
+
+
+******GT Merged Bodies*****
+2167 0.4
+

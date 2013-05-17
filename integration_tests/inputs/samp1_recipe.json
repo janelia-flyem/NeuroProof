@@ -1,0 +1,17 @@
+{
+    "recipe" : [
+        {
+            "type" : "body",
+            "path-length" : 0,
+            "threshold" : 1000
+        },
+        {
+            "type" : "synapse",
+            "threshold" : 0.1
+        },
+        {
+            "type" : "orphan",
+            "threshold" : 1000
+        }
+    ]
+}

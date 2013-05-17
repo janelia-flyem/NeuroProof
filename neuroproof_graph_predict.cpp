@@ -390,8 +390,6 @@ int main(int argc, char** argv)
     delete[] temp_label_volume1D;
     delete[] transform_data;
     
-    printf("Output written to %s, dataset %s\n",options.output_filename.c_str(),SEG_DATASET_NAME);	
-
     return 0;
 }
 
