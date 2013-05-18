@@ -5,5 +5,4 @@ Agglomerating (agglo) upto threshold 0 ...Done with 8078 regions
 Inclusion removal ...done with 8078 regions
 Merge Mitochondria (border-len) ...done with 8078 regions
 Inclusion removal ...done with 8078 regions
-Removing small bodies ... done with 8078 regions
 RF loaded with 255 trees, for 2 class prob with 190 dimensions

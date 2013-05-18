@@ -424,12 +424,12 @@ void StackPredict::absorb_small_regions(double* prediction_vol, Label* label_vol
     
 }
 
-void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold){
+int StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold){
 
-    std::map<Label, unsigned long long> regions_sz;
+    std::tr1::unordered_map<Label, unsigned long long> regions_sz;
 
     unsigned long volsz = (depth-2*padding)*(height-2*padding)*(width-2*padding);
-    std::map<Label, unsigned long long>::iterator it;
+    std::tr1::unordered_map<Label, unsigned long long>::iterator it;
     for(unsigned long long i=0; i< volsz; i++){
 	Label lbl = label_vol[i];
 	it = regions_sz.find(lbl);
@@ -441,24 +441,28 @@ void StackPredict::absorb_small_regions2(double* prediction_vol, Label* label_vo
 	}
     } 
     
-    std::set<Label> small_regions;
-    for(it = regions_sz.begin(); it != regions_sz.end(); it++)
-	if ((it->second) < threshold)
+    std::tr1::unordered_map<Label, int> synapse_counts;
+    load_synapse_counts(synapse_counts);
+    int num_removed = 0;    
+    std::tr1::unordered_set<Label> small_regions;
+    for(it = regions_sz.begin(); it != regions_sz.end(); it++) {
+	if ((synapse_counts.find(it->first) == synapse_counts.end()) &&
+                ((it->second) < threshold)) {
 	    small_regions.insert(it->first);
+	    ++num_removed;	
+        }
+    }
 
-	
-    unsigned long nnz=0; 	
     for(unsigned long i=0; i< volsz; i++){
 	Label lbl = label_vol[i];
 	if (small_regions.find(lbl) != small_regions.end()){
 	    label_vol[i] = 0;	
-	    nnz++;	
 	}
     } 
     //printf("total zeros: %d\n",nnz);
     VigraWatershed wshed(depth-2*padding,height-2*padding,width-2*padding);
     wshed.run_watershed(prediction_vol,label_vol);
 
-    
+    return num_removed;
 }
 

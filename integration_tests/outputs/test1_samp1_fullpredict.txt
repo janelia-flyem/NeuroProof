@@ -7,5 +7,5 @@ Done with 238 regions
 Inclusion removal ...done with 228 regions
 Merge Mitochondria (border-len) ...done with 228 regions
 Inclusion removal ...done with 228 regions
-Removing small bodies ... done with 228 regions
+Removing small bodies ... 64 removed
 RF loaded with 255 trees, for 2 class prob with 190 dimensions

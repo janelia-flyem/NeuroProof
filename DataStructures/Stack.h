@@ -58,7 +58,14 @@ class Stack {
         width = width_;
         padding = padding_;
     } 
-
+    
+    void reinit_watershed(Label * watershed_)
+    {
+        if (watershed) {
+            delete watershed;
+        }
+        watershed = watershed_;
+    }
 
     void reinit_stack2(Label* watershed_, int depth_, int height_, int width_, int padding_)
     {
@@ -311,7 +318,7 @@ public:
 
     void merge_mitochondria_a();
     void absorb_small_regions(double* prediction_vol, Label* label_vol);
-    void absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold);
+    int absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold);
 
 };
 

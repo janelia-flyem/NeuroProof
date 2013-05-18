@@ -78,8 +78,8 @@ void padZero(T* data, const size_t* dims, int pad_length, T** ppadded_data){
 struct PredictOptions
 {
     PredictOptions(int argc, char** argv) : synapse_filename(""), output_filename("segmentation.h5"),
-        graph_filename("graph.json"), threshold(0.2), watershed_threshold(100), post_synapse_threshold(0.0),
-        merge_mito(true), agglo_type(1), enable_transforms(true),  postseg_classifier_filename("")
+        graph_filename("graph.json"), threshold(0.2), watershed_threshold(0), post_synapse_threshold(0.0),
+        merge_mito(true), agglo_type(1), enable_transforms(true), postseg_classifier_filename("")
     {
         OptionParser parser("Program that predicts edge confidence for a graph and merges confident edges");
 
@@ -299,14 +299,21 @@ int main(int argc, char** argv)
         remove_inclusions(stackp);        
     } 	
 
-    hsize_t dims_out[3];
-    dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
-    Label * temp_label_volume1D = stackp->get_label_volume();       	    
-    cout << "Removing small bodies ... ";
-    stackp->absorb_small_regions2(prediction_ch0, temp_label_volume1D,
-            options.watershed_threshold);
-    cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
-    delete[] temp_label_volume1D;	
+    if (options.watershed_threshold > 0) {
+        size_t dims_out[3];
+        dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
+        Label * temp_label_volume1D = stackp->get_label_volume();       	    
+        cout << "Removing small bodies ... ";
+        int num_removed = stackp->absorb_small_regions2(prediction_ch0, temp_label_volume1D,
+                options.watershed_threshold);
+        Label * padded_data;
+        padZero(temp_label_volume1D, dims_out, pad_len, &padded_data);
+        delete[] temp_label_volume1D;	
+
+        stackp->reinit_watershed(padded_data);
+        cout << num_removed << " removed" << endl;	
+    }
+    
 
     // recompute rag
     stackp->reinit_rag();
@@ -380,8 +387,10 @@ int main(int argc, char** argv)
     }
 
     // write out label volume
-    temp_label_volume1D = stackp->get_label_volume();       	    
+    Label* temp_label_volume1D = stackp->get_label_volume();       	    
 
+    hsize_t dims_out[3];
+    dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
     H5Write(options.output_filename.c_str(),SEG_DATASET_NAME,3,dims_out, temp_label_volume1D,
         "transforms",2,dims_out2, transform_data,
         options.output_filename == options.watershed_filename);
