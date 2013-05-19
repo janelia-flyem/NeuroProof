@@ -303,7 +303,9 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
             rag_merge_edge(*opt_rag, temp_edge, opt_rag->find_rag_node(node1), property_names); 
             seg_stack->merge_nodes(node1, node2);
             // no rag maintained for synapse stack
-            synapse_stack->merge_nodes(node1, node2);   
+            if (synapse_stack) {
+                synapse_stack->merge_nodes(node1, node2);
+            } 
             merged = true;
         } else {
             priority_scheduler.removeEdge(pair, false);
@@ -399,6 +401,41 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
         cout << "Number of orphan bodies with more than " << options.synapse_error_size << 
             " synapse annotations : " << synapse_errors << endl;   
     }
+    
+    // ?? might give weird results when dilation is done on GT
+    seg_stack->compute_groundtruth_assignment();
+    vector<RagNode<Label>* > large_bodies;
+
+    for (Rag<Label>::nodes_iterator iter = seg_rag->nodes_begin();
+           iter != seg_rag->nodes_end(); ++iter) {
+        if ((*iter)->get_size() > options.body_error_size) {
+            large_bodies.push_back((*iter));
+        }
+    }
+
+    int num_unmerged = 0;
+    Json::Value json_vals;
+    //LocalEdgePriority<Label> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
+    for (int i = 0; i < large_bodies.size(); ++i) {
+        for (int j = (i+1); j < large_bodies.size(); ++j) {
+            int val = seg_stack->decide_edge_label(large_bodies[i], large_bodies[j]);
+
+            if (val == -1) {
+                ++num_unmerged;
+                /*double pathprob = temp_scheduler.find_path(large_bodies[i], large_bodies[j]);
+                cout << "prob: " << pathprob << " between " <<
+                    large_bodies[i]->get_size() << " and " <<
+                    large_bodies[j]->get_size() << endl; */
+            }
+        }
+    }
+    
+    cout << "Number of unmerged pairs of large bodies: " << num_unmerged << 
+        " from " << large_bodies.size() << " large bodies" << endl;
+
+    // ?! get affinity pairs for missed node pairs
+    
+    // ?! get num of bodies that are >25 K off of GT, find connected regions over 25k from this??
 
    
     // ?! percentage of total size >25k, percentage misassigned and orphan (same with synapses) 

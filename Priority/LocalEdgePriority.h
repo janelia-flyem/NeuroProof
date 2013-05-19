@@ -385,6 +385,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
     unsigned int getNumRemaining();
     void removeEdge(NodePair node_pair, bool remove);
     bool undo();
+    double find_path(RagNode<Region>* rag_node_head, RagNode<Region>* rag_node_dest);
 
   private:
     struct BodyRank {
@@ -961,6 +962,20 @@ template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region
         return NodePair(edge->get_node1()->get_node_id(), edge->get_node2()->get_node_id());
     } else {
         return NodePair(edge->get_node2()->get_node_id(), edge->get_node1()->get_node_id());
+    }
+}
+
+template <typename Region> double LocalEdgePriority<Region>::find_path(RagNode<Region>* rag_node_head,
+        RagNode<Region>* rag_node_dest)
+{
+    grabAffinityPairs(rag_node_head, 0, 0.01, false); 
+    AffinityPair<Region> apair(rag_node_head->get_node_id(), rag_node_dest->get_node_id()); 
+    
+    typename AffinityPairsLocal::iterator iter = affinity_pairs.find(apair);
+    if (iter == affinity_pairs.end()) {
+        return 0.0;
+    } else {
+        return iter->weight;
     }
 }
 

@@ -10,6 +10,7 @@ Body VI: MergeSplit: (0.112195, 0.565021)
 Number of orphan bodies with more than 1000 voxels : 5
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Number of unmerged pairs of large bodies: 41 from 58 large bodies
 ************Finished Printing Statistics**************
 Number of GT orphan bodies with more than 1000 voxels : 0
 Number of GT orphan bodies with more than 1 synapse annotations : 0
@@ -25,6 +26,7 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Number of unmerged pairs of large bodies: 3 from 40 large bodies
 ************Finished Printing Statistics**************
 
 Starting synapse mode with threshold 0.1
@@ -38,6 +40,7 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Number of unmerged pairs of large bodies: 3 from 40 large bodies
 ************Finished Printing Statistics**************
 
 Starting orphan mode with threshold 1000
@@ -51,6 +54,7 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Number of unmerged pairs of large bodies: 3 from 40 large bodies
 ************Finished Printing Statistics**************
 Total edges examined: 229
 Total edges modified: 23
