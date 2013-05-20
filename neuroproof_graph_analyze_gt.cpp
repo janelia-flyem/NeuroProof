@@ -375,7 +375,7 @@ int num_body_errors(Rag<Label>* rag, int threshold)
 }
 
 void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack, 
-        AnalyzeGTOptions& options)
+        Rag<Label>* opt_rag, AnalyzeGTOptions& options)
 {
     Rag<Label>* seg_rag = seg_stack->get_rag();
     Rag<Label>* gt_rag = gt_stack->get_rag();
@@ -429,12 +429,72 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
             }
         }
     }
-    
+   
+    // TODO: should really print distribution of bodies unmerged at different
+    // thresholds, not necessarily tied to focused proofreading threshold 
     cout << "Number of unmerged pairs of large bodies: " << num_unmerged << 
         " from " << large_bodies.size() << " large bodies" << endl;
 
     // ?! get affinity pairs for missed node pairs
     
+
+    std::tr1::unordered_map<Label, unsigned long long> body_changes;
+    Rag<Label> opt_rag_copy(*opt_rag);
+
+    bool change = true;
+    while (change) {
+        change = false;
+        for (Rag<Label>::edges_iterator iter = opt_rag_copy.edges_begin();
+                iter != opt_rag_copy.edges_end(); ++iter) {
+            double weight = (*iter)->get_weight();
+            if (weight < 0.0001) {
+                RagNode<Label>* node1 = (*iter)->get_node1();
+                RagNode<Label>* node2 = (*iter)->get_node2();
+
+                unsigned long long large1 = node1->get_size();
+                unsigned long long large2 = node2->get_size();
+                if (body_changes.find(node1->get_node_id()) != body_changes.end()) {
+                    large1 = body_changes[node1->get_node_id()];
+                }
+                if (body_changes.find(node2->get_node_id()) != body_changes.end()) {
+                    large2 = body_changes[node2->get_node_id()];
+                }
+                RagNode<Label>* node_keep;
+                if (large1 > large2) {
+                    body_changes[node1->get_node_id()] = large1;
+                    node_keep = node1;
+                    body_changes.erase(node2->get_node_id());
+                } else {
+                    body_changes[node2->get_node_id()] = large2;
+                    node_keep = node2;
+                    body_changes.erase(node1->get_node_id());
+                }
+
+                vector<string> property_names;
+                rag_merge_edge(opt_rag_copy, *iter,
+                        node_keep, property_names); 
+
+                change = true;
+                break;
+            }
+        }
+    }
+    int num_undermerged_bodies = 0;
+    for (std::tr1::unordered_map<Label, unsigned long long>::iterator iter = body_changes.begin();
+            iter != body_changes.end(); ++iter) {
+        unsigned long long largest_orig = iter->second;
+        RagNode<Label>* node1 = opt_rag_copy.find_rag_node(iter->first);
+        // TODO: should print size distribution since there is really nothing missed
+        // higher above the threshold
+        if ((node1->get_size() - largest_orig) >= options.body_error_size) {
+            ++num_undermerged_bodies;
+        } 
+    }
+    cout << "Number of under-merged bodies: " << num_undermerged_bodies << endl;
+    
+    // ?! count number of bodies where largest component body and size is greater than threshold
+    
+
     // ?! get num of bodies that are >25 K off of GT, find connected regions over 25k from this??
 
    
@@ -636,7 +696,7 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
          
         num_examined += num_examined2; 
         num_modified += num_modified2; 
-        dump_differences(seg_stack, synapse_stack, gt_stack, options);
+        dump_differences(seg_stack, synapse_stack, gt_stack, opt_rag, options);
     } 
 
     cout << "Total edges examined: " << num_examined << endl;
@@ -771,7 +831,7 @@ int main(int argc, char** argv)
         if (options.graph_filename != "") {
             // ?! print statistics on accuracy of initial predictions (histogram)
         }
-        dump_differences(seg_stack, synapse_stack, gt_stack, options);
+        dump_differences(seg_stack, synapse_stack, gt_stack, rag_comp, options);
 
         // find gt body errors
         int body_errors = num_body_errors(gt_rag, options.body_error_size);
