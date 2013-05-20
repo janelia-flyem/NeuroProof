@@ -10,6 +10,9 @@ Body VI: MergeSplit: (0.112195, 0.565021)
 Number of orphan bodies with more than 1000 voxels : 5
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Percent orphans matched for seg: 0
+Percent orphans matched for GT: -nan
+Orphan agreement rate: 0
 Number of unmerged pairs of large bodies: 41 from 58 large bodies
 Number of under-merged bodies: 12
 ************Finished Printing Statistics**************
@@ -27,6 +30,9 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Percent orphans matched for seg: -nan
+Percent orphans matched for GT: -nan
+Orphan agreement rate: -nan
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************
@@ -42,6 +48,9 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Percent orphans matched for seg: -nan
+Percent orphans matched for GT: -nan
+Orphan agreement rate: -nan
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************
@@ -57,6 +66,9 @@ Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
 Synapse VI: MergeSplit: (0.000000, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
+Percent orphans matched for seg: -nan
+Percent orphans matched for GT: -nan
+Orphan agreement rate: -nan
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************

@@ -174,6 +174,33 @@ void Stack::dump_vi_differences(double threshold)
     cout << endl; 
 }
 
+int Stack::grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
+        Rag<Label>* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
+        std::tr1::unordered_set<Label>& gt_matched)
+{
+    multimap<Label, vector<LabelCount> >::iterator mit = contingency.find(seg_body);
+    vector<LabelCount>& gt_vec = mit->second;
+    unsigned long long seg_size = rag->find_rag_node(seg_body)->get_size();
+   
+    int matched = 0; 
+    for (int j=0; j< gt_vec.size();j++){
+        if (gt_orphans.find(gt_vec[j].lbl) != gt_orphans.end()) {
+            unsigned long long gt_size = gt_rag->find_rag_node(gt_vec[j].lbl)->get_size();
+
+            if ((gt_vec[j].count / double(gt_size)) > 0.5) {
+                gt_matched.insert(gt_vec[j].lbl);
+                seg_matched.insert(seg_body);
+                ++matched;
+            } else if ((gt_vec[j].count / double(seg_size)) > 0.5) {
+                gt_matched.insert(gt_vec[j].lbl);
+                seg_matched.insert(seg_body);
+                ++matched;
+            }
+        }
+    }
+    
+    return matched;
+}
 
 void Stack::compute_groundtruth_assignment()
 {

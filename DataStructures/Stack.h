@@ -151,6 +151,9 @@ class Stack {
         }
         gtruth = pgt;
     }
+    int grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
+        Rag<Label>* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
+        std::tr1::unordered_set<Label>& gt_matched);
     void compute_groundtruth_assignment();     			
     void compute_contingency_table();
     void compute_vi();

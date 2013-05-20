@@ -88,7 +88,7 @@ struct AnalyzeGTOptions
      * \param argv Array of strings
     */
     AnalyzeGTOptions(int argc, char** argv) : gt_dilation(1), seg_dilation(0),
-    dump_split_merge_bodies(false), vi_threshold(0.02), synapse_filename(""),
+    dump_split_merge_bodies(false), dump_orphans(false), vi_threshold(0.02), synapse_filename(""),
     clear_synapse_exclusions(false), body_error_size(25000), synapse_error_size(1),
     graph_filename(""), exclusions_filename(""), recipe_filename(""),
     random_seed(1), enable_transforms(true)
@@ -108,6 +108,8 @@ struct AnalyzeGTOptions
                 "Dilation factor for the segmentation volume boundaries"); 
         parser.add_option(dump_split_merge_bodies, "dump-split-merge-bodies",
                 "Output all large VI differences at program completion"); 
+        parser.add_option(dump_orphans, "dump-orphans",
+                "Output all orphans that cannot be obviously matched between the volumes"); 
         parser.add_option(vi_threshold, "vi-threshold",
                 "Threshold at which VI differences are reported"); 
         parser.add_option(synapse_filename, "synapse-file",
@@ -142,6 +144,7 @@ struct AnalyzeGTOptions
     int gt_dilation; //! dilation of ground truth boundaries
     int seg_dilation; //! dilation of segmentation volume boundaries
     bool dump_split_merge_bodies; //! dump all body differences at the end
+    bool dump_orphans; //! dump all orphans that are not matched between seg and gt
     double vi_threshold; //! below which body differences are not reported
 
     /*!
@@ -345,6 +348,31 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
     }
 }
 
+
+void load_orphans(Stack* stack, Rag<Label>* rag, std::tr1::unordered_set<Label>& orphans,
+        int threshold, int synapse_threshold)
+{
+    std::tr1::unordered_map<Label, int> synapse_counts;
+    stack->load_synapse_counts(synapse_counts);
+    for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+            iter != synapse_counts.end(); ++iter) {
+        if (iter->second >= synapse_threshold) {
+            RagNode<Label>* node = rag->find_rag_node(iter->first);
+            if (!(node->is_border())) {
+                orphans.insert(iter->first);
+            }
+        }
+    }
+
+    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
+        if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
+            orphans.insert((*iter)->get_node_id());
+        }
+    }
+}
+
+
 int num_synapse_errors(Stack* stack, Rag<Label>* rag, int threshold)
 {
     std::tr1::unordered_map<Label, int> synapse_counts;
@@ -401,7 +429,48 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
         cout << "Number of orphan bodies with more than " << options.synapse_error_size << 
             " synapse annotations : " << synapse_errors << endl;   
     }
+
     
+    std::tr1::unordered_set<Label> seg_orphans; 
+    std::tr1::unordered_set<Label> gt_orphans; 
+    
+    load_orphans(seg_stack, seg_rag, seg_orphans, options.body_error_size,
+            options.synapse_error_size);
+    load_orphans(gt_stack, gt_rag, gt_orphans, options.body_error_size,
+            options.synapse_error_size);
+
+    std::tr1::unordered_set<Label> seg_matched; 
+    std::tr1::unordered_set<Label> gt_matched; 
+    int matched = 0;
+    for (std::tr1::unordered_set<Label>::iterator iter = seg_orphans.begin();
+           iter != seg_orphans.end(); ++iter) {
+        matched += seg_stack->grab_max_overlap((*iter), gt_orphans, gt_rag, seg_matched, gt_matched);
+    } 
+    
+    cout << "Percent orphans matched for seg: " <<
+        seg_matched.size()/double(seg_orphans.size())*100 << endl;
+    if (options.dump_orphans) {
+        for (std::tr1::unordered_set<Label>::iterator iter = seg_orphans.begin();
+                iter != seg_orphans.end(); ++iter) {
+            if (seg_matched.find(*iter) == seg_matched.end()) {
+                cout << "Unmatched seg orphan body: " << *iter << endl;
+            } 
+        }
+    }
+    cout << "Percent orphans matched for GT: " <<
+        double(gt_matched.size())/gt_orphans.size()*100 << endl;
+    
+    if (options.dump_orphans) {
+        for (std::tr1::unordered_set<Label>::iterator iter = gt_orphans.begin();
+                iter != gt_orphans.end(); ++iter) {
+            if (gt_matched.find(*iter) == gt_matched.end()) {
+                cout << "Unmatched GT orphan body: " << *iter << endl;
+            } 
+        }
+    }
+    int leftover = seg_orphans.size() - seg_matched.size() + gt_orphans.size() - gt_matched.size();
+    cout << "Orphan agreement rate: " << double(matched)/(leftover + matched) * 100.0 <<  endl; 
+     
     // ?? might give weird results when dilation is done on GT
     seg_stack->compute_groundtruth_assignment();
     vector<RagNode<Label>* > large_bodies;
