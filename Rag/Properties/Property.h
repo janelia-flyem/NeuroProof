@@ -2,27 +2,24 @@
 #define PROPERTY_H
 
 #include <boost/shared_ptr.hpp>
-#include "../Utilities/ErrMsg.h"
-#include "AffinityPair.h"
-#include "RagEdge.h"
-#include "RagNode.h"
-#include <tr1/unordered_map>
 
 namespace NeuroProof {
 
+typedef boost::shared_ptr<Property> PropertyPtr;
+
 class Property {
   public:
-    virtual boost::shared_ptr<Property> copy() = 0;
-    // add serialization/deserialization interface
+    virtual PropertyPtr copy() = 0;
+    // TODO: add serialization/deserialization interface
 };
 
 template <typename T>
 class PropertyTemplate : public Property {
   public:
     PropertyTemplate(T data_) : Property(), data(data_) {}
-    virtual boost::shared_ptr<Property> copy()
+    virtual PropertyPtr copy()
     {
-        return boost::shared_ptr<Property>(new PropertyTemplate<T>(*this));
+        return PropertyPtr(new PropertyTemplate<T>(*this));
     }
     virtual T& get_data()
     {
@@ -32,7 +29,7 @@ class PropertyTemplate : public Property {
     {
         data = data_;
     }
-    // add serialization/deserialization interface -- just memory copy
+    // TODO: add serialization/deserialization interface -- just memory copy
 
   protected:
     T data;
@@ -41,6 +38,5 @@ class PropertyTemplate : public Property {
 
 
 }
-
 
 #endif

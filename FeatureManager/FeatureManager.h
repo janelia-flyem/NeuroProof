@@ -2,7 +2,7 @@
 #define FEATUREMANAGER_H
 
 
-#include "../DataStructures/RagEdge.h"
+#include "../Rag/RagEdge.h"
 #include "../DataStructures/Glb.h"
 #include "Features.h"
 #include <tr1/unordered_map>

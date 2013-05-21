@@ -7,7 +7,7 @@
 namespace NeuroProof {
 
 template <typename Region>
-class RagEdge {
+class RagEdge : RagElement {
   public:
     static RagEdge<Region>* New(RagNode<Region>* node1, RagNode<Region>* node2)
     {
@@ -83,7 +83,6 @@ class RagEdge {
     int get_cc_id(){return cc_id;}; 	
 
     void print_edge();
-    double mito_boundary_ratio();
     
     void set_edge_id(int pid){ edge_id = pid;};
     int get_edge_id(){return edge_id;};
@@ -107,38 +106,6 @@ template<typename Region> void RagEdge<Region>::print_edge()
 {
     printf("edge : (%d, %d)\n", node1->get_node_id(), node2->get_node_id());
 }	
-
-template<typename Region> double RagEdge<Region>::mito_boundary_ratio(){
-
-   RagNode<Region>* mito_node = NULL;		
-   RagNode<Region>* other_node = NULL;		
-
-   if ((node1->get_node_type() == 2) && (node2->get_node_type() == 1) ){
-	mito_node = node1;
-	other_node = node2;
-   }	
-   else if((node2->get_node_type() == 2) && (node1->get_node_type() == 1) ){
-	mito_node = node2;
-	other_node = node1;
-   }
-   else 
-	return 0.0; 	
-
-   if (mito_node->get_size() > other_node->get_size())
-	return 0.0;
-
-   unsigned long long mito_node_border_len = mito_node->compute_border_length();		
-
-   double ratio = edge_size*1.0/mito_node_border_len; 
-
-   if (ratio > 1.0){
-	printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());
-	return 0.0;
-   }
-
-   return ratio;
-
-}
 
 template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false), qloc(-1)
 {

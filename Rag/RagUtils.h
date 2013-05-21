@@ -1,18 +1,16 @@
-#ifndef RAGALGS_H
-#define RAGALGS_H
+#ifndef RAGUTILS_H
+#define RAGUTILS_H
 
-#include "../DataStructures/Rag.h"
-#include "../DataStructures/PropertyList.h"
-#include "../DataStructures/Property.h"
 #include "../FeatureManager/FeatureManager.h"
+#include "../Algorithms/MergePriorityFunction.h"
+#include "../Algorithms/MergePriorityQueue.h"
+#include "Rag.h"
+
 #include <map>
 #include <string>
 #include <iostream>
-#include "MergePriorityFunction.h"
-#include "MergePriorityQueue.h"
 
-//#include "../ConvexHull/region_hull.h"
-
+// TODO: remove references to algorithms and feature mgr
 
 namespace NeuroProof {
 
@@ -21,25 +19,61 @@ struct EdgeRanking {
     typedef std::multimap<double, RagEdge<Region>* > type;
 };
 
-
-
-template <typename Region>
-void rag_bind_edge_property_list(Rag<Region>* rag, std::string property_type)
+template<typename Region>
+double mito_boundary_ratio(RagEdge<Regio>* edge)
 {
-   rag->bind_property_list(property_type, EdgePropertyList<Region>::create_edge_list());
+    RagNode<Region>* node1 = edge->get_node1();
+    RagNode<Region>* node2 = edge->get_node1();
+    double ratio = 0.0;
+
+    try {
+        NodeTypeProperty& type1 = node1->get_property<NodeTypeProperty>("mito-type");
+        NodeTypeProperty& type2 = node2->get_property<NodeTypeProperty>("mito-type");
+
+        RagNode<Region>* mito_node = 0;		
+        RagNode<Region>* other_node = 0;		
+
+        if ((type1 == 2) && (type2 == 1) ){
+            mito_node = node1;
+            other_node = node2;
+        } else if((type1 == 2) && (type2 == 1) ){
+            mito_node = node2;
+            other_node = node1;
+        } else { 
+            return 0.0; 	
+        }
+
+        if (mito_node->get_size() > other_node->get_size()) {
+            return 0.0;
+        }
+
+        unsigned long long mito_node_border_len = mito_node->compute_border_length();		
+
+        double ratio = edge_size*1.0/mito_node_border_len; 
+
+        if (ratio > 1.0){
+            printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());
+            return 0.0;
+        }
+
+    } catch (ErrMsg& err) {
+        // # just return 
+    } 
+
+    return ratio;
 }
 
 template <typename Region>
-void rag_bind_node_property_list(Rag<Region>* rag, std::string property_type)
+unsigned long long get_rag_size(Rag<Region>* rag)
 {
-   rag->bind_property_list(property_type, NodePropertyList<Region>::create_node_list());
+    unsigned long long total_num_voxels = 0;
+    for (typename Rag<Region>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        total_num_voxels += (*iter)->get_size();
+    }
+    return total_num_voxels;
 }
 
-template <typename Region>
-void rag_unbind_property_list(Rag<Region>* rag, std::string property_type)
-{
-   rag->unbind_property_list(property_type);
-}
+
 
 template <typename Region>
 void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, std::vector<double>& preds, 
@@ -70,94 +104,6 @@ void rag_add_edge(Rag<Region>* rag, unsigned int id1, unsigned int id2, std::vec
 }  
 
 
-template <typename Region, typename T>
-void rag_add_property(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type, T data)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    boost::shared_ptr<Property> property(new PropertyTemplate<T>(data));
-    property_list->add_property(edge, property);
-}
-
-template <typename Region>
-void rag_add_propertyptr(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type, boost::shared_ptr<Property> property)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    property_list->add_property(edge, property);
-}
-
-template <typename Region>
-void rag_add_propertyptr(Rag<Region>* rag, RagNode<Region>* node, std::string property_type, boost::shared_ptr<Property> property)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    property_list->add_property(node, property);
-}
-
-
-
-template <typename Region, typename T>
-void rag_add_property(Rag<Region>* rag, RagNode<Region>* node, std::string property_type, T data)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    boost::shared_ptr<Property> property(new PropertyTemplate<T>(data));
-    property_list->add_property(node, property);
-}
-
-template <typename Region, typename T>
-T rag_retrieve_property(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    return property_list_retrieve_template_property<Region, T>(property_list, edge);
-}
-
-template <typename Region, typename T>
-T rag_retrieve_property(Rag<Region>* rag, RagNode<Region>* node, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    return property_list_retrieve_template_property<Region, T>(property_list, node);
-}
-
-template <typename Region>
-boost::shared_ptr<Property> rag_retrieve_propertyptr(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    return property_list->retrieve_property(edge);
-}
-
-template <typename Region>
-boost::shared_ptr<Property> rag_retrieve_propertyptr(Rag<Region>* rag, RagNode<Region>* node, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    return property_list->retrieve_property(node);
-}
-
-
-
-template <typename Region>
-void rag_remove_property(Rag<Region>* rag, RagEdge<Region>* edge, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    property_list->remove_property(edge);
-}
-
-template <typename Region>
-void rag_remove_property(Rag<Region>* rag, RagNode<Region>* node, std::string property_type)
-{
-    boost::shared_ptr<PropertyList<Region> > property_list = rag->retrieve_property_list(property_type);
-    property_list->remove_property(node);
-}
-
-
-template <typename Region>
-unsigned long long get_rag_size(Rag<Region>* rag)
-{
-    unsigned long long total_num_voxels = 0;
-    for (typename Rag<Region>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-        total_num_voxels += (*iter)->get_size();
-    }
-    return total_num_voxels;
-}
-
-
 // take smallest value edge and use that when connecting back
 template <typename Region>
 void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* node_keep, std::vector<std::string>& property_names)
@@ -180,16 +126,16 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
             
             if (!((*iter)->is_false_edge())) {
                 for (int i = 0; i < property_names.size(); ++i) {
-                    boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, *iter, property_names[i]);
-                    rag_add_propertyptr(&rag, temp_edge, property_names[i], property);
+                    PropertyPtr property = (*iter)->get_property_ptr(property_names[i]);
+                    temp_edge->set_property_ptr(property_names[i], property);
                 }
             }
         } else if (!temp_edge) {
             RagEdge<Region>* new_edge = rag.insert_rag_edge(node_keep, other_node);
             new_edge->set_weight(weight);
             for (int i = 0; i < property_names.size(); ++i) {
-                boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, *iter, property_names[i]);
-                rag_add_propertyptr(&rag, new_edge, property_names[i], property);
+                PropertyPtr property = (*iter)->get_property_ptr(property_names[i]);
+                new_edge->set_property_ptr(property_names[i], property);
             }
             final_edge = new_edge;
         }

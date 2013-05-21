@@ -1,17 +1,13 @@
 #include "FeatureManager/FeatureManager.h"
-#include "DataStructures/Rag.h"
-#include "Algorithms/RagAlgs.h"
-#include "ImportsExports/ImportExportRagPriority.h"
+#include "Rag/Rag.h"
+#include "Rag/RagUtils.h"
+#include "Rag/RagIO.h"
 #include "Utilities/ErrMsg.h"
-
-
+#include "DataStructures/Stack.h"
 
 #include <boost/python.hpp>
 
-//#include <boost/numeric/ublas/matrix.hpp>
 #include <iostream>
-
-#include "DataStructures/Stack.h"
 
 using namespace NeuroProof;
 using namespace boost::python;
@@ -29,16 +25,17 @@ RagEdge<Label>* (Rag_ui::*find_rag_edge_ptr1)(Label, Label) = &Rag_ui::find_rag_
 RagEdge<Label>* (Rag_ui::*find_rag_edge_ptr2)(RagNode<Label>*, RagNode<Label>*) = &Rag_ui::find_rag_edge;
 
 
+#if 0
 void (*rag_add_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string, object) = rag_add_property<Label, object>;
 object (*rag_retrieve_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string) = rag_retrieve_property<Label, object>;
-void (*rag_bind_edge_property_list_ptr)(Rag_ui*, std::string) = rag_bind_edge_property_list<Label>;
 
 void (*rag_add_property_ptr2)(Rag_ui*, RagNode_ui*, std::string, object) = rag_add_property<Label, object>;
 object (*rag_retrieve_property_ptr2)(Rag_ui*, RagNode_ui*, std::string) = rag_retrieve_property<Label, object>;
-void (*rag_bind_node_property_list_ptr)(Rag_ui*, std::string) = rag_bind_node_property_list<Label>;
 
 void (*rag_remove_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string) = rag_remove_property<Label>;
 void (*rag_remove_property_ptr2)(Rag_ui*, RagNode_ui*, std::string) = rag_remove_property<Label>;
+#endif
+
 
 // add some documentation and produce a simple case (showing that copying works and use of generic properties)
 
@@ -253,6 +250,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     def("add_prediction_channel2", add_prediction_channel2);
     def("write_volume_to_buffer", write_volume_to_buffer);
 
+#if 0
     // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
     def("rag_add_property", rag_add_property_ptr1);
     def("rag_add_property", rag_add_property_ptr2);
@@ -264,14 +262,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     // retrieve property from a rag (return <data>, params: <rag>, <edge/node>, <property_string>)
     def("rag_retrieve_property", rag_retrieve_property_ptr1);
     def("rag_retrieve_property", rag_retrieve_property_ptr2);
-
-    // delete and unbind property list from rag (params: <rag>, <property_string>)
-    def("rag_unbind_property_list", rag_unbind_property_list<Label>);
-
-    // create and bind edge property list to rag (params: <rag>, <property_string>)
-    def("rag_bind_edge_property_list", rag_bind_edge_property_list_ptr);
-    // create and bind node property list to rag (params: <rag>, <property_string>)
-    def("rag_bind_node_property_list", rag_bind_node_property_list_ptr);
+#endif
 
     // initialization actually occurs within custom build
     class_<FeatureMgr>("FeatureMgr", no_init)

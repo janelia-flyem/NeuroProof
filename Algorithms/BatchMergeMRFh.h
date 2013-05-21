@@ -2,7 +2,7 @@
 #define _BATCH_MERGE_MRFh
 
 #include <vector>
-#include "../DataStructures/Rag.h"
+#include "../Rag/Rag.h"
 #include "../FeatureManager/FeatureManager.h"
 #include "../DataStructures/Glb.h"
 

@@ -1,7 +1,7 @@
 #ifndef GPR_H
 #define GPR_H
 
-#include "../DataStructures/Rag.h"
+#include "../Rag/Rag.h"
 #include "../DataStructures/AffinityPair.h"
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>

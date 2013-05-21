@@ -710,12 +710,10 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
     }
     
     // load default information
-    rag_bind_edge_property_list(rag, "location");
-    rag_bind_edge_property_list(rag, "edge_size");
     for (Rag<Label>::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
-        rag_add_property(rag, (*iter), "location", Location(0,0,0));
-        rag_add_property(rag, (*iter), "edge_size", (*iter)->get_size());
+        (*iter)->set_property("location", Location(0,0,0));
+        (*iter)->set_property("edge_size", (*iter)->get_size());
     }
     
     json_vals_priority["orphan_bodies"] = orphan_bodies;

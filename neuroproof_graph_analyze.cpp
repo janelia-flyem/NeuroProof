@@ -17,7 +17,7 @@
 */
 
 // contains library for storing a region adjacency graph (RAG)
-#include "DataStructures/Rag.h"
+#include "Rag/Rag.h"
 
 // algorithms to calculate generalized probabilistic rand (GPR)
 #include "Priority/GPR.h"
@@ -29,7 +29,7 @@
 #include "Utilities/ScopeTime.h"
 
 // utilties for importing rags
-#include "ImportsExports/ImportExportRagPriority.h"
+#include "Rag/RagIO.h"
 
 // utitlies for parsing options
 #include "Utilities/OptionParser.h"

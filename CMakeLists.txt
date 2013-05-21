@@ -62,13 +62,13 @@ else ()
     
     # Compile NeuroProof components
 
-    add_subdirectory (ImportsExports)
+    add_subdirectory (Rag)
     add_subdirectory (FeatureManager)
     add_subdirectory (Algorithms)
     add_subdirectory (Classifier)
     add_subdirectory (DataStructures)
 
-    set (NEUROPROOF_INT_LIBS ImportsExports FeatureManager Algorithms Classifier DataStructures)
+    set (NEUROPROOF_INT_LIBS Rag FeatureManager Algorithms Classifier DataStructures)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
     set (NEUROPROOF_DEPS ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
 
@@ -100,7 +100,7 @@ else ()
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 
     # need to build components separately to set python flag
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp ImportsExports/ImportExportRagPriority.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp)
+    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp Rag/Properties/GlbPropertyManager.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp)
     target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")

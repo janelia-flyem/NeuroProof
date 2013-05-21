@@ -3,7 +3,6 @@
 
 #include "RagEdge.h"
 #include "RagNode.h"
-#include "PropertyList.h"
 #include "../Utilities/ErrMsg.h"
 #include <tr1/unordered_set>
 #include <tr1/unordered_map>
@@ -32,12 +31,7 @@ class Rag {
     size_t get_num_edges() const;
     
     typedef std::tr1::unordered_set<RagEdge<Region>*, RagEdgePtrHash<Region>, RagEdgePtrEq<Region> >  EdgeHash;
-    typedef std::tr1::unordered_map<std::string, boost::shared_ptr<PropertyList<Region> > >  PropertyListMap;
     typedef std::tr1::unordered_set<RagNode<Region>*, RagNodePtrHash<Region>, RagNodePtrEq<Region> >  NodeHash;
-
-    void bind_property_list(std::string property_type, boost::shared_ptr<PropertyList<Region> > property_list);
-    boost::shared_ptr<PropertyList<Region> > retrieve_property_list(std::string property_type);
-    void unbind_property_list(std::string property_type);
 
     class edges_iterator {
       public:
@@ -162,15 +156,10 @@ class Rag {
     RagEdge<Region>* find_rag_edge(RagEdge<Region>* edge);
     RagEdge<Region>* get_probe_edge(RagNode<Region>* rag_node1, RagNode<Region>* rag_node2);
     RagEdge<Region>* get_probe_edge(Region region1, Region region2);
-    void remove_property(RagEdge<Region>* rag_edge);
-    void remove_property(RagNode<Region>* rag_node);
-
 
     // core data lists
     EdgeHash rag_edges;
     NodeHash rag_nodes;
-    PropertyListMap property_list_map;
-
 
     // internal probes for efficiency
     RagEdge<Region>* probe_rag_edge;
@@ -191,10 +180,12 @@ template <typename Region> Rag<Region>::Rag(const Rag<Region>& dup_rag)
     
     for (typename EdgeHash::const_iterator iter = dup_rag.rag_edges.begin(); iter != dup_rag.rag_edges.end(); ++iter) {
         RagEdge<Region>* rag_edge = new RagEdge<Region>(**iter);
+        (*iter)->cp_properties(rag_edge);
         rag_edges.insert(rag_edge);
     }
     for (typename NodeHash::const_iterator iter = dup_rag.rag_nodes.begin(); iter != dup_rag.rag_nodes.end(); ++iter) {
         RagNode<Region>* rag_node = new RagNode<Region>(**iter);
+        (*iter)->cp_properties(rag_node);
         rag_nodes.insert(rag_node);
     }
     for (typename EdgeHash::iterator iter = rag_edges.begin(); iter != rag_edges.end(); ++iter) {
@@ -211,17 +202,11 @@ template <typename Region> Rag<Region>::Rag(const Rag<Region>& dup_rag)
         RagNode<Region> * scan_node = const_cast<RagNode<Region>*>(*iter);
         RagNode<Region> * curr_node = find_rag_node(scan_node);
     
-
         for (typename RagNode<Region>::edge_iterator edge_iter = scan_node->edge_begin(); edge_iter != scan_node->edge_end(); ++edge_iter) {
             curr_node->remove_edge(*edge_iter);
             curr_node->insert_edge(find_rag_edge(*edge_iter));
         }
     }
-
-    for (typename PropertyListMap::const_iterator iter = dup_rag.property_list_map.begin(); iter != dup_rag.property_list_map.end(); ++iter) {
-        property_list_map[iter->first] = iter->second->copy(); 
-    }
-
 }
 
 template <typename Region> Rag<Region>& Rag<Region>::operator=(const Rag<Region>& dup_rag)
@@ -361,12 +346,12 @@ template <typename Region> inline void Rag<Region>::remove_rag_node(RagNode<Regi
     for (int i = 0; i < edge_list.size(); ++i) {
         edge_list[i]->get_node1()->remove_edge(edge_list[i]); 
         edge_list[i]->get_node2()->remove_edge(edge_list[i]); 
-        
-        remove_property(edge_list[i]);
+    
+        edge_list[i]->rm_properties();    
         rag_edges.erase(edge_list[i]);
     }
 
-    remove_property(rag_node);
+    rag_node->rm_properties();
     rag_nodes.erase(rag_node);
 }
 
@@ -379,53 +364,9 @@ template <typename Region> inline void Rag<Region>::remove_rag_edge(RagEdge<Regi
     rag_edge->get_node1()->remove_edge(rag_edge);
     rag_edge->get_node2()->remove_edge(rag_edge);
 
-    remove_property(rag_edge);
+    rag_edge->rm_properties();
     rag_edges.erase(rag_edge);
 }
-
-
-template <typename Region> inline void Rag<Region>::remove_property(RagEdge<Region>* rag_edge)
-{
-    for (typename PropertyListMap::iterator iter = property_list_map.begin(); iter != property_list_map.end(); ++iter) { 
-        try {
-            iter->second->remove_property(rag_edge);
-        } catch (ErrMsg& msg) {
-            //
-        }
-    }
-}
-template <typename Region> inline void Rag<Region>::remove_property(RagNode<Region>* rag_node)
-{
-    for (typename PropertyListMap::iterator iter = property_list_map.begin(); iter != property_list_map.end(); ++iter) { 
-        try {
-            iter->second->remove_property(rag_node);
-        } catch (ErrMsg& msg) {
-            //
-        }
-    }
-}
-
-
-template <typename Region> void Rag<Region>::bind_property_list(std::string property_type, boost::shared_ptr<PropertyList<Region> > property_list)
-{
-    property_list_map[property_type] = property_list;
-} 
-
-template <typename Region> inline boost::shared_ptr<PropertyList<Region> > Rag<Region>::retrieve_property_list(std::string property_type)
-{
-    typename PropertyListMap::iterator iter = property_list_map.find(property_type);
-    if (iter == property_list_map.end()) {
-        throw ErrMsg(std::string("No properties loaded for ") + property_type);
-    }
-    return iter->second;
-} 
-
-template <typename Region> inline void Rag<Region>::unbind_property_list(std::string property_type)
-{
-    property_list_map.erase(property_type);
-} 
-
-
 
 template <typename Region> inline size_t Rag<Region>::get_num_regions() const
 {
@@ -441,7 +382,6 @@ template <typename Region> void Rag<Region>::swap_em(Rag<Region>* rag_core)
 {
     std::swap(rag_edges, rag_core->rag_edges);
     std::swap(rag_nodes, rag_core->rag_nodes);
-    std::swap(property_list_map, rag_core->property_list_map);
     std::swap(probe_rag_edge, rag_core->probe_rag_edge);
     std::swap(probe_rag_node, rag_core->probe_rag_node);
     std::swap(probe_rag_node2, rag_core->probe_rag_node2);

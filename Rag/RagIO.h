@@ -1,5 +1,5 @@
-#ifndef IMPORTEXPORTRAGPRIORITY_H
-#define IMPORTEXPORTRAGPRIORITY_H
+#ifndef RAGIO_H
+#define RAGIO_H
 
 #include <json/value.h>
 

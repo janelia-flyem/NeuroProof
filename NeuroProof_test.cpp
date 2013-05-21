@@ -1,8 +1,9 @@
-#include "DataStructures/Rag.h"
+#include "Rag/Rag.h"
 #include "Priority/GPR.h"
 #include "Priority/LocalEdgePriority.h"
 #include "Utilities/ScopeTime.h"
-#include "ImportsExports/ImportExportRagPriority.h"
+#include "Rag/RagIO.h"
+
 #include <fstream>
 #include <sstream>
 #include <cassert>

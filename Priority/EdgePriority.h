@@ -1,7 +1,7 @@
 #ifndef EDGEPRIORITY_H
 #define EDGEPRIORITY_H
 
-#include "../DataStructures/Rag.h"
+#include "../Rag/Rag.h"
 #include <vector>
 #include <boost/tuple/tuple.hpp>
 
@@ -56,7 +56,7 @@ class EdgePriority {
         double weight;
         bool false_edge;
         bool preserve_edge;
-        std::vector<boost::shared_ptr<Property> > property_list_curr;
+        std::vector<PropertyPtr> property_list_curr;
     };
 
     std::vector<EdgeHistory> history_queue;
@@ -115,34 +115,37 @@ template <typename Region> bool EdgePriority<Region>::undo()
             temp_edge->set_weight(history.edge_weight1[i]);
             temp_edge->set_preserve(history.preserve_edge1[i]);
             temp_edge->set_false_edge(history.false_edge1[i]);
-            rag_add_propertyptr(&rag, temp_edge, "location", history.property_list1[i][0]);
-            rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list1[i][1]);
+            
+            temp_edge->set_property_ptr("location", history.property_list1[i][0]);
+            temp_edge->set_property_ptr("edge_size", history.property_list1[i][1]);
         } 
         for (int i = 0; i < history.node_list2.size(); ++i) {
             RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node2, rag.find_rag_node(history.node_list2[i]));
             temp_edge->set_weight(history.edge_weight2[i]);
             temp_edge->set_preserve(history.preserve_edge2[i]);
             temp_edge->set_false_edge(history.false_edge2[i]);
-            rag_add_propertyptr(&rag, temp_edge, "location", history.property_list2[i][0]);
-            rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list2[i][1]);
+            
+            temp_edge->set_property_ptr("location", history.property_list2[i][0]);
+            temp_edge->set_property_ptr("edge_size", history.property_list2[i][1]);
         }
 
         RagEdge<Region>* temp_edge = rag.insert_rag_edge(temp_node1, temp_node2);
         temp_edge->set_weight(history.weight);
         temp_edge->set_preserve(history.preserve_edge); 
         temp_edge->set_false_edge(history.false_edge); 
-        rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
-        rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
+        
+        temp_edge->set_property_ptr("location", history.property_list_curr[0]);
+        temp_edge->set_property_ptr("edge_size", history.property_list_curr[1]);
         
         for (typename NodePropertyMap::iterator iter = history.node_properties1.begin(); 
             iter != history.node_properties1.end();
                 ++iter) {
-            rag_add_propertyptr(&rag, temp_node1, iter->first, iter->second);
+            temp_node1->set_property_ptr(iter->first, iter-second);
         }
         for (typename NodePropertyMap::iterator iter = history.node_properties2.begin();
             iter != history.node_properties2.end();
                 ++iter) {
-            rag_add_propertyptr(&rag, temp_node2, iter->first, iter->second);
+            temp_node2->set_property_ptr(iter->first, iter-second);
         }
     } else {
         RagNode<Region>* temp_node1 = rag.find_rag_node(history.node1);
@@ -152,8 +155,6 @@ template <typename Region> bool EdgePriority<Region>::undo()
         temp_edge->set_weight(history.weight);
         temp_edge->set_preserve(history.preserve_edge); 
         temp_edge->set_false_edge(history.false_edge); 
-        //rag_add_propertyptr(&rag, temp_edge, "location", history.property_list_curr[0]);
-        //rag_add_propertyptr(&rag, temp_edge, "edge_size", history.property_list_curr[1]);
     }
 
     history_queue.pop_back();
@@ -172,8 +173,8 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
     history.weight = edge->get_weight();
     history.preserve_edge = edge->is_preserve();
     history.false_edge = edge->is_false_edge();
-    history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "location"));
-    history.property_list_curr.push_back(rag_retrieve_propertyptr(&rag, edge, "edge_size"));
+    history.property_list_curr.push_back(edge->get_property_ptr("location"));
+    history.property_list_curr.push_back(edge->get_property_ptr("edge_size")); 
 
     // node id that is kept
     history.remove = true;
@@ -185,13 +186,13 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
     for (int i = 0; i < node_properties.size(); ++i) {
         std::string property_type = node_properties[i];
         try {
-            boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, node1, property_type);
+            PropertyPtr property = node1->get_property_ptr(property_type);
             history.node_properties1[property_type] = property;
         } catch(...) {
             //
         }
         try {
-            boost::shared_ptr<Property> property = rag_retrieve_propertyptr(&rag, node2, property_type);
+            PropertyPtr property = node2->get_property_ptr(property_type);
             history.node_properties2[property_type] = property;
         } catch(...) {
             //
@@ -206,10 +207,9 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
             history.preserve_edge1.push_back((*iter)->is_preserve());
             history.false_edge1.push_back((*iter)->is_false_edge());
 
-
             std::vector<boost::shared_ptr<Property> > property_list;
-            property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
-            property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "edge_size"));  
+            property_list.push_back((*iter)->get_property_ptr("location"));  
+            property_list.push_back((*iter)->get_property_ptr("edge_size"));  
             history.property_list1.push_back(property_list);
         }
     } 
@@ -223,21 +223,15 @@ template <typename Region> void EdgePriority<Region>::removeEdge(NodePair node_p
             history.false_edge2.push_back((*iter)->is_false_edge());
 
             std::vector<boost::shared_ptr<Property> > property_list;
-            property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "location"));  
-            property_list.push_back(rag_retrieve_propertyptr(&rag, *iter, "edge_size"));  
+            property_list.push_back((*iter)->get_property_ptr("location"));  
+            property_list.push_back((*iter)->get_property_ptr("edge_size"));  
             history.property_list2.push_back(property_list);
         }
     }
 
     rag_merge_edge(rag, edge, node1, property_names); 
-
     history_queue.push_back(history);
 }
-
-
-
-
-
 
 }
 

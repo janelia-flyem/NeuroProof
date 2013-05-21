@@ -4,7 +4,7 @@
 #include <vector>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#include "Rag.h"
+#include "../Rag/Rag.h"
 #include "AffinityPair.h"
 #include "../FeatureManager/FeatureManager.h"
 #include "Glb.h"
@@ -19,7 +19,7 @@
 
 #include "../Watershed/vigra_watershed.h"
 
-#include "../Algorithms/RagAlgs.h"
+#include "../Rag/RagUtils.h"
 
 #include <json/json.h>
 #include <json/value.h>
@@ -263,7 +263,6 @@ class Stack {
     int depth2, height2, width2;
     int padding2;
 
-    boost::shared_ptr<PropertyList<Label> > node_properties_holder;
     std::tr1::unordered_set<Label> visited;
     std::tr1::unordered_map<Label, int> node_depth;
     std::tr1::unordered_map<Label, int> low_count;

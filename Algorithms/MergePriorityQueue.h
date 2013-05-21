@@ -8,8 +8,8 @@
 
 #include "../DataStructures/Glb.h"
 
-#include "../DataStructures/Rag.h"
-#include "../DataStructures/RagEdge.h"
+#include "../Rag/Rag.h"
+#include "../Rag/RagEdge.h"
 
 #define MAX_QVAL 2
 

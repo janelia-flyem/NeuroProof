@@ -9,8 +9,6 @@
 #ifndef RAGNODE_H
 #define RAGNODE_H
 
-// TODO: remove this include
-#include "NodeType.h"
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -28,9 +26,10 @@ class RagEdge;
  * is necessary for traversing edges and other nodes.  User-defined
  * datatypes can be used as the fundamental data stored at the node.
  * Operators must be overload to handle the operations used in this class.
+ * Inherits property interface from RagElement
 */ 
 template <typename Region>
-class RagNode {
+class RagNode : public RagElement {
   public:
     //! Static creation of nodes on the heap only
     static RagNode<Region>* New(Region node_int)
@@ -108,9 +107,6 @@ class RagNode {
     */ 
     void remove_edge(RagEdge<Region>* edge);
     
-   
-    NodeType<Region>* get_type_decider(){return &type_decider;};	
-    Region get_node_type(){return type_decider.get_node_type();};	
     unsigned long long compute_border_length();
  	
 
@@ -265,9 +261,6 @@ class RagNode {
     unsigned long long border_size;
     RagEdgeList edges;
     Region node_int;
-
-    //! TODO: used for mito detection -- should be refactored
-    NodeType<Region> type_decider;	
 
 };
 template<typename Region> unsigned long long RagNode<Region>::compute_border_length()  {

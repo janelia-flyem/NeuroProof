@@ -1,9 +1,10 @@
-#include "ImportExportRagPriority.h"
+#include "RagIO.h"
 #include "../DataStructures/Rag.h"
-#include "../Algorithms/RagAlgs.h"
+#include "../Utilities/ErrMsg.h"
+#include "RagUtils.h"
+
 #include <json/json.h>
 #include <json/value.h>
-#include "../Utilities/ErrMsg.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -83,23 +84,13 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
                     x = location[(unsigned int)(0)].asUInt();
                     y = location[(unsigned int)(1)].asUInt();
                     z = location[(unsigned int)(2)].asUInt();
-                    try {
-                        rag->retrieve_property_list("location");
-                    } catch (ErrMsg& msg) {
-                        rag_bind_edge_property_list(rag, "location");
-                    }
-                    rag_add_property(rag, rag_edge, "location", Location(x,y,z));
+                    rag_edge->set_property("location", Location(x,y,z));
                 }
 
                 rag_edge->set_preserve(preserve);
                 rag_edge->set_false_edge(false_edge);
 
-                try {
-                        rag->retrieve_property_list("edge_size");
-                } catch (ErrMsg& msg) {
-                        rag_bind_edge_property_list(rag, "edge_size");
-                }
-                rag_add_property(rag, rag_edge, "edge_size", edge_size);
+                rag_edge->set_property("edge_size", edge_size);                
             } 
         }
 
@@ -160,7 +151,7 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_
             json_edge["false_edge"] = (*iter)->is_false_edge();           
 
             try {
-                Location location = rag_retrieve_property<Label, Location>(rag, *iter, "location");
+                Location location = (*iter)->get_property<Location>("location")
                 json_edge["location"][(unsigned int)(0)] = boost::get<0>(location); 
                 json_edge["location"][(unsigned int)(1)] = boost::get<1>(location); 
                 json_edge["location"][(unsigned int)(2)] = boost::get<2>(location); 
@@ -169,7 +160,7 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_
             }
           
             try { 
-                unsigned int edge_size = rag_retrieve_property<Label, unsigned int>(rag, *iter, "edge_size");
+                unsigned int edge_size = (*iter)->get_property<unsigned int("edge_size")
                 json_edge["edge_size"] = edge_size;
             } catch (ErrMsg& msg) {
             }

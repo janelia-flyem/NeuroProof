@@ -2,7 +2,12 @@
 #include "Priority/GPR.h"
 #include "Priority/LocalEdgePriority.h"
 #include "Utilities/ScopeTime.h"
-#include "ImportsExports/ImportExportRagPriority.h"
+#include "Rag/RagIO.h"
+
+#include "Utilities/h5read.h"
+#include "Utilities/h5write.h"
+#include "Utilities/OptionParser.h"
+
 #include <fstream>
 #include <sstream>
 #include <cassert>
@@ -10,10 +15,6 @@
 #include <memory>
 #include <json/json.h>
 #include <json/value.h>
-
-#include "Utilities/h5read.h"
-#include "Utilities/h5write.h"
-#include "Utilities/OptionParser.h"
 
 #include <ctime>
 #include <cmath>
@@ -338,7 +339,6 @@ int main(int argc, char** argv)
    
     // set edge properties for export 
     Rag<Label>* rag = stackp->get_rag();
-    rag_bind_edge_property_list(rag, "location");
     for (Rag<Label>::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_false_edge())) {
@@ -353,7 +353,7 @@ int main(int argc, char** argv)
         } catch (ErrMsg& msg) {
             //
         }
-        rag_add_property(rag, (*iter), "location", Location(x,y,z));
+        (*iter)->set_property("location", Location(x,y,z));
     }
 
     // write out graph json
