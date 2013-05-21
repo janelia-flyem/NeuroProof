@@ -19,7 +19,7 @@
 */
 
 // contains library for storing a region adjacency graph (RAG)
-#include "DataStructures/Rag.h"
+#include "Rag/Rag.h"
 
 // algorithms used to estimate how many edges need to be examine
 #include "Priority/LocalEdgePriority.h"
@@ -28,7 +28,7 @@
 #include "Utilities/ScopeTime.h"
 
 // utilties for importing rags
-#include "ImportsExports/ImportExportRagPriority.h"
+#include "Rag/RagIO.h"
 
 // utitlies for parsing options
 #include "Utilities/OptionParser.h"

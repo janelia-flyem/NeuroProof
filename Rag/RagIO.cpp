@@ -1,5 +1,5 @@
 #include "RagIO.h"
-#include "../DataStructures/Rag.h"
+#include "Rag.h"
 #include "../Utilities/ErrMsg.h"
 #include "RagUtils.h"
 
@@ -151,7 +151,7 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_
             json_edge["false_edge"] = (*iter)->is_false_edge();           
 
             try {
-                Location location = (*iter)->get_property<Location>("location")
+                Location location = (*iter)->get_property<Location>("location");
                 json_edge["location"][(unsigned int)(0)] = boost::get<0>(location); 
                 json_edge["location"][(unsigned int)(1)] = boost::get<1>(location); 
                 json_edge["location"][(unsigned int)(2)] = boost::get<2>(location); 
@@ -160,7 +160,7 @@ bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_
             }
           
             try { 
-                unsigned int edge_size = (*iter)->get_property<unsigned int("edge_size")
+                unsigned int edge_size = (*iter)->get_property<unsigned int>("edge_size");
                 json_edge["edge_size"] = edge_size;
             } catch (ErrMsg& msg) {
             }

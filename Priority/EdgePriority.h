@@ -140,12 +140,12 @@ template <typename Region> bool EdgePriority<Region>::undo()
         for (typename NodePropertyMap::iterator iter = history.node_properties1.begin(); 
             iter != history.node_properties1.end();
                 ++iter) {
-            temp_node1->set_property_ptr(iter->first, iter-second);
+            temp_node1->set_property_ptr(iter->first, iter->second);
         }
         for (typename NodePropertyMap::iterator iter = history.node_properties2.begin();
             iter != history.node_properties2.end();
                 ++iter) {
-            temp_node2->set_property_ptr(iter->first, iter-second);
+            temp_node2->set_property_ptr(iter->first, iter->second);
         }
     } else {
         RagNode<Region>* temp_node1 = rag.find_rag_node(history.node1);

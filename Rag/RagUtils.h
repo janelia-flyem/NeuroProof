@@ -4,6 +4,7 @@
 #include "../FeatureManager/FeatureManager.h"
 #include "../Algorithms/MergePriorityFunction.h"
 #include "../Algorithms/MergePriorityQueue.h"
+#include "Properties/MitoTypeProperty.h"
 #include "Rag.h"
 
 #include <map>
@@ -20,15 +21,17 @@ struct EdgeRanking {
 };
 
 template<typename Region>
-double mito_boundary_ratio(RagEdge<Regio>* edge)
+double mito_boundary_ratio(RagEdge<Region>* edge)
 {
     RagNode<Region>* node1 = edge->get_node1();
-    RagNode<Region>* node2 = edge->get_node1();
+    RagNode<Region>* node2 = edge->get_node2();
     double ratio = 0.0;
 
     try {
-        NodeTypeProperty& type1 = node1->get_property<NodeTypeProperty>("mito-type");
-        NodeTypeProperty& type2 = node2->get_property<NodeTypeProperty>("mito-type");
+        MitoTypeProperty& type1_mito = node1->template get_property<MitoTypeProperty>("mito-type");
+        MitoTypeProperty& type2_mito = node2->template get_property<MitoTypeProperty>("mito-type");
+        int type1 = type1_mito.get_node_type(); 
+        int type2 = type2_mito.get_node_type(); 
 
         RagNode<Region>* mito_node = 0;		
         RagNode<Region>* other_node = 0;		
@@ -49,7 +52,7 @@ double mito_boundary_ratio(RagEdge<Regio>* edge)
 
         unsigned long long mito_node_border_len = mito_node->compute_border_length();		
 
-        double ratio = edge_size*1.0/mito_node_border_len; 
+        double ratio = (edge->get_size())*1.0/mito_node_border_len; 
 
         if (ratio > 1.0){
             printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());

@@ -1,5 +1,7 @@
 #include "Stack.h"
 
+#include "../Rag/Properties/MitoTypeProperty.h"
+
 using namespace NeuroProof;
 using namespace std;
 using namespace vigra;
@@ -160,10 +162,16 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
 
-	    
-	if ((rag_node1->get_node_type()==2) || (rag_node2->get_node_type()==2))	
-	   continue;
-	
+	try {    
+            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
+            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
+        } catch (ErrMsg& msg) {
+
+        }
+
 	if(gtruth)
 	    error += ((assignment.find(node1)->second == assignment.find(node2)->second) ? 0 : 1);
 	    
@@ -256,8 +264,16 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
 
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
-	if ((rag_node1->get_node_type()==2) || (rag_node2->get_node_type()==2))	
-	   continue;
+	try {    
+            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
+            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
+        } catch (ErrMsg& msg) {
+
+        }
+
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
 	//printf("node keep: %d, node remove :%d\n",node1,node2);
@@ -293,8 +309,16 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
 
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
-	if ((rag_node1->get_node_type()==2) || (rag_node2->get_node_type()==2))	
-	   continue;
+
+	try {    
+            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
+            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
+        } catch (ErrMsg& msg) {
+
+        }
 
         Label node1 = rag_node1->get_node_id(); 
         Label node2 = rag_node2->get_node_id();
@@ -346,16 +370,21 @@ void StackPredict::merge_mitochondria_a()
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
 
-        if ((rag_node1->get_node_type()==2) && (rag_node2->get_node_type()==1))	{
-	    RagNode<Label>* tmp = rag_node1;
-	    rag_node1 = rag_node2;
-	    rag_node2 = tmp;		
-	}
-        else if ((rag_node2->get_node_type()==2) && (rag_node1->get_node_type()==1))	{
-	    // nophing	
-	}
-	else	
-	    continue;
+        try {
+            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
+            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+            if ((mtype1.get_node_type()==2) && (mtype2.get_node_type()==1))	{
+                RagNode<Label>* tmp = rag_node1;
+                rag_node1 = rag_node2;
+                rag_node2 = tmp;		
+            } else if ((mtype2.get_node_type()==2) && (mtype1.get_node_type()==1))	{
+                // nophing	
+            } else {
+                continue;
+            }
+        } catch (ErrMsg& msg) {
+            continue;
+        }
 
         Label node1 = rag_node1->get_node_id(); 
         Label node2 = rag_node2->get_node_id();
@@ -383,9 +412,14 @@ void StackPredict::merge_mitochondria_a()
     unsigned long not_merged_total=0;
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
-	
-	if((*iter)->get_node_type()==2)
-	    not_merged_total++;
+
+        try {        
+            MitoTypeProperty& mtype = (*iter)->get_property<MitoTypeProperty>("mito-type");
+            if(mtype.get_node_type()==2)
+                not_merged_total++;
+        } catch (ErrMsg& msg) {
+
+        }
     }
     //printf("Total mito not merged %d\n", not_merged_total);	
 }

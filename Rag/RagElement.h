@@ -8,7 +8,7 @@
 #ifndef RAGELEMENT_H
 #define RAGELEMENT_H
 
-#include "Features/GlbPropertyManager.h"
+#include "Properties/GlbPropertyManager.h"
 
 namespace NeuroProof {
 
@@ -26,7 +26,7 @@ class RagElement {
     template <typename T>
     void set_property(std::string key, T property)
     {
-        GlbProperty::get_instance()->set_property((*this), key, property);
+        GlbPropertyManager::get_instance()->set_property(this, key, property);
     }
 
     /*!
@@ -36,7 +36,7 @@ class RagElement {
     */
     void set_property_ptr(std::string key, PropertyPtr property)
     {
-        GlbProperty::get_instance()->set_property_ptr((*this), std::string key, property);
+        GlbPropertyManager::get_instance()->set_property_ptr(this, key, property);
     }
 
     /*!
@@ -48,7 +48,7 @@ class RagElement {
     template <typename T>
     T& get_property(std::string key)
     {
-        return GlbProperty::get_instance()->get_property<T>((*this), key);
+        return GlbPropertyManager::get_instance()->get_property<T>(this, key);
     }
 
     /*!
@@ -58,7 +58,7 @@ class RagElement {
     */
     PropertyPtr get_property_ptr(std::string key)
     {
-        return GlbProperty::get_instance()->get_property_ptr((*this), key);
+        return GlbPropertyManager::get_instance()->get_property_ptr(this, key);
     }
 
     /*!
@@ -69,7 +69,7 @@ class RagElement {
     */
     bool has_property(std::string key)
     {
-        GlbProperty::get_instance()->has_property((*this), key)
+        GlbPropertyManager::get_instance()->has_property(this, key);
     }
   
     /*!
@@ -78,7 +78,7 @@ class RagElement {
     */
     void rm_property(std::string key)
     {
-        GlbProperty::get_instance()->rm_property((*this), key)
+        GlbPropertyManager::get_instance()->rm_property(this, key);
     }
 
     /*!
@@ -87,7 +87,7 @@ class RagElement {
     */
     void cp_properties(RagElement* element2)
     {
-        GlbProperty::get_instance()->mv_property((*this), element2)
+        GlbPropertyManager::get_instance()->cp_properties(this, element2);
     }
     
     /*!
@@ -96,7 +96,7 @@ class RagElement {
     */
     void mv_properties(RagElement* element2)
     {
-        GlbProperty::get_instance()->mv_property((*this), element2)
+        GlbPropertyManager::get_instance()->mv_properties(this, element2);
     }
     
     /*!
@@ -104,7 +104,7 @@ class RagElement {
     */ 
     void rm_properties()
     {
-        GlbProperty::get_instance()->rm_property((*this))
+        GlbPropertyManager::get_instance()->rm_properties(this);
     } 
 };
 

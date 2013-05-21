@@ -2,7 +2,7 @@
 #define LOCALEDGEPRIORITY_H
 
 #include "EdgePriority.h"
-#include "../Rag/RagAlgs.h"
+#include "../Rag/RagUtils.h"
 #include <iostream>
 #include <json/value.h>
 #include <set>
@@ -40,7 +40,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
             unsigned long long synapse_weight = 0;
             try {   
-                synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
+                synapse_weight = (*iter)->template get_property<unsigned long long>(SynapseStr);
             } catch(...) {
                 //
             }
@@ -48,7 +48,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
             bool is_orphan = false;
             try {   
 
-                is_orphan = (*iter)->get_property<bool>(OrphanStr);
+                is_orphan = (*iter)->template get_property<bool>(OrphanStr);
             } catch(...) {
                 //
             }
@@ -107,13 +107,13 @@ class LocalEdgePriority : public EdgePriority<Region> {
         if (body_list) {
             delete body_list;
         } 
-        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        body_list = new BodyRankList(ragtemp);
         current_depth = 0;
 
         for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
             unsigned long long synapse_weight = 0;
             try {   
-                synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
+                synapse_weight = (*iter)->template get_property<unsigned long long>(SynapseStr);
             } catch(...) {
                 //
             }
@@ -142,7 +142,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         if (body_list) {
             delete body_list;
         } 
-        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        body_list = new BodyRankList(ragtemp);
        
         current_depth = depth; 
         volume_size = get_rag_size(&ragtemp);
@@ -173,20 +173,20 @@ class LocalEdgePriority : public EdgePriority<Region> {
         if (body_list) {
             delete body_list;
         } 
-        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        body_list = new BodyRankList(ragtemp);
         current_depth = 0;
 
         for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin(); iter != ragtemp.nodes_end(); ++iter) {
             unsigned long long synapse_weight = 0;
             try {   
-                synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
+                synapse_weight = (*iter)->template get_property<unsigned long long>(SynapseStr);
             } catch(...) {
                 //
             }
 
             bool is_orphan = false;
             try {   
-                is_orphan = (*iter)->get_property<bool>(OrphanStr);
+                is_orphan = (*iter)->template get_property<bool>(OrphanStr);
             } catch(...) {
                 //
             }
@@ -254,12 +254,12 @@ class LocalEdgePriority : public EdgePriority<Region> {
                 unsigned long long synapse_weight2 = 0;
                 if (!examined) {
                     try {
-                        synapse_weight1 = node1->get_property<unsigned long long>(SynapseStr);
+                        synapse_weight1 = node1->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }
                     try {
-                        synapse_weight2 = node2->get_property<unsigned long long>(SynapseStr);
+                        synapse_weight2 = node2->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }
@@ -278,14 +278,14 @@ class LocalEdgePriority : public EdgePriority<Region> {
                     bool orphan1 = false;
          
                     try {
-                        orphan1 = node1->get_property<bool>(OrphanStr);
+                        orphan1 = node1->template get_property<bool>(OrphanStr);
                     } catch(...) {
                         //
                     }
 
                     bool orphan2 = false;
                     try {
-                        orphan2 = node2->get_property<bool>(OrphanStr);
+                        orphan2 = node2->template get_property<bool>(OrphanStr);
                     } catch(...) {
                         //
                     }
@@ -407,8 +407,9 @@ class LocalEdgePriority : public EdgePriority<Region> {
 
     class BodyRankList {
       public:
-        BodyRankList(Rag<Region>& rag_, boost::shared_ptr<PropertyList<Region> > already_analyzed_list_) : 
-            rag(rag_), already_analyzed_list(already_analyzed_list_), checkpoint(false) {}
+        BodyRankList(Rag<Region>& rag_) : 
+            rag(rag_), checkpoint(false), OrphanStr("orphan"), ExaminedStr("examined"),
+            SynapseStr("synapse_weight") {}
         void insert(BodyRank item)
         {
             if (checkpoint) {
@@ -500,11 +501,13 @@ class LocalEdgePriority : public EdgePriority<Region> {
         };
 
         Rag<Region>& rag;
-        boost::shared_ptr<PropertyList<Region> > already_analyzed_list;
         std::set<BodyRank> body_list;
         std::tr1::unordered_map<Region, BodyRank> stored_ids;
         bool checkpoint;
         std::vector<std::vector<HistoryElement> > history;
+        const std::string OrphanStr;
+        const std::string ExaminedStr;
+        const std::string SynapseStr;
     };
 
     void grabAffinityPairs(RagNode<Region>* rag_node_head, int path_restriction, double connection_threshold, bool preserve);
@@ -516,7 +519,7 @@ class LocalEdgePriority : public EdgePriority<Region> {
         prob_mode = false;
         synapse_mode = false;
         
-        for (Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
+        for (typename Rag<Region>::nodes_iterator iter = ragtemp.nodes_begin();
                 iter != ragtemp.nodes_end(); ++iter) {
             (*iter)->rm_property(ExaminedStr);
         }
@@ -654,7 +657,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
     if (prob_mode && prune_small_edges) {
         for (typename Rag<Region>::edges_iterator iter = ragtemp.edges_begin();
                 iter != ragtemp.edges_end(); ++iter) {
-            if (((*iter)->get_property<unsigned int>("edge_size")) <= 1) {
+            if (((*iter)->template get_property<unsigned int>("edge_size")) <= 1) {
                 (*iter)->set_weight(10.0);
             }
         }
@@ -675,7 +678,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
     // load synapse info
     unsigned long long num_synapses = 0; 
-    BodyRankList body_list_synapse(ragtemp, already_analyzed_list);
+    BodyRankList body_list_synapse(ragtemp);
     Json::Value json_synapse_weights = json_vals["synapse_bodies"];
     for (unsigned int i = 0; i < json_synapse_weights.size(); ++i) {
         BodyRank body_rank;
@@ -689,7 +692,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
         bool is_examined = false;
         try { 
-            is_examined =  rag_node->get_property<bool>(ExaminedStr);
+            is_examined =  rag_node->template get_property<bool>(ExaminedStr);
         } catch(...) {
             //
         }
@@ -700,7 +703,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
 
     // load orphan info
-    BodyRankList body_list_orphan(ragtemp, already_analyzed_list);
+    BodyRankList body_list_orphan(ragtemp);
     Json::Value json_orphan = json_vals["orphan_bodies"];
     for (unsigned int i = 0; i < json_orphan.size(); ++i) {
         BodyRank body_rank;
@@ -713,7 +716,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
 
         unsigned long long synapse_weight = 0;
         try {   
-            synapse_weight = rag_node->get_property<unsigned long long>(SynapseStr);
+            synapse_weight = rag_node->template get_property<unsigned long long>(SynapseStr);
         } catch(...) {
             //
         }
@@ -734,7 +737,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
         volume_size = num_synapses;
         ignore_size = voi_change(ignore_size, ignore_size, volume_size);
     } else if (!prob_mode) {
-        body_list = new BodyRankList(ragtemp, already_analyzed_list);
+        body_list = new BodyRankList(ragtemp);
 
         volume_size = get_rag_size(&ragtemp);
         ignore_size = voi_change(approx_neurite_size, ignore_size, volume_size);
@@ -745,7 +748,7 @@ template <typename Region> LocalEdgePriority<Region>::LocalEdgePriority(Rag<Regi
             // heuristically ignore bodies below a certain size for computation reasons
             bool is_examined = false;
             try { 
-                is_examined = (*iter)->get_property<bool>(ExamineStr);
+                is_examined = (*iter)->template get_property<bool>(ExaminedStr);
             } catch(...) {
                 //
             }
@@ -845,19 +848,19 @@ template <typename Region> void LocalEdgePriority<Region>::export_json(Json::Val
         unsigned long long synapse_weight = 0;
 
         try {
-            is_orphan = (*iter)->get_property<bool>(OrphanStr);
+            is_orphan = (*iter)->template get_property<bool>(OrphanStr);
         } catch(...) {
             //
         }
 
         try {
-            synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
+            synapse_weight = (*iter)->template get_property<unsigned long long>(SynapseStr);
         } catch(...) {
             //
         }
 
         try {
-            is_examined = (*iter)->get_property<bool>(ExaminedStr);
+            is_examined = (*iter)->template get_property<bool>(ExaminedStr);
         } catch(...) {
             //
         }
@@ -952,7 +955,7 @@ template <typename Region> boost::tuple<Region, Region> LocalEdgePriority<Region
             edge = edge_ranking.begin()->second;
         }
        
-        location = edge->get_property<Location>("location");
+        location = edge->template get_property<Location>("location");
     } catch(ErrMsg& msg) {
         std::cerr << msg.str << std::endl;
         throw ErrMsg("Priority scheduler crashed");
@@ -1014,13 +1017,13 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                 if (synapse_mode) { 
                     unsigned long long synapse_weight1 = 0;
                     try {
-                        synapse_weight1 = head_node->get_property<unsigned long long>(SynapseStr);
+                        synapse_weight1 = head_node->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }
                     unsigned long long synapse_weight2 = 0;
                     try {
-                        synapse_weight2 = other_node->get_property<unsigned long long>(SynapseStr);
+                        synapse_weight2 = other_node->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }
@@ -1032,14 +1035,14 @@ template <typename Region> void LocalEdgePriority<Region>::updatePriority()
                 } else if (orphan_mode) {
                     bool orphan1 = false;
                     try {
-                        orphan1 = head_node->get_property<bool>(OrphanStr);
+                        orphan1 = head_node->template get_property<bool>(OrphanStr);
                     } catch(...) {
                         //
                     }
 
                     bool orphan2 = false;
                     try {
-                        orphan2 = other_node->get_property<bool>(OrphanStr);
+                        orphan2 = other_node->template get_property<bool>(OrphanStr);
                     } catch(...) {
                         //
                     }
@@ -1150,24 +1153,24 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
             unsigned long long  synapse_weight = 0;
             unsigned long long synapse_weight_head = 0;
             try {
-                synapse_weight_head = rag_head_node->get_property<unsigned long long>(SynapseStr);
+                synapse_weight_head = rag_head_node->template get_property<unsigned long long>(SynapseStr);
             } catch(...) {
                 //
             }
 
             try {
-                is_orphan = rag_other_node->get_property<bool>(OrphanStr);
+                is_orphan = rag_other_node->template get_property<bool>(OrphanStr);
             } catch(...) {
                 //
             }
             try {
-                is_orphan_head = rag_head_node->get_property<bool>(OrphanStr);
+                is_orphan_head = rag_head_node->template get_property<bool>(OrphanStr);
             } catch(...) {
                 //
             }
 
             try {
-                synapse_weight = rag_other_node->get_property<unsigned long long>(SynapseStr);
+                synapse_weight = rag_other_node->template get_property<unsigned long long>(SynapseStr);
             } catch(...) {
                 //
             }
@@ -1237,14 +1240,14 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 if (orphan_mode) {
                     bool is_orphan2 = false;
                     try {   
-                        is_orphan2 = rag_other_node2->get_property<bool>(OrphanStr);
+                        is_orphan2 = rag_other_node2->template get_property<bool>(OrphanStr);
                     } catch(...) {
                         //
                     }
 
                     unsigned long long synapse_weight = 0;
                     try {   
-                        synapse_weight = rag_other_node2->get_property<unsigned long long>(SynapseStr);
+                        synapse_weight = rag_other_node2->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }
@@ -1258,7 +1261,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
                 if (synapse_mode) {
                     item.size = 0;
                     try { 
-                        item.size = rag_other_node2->get_property<unsigned long long>(SynapseStr);
+                        item.size = rag_other_node2->template get_property<unsigned long long>(SynapseStr);
                     } catch(...) {
                         //
                     }

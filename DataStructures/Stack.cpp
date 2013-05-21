@@ -1,5 +1,7 @@
 #include "Stack.h"
 
+#include "../Rag/Properties/MitoTypeProperty.h"
+
 using namespace NeuroProof;
 using namespace std;
 
@@ -375,6 +377,8 @@ void Stack::build_rag()
                 RagNode<Label> * node = rag->find_rag_node(spot0);
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
+                    MitoTypeProperty mtype;
+                    node->set_property("mito-type", mtype);
                 }
 
                 if (feature_mgr && !median_mode) {
@@ -384,7 +388,8 @@ void Stack::build_rag()
                 }
 
                 if (!predictions.empty()) {
-                    node->get_type_decider()->update(predictions); 
+                    MitoTypeProperty& mtype = node->get_property<MitoTypeProperty>("mito-type");
+                    mtype.update(predictions); 
                 }
 
                 if (spot1 && (spot0 != spot1)) {
@@ -425,7 +430,8 @@ void Stack::build_rag()
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
         if (!predictions.empty()) {
-            (*iter)->get_type_decider()->set_type();
+            MitoTypeProperty& mtype = (*iter)->get_property<MitoTypeProperty>("mito-type");
+            mtype.set_type(); 
         }
     }
 }
@@ -1278,8 +1284,15 @@ int Stack::decide_edge_label(RagNode<Label>* rag_node1, RagNode<Label>* rag_node
     edge_label = (node1gt == node2gt)? -1 : 1;
 
 
-    if ( rag_node1->get_node_type() == 2 || rag_node2->get_node_type() == 2 )
-        edge_label = 1;				
+    try {        
+        MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
+        MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+        if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
+            edge_label = 1;
+        }
+    } catch (ErrMsg& msg) {
+        
+    }
 
     return edge_label;	
 }

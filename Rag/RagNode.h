@@ -9,6 +9,7 @@
 #ifndef RAGNODE_H
 #define RAGNODE_H
 
+#include "RagElement.h"
 #include <vector>
 #include <algorithm>
 #include <map>

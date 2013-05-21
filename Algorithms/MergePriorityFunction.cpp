@@ -1,4 +1,5 @@
 #include "MergePriorityFunction.h"
+#include "../Rag/RagUtils.h"
 
 #include <cstdio>
 
@@ -179,7 +180,7 @@ void MitoPriority::initialize_priority(double threshold_, bool use_edge_weight)
     for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if (valid_edge(*iter)) {
 	    double val;
-	    val = 1 - (*iter)->mito_boundary_ratio();
+	    val = 1 - mito_boundary_ratio((*iter));
 
 	    if (val < threshold) {
 	        ranking.insert(std::make_pair(val, std::make_pair((*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id())));
@@ -212,7 +213,7 @@ void MitoPriority::clear_dirty()
 	rag_edge->set_dirty(false);
 
 	if (valid_edge(rag_edge)) {
-	    double val = 1 - rag_edge->mito_boundary_ratio();
+	    double val = 1 - mito_boundary_ratio(rag_edge);
 
 	    if (val < threshold) {
 		ranking.insert(std::make_pair(val, std::make_pair(node1, node2)));
@@ -262,12 +263,12 @@ RagEdge<Label>* MitoPriority::get_top_edge()
 	return 0;
     }
 
-    double val = 1 - rag_edge->mito_boundary_ratio();
+    double val = 1 - mito_boundary_ratio(rag_edge);
 
     bool dirty = false;
     if (rag_edge->is_dirty()) {
 	dirty = true;
-	val = 1 - rag_edge->mito_boundary_ratio();
+	val = 1 - mito_boundary_ratio(rag_edge);
 	rag_edge->set_dirty(false);
 	dirty_edges.erase(OrderedPair<Label>(node1, node2));
     }

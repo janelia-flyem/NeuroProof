@@ -1,4 +1,6 @@
 #include "BatchMergeMRFh.h"
+#include "../Rag/Properties/MitoTypeProperty.h"
+
 #include <ctime>
 #include <cstdlib>
 #include <cmath>
@@ -63,8 +65,17 @@ double BatchMergeMRFh::compute_merge_prob( int iterCount, std::vector< std::pair
 
 
     for (Rag<Label>::nodes_iterator iter = _rag->nodes_begin(); iter != _rag->nodes_end(); ++iter) 
-	if (*iter && (*iter)->get_node_type() != 2)
-	    generate_subsets(*iter);
+        
+        if (*iter) {
+            try {
+                MitoTypeProperty& mtype = (*iter)->get_property<MitoTypeProperty>("mito-type");
+                if (mtype.get_node_type() != 2) {
+                    generate_subsets(*iter);
+                }
+            } catch (ErrMsg& msg) {
+                generate_subsets(*iter);
+            }
+        }
 
     /*fprintf(_fp,"\n\n"); 	
     for (int i=0;i<_subsets.size();i++){
@@ -217,8 +228,15 @@ void BatchMergeMRFh::generate_subsets(RagNode<Label>* pnode)
     multimap<Label, Label > nbr_set_degree;	
     for(RagNode<Label>::edge_iterator iter = pnode->edge_begin(); iter != pnode->edge_end(); ++iter) {
 	RagNode<Label>* other_node = (*iter)->get_other_node(pnode);
-	if (other_node->get_node_type()!=2)
-	    nbr_set.insert(other_node->get_node_id());
+
+        try {
+            MitoTypeProperty& mtype = other_node->get_property<MitoTypeProperty>("mito-type");
+            if (mtype.get_node_type()!=2) {
+                nbr_set.insert(other_node->get_node_id());
+            }
+        } catch (ErrMsg& msg) {
+            nbr_set.insert(other_node->get_node_id());
+        }
 
 	//fprintf(_fp,"edge: (%d, %d), loc %d\n",pnode->get_node_id(), other_node->get_node_id(), (*iter)->get_qloc());
     }

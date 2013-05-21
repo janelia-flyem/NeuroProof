@@ -5,13 +5,13 @@
 
 namespace NeuroProof {
 
-typedef boost::shared_ptr<Property> PropertyPtr;
-
 class Property {
   public:
-    virtual PropertyPtr copy() = 0;
+    virtual boost::shared_ptr<Property> copy() = 0;
     // TODO: add serialization/deserialization interface
 };
+
+typedef boost::shared_ptr<Property> PropertyPtr;
 
 template <typename T>
 class PropertyTemplate : public Property {

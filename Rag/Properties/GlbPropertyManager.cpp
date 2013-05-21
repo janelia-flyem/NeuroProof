@@ -1,6 +1,6 @@
-#include "GlbPropertyManager"
+#include "GlbPropertyManager.h"
 
 using namespace NeuroProof;
 
-static GlbPropertyManager* GlbPropertyManager::manager = 0;
+GlbPropertyManager* GlbPropertyManager::manager = 0;
 

@@ -8,15 +8,15 @@
 #define GLBPROPERTYMANAGER_H
 
 #include "Property.h"
-#include "../Utitlies/ErrMsg.h"
+#include "../../Utilities/ErrMsg.h"
 
 #include <tr1/unordered_map>
 #include <string>
 
+namespace NeuroProof {
+
 // forward declaration of RagElement
 class RagElement;
-
-namespace NeuroProof {
 
 /*!
  * Singleton class that provides storage for all rag nodes and edges.
@@ -86,7 +86,7 @@ class GlbPropertyManager {
         boost::shared_ptr<PropertyTemplate<T> > property_tem =
             boost::shared_polymorphic_downcast<PropertyTemplate<T> >(property);
         
-        return property->get_data();
+        return property_tem->get_data();
     }
 
     /*!
@@ -172,7 +172,7 @@ class GlbPropertyManager {
 
   private:
     //! Empty private constructor for singleton
-    GlbPropertyManger() { // empty} 
+    GlbPropertyManager() { }
 
     //! Destroy singleton
     ~GlbPropertyManager()
@@ -183,7 +183,7 @@ class GlbPropertyManager {
     //! pointer to singleton object
     static GlbPropertyManager* manager;
     
-    typedef std::tr1::unordered_map<std::string, PropertyPtr> Properties_t
+    typedef std::tr1::unordered_map<std::string, PropertyPtr> Properties_t;
     typedef std::tr1::unordered_map<RagElement*, Properties_t> PropertyMap_t;
     
     //! mapping for RagElement to property map

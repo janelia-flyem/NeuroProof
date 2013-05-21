@@ -7,7 +7,7 @@
 namespace NeuroProof {
 
 template <typename Region>
-class RagEdge : RagElement {
+class RagEdge : public RagElement {
   public:
     static RagEdge<Region>* New(RagNode<Region>* node1, RagNode<Region>* node2)
     {
