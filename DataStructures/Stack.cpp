@@ -377,8 +377,6 @@ void Stack::build_rag()
                 RagNode<Label> * node = rag->find_rag_node(spot0);
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
-                    MitoTypeProperty mtype;
-                    node->set_property("mito-type", mtype);
                 }
 
                 if (feature_mgr && !median_mode) {
@@ -388,8 +386,14 @@ void Stack::build_rag()
                 }
 
                 if (!predictions.empty()) {
-                    MitoTypeProperty& mtype = node->get_property<MitoTypeProperty>("mito-type");
-                    mtype.update(predictions); 
+                    try { 
+                        MitoTypeProperty& mtype = node->get_property<MitoTypeProperty>("mito-type");
+                        mtype.update(predictions);
+                    } catch (ErrMsg& msg) {
+                        MitoTypeProperty mtype;
+                        mtype.update(predictions);
+                        node->set_property("mito-type", mtype);
+                    } 
                 }
 
                 if (spot1 && (spot0 != spot1)) {
