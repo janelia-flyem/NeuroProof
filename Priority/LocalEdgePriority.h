@@ -1184,6 +1184,7 @@ template <typename Region> void LocalEdgePriority<Region>::removeEdge(NodePair n
 
             BodyRank master_item;
             master_item.id = head_reexamine.id;
+            master_item.size = head_reexamine.size;
             bool switching = false;
             if (boost::get<0>(node_pair) != head_reexamine.id) {
                 //assert(orphan_mode || synapse_mode);
