@@ -39,7 +39,7 @@ double mito_boundary_ratio(RagEdge<Region>* edge)
         if ((type1 == 2) && (type2 == 1) ){
             mito_node = node1;
             other_node = node2;
-        } else if((type1 == 2) && (type2 == 1) ){
+        } else if((type2 == 2) && (type1 == 1) ){
             mito_node = node2;
             other_node = node1;
         } else { 
@@ -52,7 +52,7 @@ double mito_boundary_ratio(RagEdge<Region>* edge)
 
         unsigned long long mito_node_border_len = mito_node->compute_border_length();		
 
-        double ratio = (edge->get_size())*1.0/mito_node_border_len; 
+        ratio = (edge->get_size())*1.0/mito_node_border_len; 
 
         if (ratio > 1.0){
             printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());

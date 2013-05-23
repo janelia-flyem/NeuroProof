@@ -351,6 +351,8 @@ void Stack::build_rag()
     unsigned int plane_size = width * height;
     std::vector<double> predictions(prediction_array.size(), 0.0);
     std::tr1::unordered_set<Label> labels;
+    
+    std::tr1::unordered_map<Label, MitoTypeProperty> mito_probs;
 
     for (unsigned int z = 1; z < (depth-1); ++z) {
         int z_spot = z * plane_size;
@@ -386,14 +388,15 @@ void Stack::build_rag()
                 }
 
                 if (!predictions.empty()) {
-                    try { 
+                    mito_probs[spot0].update(predictions); 
+                    /*try { 
                         MitoTypeProperty& mtype = node->get_property<MitoTypeProperty>("mito-type");
                         mtype.update(predictions);
                     } catch (ErrMsg& msg) {
                         MitoTypeProperty mtype;
                         mtype.update(predictions);
                         node->set_property("mito-type", mtype);
-                    } 
+                    } */
                 }
 
                 if (spot1 && (spot0 != spot1)) {
@@ -434,8 +437,9 @@ void Stack::build_rag()
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
         if (!predictions.empty()) {
-            MitoTypeProperty& mtype = (*iter)->get_property<MitoTypeProperty>("mito-type");
+            MitoTypeProperty mtype = mito_probs[id];
             mtype.set_type(); 
+            (*iter)->set_property("mito-type", mtype);
         }
     }
 }
@@ -1287,17 +1291,20 @@ int Stack::decide_edge_label(RagNode<Label>* rag_node1, RagNode<Label>* rag_node
 
     edge_label = (node1gt == node2gt)? -1 : 1;
 
-
+    MitoTypeProperty mtype1;
+    MitoTypeProperty mtype2;
     try {        
-        MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-        MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-        if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
-            edge_label = 1;
-        }
+        mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
     } catch (ErrMsg& msg) {
-        
     }
-
+    try {
+        mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+    } catch (ErrMsg& msg) {
+    }
+    if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
+        edge_label = 1;
+    }
+        
     return edge_label;	
 }
 

@@ -162,14 +162,20 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
 
-	try {    
-            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-                continue;
-            }
+        MitoTypeProperty mtype1, mtype2;
+        try {    
+            mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
         } catch (ErrMsg& msg) {
 
+        }
+        try {    
+            mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+        } catch (ErrMsg& msg) {
+
+        }
+
+        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+            continue;
         }
 
 	if(gtruth)
@@ -264,14 +270,20 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
 
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
-	try {    
-            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-                continue;
-            }
+        MitoTypeProperty mtype1, mtype2;
+        try {    
+            mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
         } catch (ErrMsg& msg) {
 
+        }
+        try {    
+            mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+        } catch (ErrMsg& msg) {
+
+        }
+
+        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+            continue;
         }
 
         node1 = rag_node1->get_node_id(); 
@@ -309,16 +321,21 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
 
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
-
-	try {    
-            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-                continue;
-            }
+        
+        MitoTypeProperty mtype1, mtype2;
+        try {
+            mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
         } catch (ErrMsg& msg) {
-
         }
+        try {
+            mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+        } catch (ErrMsg& msg) {
+        }
+
+        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+            continue;
+        }
+
 
         Label node1 = rag_node1->get_node_id(); 
         Label node2 = rag_node2->get_node_id();
@@ -370,19 +387,25 @@ void StackPredict::merge_mitochondria_a()
         RagNode<Label>* rag_node1 = rag_edge->get_node1();
         RagNode<Label>* rag_node2 = rag_edge->get_node2();
 
-        try {
-            MitoTypeProperty& mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-            MitoTypeProperty& mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-            if ((mtype1.get_node_type()==2) && (mtype2.get_node_type()==1))	{
-                RagNode<Label>* tmp = rag_node1;
-                rag_node1 = rag_node2;
-                rag_node2 = tmp;		
-            } else if ((mtype2.get_node_type()==2) && (mtype1.get_node_type()==1))	{
-                // nophing	
-            } else {
-                continue;
-            }
+
+        MitoTypeProperty mtype1, mtype2;
+	try {    
+            mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
         } catch (ErrMsg& msg) {
+        
+        }
+        try {    
+            mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
+        } catch (ErrMsg& msg) {
+        
+        }
+        if ((mtype1.get_node_type()==2) && (mtype2.get_node_type()==1))	{
+            RagNode<Label>* tmp = rag_node1;
+            rag_node1 = rag_node2;
+            rag_node2 = tmp;		
+        } else if ((mtype2.get_node_type()==2) && (mtype1.get_node_type()==1))	{
+            // nophing	
+        } else {
             continue;
         }
 
