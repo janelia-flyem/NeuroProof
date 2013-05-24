@@ -123,6 +123,16 @@ class FeatureMgr {
         edge_caches.erase(edge2);        
     } 
 
+    void remove_edge(RagEdge<Label>* edge)
+    {
+        edge_caches.erase(edge);
+    }
+
+    void remove_node(RagNode<Label>* node)
+    {
+        node_caches.erase(node);
+    }
+
     void merge_features(RagNode<Label>* node1, RagNode<Label>* node2);
     void merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, RagEdge<Label>* edge );
     void merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2);

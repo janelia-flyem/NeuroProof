@@ -208,7 +208,8 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
     }
 
     //node_keep->set_size(node_keep->get_size() + node_remove->get_size());
-    
+   
+    feature_mgr->remove_edge(edge); 
     rag.remove_rag_node(node_remove);
 
     for(typename RagNode<Region>::edge_iterator iter = node_keep->edge_begin(); iter != node_keep->edge_end(); ++iter) {
@@ -267,6 +268,7 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
 
     //node_keep->set_size(node_keep->get_size() + node_remove->get_size());
     
+    feature_mgr->remove_edge(edge); 
     rag.remove_rag_node(node_remove);
 
 }
@@ -330,6 +332,7 @@ void rag_merge_edge_priorityq(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<R
 
     //node_keep->set_size(node_keep->get_size() + node_remove->get_size());
     
+    feature_mgr->remove_edge(edge); 
     rag.remove_rag_node(node_remove);
 
     // refine prob for all nodes adjacent to node_keep 	
@@ -440,6 +443,7 @@ void rag_merge_edge_flat(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region
     }
 
     
+    feature_mgr->remove_edge(edge); 
     rag.remove_rag_node(node_remove);
 
 }

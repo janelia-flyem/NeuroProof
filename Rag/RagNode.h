@@ -257,6 +257,7 @@ class RagNode : public RagElement {
 
   private:
 
+    RagNode<Region>&  operator=(const RagNode<Region>& node2) {}
     RagNode(Region node_int_) : size(0), border_size(0), node_int(node_int_) {}
     unsigned long long size;
     unsigned long long border_size;

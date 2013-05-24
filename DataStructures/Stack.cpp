@@ -559,6 +559,10 @@ int Stack::remove_inclusions()
                 assert(rag_node);
                 if (articulation_node != rag_node) {
                     feature_mgr->merge_features(articulation_node, rag_node); 
+                   
+                    for (RagNode<Label>::edge_iterator iter2 = rag_node->edge_begin(); iter2 != rag_node->edge_end(); ++iter) {
+                        feature_mgr->remove_edge(*iter2);
+                    } 
                     rag->remove_rag_node(rag_node); 
 
                     watershed_to_body[region2] = articulation_region;

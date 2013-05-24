@@ -180,12 +180,10 @@ template <typename Region> Rag<Region>::Rag(const Rag<Region>& dup_rag)
     
     for (typename EdgeHash::const_iterator iter = dup_rag.rag_edges.begin(); iter != dup_rag.rag_edges.end(); ++iter) {
         RagEdge<Region>* rag_edge = new RagEdge<Region>(**iter);
-        (*iter)->cp_properties(rag_edge);
         rag_edges.insert(rag_edge);
     }
     for (typename NodeHash::const_iterator iter = dup_rag.rag_nodes.begin(); iter != dup_rag.rag_nodes.end(); ++iter) {
         RagNode<Region>* rag_node = new RagNode<Region>(**iter);
-        (*iter)->cp_properties(rag_node);
         rag_nodes.insert(rag_node);
     }
     for (typename EdgeHash::iterator iter = rag_edges.begin(); iter != rag_edges.end(); ++iter) {
@@ -343,16 +341,15 @@ template <typename Region> inline void Rag<Region>::remove_rag_node(RagNode<Regi
         edge_list.push_back(*iter);
     }
 
-    for (int i = 0; i < edge_list.size(); ++i) {
+    for (unsigned int i = 0; i < edge_list.size(); ++i) {
+        rag_edges.erase(edge_list[i]);
         edge_list[i]->get_node1()->remove_edge(edge_list[i]); 
         edge_list[i]->get_node2()->remove_edge(edge_list[i]); 
-    
-        edge_list[i]->rm_properties();    
-        rag_edges.erase(edge_list[i]);
+        delete edge_list[i];
     }
 
-    rag_node->rm_properties();
     rag_nodes.erase(rag_node);
+    delete rag_node;
 }
 
 template <typename Region> inline void Rag<Region>::remove_rag_edge(RagEdge<Region>* rag_edge)
@@ -361,11 +358,12 @@ template <typename Region> inline void Rag<Region>::remove_rag_edge(RagEdge<Regi
     if (rag_edge_iter == rag_edges.end()) {
         throw ErrMsg("edge does not exist");
     }
+
+    rag_edges.erase(rag_edge);
     rag_edge->get_node1()->remove_edge(rag_edge);
     rag_edge->get_node2()->remove_edge(rag_edge);
 
-    rag_edge->rm_properties();
-    rag_edges.erase(rag_edge);
+    delete rag_edge;
 }
 
 template <typename Region> inline size_t Rag<Region>::get_num_regions() const

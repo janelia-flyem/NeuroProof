@@ -89,6 +89,7 @@ class RagEdge : public RagElement {
 
   private:
     RagEdge(RagNode<Region>* node1_, RagNode<Region>* node_);
+    RagEdge<Region>&  operator=(const RagEdge<Region>& edge2) {}
     RagNode<Region>* node1;
     RagNode<Region>* node2;
     double weight;

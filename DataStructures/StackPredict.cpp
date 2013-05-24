@@ -307,7 +307,6 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
 {
   
     double error=0;  	
-    
     MergePriority* priority = new ProbPriority(feature_mgr, rag, synapse_mode);
     priority->initialize_priority(threshold, use_edge_weight);
 

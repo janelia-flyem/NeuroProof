@@ -8,7 +8,10 @@
 #ifndef RAGELEMENT_H
 #define RAGELEMENT_H
 
-#include "Properties/GlbPropertyManager.h"
+#include "Properties/Property.h"
+#include "../Utilities/ErrMsg.h"
+#include <tr1/unordered_map>
+#include <string>
 
 namespace NeuroProof {
 
@@ -19,14 +22,47 @@ namespace NeuroProof {
 class RagElement {
   public:
     /*!
+     * Define empty constructor
+    */
+    RagElement() {}
+    
+    /*! 
+     * Copy constructor, calls copy for all properties
+     * \param dup_element rag element to duplicate
+    */
+    RagElement(const RagElement& dup_element)
+    {
+        for (Properties_t::const_iterator iter = dup_element.properties.begin();
+                iter != dup_element.properties.end(); ++iter) {
+            properties[iter->first] = iter->second->copy();
+        }  
+    }
+    
+    /*!
+     * Assignment operator overload
+     * \param rag that will be assigned
+    */
+    RagElement& operator=(const RagElement& dup_element)
+    {
+        if (this != &dup_element) {
+            RagElement element_temp(dup_element);
+            std::swap(properties, element_temp.properties);
+        }
+
+        return *this; 
+    }
+
+      
+    /*!
      * Set any data-type to a rag element with a given property name
      * \param key property name to reference given property
      * \param property data to be save at this element with the given property name
     */ 
     template <typename T>
-    void set_property(std::string key, T property)
+    void set_property(std::string key, T val)
     {
-        GlbPropertyManager::get_instance()->set_property(this, key, property);
+        PropertyPtr property = PropertyPtr(new PropertyTemplate<T>(val)); 
+        properties[key] = property;
     }
 
     /*!
@@ -36,7 +72,7 @@ class RagElement {
     */
     void set_property_ptr(std::string key, PropertyPtr property)
     {
-        GlbPropertyManager::get_instance()->set_property_ptr(this, key, property);
+        properties[key] = property;
     }
 
     /*!
@@ -48,7 +84,15 @@ class RagElement {
     template <typename T>
     T& get_property(std::string key)
     {
-        return GlbPropertyManager::get_instance()->get_property<T>(this, key);
+        if (properties.find(key) == properties.end()) {
+            throw ErrMsg("Property Error: " + key + " not found");
+        }
+        PropertyPtr property = properties[key];
+        
+        boost::shared_ptr<PropertyTemplate<T> > property_tem =
+            boost::shared_polymorphic_downcast<PropertyTemplate<T> >(property);
+        
+        return property_tem->get_data();
     }
 
     /*!
@@ -58,7 +102,10 @@ class RagElement {
     */
     PropertyPtr get_property_ptr(std::string key)
     {
-        return GlbPropertyManager::get_instance()->get_property_ptr(this, key);
+        if (properties.find(key) == properties.end()) {
+            throw ErrMsg("Property Error: " + key + " not found");
+        }
+        return properties[key];
     }
 
     /*!
@@ -69,7 +116,7 @@ class RagElement {
     */
     bool has_property(std::string key)
     {
-        GlbPropertyManager::get_instance()->has_property(this, key);
+        return !(properties.find(key) == properties.end());
     }
   
     /*!
@@ -78,7 +125,7 @@ class RagElement {
     */
     void rm_property(std::string key)
     {
-        GlbPropertyManager::get_instance()->rm_property(this, key);
+        properties.erase(key);
     }
 
     /*!
@@ -87,7 +134,10 @@ class RagElement {
     */
     void cp_properties(RagElement* element2)
     {
-        GlbPropertyManager::get_instance()->cp_properties(this, element2);
+        for (Properties_t::iterator iter = properties.begin();
+              iter != properties.end(); ++iter) {
+            element2->properties[iter->first] = iter->second->copy();
+        }
     }
     
     /*!
@@ -96,16 +146,25 @@ class RagElement {
     */
     void mv_properties(RagElement* element2)
     {
-        GlbPropertyManager::get_instance()->mv_properties(this, element2);
+        for (Properties_t::iterator iter = properties.begin();
+                iter != properties.end(); ++iter) {
+            element2->properties[iter->first] = iter->second;
+        }
+        properties.clear(); 
     }
-    
+
     /*!
      * Removes all properties associated with rag element
     */ 
     void rm_properties()
     {
-        GlbPropertyManager::get_instance()->rm_properties(this);
+        properties.clear();
     } 
+  
+  private:
+    typedef std::tr1::unordered_map<std::string, PropertyPtr> Properties_t;
+    //! Properties stored for rag element (string index)
+    Properties_t properties;
 };
 
 }
