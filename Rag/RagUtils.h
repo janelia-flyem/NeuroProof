@@ -189,6 +189,8 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
                 feature_mgr->mv_features(*iter, temp_edge); 
             } else if (!((*iter)->is_false_edge())) {
                 feature_mgr->merge_features(temp_edge, (*iter));
+            } else {
+                feature_mgr->remove_edge(*iter);
             }
             //double val = feature_mgr->get_prob(temp_edge);
             //ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
@@ -249,6 +251,8 @@ void rag_merge_edge(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region>* no
                 feature_mgr->mv_features(*iter, temp_edge); 
             } else if (!((*iter)->is_false_edge())) {
                 feature_mgr->merge_features(temp_edge, (*iter));
+            } else {
+                feature_mgr->remove_edge(*iter);
             }
             //double val = feature_mgr->get_prob(temp_edge);
             //ranking.insert(std::make_pair(val, std::make_pair(temp_edge->get_node1()->get_node_id(), temp_edge->get_node2()->get_node_id())));
@@ -316,6 +320,8 @@ void rag_merge_edge_priorityq(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<R
                 feature_mgr->mv_features(*iter, temp_edge); 
             } else if (!((*iter)->is_false_edge())) {
                 feature_mgr->merge_features(temp_edge, (*iter));
+            } else {
+                feature_mgr->remove_edge(*iter);
             }
         } 
 	else {	// if edge(node_keep, other_node) does not exist
@@ -408,6 +414,8 @@ void rag_merge_edge_flat(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Region
             } else if (!((*iter)->is_false_edge())) {
 		int tt=1;
                 feature_mgr->merge_features(temp_edge, (*iter));
+            } else {
+                feature_mgr->remove_edge(*iter);
             }
 	    double prob = feature_mgr->get_prob(temp_edge);
 	    temp_edge->set_weight(prob);	

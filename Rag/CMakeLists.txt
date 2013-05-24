@@ -5,7 +5,7 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET (CMAKE_BUILD_TYPE Release)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-set (SOURCES RagIO.cpp Properties/GlbPropertyManager.cpp)
+set (SOURCES RagIO.cpp)
 
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 
