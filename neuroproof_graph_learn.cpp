@@ -87,9 +87,11 @@ int main(int argc, char** argv)
     string groundtruth_filename="";
     string groundtruth_dataset_name="";		
     string classifier_filename;
-    	
+        
     int maxIter = 1; 	
-    int strategy = 1; 	
+    int strategy = 1;
+    bool merge_mito = true;
+
     while(argc_itr<argc){
 	if (!(strcmp(argv[argc_itr],"-watershed"))){
 	    watershed_filename = argv[++argc_itr];
@@ -107,7 +109,9 @@ int main(int argc, char** argv)
 	    groundtruth_filename = argv[++argc_itr];
 	    groundtruth_dataset_name = argv[++argc_itr];
 	}
-
+        if (!(strcmp(argv[argc_itr],"-nomito"))){
+            merge_mito = false;
+        }
 	if (!(strcmp(argv[argc_itr],"-iteration"))){
 	    maxIter = atoi(argv[++argc_itr]);
 	}
@@ -174,6 +178,7 @@ int main(int argc, char** argv)
 	
 	StackLearn* stackp = new StackLearn(zp_watershed_data, depth+2*pad_len, height+2*pad_len, width+2*pad_len, pad_len);
 	stackp->set_feature_mgr(new FeatureMgr());
+        stackp->set_merge_mito(merge_mito);
 
 
 	size_t cube_size, plane_size, element_size=prediction.dim()[prediction.total_dim()-1];

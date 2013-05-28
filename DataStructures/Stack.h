@@ -28,13 +28,13 @@ namespace NeuroProof {
 class LabelCount;
 class Stack {
   public:
-    Stack(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), gtruth(0)
+    Stack(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), gtruth(0), merge_mito(false)
     {
         rag = new Rag<Label>();
         reinit_stack(watershed_, depth_, height_, width_, padding_);
     }
     
-    Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0), gtruth(0)
+    Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0), gtruth(0), merge_mito(false)
     {
         rag = new Rag<Label>();
     }
@@ -243,6 +243,11 @@ class Stack {
         int start_pos;
     };
 
+    void set_merge_mito(bool flag)
+    {
+        merge_mito = flag;
+    }
+
   protected:
     void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
     
@@ -289,6 +294,7 @@ class Stack {
 
     double merge_vi;
     double split_vi;
+    bool merge_mito;
 };
 
 

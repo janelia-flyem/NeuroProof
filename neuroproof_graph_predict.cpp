@@ -198,7 +198,7 @@ int main(int argc, char** argv)
 
     StackPredict* stackp = new StackPredict(zp_watershed_data, depth+2*pad_len, height+2*pad_len, width+2*pad_len, pad_len);
     stackp->set_feature_mgr(new FeatureMgr());
-	
+    stackp->set_merge_mito(options.merge_mito);	
 
     H5Read prediction(options.prediction_filename.c_str(),PRED_DATASET_NAME);	
     float* prediction_data=0;

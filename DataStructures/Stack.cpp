@@ -387,7 +387,7 @@ void Stack::build_rag()
                     node->incr_size();
                 }
 
-                if (!predictions.empty()) {
+                if (!predictions.empty() && merge_mito) {
                     mito_probs[spot0].update(predictions); 
                     /*try { 
                         MitoTypeProperty& mtype = node->get_property<MitoTypeProperty>("mito-type");
@@ -436,7 +436,7 @@ void Stack::build_rag()
     for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
-        if (!predictions.empty()) {
+        if (!predictions.empty() && merge_mito) {
             MitoTypeProperty mtype = mito_probs[id];
             mtype.set_type(); 
             (*iter)->set_property("mito-type", mtype);
@@ -1308,8 +1308,11 @@ int Stack::decide_edge_label(RagNode<Label>* rag_node1, RagNode<Label>* rag_node
         mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
     } catch (ErrMsg& msg) {
     }
-    if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
-        edge_label = 1;
+
+    if (merge_mito) {
+        if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
+            edge_label = 1;
+        }
     }
         
     return edge_label;	

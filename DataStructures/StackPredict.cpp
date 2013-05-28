@@ -174,8 +174,10 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 
         }
 
-        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-            continue;
+        if (merge_mito) {
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
         }
 
 	if(gtruth)
@@ -282,8 +284,10 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
 
         }
 
-        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-            continue;
+        if (merge_mito) {
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
         }
 
         node1 = rag_node1->get_node_id(); 
@@ -330,8 +334,10 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
         } catch (ErrMsg& msg) {
         }
 
-        if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
-            continue;
+        if (merge_mito) {
+            if ((mtype1.get_node_type()==2) || (mtype2.get_node_type()==2)) {	
+                continue;
+            }
         }
 
 
