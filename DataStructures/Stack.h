@@ -97,7 +97,7 @@ class Stack {
     void build_rag();
     void create_0bounds();
     void build_rag_border();
-    void determine_edge_locations();
+    void determine_edge_locations(bool use_probs=false);
     boost::python::list get_transformations();
     void disable_nonborder_edges();
     void enable_nonborder_edges();
@@ -260,7 +260,7 @@ class Stack {
     std::tr1::unordered_map<Label, Label> watershed_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
-    typedef std::tr1::unordered_map<RagEdge<Label>*, unsigned long long> EdgeCount; 
+    typedef std::tr1::unordered_map<RagEdge<Label>*, double> EdgeCount; 
     typedef std::tr1::unordered_map<RagEdge<Label>*, Location> EdgeLoc; 
     typedef std::tr1::unordered_set<RagEdge<Label>*, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> >  EdgeHash;
     

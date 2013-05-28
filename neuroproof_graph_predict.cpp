@@ -80,7 +80,8 @@ struct PredictOptions
 {
     PredictOptions(int argc, char** argv) : synapse_filename(""), output_filename("segmentation.h5"),
         graph_filename("graph.json"), threshold(0.2), watershed_threshold(0), post_synapse_threshold(0.0),
-        merge_mito(true), agglo_type(1), enable_transforms(true), postseg_classifier_filename("")
+        merge_mito(true), agglo_type(1), enable_transforms(true), postseg_classifier_filename(""),
+        location_prob(true)
     {
         OptionParser parser("Program that predicts edge confidence for a graph and merges confident edges");
 
@@ -115,6 +116,8 @@ struct PredictOptions
                 "merge mode used", true, false, true); 
         parser.add_option(enable_transforms, "transforms",
                 "enables using the transforms table when reading the segmentation", true, false, true); 
+        parser.add_option(location_prob, "location_prob",
+                "enables pixel prediction when choosing optimal edge location", true, false, true); 
 
         parser.parse_options(argc, argv);
     }
@@ -138,6 +141,7 @@ struct PredictOptions
     bool merge_mito;
     int agglo_type;
     bool enable_transforms;
+    bool location_prob;
 };
 
 int main(int argc, char** argv) 
@@ -344,7 +348,7 @@ int main(int argc, char** argv)
     if (options.synapse_filename != "") {   
         stackp->set_exclusions(options.synapse_filename);
     }
-    stackp->determine_edge_locations();
+    stackp->determine_edge_locations(options.location_prob);
    
     // set edge properties for export 
     Rag<Label>* rag = stackp->get_rag();

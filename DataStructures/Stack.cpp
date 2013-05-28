@@ -894,7 +894,7 @@ Label* Stack::get_label_volume_reverse(){
 }
 
 
-void Stack::determine_edge_locations()
+void Stack::determine_edge_locations(bool use_probs)
 {
     best_edge_z.clear();
     best_edge_loc.clear();
@@ -924,34 +924,40 @@ void Stack::determine_edge_locations()
                 unsigned int spot5 = watershed_to_body[(watershed[curr_spot-plane_size])];
                 unsigned int spot6 = watershed_to_body[(watershed[curr_spot+plane_size])];
 
+                double incr = 1.0;
+                if (use_probs) {
+                    // pick plane with a lot of low edge probs
+                    incr = 1.0 - prediction_array[0][curr_spot];
+                }
+
                 if (spot1 && (spot0 != spot1)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot1);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot2 && (spot0 != spot2)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot2);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot3 && (spot0 != spot3)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot3);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot4 && (spot0 != spot4)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot4);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot5 && (spot0 != spot5)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot5);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot6 && (spot0 != spot6)) {
                     RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot6);
-                    curr_edge_z[edge] += 1;  
+                    curr_edge_z[edge] += incr; 
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
             }
