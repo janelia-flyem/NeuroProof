@@ -8,6 +8,7 @@ namespace NeuroProof {
 class Property {
   public:
     virtual boost::shared_ptr<Property> copy() = 0;
+    virtual ~Property() {}
     // TODO: add serialization/deserialization interface
 };
 

@@ -18,6 +18,8 @@ class MergePriority {
                         feature_mgr(feature_mgr_), rag(rag_), synapse_mode(synapse_mode_),
                         kicked_out(0) {} 
     
+    virtual ~MergePriority() {}
+
     virtual void initialize_priority(double threshold, bool use_edge_weight=false) = 0;
 
     virtual void initialize_random(double pthreshold) {}

@@ -26,6 +26,11 @@ class RagElement {
     */
     RagElement() {}
     
+    /*!
+     * Define empty virtual destructor
+    */
+    virtual ~RagElement() {}
+
     /*! 
      * Copy constructor, calls copy for all properties
      * \param dup_element rag element to duplicate

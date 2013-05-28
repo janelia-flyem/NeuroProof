@@ -227,11 +227,11 @@ class Stack {
         delete rag;
         if (!prediction_array.empty()) {
             for (unsigned int i = 0; i < prediction_array.size(); ++i) {
-                delete prediction_array[i];
+                delete [] prediction_array[i];
             }
         }
 
-        delete watershed;
+        delete [] watershed;
         if (feature_mgr) {
             delete feature_mgr;
         }

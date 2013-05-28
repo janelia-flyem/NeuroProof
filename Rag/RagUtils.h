@@ -210,7 +210,6 @@ void rag_merge_edge_median(Rag<Region>& rag, RagEdge<Region>* edge, RagNode<Regi
     }
 
     //node_keep->set_size(node_keep->get_size() + node_remove->get_size());
-   
     feature_mgr->remove_edge(edge); 
     rag.remove_rag_node(node_remove);
 

@@ -642,6 +642,13 @@ void FeatureMgr::clear_features()
 FeatureMgr::~FeatureMgr()
 {
     clear_features();
+
+    if (num_channels > 0) {
+        vector<FeatureCompute*>& features = channels_features[0];
+        for (int j = 0; j < features.size(); ++j) {
+            delete features[j]; 
+        }
+    }
 }
 
 

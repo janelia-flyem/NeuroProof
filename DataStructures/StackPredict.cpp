@@ -311,7 +311,6 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
     priority->initialize_priority(threshold, use_edge_weight);
 
     while (!(priority->empty())) {
-
         RagEdge<Label>* rag_edge = priority->get_top_edge();
 
         if (!rag_edge) {
@@ -358,6 +357,7 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
     if(gtruth)	
         printf("# false merges %.2f\n",error); 	
 
+    delete priority;
 }
 
 void StackPredict::agglomerate_rag_size(double threshold)
@@ -444,6 +444,7 @@ void StackPredict::merge_mitochondria_a()
         }
     }
     //printf("Total mito not merged %d\n", not_merged_total);	
+    delete priority;
 }
 
 

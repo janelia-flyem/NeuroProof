@@ -760,6 +760,7 @@ void Stack::set_gt_exclusions()
             exclusion_set.insert(iter->first);
         }
     }
+    delete [] watershed_data;
 }
 
 void Stack::set_exclusions(std::string synapse_json)
@@ -1191,6 +1192,8 @@ void Stack::agglomerate_rag(double threshold)
             */
         }
     }
+
+    delete priority;
 }
 
 boost::python::list Stack::get_transformations()

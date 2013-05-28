@@ -23,6 +23,7 @@ class FeatureCompute {
     virtual void merge_cache(void * cache1, void * cache2) = 0; 
     virtual void print_cache(void* pcache) = 0; 	
     virtual void print_name() = 0; 	
+    virtual ~FeatureCompute() {}
 };
 
 

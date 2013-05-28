@@ -19,7 +19,7 @@ public:
 	virtual void save_classifier(const char* rf_filename)=0;
 	virtual bool is_trained()=0;
 
-
+        virtual ~EdgeClassifier() {}
 
 
      	virtual void set_tree_weights(std::vector<double>& pwts){};	

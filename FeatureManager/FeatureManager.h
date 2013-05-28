@@ -119,13 +119,27 @@ class FeatureMgr {
     void mv_features(RagEdge<Label>* edge2, RagEdge<Label>* edge1)
     {
         edge1->set_size(edge2->get_size());
-        edge_caches[edge1] = edge_caches[edge2];
-        edge_caches.erase(edge2);        
+        if (edge_caches.find(edge2) != edge_caches.end()) {
+            edge_caches[edge1] = edge_caches[edge2];
+            edge_caches.erase(edge2);        
+        }
     } 
 
     void remove_edge(RagEdge<Label>* edge)
     {
-        edge_caches.erase(edge);
+        if (edge_caches.find(edge) != edge_caches.end()) {
+            std::vector<void*>& edge_vec = edge_caches[edge];
+            assert(edge_vec.size() > 0);
+            unsigned int pos = 0;
+            for (int i = 0; i < num_channels; ++i) {
+                vector<FeatureCompute*>& features = channels_features[i];
+                for (int j = 0; j < features.size(); ++j) {
+                    features[j]->delete_cache(edge_vec[pos]);
+                    ++pos;
+                } 
+            }
+            edge_caches.erase(edge);
+        }
     }
 
     void remove_node(RagNode<Label>* node)

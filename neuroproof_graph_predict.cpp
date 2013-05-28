@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 	
 
     H5Read prediction(options.prediction_filename.c_str(),PRED_DATASET_NAME);	
-    float* prediction_data=NULL;
+    float* prediction_data=0;
     prediction.readData(&prediction_data);	
  
     double* prediction_single_ch = new double[depth*height*width];
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
 	    }	
 	}
 	
-	double* zp_prediction_single_ch = NULL;
+	double* zp_prediction_single_ch = 0;
 	padZero(prediction_single_ch,dims,pad_len,&zp_prediction_single_ch);
 	if (ch == 0)
 	    memcpy(prediction_ch0, prediction_single_ch, depth*height*width*sizeof(double));	
@@ -232,7 +232,12 @@ int main(int argc, char** argv)
 	stackp->add_prediction_channel(zp_prediction_single_ch);
     }
 
+    delete [] prediction_data;
+    delete [] prediction_single_ch;
+
     stackp->set_basic_features();
+
+
 
     EdgeClassifier* eclfr;
     if (ends_with(options.classifier_filename, ".h5"))
@@ -280,6 +285,7 @@ int main(int argc, char** argv)
         default: throw ErrMsg("Illegal agglomeration type specified");
     }
     cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
+    
 
     if (options.post_synapse_threshold > 0.00001) {
         cout << "Agglomerating (agglo) ignoring synapse constraints upto threshold "
@@ -314,7 +320,7 @@ int main(int argc, char** argv)
         stackp->reinit_watershed(padded_data);
         cout << num_removed << " removed" << endl;	
     }
-    
+    delete[] prediction_ch0;
 
     // recompute rag
     stackp->reinit_rag();
@@ -323,6 +329,7 @@ int main(int argc, char** argv)
         options.postseg_classifier_filename = options.classifier_filename;
     }
 
+    delete eclfr;
     if (ends_with(options.postseg_classifier_filename, ".h5"))
     	eclfr = new VigraRFclassifier(options.postseg_classifier_filename.c_str());	
     else if (ends_with(options.postseg_classifier_filename, ".xml")) 	
@@ -330,6 +337,8 @@ int main(int argc, char** argv)
     
     stackp->get_feature_mgr()->set_classifier(eclfr);   	 
     stackp->build_rag();
+    
+
 
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
@@ -370,6 +379,9 @@ int main(int argc, char** argv)
     stackp->write_graph_json(json_writer);
     fout << json_writer;
     fout.close();
+ 
+
+   
 
 
     // write out transforms (identity)
@@ -386,8 +398,13 @@ int main(int argc, char** argv)
         transform_data[tpos+1] = (*iter)->get_node_id();
     }
 
+
+
+
     // write out label volume
     Label* temp_label_volume1D = stackp->get_label_volume();       	    
+
+
 
     hsize_t dims_out[3];
     dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
@@ -395,10 +412,11 @@ int main(int argc, char** argv)
         "transforms",2,dims_out2, transform_data,
         options.output_filename == options.watershed_filename);
     
-    
+    delete eclfr;
+    delete stackp; 
     delete[] temp_label_volume1D;
     delete[] transform_data;
-    
+
     return 0;
 }
 
