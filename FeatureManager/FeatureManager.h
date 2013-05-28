@@ -1,6 +1,7 @@
 #ifndef FEATUREMANAGER_H
 #define FEATUREMANAGER_H
 
+#include <boost/python.hpp>
 
 #include "../Rag/RagEdge.h"
 #include "../DataStructures/Glb.h"
@@ -8,7 +9,6 @@
 #include <tr1/unordered_map>
 
 
-#include <boost/python.hpp>
 
 #include "../Classifier/vigraRFclassifier.h"
 #include "../Classifier/opencvRFclassifier.h"

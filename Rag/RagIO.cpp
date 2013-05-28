@@ -1,7 +1,7 @@
-#include "RagIO.h"
-#include "Rag.h"
-#include "../Utilities/ErrMsg.h"
 #include "RagUtils.h"
+#include "Rag.h"
+#include "RagIO.h"
+#include "../Utilities/ErrMsg.h"
 
 #include <json/json.h>
 #include <json/value.h>

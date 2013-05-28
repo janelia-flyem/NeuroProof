@@ -1,17 +1,18 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include <boost/python.hpp>
+#include "../FeatureManager/FeatureManager.h"
 #include <vector>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include "../Rag/Rag.h"
 #include "AffinityPair.h"
-#include "../FeatureManager/FeatureManager.h"
 #include "Glb.h"
-#include <boost/python.hpp>
 #include <boost/tuple/tuple.hpp>
 #include "../Algorithms/MergePriorityFunction.h"
 #include "../Algorithms/MergePriorityQueue.h"
+
 #include <time.h>
 
 #include "../Algorithms/BatchMergeMRFh.h"

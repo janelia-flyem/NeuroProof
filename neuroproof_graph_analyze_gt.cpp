@@ -18,6 +18,9 @@
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */
 
+// holder for label volume
+#include "DataStructures/Stack.h" 
+
 // contains library for storing a region adjacency graph (RAG)
 #include "Rag/Rag.h"
 
@@ -32,9 +35,6 @@
 
 // utitlies for parsing options
 #include "Utilities/OptionParser.h"
-
-// holder for label volume
-#include "DataStructures/Stack.h" 
 
 // utility to read label volumes
 #include "Utilities/h5read.h"

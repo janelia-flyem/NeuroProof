@@ -1,9 +1,9 @@
 #ifndef _BATCH_MERGE_MRFh
 #define _BATCH_MERGE_MRFh
 
+#include "../FeatureManager/FeatureManager.h"
 #include <vector>
 #include "../Rag/Rag.h"
-#include "../FeatureManager/FeatureManager.h"
 #include "../DataStructures/Glb.h"
 
 #define MERGE 0

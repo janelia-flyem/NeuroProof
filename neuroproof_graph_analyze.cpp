@@ -16,14 +16,14 @@
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */
 
+// algorithms used to estimate how many edges need to be examine
+#include "Priority/LocalEdgePriority.h"
+
 // contains library for storing a region adjacency graph (RAG)
 #include "Rag/Rag.h"
 
 // algorithms to calculate generalized probabilistic rand (GPR)
 #include "Priority/GPR.h"
-
-// algorithms used to estimate how many edges need to be examine
-#include "Priority/LocalEdgePriority.h"
 
 // simple function for measuring runtime
 #include "Utilities/ScopeTime.h"

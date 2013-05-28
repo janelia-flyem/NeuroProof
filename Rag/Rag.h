@@ -4,6 +4,7 @@
 #include "RagEdge.h"
 #include "RagNode.h"
 #include "../Utilities/ErrMsg.h"
+
 #include <tr1/unordered_set>
 #include <tr1/unordered_map>
 
