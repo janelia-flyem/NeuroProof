@@ -90,7 +90,7 @@ struct AnalyzeGTOptions
     AnalyzeGTOptions(int argc, char** argv) : gt_dilation(1), seg_dilation(0),
     dump_split_merge_bodies(false), dump_orphans(false), vi_threshold(0.02), synapse_filename(""),
     clear_synapse_exclusions(false), body_error_size(25000), synapse_error_size(1),
-    graph_filename(""), exclusions_filename(""), recipe_filename(""),
+    graph_filename(""), exclusions_filename(""), recipe_filename(""), min_filter_size(0),
     random_seed(1), enable_transforms(true)
     {
         OptionParser parser("Program analyzes a segmentation graph with respect to ground truth");
@@ -103,9 +103,9 @@ struct AnalyzeGTOptions
 
         // optional arguments
         parser.add_option(gt_dilation, "gt-dilation",
-                "Dilation factor for the ground truth volume boundaries"); 
+                "Dilation factor for the ground truth volume boundaries (>1 not supported)"); 
         parser.add_option(seg_dilation, "seg-dilation",
-                "Dilation factor for the segmentation volume boundaries"); 
+                "Dilation factor for the segmentation volume boundaries (>1 not supported)"); 
         parser.add_option(dump_split_merge_bodies, "dump-split-merge-bodies",
                 "Output all large VI differences at program completion"); 
         parser.add_option(dump_orphans, "dump-orphans",
@@ -126,6 +126,8 @@ struct AnalyzeGTOptions
                 "json file that specifies bodies to ignore during VI"); 
         parser.add_option(recipe_filename, "recipe-file",
                 "json file that specifies editing operations to be performed automatically"); 
+        parser.add_option(min_filter_size, "filter-size",
+                "body size filter below which bodies are ignored in VI computation -- should not run with synapse VI"); 
     
         // invisible arguments
         parser.add_option(random_seed, "random-seed",
@@ -186,6 +188,9 @@ struct AnalyzeGTOptions
      * is done at the end of all the actions. */ 
     string recipe_filename; //! contains operations to try and body restrictions
    
+    //! body size below which is ignored
+    unsigned long long min_filter_size;
+    
     // hidden option (with default value)
     int random_seed;
     bool enable_transforms;
@@ -876,11 +881,21 @@ int main(int argc, char** argv)
 
         }
 
+        // remove small bodies
+        // TODO: handle synapse bodies
+        if (options.min_filter_size > 0) {
+            int num_removed = seg_stack->remove_small_regions(options.min_filter_size);
+            cout << "Small seg bodies removed: " << num_removed << endl;
+            num_removed = gt_stack->remove_small_regions(options.min_filter_size); 
+            cout << "Small gt bodies removed: " << num_removed << endl;
+        }
+
         // dilate edges for vi comparison
         if (options.gt_dilation > 0) {
             cout << "Create gt 0 boundaries" << endl;
             gt_stack->create_0bounds();
             for (int i = 1; i < options.gt_dilation; ++i) {
+                cout << "Warning: dilation >1 not currently supported" << endl;
                 // TODO: run dilation
             }
             seg_stack->set_groundtruth(gt_stack->get_label_volume());
@@ -889,9 +904,11 @@ int main(int argc, char** argv)
             seg_stack->create_0bounds();
             cout << "Created seg 0 boundaries" << endl;
             for (int i = 1; i < options.seg_dilation; ++i) {
+                cout << "Warning: dilation >1 not currently supported" << endl;
                 // TODO: run dilation
             }
         }        
+        
 
 
         // print different statistics by default

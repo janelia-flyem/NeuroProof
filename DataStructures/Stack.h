@@ -207,6 +207,7 @@ class Stack {
     void set_exclusions(std::string synapse_json);
     void set_gt_exclusions();
     void set_body_exclusions(string exclusions_json);
+    int remove_small_regions(unsigned long long threshold);
     int remove_inclusions();
 
     void reinit_rag()

@@ -68,6 +68,46 @@ void Stack::compute_contingency_table()
 
     delete[] watershed_data;	
 }
+
+int Stack::remove_small_regions(unsigned long long threshold)
+{
+    std::tr1::unordered_map<Label, unsigned long long> regions_sz;
+
+    unsigned long long volsz = (depth)*(height)*(width);
+    std::tr1::unordered_map<Label, unsigned long long>::iterator it;
+    for(unsigned long long i=0; i< volsz; ++i){
+        Label body_id = watershed[i];
+        if (body_id != 0) {
+            if (!watershed_to_body.empty()) {
+                body_id = watershed_to_body[body_id];
+            }
+            regions_sz[body_id]++;
+        }
+    } 
+    
+    int num_removed = 0;    
+    std::tr1::unordered_set<Label> small_regions;
+    for(it = regions_sz.begin(); it != regions_sz.end(); it++) {
+        if ((it->second) < threshold) {
+	    small_regions.insert(it->first);
+	    ++num_removed;
+        }
+    }
+
+    for(unsigned long i=0; i< volsz; i++) {
+        Label body_id = watershed[i];
+        if (!watershed_to_body.empty()) {
+            body_id = watershed_to_body[body_id];
+        }
+	if (small_regions.find(body_id) != small_regions.end()){
+	    watershed[i] = 0;	
+	}
+    } 
+
+    return num_removed;
+}
+
+
 void Stack::compute_vi()
 {
     if(!gtruth)
