@@ -20,7 +20,7 @@
 
 #include "../Watershed/vigra_watershed.h"
 
-#include "../Rag/RagUtils.h"
+#include "../Refactoring/RagUtils2.h"
 
 #include <json/json.h>
 #include <json/value.h>

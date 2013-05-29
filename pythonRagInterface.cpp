@@ -1,6 +1,6 @@
 #include "FeatureManager/FeatureManager.h"
 #include "Rag/Rag.h"
-#include "Rag/RagUtils.h"
+#include "Refactoring/RagUtils2.h"
 #include "Rag/RagIO.h"
 #include "Utilities/ErrMsg.h"
 #include "DataStructures/Stack.h"

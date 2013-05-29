@@ -1,7 +1,7 @@
 #ifndef LOCALEDGEPRIORITY_H
 #define LOCALEDGEPRIORITY_H
 
-#include "../Rag/RagUtils.h"
+#include "../Refactoring/RagUtils2.h"
 #include "EdgePriority.h"
 #include <iostream>
 #include <json/value.h>

@@ -1,5 +1,5 @@
 #include "MergePriorityFunction.h"
-#include "../Rag/RagUtils.h"
+#include "../Refactoring/RagUtils2.h"
 
 #include <cstdio>
 
