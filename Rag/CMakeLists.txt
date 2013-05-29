@@ -7,7 +7,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 set (SOURCES RagIO.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
+include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
 
 add_library (Rag SHARED ${SOURCES})
 add_dependencies (Rag ${jsoncpp_NAME} ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
