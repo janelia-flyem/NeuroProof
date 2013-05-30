@@ -16,9 +16,9 @@ using namespace NeuroProof;
 
 class BatchMergeMRFh{
 
-    Rag<Label>* _rag;
+    Rag_uit* _rag;
 
-    Rag<Label>* _srag;
+    Rag_uit* _srag;
 
 
     FeatureMgr* _feature_mgr;
@@ -32,7 +32,6 @@ class BatchMergeMRFh{
     vector< vector<double> > _costs; 	
     			
     vector< vector<int> > _labelConfig; 
-//    std::vector< std::pair<Label, Label> > _allEdges;	    	
 
     multimap<Label, Label>* _assignment;
 
@@ -43,7 +42,7 @@ class BatchMergeMRFh{
 
     multimap<int, vector< vector<int> > > _configList;
 public:
-    BatchMergeMRFh(Rag<Label>* prag, FeatureMgr* pfmgr, multimap<Label, Label>* assignment, double pthd=0.5, size_t psz=4): _rag(prag), _feature_mgr(pfmgr), _subsetSz(psz), _thd(pthd) {
+    BatchMergeMRFh(Rag_uit* prag, FeatureMgr* pfmgr, multimap<Label, Label>* assignment, double pthd=0.5, size_t psz=4): _rag(prag), _feature_mgr(pfmgr), _subsetSz(psz), _thd(pthd) {
 
         _assignment = assignment;
 	if (_subsetSz==2){
@@ -54,7 +53,7 @@ public:
 	    _labelConfig[3].resize(_subsetSz); _labelConfig[3][0]=KEEP; _labelConfig[3][1] = KEEP;	
 	}
 
-	_srag = new Rag<Label>();
+	_srag = new Rag_uit();
 	_sfeature_mgr = new FeatureMgr();
 	_sfeature_mgr->copy_channel_features(_feature_mgr);
 	_sfeature_mgr->set_classifier(_feature_mgr->get_classifier());
@@ -66,18 +65,18 @@ public:
     };
 
     double compute_merge_prob( int iterCount, std::vector< std::pair<Label, Label> >& allEdges, string wts_path, string analysis_path);	
-    void generate_subsets(RagNode<Label>* pnode);
-    void compute_subset_cost(RagNode<Label>* pnode, set<Label>& subset);
+    void generate_subsets(RagNode_uit* pnode);
+    void compute_subset_cost(RagNode_uit* pnode, set<Label>& subset);
     double merge_by_config(vector<int>& config, vector<Label>& subset);
     double merge_by_order(vector<int>& config, vector<Label>& subset, vector<int>& morder);
-    void build_srag(RagNode<Label>* pnode, set<Label>& subset);
+    void build_srag(RagNode_uit* pnode, set<Label>& subset);
     int oneDaddress(int rr, int cc, int nCols);
     void ComputeTempIndex(vector< vector<int> > &tupleLabelMat,int nClass,int tupleSz);
     void read_and_set_tree_weights(string sol_fname, vector<double>& tree_wts);
     double refine_edge_weights(std::vector< std::pair<Label, Label> >& allEdges, string tmp_filename);
 
     void write_in_file(const char *filename);
-    int get_gt(RagEdge<Label>* pedge);
+    int get_gt(RagEdge_uit* pedge);
 };
 
 #endif

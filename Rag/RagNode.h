@@ -265,6 +265,10 @@ class RagNode : public RagElement {
     Region node_int;
 
 };
+
+typedef unsigned int Node_uit;
+typedef RagNode<Node_uit> RagNode_uit; 
+
 template<typename Region> unsigned long long RagNode<Region>::compute_border_length()  {
     unsigned long long count = 0;
     for (RagNode<Region>::edge_iterator iter = this->edge_begin(); iter != this->edge_end(); ++iter) {

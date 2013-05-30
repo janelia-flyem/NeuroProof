@@ -217,7 +217,7 @@ void Stack::dump_vi_differences(double threshold)
 }
 
 int Stack::grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
-        Rag<Label>* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
+        Rag_uit* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
         std::tr1::unordered_set<Label>& gt_matched)
 {
     multimap<Label, vector<LabelCount> >::iterator mit = contingency.find(seg_body);
@@ -416,7 +416,7 @@ void Stack::build_rag()
                     continue;
                 }
 
-                RagNode<Label> * node = rag->find_rag_node(spot0);
+                RagNode_uit * node = rag->find_rag_node(spot0);
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
                 }
@@ -473,7 +473,7 @@ void Stack::build_rag()
     } 
 
     watershed_to_body[0] = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
         if (!predictions.empty() && merge_mito) {
@@ -503,8 +503,8 @@ int Stack::remove_inclusions()
     biconnected_components.clear();
     stack.clear();
 
-    RagNode<Label>* rag_node = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    RagNode_uit* rag_node = 0;
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         bool border = (*iter)->is_border();
 
         if (border) {
@@ -553,10 +553,10 @@ int Stack::remove_inclusions()
         if (!found_zero) {
             Label articulation_region = biconnected_components[i][biconnected_components[i].size()-1].region1;
             unsigned long long total_size = 0;
-            RagNode<Label>* articulation_node = rag->find_rag_node(articulation_region);
+            RagNode_uit* articulation_node = rag->find_rag_node(articulation_region);
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region1 = *iter;
-                RagNode<Label>* rag_node = rag->find_rag_node(region1);
+                RagNode_uit* rag_node = rag->find_rag_node(region1);
                 total_size += rag_node->get_size();
 
             }
@@ -568,10 +568,10 @@ int Stack::remove_inclusions()
                     region2 = body_to_body[region2];
                 }
 
-                RagNode<Label>* rag_node = rag->find_rag_node(region2);
+                RagNode_uit* rag_node = rag->find_rag_node(region2);
                 assert(rag_node);
                 if (articulation_node != rag_node) {
-                    for (RagNode<Label>::edge_iterator edge_iter = rag_node->edge_begin();
+                    for (RagNode_uit::edge_iterator edge_iter = rag_node->edge_begin();
                             edge_iter != rag_node->edge_end(); ++edge_iter) {
                         if ((*edge_iter)->is_preserve()) {
                             found_preserve = true;
@@ -595,12 +595,12 @@ int Stack::remove_inclusions()
                     region2 = body_to_body[region2];
                 }
 
-                RagNode<Label>* rag_node = rag->find_rag_node(region2);
+                RagNode_uit* rag_node = rag->find_rag_node(region2);
                 assert(rag_node);
                 if (articulation_node != rag_node) {
                     feature_mgr->merge_features(articulation_node, rag_node); 
                    
-                    for (RagNode<Label>::edge_iterator iter2 = rag_node->edge_begin(); iter2 != rag_node->edge_end(); ++iter2) {
+                    for (RagNode_uit::edge_iterator iter2 = rag_node->edge_begin(); iter2 != rag_node->edge_end(); ++iter2) {
                         feature_mgr->remove_edge(*iter2);
                     } 
                     rag->remove_rag_node(rag_node); 
@@ -642,7 +642,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
 {
     while (!dfs_stack.empty()) {
         DFSStack entry = dfs_stack.back();
-        RagNode<Label>* rag_node = entry.rag_node;
+        RagNode_uit* rag_node = entry.rag_node;
         Label previous = entry.previous;
         int count = entry.count;
         dfs_stack.pop_back();
@@ -656,8 +656,8 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
 
         bool skip = false;
         int curr_pos = 0;
-        for (RagNode<Label>::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
-            RagEdge<Label>* rag_edge = rag->find_rag_edge(rag_node, *iter);
+        for (RagNode_uit::node_iterator iter = rag_node->node_begin(); iter != rag_node->node_end(); ++iter) {
+            RagEdge_uit* rag_edge = rag->find_rag_edge(rag_node, *iter);
             if (rag_edge->is_false_edge()) {
                 continue;
             }
@@ -667,23 +667,23 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
                 continue;
             }
             if (prev_id[(*iter)->get_node_id()] == rag_node->get_node_id()) {
-                OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                OrderedPair current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
                 int temp_low = low_count[(*iter)->get_node_id()];
                 low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], temp_low);
 
                 if (temp_low >= count) {
-                    OrderedPair<Label> popped_edge;
-                    biconnected_components.push_back(std::vector<OrderedPair<Label> >());
+                    OrderedPair popped_edge;
+                    biconnected_components.push_back(std::vector<OrderedPair>());
                     do {
                         popped_edge = stack.back();
                         stack.pop_back();
                         biconnected_components[biconnected_components.size()-1].push_back(popped_edge);
                     } while (!(popped_edge == current_edge));
-                    OrderedPair<Label> articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
+                    OrderedPair articulation_pair(rag_node->get_node_id(), rag_node->get_node_id());
                     biconnected_components[biconnected_components.size()-1].push_back(articulation_pair);
                 } 
             } else if (visited.find((*iter)->get_node_id()) == visited.end()) {
-                OrderedPair<Label> current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
+                OrderedPair current_edge(rag_node->get_node_id(), (*iter)->get_node_id());
                 stack.push_back(current_edge);
 
                 DFSStack temp;
@@ -699,7 +699,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
             } else if ((*iter)->get_node_id() != previous) {
                 low_count[rag_node->get_node_id()] = std::min(low_count[rag_node->get_node_id()], node_depth[(*iter)->get_node_id()]);
                 if (count > node_depth[(*iter)->get_node_id()]) {
-                    stack.push_back(OrderedPair<Label>(rag_node->get_node_id(), (*iter)->get_node_id()));
+                    stack.push_back(OrderedPair(rag_node->get_node_id(), (*iter)->get_node_id()));
                 }
             }
             ++curr_pos;
@@ -712,7 +712,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
         bool border = rag_node->is_border();
         if (previous && border) {
             low_count[rag_node->get_node_id()] = 0;
-            stack.push_back(OrderedPair<Label>(0, rag_node->get_node_id()));
+            stack.push_back(OrderedPair(0, rag_node->get_node_id()));
         }
     }
 }
@@ -795,7 +795,7 @@ void Stack::set_gt_exclusions()
 
     for (std::tr1::unordered_map<Label, unsigned long int>::iterator iter = body_excl_count.begin();
             iter != body_excl_count.end(); ++iter) {
-        RagNode<Label>* node = rag->find_rag_node(iter->first);
+        RagNode_uit* node = rag->find_rag_node(iter->first);
         if (iter->second > (node->get_size() / 2)) {
             exclusion_set.insert(iter->first);
         }
@@ -931,32 +931,32 @@ void Stack::determine_edge_locations(bool use_probs)
                 }
 
                 if (spot1 && (spot0 != spot1)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot1);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot1);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot2 && (spot0 != spot2)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot2);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot2);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot3 && (spot0 != spot3)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot3);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot3);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot4 && (spot0 != spot4)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot4);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot4);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot5 && (spot0 != spot5)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot5);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot5);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (spot6 && (spot0 != spot6)) {
-                    RagEdge<Label>* edge = rag->find_rag_edge(spot0, spot6);
+                    RagEdge_uit* edge = rag->find_rag_edge(spot0, spot6);
                     curr_edge_z[edge] += incr; 
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
@@ -989,11 +989,11 @@ bool Stack::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int 
         return true;
     }
 
-    RagEdge<Label>* edge = rag->find_rag_edge(body1, body2);
+    RagEdge_uit* edge = rag->find_rag_edge(body1, body2);
 
     if (!edge) {
-        RagNode<Label>* node1 = rag->find_rag_node(body1);
-        RagNode<Label>* node2 = rag->find_rag_node(body2);
+        RagNode_uit* node1 = rag->find_rag_node(body1);
+        RagNode_uit* node2 = rag->find_rag_node(body2);
         edge = rag->insert_rag_edge(node1, node2);
         edge->set_weight(1.0);
         edge->set_false_edge(true);
@@ -1039,7 +1039,7 @@ Label Stack::get_gt_body_id(unsigned int x, unsigned int y, unsigned int z)
     return body_id;
 }
 
-boost::python::tuple Stack::get_edge_loc2(RagEdge<Label>* edge)
+boost::python::tuple Stack::get_edge_loc2(RagEdge_uit* edge)
 {
     if (best_edge_loc.find(edge) == best_edge_loc.end()) {
         throw ErrMsg("Edge location was not loaded!");
@@ -1052,7 +1052,7 @@ boost::python::tuple Stack::get_edge_loc2(RagEdge<Label>* edge)
     return boost::python::make_tuple(x, y, z); 
 }
 
-void Stack::get_edge_loc(RagEdge<Label>* edge, Label&x, Label& y, Label& z)
+void Stack::get_edge_loc(RagEdge_uit* edge, Label&x, Label& y, Label& z)
 {
     if (best_edge_loc.find(edge) == best_edge_loc.end()) {
         throw ErrMsg("Edge location was not loaded!");
@@ -1090,12 +1090,12 @@ void Stack::build_rag_border()
 
                 assert(spot0 != spot1);
 
-                RagNode<Label> * node = rag->find_rag_node(spot0);
+                RagNode_uit * node = rag->find_rag_node(spot0);
                 if (!node) {
                     node = rag->insert_rag_node(spot0);
                 }
 
-                RagNode<Label> * node2 = rag->find_rag_node(spot1);
+                RagNode_uit * node2 = rag->find_rag_node(spot1);
 
                 if (!node2) {
                     node2 = rag->insert_rag_node(spot1);
@@ -1125,7 +1125,7 @@ void Stack::build_rag_border()
     }
 
     watershed_to_body[0] = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
         watershed_to_body[id] = id;
     }
@@ -1133,7 +1133,7 @@ void Stack::build_rag_border()
 
 void Stack::disable_nonborder_edges()
 {
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if (border_edges.find(*iter) == border_edges.end()) {
             (*iter)->set_false_edge(true);
         }
@@ -1142,7 +1142,7 @@ void Stack::disable_nonborder_edges()
 
 void Stack::enable_nonborder_edges()
 {
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_preserve())) {
             (*iter)->set_false_edge(false);
         }
@@ -1184,14 +1184,14 @@ void Stack::agglomerate_rag(double threshold)
 
     while (!(priority->empty())) {
 
-        RagEdge<Label>* rag_edge = priority->get_top_edge();
+        RagEdge_uit* rag_edge = priority->get_top_edge();
 
         if (!rag_edge) {
             continue;
         }
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
         Label node1 = rag_node1->get_node_id(); 
         Label node2 = rag_node2->get_node_id(); 
         rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
@@ -1214,20 +1214,20 @@ void Stack::agglomerate_rag(double threshold)
             border_edges.insert(rag->find_rag_edge(body1, body2)); 
         
             /*
-            RagNode<Label>* n1 = rag->find_rag_node(body1);
-            RagNode<Label>* n2 = rag->find_rag_node(body2);
+            RagNode_uit* n1 = rag->find_rag_node(body1);
+            RagNode_uit* n2 = rag->find_rag_node(body2);
             // print info on edges
-            RagEdge<Label>* temp_edge = rag->find_rag_edge(body1, body2);
+            RagEdge_uit* temp_edge = rag->find_rag_edge(body1, body2);
             unsigned long long edge_size = temp_edge->get_size();
             unsigned long long total_edge_size1 = 0;
             unsigned long long total_edge_size2 = 0;
 
-            for (RagNode<Label>::edge_iterator eiter = n1->edge_begin(); eiter != n1->edge_end(); ++eiter) {
+            for (RagNode_uit::edge_iterator eiter = n1->edge_begin(); eiter != n1->edge_end(); ++eiter) {
                 if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                     total_edge_size1 += (*eiter)->get_size();
                 }
             }
-            for (RagNode<Label>::edge_iterator eiter = n2->edge_begin(); eiter != n2->edge_end(); ++eiter) {
+            for (RagNode_uit::edge_iterator eiter = n2->edge_begin(); eiter != n2->edge_end(); ++eiter) {
                 if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                     total_edge_size2 += (*eiter)->get_size();
                 }
@@ -1287,7 +1287,7 @@ void Stack::write_graph_json(Json::Value& json_writer)
     }
 
     id = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         if (is_orphan(*iter)) {
             json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
             ++id;
@@ -1308,14 +1308,14 @@ void Stack::write_graph(string output_path)
         return;
     }
     fprintf(fp,"Nodes:\n");
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         fprintf(fp,"%u %lu %u\n", (*iter)->get_node_id(), (*iter)->get_size(), 
                 (is_orphan(*iter)? 1 : 0));
     }
     fprintf(fp,"\nEdges:\n");
 
     Label x, y, z;
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         get_edge_loc(*iter, x, y, z); 
         fprintf(fp,"%u %u %lu %lu %u %u %lf %u %u %u\n", (*iter)->get_node1()->get_node_id(), (*iter)->get_node2()->get_node_id(),
                 (*iter)->get_node1()->get_size(), (*iter)->get_node2()->get_size(),
@@ -1326,7 +1326,7 @@ void Stack::write_graph(string output_path)
 
 }
 
-int Stack::decide_edge_label(RagNode<Label>* rag_node1, RagNode<Label>* rag_node2)
+int Stack::decide_edge_label(RagNode_uit* rag_node1, RagNode_uit* rag_node2)
 {
     int edge_label = 0;
     Label node1 = rag_node1->get_node_id();	

@@ -140,7 +140,7 @@ void parse_options(int argc, char** argv, int& num_threads,
  * \param graph_file file in json format that contains graph
  * \return a pointer to a RAG
 */ 
-Rag<Label>* read_graph(string graph_file, Json::Value& json_vals)
+Rag_uit* read_graph(string graph_file, Json::Value& json_vals)
 {
     ifstream fin(graph_file.c_str());
     Json::Reader json_reader;
@@ -149,7 +149,7 @@ Rag<Label>* read_graph(string graph_file, Json::Value& json_vals)
     }
     fin.close();
 
-    Rag<Label>* rag = create_rag_from_json(json_vals);
+    Rag_uit* rag = create_rag_from_json(json_vals);
     if (!rag) {
         throw ErrMsg("Rag could not be created");
     }
@@ -163,12 +163,12 @@ Rag<Label>* read_graph(string graph_file, Json::Value& json_vals)
  * \param rag graph whose uncertainty will be measured
  * \param num_threads number of threads used in computation
 */ 
-void calc_gpr(Rag<Label>* rag, int num_threads)
+void calc_gpr(Rag_uit* rag, int num_threads)
 {
     try {
         ScopeTime timer;
 
-        GPR<Label> gpr_metric(*rag, false);
+        GPR gpr_metric(*rag, false);
         double gpr = gpr_metric.calculateGPR(1, num_threads);
         cout << "GPR: " << gpr << endl;
     } catch (ErrMsg& msg) {
@@ -184,18 +184,18 @@ void calc_gpr(Rag<Label>* rag, int num_threads)
  * \param priority_scheduler scheduler to find uncertain edges
  * \param rag graph whose uncertain edges are analyzed
 */
-int get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Rag<Label>* rag)
+int get_num_edits(LocalEdgePriority& priority_scheduler, Rag_uit* rag)
 {
     int edges_examined = 0;
     while (!priority_scheduler.isFinished()) {
-        EdgePriority<Label>::Location location;
+        EdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
         
         Label node1 = boost::get<0>(pair);
         Label node2 = boost::get<1>(pair);
-        RagEdge<Label>* temp_edge = rag->find_rag_edge(node1, node2);
+        RagEdge_uit* temp_edge = rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
 
         // simulate the edge as true or false as function of edge certainty
@@ -225,7 +225,7 @@ int get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Rag<Label>* rag)
  * \param synapse_threshold threshold that determines which synape size change is impactful
  * \param json_vals json data parsed from graph
 */
-void est_edit_distance(Rag<Label>* rag, int node_threshold,
+void est_edit_distance(Rag_uit* rag, int node_threshold,
         double synapse_threshold, Json::Value& json_vals)
 {
     try {
@@ -234,7 +234,7 @@ void est_edit_distance(Rag<Label>* rag, int node_threshold,
         cout << "Node size threshold: " << node_threshold << endl;
         cout << "Synapse size threshold: " << synapse_threshold << endl;
 
-        LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
+        LocalEdgePriority priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
 
         // determine the number of node above a certain size that do not
         // touch a boundary
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
 
     // always display the size of the graph
     Json::Value json_vals;
-    Rag<Label>* rag = read_graph(graph_file, json_vals);        
+    Rag_uit* rag = read_graph(graph_file, json_vals);        
     cout << "Graph edges: " << rag->get_num_edges() << endl;
     cout << "Graph nodes: " << rag->get_num_regions() << endl;
 

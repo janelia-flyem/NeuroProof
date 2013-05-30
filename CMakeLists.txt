@@ -100,7 +100,7 @@ else ()
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 
     # need to build components separately to set python flag
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp)
+    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Refactoring/RagUtils2.cpp)
     target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")

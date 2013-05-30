@@ -31,13 +31,13 @@ class Stack {
   public:
     Stack(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), gtruth(0), merge_mito(false)
     {
-        rag = new Rag<Label>();
+        rag = new Rag_uit();
         reinit_stack(watershed_, depth_, height_, width_, padding_);
     }
     
     Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0), gtruth(0), merge_mito(false)
     {
-        rag = new Rag<Label>();
+        rag = new Rag_uit();
     }
 
     void reinit_stack(Label* watershed_, int depth_, int height_, int width_, int padding_)
@@ -92,8 +92,8 @@ class Stack {
     Label * get_label_volume();
     Label * get_label_volume_reverse();
     
-    boost::python::tuple get_edge_loc2(RagEdge<Label>* edge);
-    void get_edge_loc(RagEdge<Label>* edge, Label& x, Label& y, Label& z);
+    boost::python::tuple get_edge_loc2(RagEdge_uit* edge);
+    void get_edge_loc(RagEdge_uit* edge, Label& x, Label& y, Label& z);
 
     void build_rag();
     void create_0bounds();
@@ -125,18 +125,18 @@ class Stack {
     }
 
 
-    bool is_orphan(RagNode<Label>* node)
+    bool is_orphan(RagNode_uit* node)
     {
         return !(node->is_border());
     }
         
-    Rag<Label>* get_rag()
+    Rag_uit* get_rag()
     {
         return rag;
     }
 
 
-    double get_edge_weight(RagEdge<Label>* edge)
+    double get_edge_weight(RagEdge_uit* edge)
     {
         return feature_mgr->get_prob(edge);
     }
@@ -153,7 +153,7 @@ class Stack {
         gtruth = pgt;
     }
     int grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
-        Rag<Label>* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
+        Rag_uit* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
         std::tr1::unordered_set<Label>& gt_matched);
     void compute_groundtruth_assignment();     			
     void compute_contingency_table();
@@ -164,7 +164,7 @@ class Stack {
     bool is_excluded(Label node);
     void merge_nodes(Label node1, Label node2);
     void write_graph(string);
-    int decide_edge_label(RagNode<Label>* node1, RagNode<Label>* node2);
+    int decide_edge_label(RagNode_uit* node1, RagNode_uit* node2);
 
 
     
@@ -221,7 +221,7 @@ class Stack {
             }
         }
         watershed_to_body.clear();
-        rag = new Rag<Label>();
+        rag = new Rag_uit();
     }
 
     ~Stack()
@@ -240,7 +240,7 @@ class Stack {
     }
     struct DFSStack {
         Label previous;
-        RagNode<Label>* rag_node;  
+        RagNode_uit* rag_node;  
         int count;
         int start_pos;
     };
@@ -253,7 +253,7 @@ class Stack {
   protected:
     void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
     
-    Rag<Label> * rag;
+    Rag_uit * rag;
     Label* watershed;
     Label* watershed2;
     std::vector<double*> prediction_array;
@@ -261,9 +261,9 @@ class Stack {
     std::tr1::unordered_map<Label, Label> watershed_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history; 
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
-    typedef std::tr1::unordered_map<RagEdge<Label>*, double> EdgeCount; 
-    typedef std::tr1::unordered_map<RagEdge<Label>*, Location> EdgeLoc; 
-    typedef std::tr1::unordered_set<RagEdge<Label>*, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> >  EdgeHash;
+    typedef std::tr1::unordered_map<RagEdge_uit*, double> EdgeCount; 
+    typedef std::tr1::unordered_map<RagEdge_uit*, Location> EdgeLoc; 
+    typedef std::tr1::unordered_set<RagEdge_uit*, RagEdgePtrHash<Node_uit>, RagEdgePtrEq<Node_uit> >  EdgeHash;
     
     int depth, height, width;
     int padding;
@@ -274,9 +274,9 @@ class Stack {
     std::tr1::unordered_map<Label, int> node_depth;
     std::tr1::unordered_map<Label, int> low_count;
     std::tr1::unordered_map<Label, Label> prev_id;
-    std::vector<std::vector<OrderedPair<Label> > > biconnected_components; 
+    std::vector<std::vector<OrderedPair> > biconnected_components; 
     
-    std::vector<OrderedPair<Label> > stack;
+    std::vector<OrderedPair> stack;
    
     EdgeCount best_edge_z;
     EdgeLoc best_edge_loc;

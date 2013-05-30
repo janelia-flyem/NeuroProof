@@ -103,6 +103,9 @@ class RagEdge : public RagElement {
     int cc_id;	
     int edge_id;	
 };
+
+typedef RagEdge<Node_uit> RagEdge_uit; 
+
 template<typename Region> void RagEdge<Region>::print_edge()
 {
     printf("edge : (%d, %d)\n", node1->get_node_id(), node2->get_node_id());

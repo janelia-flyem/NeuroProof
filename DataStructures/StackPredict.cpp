@@ -19,7 +19,7 @@ void StackPredict::agglomerate_rag_mrf(double threshold, bool read_off, string o
     unsigned int edgeCount=0;	
     std::vector< std::pair<Label, Label> > allEdges;	    	
 
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
 	    double prev_val = (*iter)->get_weight();	
             double val = feature_mgr->get_prob(*iter);
@@ -110,12 +110,12 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
     std::vector<QE> all_edges;	    	
 
     int count=0; 	
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
 	  
 
-	    RagNode<Label>* rag_node1 = (*iter)->get_node1();
-	    RagNode<Label>* rag_node2 = (*iter)->get_node2();
+	    RagNode_uit* rag_node1 = (*iter)->get_node1();
+	    RagNode_uit* rag_node2 = (*iter)->get_node2();
 	    
 	    Label node1 = rag_node1->get_node_id(); 
 	    Label node2 = rag_node2->get_node_id(); 
@@ -145,10 +145,10 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 	QE tmpqe = Q->heap_extract_min();	
 
 
-        //RagEdge<Label>* rag_edge = tmpqe.get_val();
+        //RagEdge_uit* rag_edge = tmpqe.get_val();
         Label node1 = tmpqe.get_val().first;
         Label node2 = tmpqe.get_val().second;
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(node1,node2);;
+        RagEdge_uit* rag_edge = rag->find_rag_edge(node1,node2);;
 
         if (!rag_edge || !tmpqe.valid()) {
             continue;
@@ -157,8 +157,8 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 	if (prob>threshold)
 	    break;	
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
 
@@ -206,7 +206,7 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
     std::map<Label, Label> unique_node_id;
     std::map<Label, Label> unique_node_id_reverse;
     Label count = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
 	Label id = (*iter)->get_node_id();
 	if (unique_node_id.find(id) == unique_node_id.end()){
 	    unique_node_id.insert(std::make_pair(id, count));
@@ -264,14 +264,14 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
 	if(node1==node2)
 	    continue;
 	
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(node1,node2);;
+        RagEdge_uit* rag_edge = rag->find_rag_edge(node1,node2);;
 
         if (!rag_edge || !(priority[ii].valid()) || (rag_edge->get_weight())>threshold ) {
             continue;
         }
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
         MitoTypeProperty mtype1, mtype2;
         try {    
             mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
@@ -315,14 +315,14 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
     priority->initialize_priority(threshold, use_edge_weight);
 
     while (!(priority->empty())) {
-        RagEdge<Label>* rag_edge = priority->get_top_edge();
+        RagEdge_uit* rag_edge = priority->get_top_edge();
 
         if (!rag_edge) {
             continue;
         }
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
         
         MitoTypeProperty mtype1, mtype2;
         try {
@@ -383,14 +383,14 @@ void StackPredict::merge_mitochondria_a()
 
     while (!(priority->empty())) {
 
-        RagEdge<Label>* rag_edge = priority->get_top_edge();
+        RagEdge_uit* rag_edge = priority->get_top_edge();
 
         if (!rag_edge) {
             continue;
         }
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
 
 
         MitoTypeProperty mtype1, mtype2;
@@ -405,7 +405,7 @@ void StackPredict::merge_mitochondria_a()
         
         }
         if ((mtype1.get_node_type()==2) && (mtype2.get_node_type()==1))	{
-            RagNode<Label>* tmp = rag_node1;
+            RagNode_uit* tmp = rag_node1;
             rag_node1 = rag_node2;
             rag_node2 = tmp;		
         } else if ((mtype2.get_node_type()==2) && (mtype1.get_node_type()==1))	{
@@ -438,7 +438,7 @@ void StackPredict::merge_mitochondria_a()
         printf("# false merges %.2f\n",error); 	
 
     unsigned long not_merged_total=0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label id = (*iter)->get_node_id();
 
         try {        
@@ -463,7 +463,7 @@ void StackPredict::absorb_small_regions(double* prediction_vol, Label* label_vol
 
     std::set<Label> small_regions;
      
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         unsigned long long  sz = (*iter)->get_size();
 	
 	if(sz<100)

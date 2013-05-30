@@ -31,10 +31,10 @@ public:
     V get_val(){return _val;};	
     void invalidate() {validity = false;};
     bool valid(){return validity;};	 		     	
-    void reassign_qloc(int ploc, Rag<Label>* prag){ 
+    void reassign_qloc(int ploc, Rag_uit* prag){ 
 	Label node1 = _val.first;
 	Label node2 = _val.second;
-	RagEdge<Label>* rag_edge = prag->find_rag_edge(node1, node2);
+	RagEdge_uit* rag_edge = prag->find_rag_edge(node1, node2);
 	if(!rag_edge)
 	    return;	
 	rag_edge->reassign_qloc(ploc);
@@ -53,10 +53,10 @@ class MergePriorityQueue{
     size_t parent(size_t loc){return (loc/2);};	
 
     void exchange(size_t a, size_t b);	
-    Rag<Label>* rag;	
+    Rag_uit* rag;	
 
 public:
-    MergePriorityQueue(Rag<Label>* prag): rag(prag){};  	
+    MergePriorityQueue(Rag_uit* prag): rag(prag){};  	
     void set_storage(vector<T> *parray);
     T heap_extract_min();
     void heap_insert(T qelem);

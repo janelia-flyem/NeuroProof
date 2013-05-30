@@ -13,28 +13,11 @@ using namespace NeuroProof;
 using namespace boost::python;
 using std::cout;
 
-typedef Rag<Label> Rag_ui;
-typedef RagNode<Label> RagNode_ui;
-typedef RagEdge<Label> RagEdge_ui;
-        
-
-RagNode<Label>* (Rag_ui::*find_rag_node_ptr)(Label) = &Rag_ui::find_rag_node;
-RagNode<Label>* (Rag_ui::*insert_rag_node_ptr)(Label) = &Rag_ui::insert_rag_node;
-RagEdge<Label>* (Rag_ui::*insert_rag_edge_ptr)(RagNode<Label>*, RagNode<Label>*) = &Rag_ui::insert_rag_edge;
-RagEdge<Label>* (Rag_ui::*find_rag_edge_ptr1)(Label, Label) = &Rag_ui::find_rag_edge;
-RagEdge<Label>* (Rag_ui::*find_rag_edge_ptr2)(RagNode<Label>*, RagNode<Label>*) = &Rag_ui::find_rag_edge;
-
-
-#if 0
-void (*rag_add_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string, object) = rag_add_property<Label, object>;
-object (*rag_retrieve_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string) = rag_retrieve_property<Label, object>;
-
-void (*rag_add_property_ptr2)(Rag_ui*, RagNode_ui*, std::string, object) = rag_add_property<Label, object>;
-object (*rag_retrieve_property_ptr2)(Rag_ui*, RagNode_ui*, std::string) = rag_retrieve_property<Label, object>;
-
-void (*rag_remove_property_ptr1)(Rag_ui*, RagEdge_ui*, std::string) = rag_remove_property<Label>;
-void (*rag_remove_property_ptr2)(Rag_ui*, RagNode_ui*, std::string) = rag_remove_property<Label>;
-#endif
+RagNode_uit* (Rag_uit::*find_rag_node_ptr)(Label) = &Rag_uit::find_rag_node;
+RagNode_uit* (Rag_uit::*insert_rag_node_ptr)(Label) = &Rag_uit::insert_rag_node;
+RagEdge_uit* (Rag_uit::*insert_rag_edge_ptr)(RagNode_uit*, RagNode_uit*) = &Rag_uit::insert_rag_edge;
+RagEdge_uit* (Rag_uit::*find_rag_edge_ptr1)(Label, Label) = &Rag_uit::find_rag_edge;
+RagEdge_uit* (Rag_uit::*find_rag_edge_ptr2)(RagNode_uit*, RagNode_uit*) = &Rag_uit::find_rag_edge;
 
 
 // add some documentation and produce a simple case (showing that copying works and use of generic properties)
@@ -56,60 +39,60 @@ void (*rag_remove_property_ptr2)(Rag_ui*, RagNode_ui*, std::string) = rag_remove
 
 class RagNode_edgeiterator_wrapper {
   public:
-    RagNode_edgeiterator_wrapper(RagNode_ui* rag_node_) : rag_node(rag_node_) {}
-    RagNode_ui::edge_iterator edge_begin()
+    RagNode_edgeiterator_wrapper(RagNode_uit* rag_node_) : rag_node(rag_node_) {}
+    RagNode_uit::edge_iterator edge_begin()
     {
         return rag_node->edge_begin();
     }
-    RagNode_ui::edge_iterator edge_end()
+    RagNode_uit::edge_iterator edge_end()
     {
         return rag_node->edge_end();
     }
   private:
-    RagNode_ui* rag_node;
+    RagNode_uit* rag_node;
 };
 
-RagNode_edgeiterator_wrapper ragnode_get_edges(RagNode_ui& rag_node) {
+RagNode_edgeiterator_wrapper ragnode_get_edges(RagNode_uit& rag_node) {
     return RagNode_edgeiterator_wrapper(&rag_node);
 }
 
 
 class Rag_edgeiterator_wrapper {
   public:
-    Rag_edgeiterator_wrapper(Rag_ui* rag_) : rag(rag_) {}
-    Rag_ui::edges_iterator edges_begin()
+    Rag_edgeiterator_wrapper(Rag_uit* rag_) : rag(rag_) {}
+    Rag_uit::edges_iterator edges_begin()
     {
         return rag->edges_begin();
     }
-    Rag_ui::edges_iterator edges_end()
+    Rag_uit::edges_iterator edges_end()
     {
         return rag->edges_end();
     }
   private:
-    Rag_ui* rag;
+    Rag_uit* rag;
 };
 
-Rag_edgeiterator_wrapper rag_get_edges(Rag_ui& rag) {
+Rag_edgeiterator_wrapper rag_get_edges(Rag_uit& rag) {
     return Rag_edgeiterator_wrapper(&rag);
 }
 
 
 class Rag_nodeiterator_wrapper {
   public:
-    Rag_nodeiterator_wrapper(Rag_ui* rag_) : rag(rag_) {}
-    Rag_ui::nodes_iterator nodes_begin()
+    Rag_nodeiterator_wrapper(Rag_uit* rag_) : rag(rag_) {}
+    Rag_uit::nodes_iterator nodes_begin()
     {
         return rag->nodes_begin();
     }
-    Rag_ui::nodes_iterator nodes_end()
+    Rag_uit::nodes_iterator nodes_end()
     {
         return rag->nodes_end();
     }
   private:
-    Rag_ui* rag;
+    Rag_uit* rag;
 };
 
-Rag_nodeiterator_wrapper rag_get_nodes(Rag_ui& rag)
+Rag_nodeiterator_wrapper rag_get_nodes(Rag_uit& rag)
 {
     return Rag_nodeiterator_wrapper(&rag);
 }
@@ -306,48 +289,48 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
 
 
     // denormalized edge data structure (unique for a node pair)
-    class_<RagEdge_ui>("RagEdge", no_init)
+    class_<RagEdge_uit>("RagEdge", no_init)
         // get first rag node connected to edge
-        .def("get_node1", &RagEdge_ui::get_node1, return_value_policy<reference_existing_object>()) 
+        .def("get_node1", &RagEdge_uit::get_node1, return_value_policy<reference_existing_object>()) 
         // get second rag node connected to edge
-        .def("get_node2", &RagEdge_ui::get_node2, return_value_policy<reference_existing_object>()) 
+        .def("get_node2", &RagEdge_uit::get_node2, return_value_policy<reference_existing_object>()) 
         // returns a double value for the weight
-        .def("get_weight", &RagEdge_ui::get_weight) 
+        .def("get_weight", &RagEdge_uit::get_weight) 
         // set a double value for the weight
-        .def("set_weight", &RagEdge_ui::set_weight)
-        .def("is_preserve", &RagEdge_ui::is_preserve)
-        .def("is_false_edge", &RagEdge_ui::is_false_edge)
+        .def("set_weight", &RagEdge_uit::set_weight)
+        .def("is_preserve", &RagEdge_uit::is_preserve)
+        .def("is_false_edge", &RagEdge_uit::is_false_edge)
         ;
     
     // denormalized node data structure (unique for a node id)
-    class_<RagNode_ui>("RagNode", no_init)
+    class_<RagNode_uit>("RagNode", no_init)
         // number of nodes connected to node
-        .def("node_degree", &RagNode_ui::node_degree)
+        .def("node_degree", &RagNode_uit::node_degree)
         // normalized, unique id for node (node_id, node_id is a normalized id for an edge)
-        .def("get_node_id", &RagNode_ui::get_node_id)
+        .def("get_node_id", &RagNode_uit::get_node_id)
         // size as 64 bit unsigned
-        .def("get_size", &RagNode_ui::get_size)
+        .def("get_size", &RagNode_uit::get_size)
         // size as 64 bit unsigned
-        .def("set_size", &RagNode_ui::set_size)
+        .def("set_size", &RagNode_uit::set_size)
         // returns an iterator to the connected edges
         .def("get_edges", ragnode_get_edges)
         // returns an iterator to the connected nodes
-        .def("set_size", &RagNode_ui::set_size)
-        .def("__iter__", range<return_value_policy<reference_existing_object> >(&RagNode_ui::node_begin, &RagNode_ui::node_end))
+        .def("set_size", &RagNode_uit::set_size)
+        .def("__iter__", range<return_value_policy<reference_existing_object> >(&RagNode_uit::node_begin, &RagNode_uit::node_end))
         ;
  
-    class_<Rag_ui>("Rag", init<>())
+    class_<Rag_uit>("Rag", init<>())
         // copy constructor supported -- denormolized rag copied correctly, associated properties
         // added in python will just copy the object reference
-        .def(init<const Rag_ui&>())
+        .def(init<const Rag_uit&>())
         // returns an interator to the nodes in the rag
         .def("get_edges", rag_get_edges)
         // returns an interator to the edges in the rag
         .def("get_nodes", rag_get_nodes)
         // returns the number of nodes 
-        .def("get_num_regions", &Rag_ui::get_num_regions)
+        .def("get_num_regions", &Rag_uit::get_num_regions)
         // returns the number of edges 
-        .def("get_num_edges", &Rag_ui::get_num_edges)
+        .def("get_num_edges", &Rag_uit::get_num_edges)
         // create a new node (return rag_node, params: unique unsigned int) 
         .def("insert_rag_node", insert_rag_node_ptr, return_value_policy<reference_existing_object>())
         // return rag node (return none or node, params: unique unsigned int)
@@ -359,9 +342,9 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         // insert a rag edge (return none or edge, params: rag node id 1, rag node id 2)
         .def("insert_rag_edge", insert_rag_edge_ptr, return_value_policy<reference_existing_object>())
         // delete rag edge and remove properties associated with edge (params: rag_edge)
-        .def("remove_rag_edge", &Rag_ui::remove_rag_edge)
+        .def("remove_rag_edge", &Rag_uit::remove_rag_edge)
         // delete rag node and connecting edges and remove properties associated with them (params: rag_node)
-        .def("remove_rag_node", &Rag_ui::remove_rag_node)
+        .def("remove_rag_node", &Rag_uit::remove_rag_node)
         ;
 
 

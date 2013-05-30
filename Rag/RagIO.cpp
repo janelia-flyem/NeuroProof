@@ -16,7 +16,7 @@ namespace NeuroProof {
 
 typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
-Rag<Label>* create_rag_from_jsonfile(const char * file_name)
+Rag_uit* create_rag_from_jsonfile(const char * file_name)
 {
     try {
         Json::Reader json_reader;
@@ -38,11 +38,11 @@ Rag<Label>* create_rag_from_jsonfile(const char * file_name)
     return 0;
 }
 
-Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
+Rag_uit* create_rag_from_json(Json::Value& json_reader_vals)
 {
-    Rag<Label>* rag = 0;
+    Rag_uit* rag = 0;
     try {
-        rag = new Rag<Label>;
+        rag = new Rag_uit;
         Json::Value edge_list = json_reader_vals["edge_list"];
 
         if (edge_list.size() == 0) {
@@ -50,8 +50,8 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
         }
 
         for (int i = 0; i < edge_list.size(); ++i) {
-            Label node1 = edge_list[i]["node1"].asUInt();
-            Label node2 = edge_list[i]["node2"].asUInt();
+            Node_uit node1 = edge_list[i]["node1"].asUInt();
+            Node_uit node2 = edge_list[i]["node2"].asUInt();
             unsigned int size1 = edge_list[i].get("size1", 1).asUInt();
             unsigned int size2 = edge_list[i].get("size2", 1).asUInt();
             double weight = edge_list[i].get("weight", 0.0).asDouble();
@@ -61,19 +61,19 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
             bool false_edge = edge_list[i].get("false_edge", false).asUInt();
 
 
-            RagNode<Label>* rag_node1 = rag->find_rag_node(node1);
+            RagNode_uit* rag_node1 = rag->find_rag_node(node1);
             if (!rag_node1) {
                 rag_node1 = rag->insert_rag_node(node1);
                 rag_node1->set_size(size1);
             }
-            RagNode<Label>* rag_node2 = rag->find_rag_node(node2);
+            RagNode_uit* rag_node2 = rag->find_rag_node(node2);
             if (!rag_node2) {
                 rag_node2 = rag->insert_rag_node(node2);
                 rag_node2->set_size(size2);
             }
            
             if (!rag->find_rag_edge(rag_node1, rag_node2)) {
-                RagEdge<Label>* rag_edge = rag->insert_rag_edge(rag_node1, rag_node2);
+                RagEdge_uit* rag_edge = rag->insert_rag_edge(rag_node1, rag_node2);
                 rag_edge->set_weight(weight);
           
                 unsigned int x, y, z;
@@ -105,7 +105,7 @@ Rag<Label>* create_rag_from_json(Json::Value& json_reader_vals)
 }
 
 
-bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
+bool create_jsonfile_from_rag(Rag_uit* rag, const char * file_name)
 {
     try {
         Json::Value json_writer;
@@ -129,11 +129,11 @@ bool create_jsonfile_from_rag(Rag<Label>* rag, const char * file_name)
     return true;
 }
 
-bool create_json_from_rag(Rag<Label>* rag, Json::Value& json_writer, bool debug_mode)
+bool create_json_from_rag(Rag_uit* rag, Json::Value& json_writer, bool debug_mode)
 {
     try {
         int edge_num = -1;
-        for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+        for (Rag_uit::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter)
         {
             if (debug_mode && !((*iter)->is_preserve())) {

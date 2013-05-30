@@ -35,7 +35,7 @@ double BatchMergeMRFh::compute_merge_prob( int iterCount, std::vector< std::pair
 
     double maxDiff = 0;
 
-/*    for (Rag<Label>::edges_iterator iter = _rag->edges_begin(); iter != _rag->edges_end(); ++iter) {
+/*    for (Rag_uit::edges_iterator iter = _rag->edges_begin(); iter != _rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = _feature_mgr->get_prob(*iter);
             //(*iter)->set_weight(val);
@@ -56,7 +56,7 @@ double BatchMergeMRFh::compute_merge_prob( int iterCount, std::vector< std::pair
     _edgeBlf.resize(edgeCount);	
 
     /*FILE* fp=fopen("node_neighbors.txt","wt");	
-    for (Rag<Label>::nodes_iterator iter = _rag->nodes_begin(); iter != _rag->nodes_end(); ++iter) 
+    for (Rag_uit::nodes_iterator iter = _rag->nodes_begin(); iter != _rag->nodes_end(); ++iter) 
 	if (*iter)
 	    fprintf(fp,"%d %d\n",(*iter)->get_size(),(*iter)->node_degree());
 
@@ -64,7 +64,7 @@ double BatchMergeMRFh::compute_merge_prob( int iterCount, std::vector< std::pair
 
 
 
-    for (Rag<Label>::nodes_iterator iter = _rag->nodes_begin(); iter != _rag->nodes_end(); ++iter) 
+    for (Rag_uit::nodes_iterator iter = _rag->nodes_begin(); iter != _rag->nodes_end(); ++iter) 
         
         if (*iter) {
             try {
@@ -93,7 +93,7 @@ double BatchMergeMRFh::compute_merge_prob( int iterCount, std::vector< std::pair
 	Label node1 = allEdges[i].first;
 	Label node2 = allEdges[i].second;
 
-	RagEdge<Label>* edge1 = _rag->find_rag_edge(node1, node2);;
+	RagEdge_uit* edge1 = _rag->find_rag_edge(node1, node2);;
 
 	double prob = edge1->get_weight();
 	
@@ -196,7 +196,7 @@ double BatchMergeMRFh::refine_edge_weights(std::vector< std::pair<Label, Label> 
 	Label node1 = allEdges[i].first;
 	Label node2 = allEdges[i].second;
 
-	RagEdge<Label>* edge1 = _rag->find_rag_edge(node1, node2);;
+	RagEdge_uit* edge1 = _rag->find_rag_edge(node1, node2);;
 
 	int edge_label = get_gt(edge1);
 
@@ -221,13 +221,13 @@ double BatchMergeMRFh::refine_edge_weights(std::vector< std::pair<Label, Label> 
     return maxDiff;	
 }
 
-void BatchMergeMRFh::generate_subsets(RagNode<Label>* pnode)
+void BatchMergeMRFh::generate_subsets(RagNode_uit* pnode)
 {
 	
     set<Label> nbr_set;
     multimap<Label, Label > nbr_set_degree;	
-    for(RagNode<Label>::edge_iterator iter = pnode->edge_begin(); iter != pnode->edge_end(); ++iter) {
-	RagNode<Label>* other_node = (*iter)->get_other_node(pnode);
+    for(RagNode_uit::edge_iterator iter = pnode->edge_begin(); iter != pnode->edge_end(); ++iter) {
+	RagNode_uit* other_node = (*iter)->get_other_node(pnode);
 
         try {
             MitoTypeProperty& mtype = other_node->get_property<MitoTypeProperty>("mito-type");
@@ -246,9 +246,9 @@ void BatchMergeMRFh::generate_subsets(RagNode<Label>* pnode)
     for(set<Label>::iterator it=nbr_set.begin(); it!= nbr_set.end(); it++){
  	Label nbr1 = *it;
 	int sdegree=0;
-	RagNode<Label>* rag_nbr1 = _rag->find_rag_node(nbr1);
+	RagNode_uit* rag_nbr1 = _rag->find_rag_node(nbr1);
 	int degree1 = rag_nbr1->node_degree();
-	for(RagNode<Label>::edge_iterator iter2 = rag_nbr1->edge_begin(); iter2 != rag_nbr1->edge_end(); ++iter2){
+	for(RagNode_uit::edge_iterator iter2 = rag_nbr1->edge_begin(); iter2 != rag_nbr1->edge_end(); ++iter2){
 	    Label nbr_to_nbr1 = (*iter2)->get_other_node(rag_nbr1)->get_node_id();
 	    if (nbr_set.find(nbr_to_nbr1)!= nbr_set.end())
 		sdegree++;	
@@ -264,8 +264,8 @@ void BatchMergeMRFh::generate_subsets(RagNode<Label>* pnode)
     while(!nbr_set_degree.empty()){
 	multimap<Label, Label >::reverse_iterator nsdb;
 	for(nsdb = nbr_set_degree.rbegin(); nsdb!= nbr_set_degree.rend(); nsdb++){
-	    RagNode<Label>* rag_node1 = _rag->find_rag_node((*nsdb).second);
-	    RagEdge<Label>* edge1= _rag->find_rag_edge(rag_node1, _rag->find_rag_node(prev_node));
+	    RagNode_uit* rag_node1 = _rag->find_rag_node((*nsdb).second);
+	    RagEdge_uit* edge1= _rag->find_rag_edge(rag_node1, _rag->find_rag_node(prev_node));
 	    if (edge1)
 		break;	
 	}
@@ -298,7 +298,7 @@ void BatchMergeMRFh::generate_subsets(RagNode<Label>* pnode)
 	subset.clear();		
     }			
 }
-void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subset)
+void BatchMergeMRFh::compute_subset_cost(RagNode_uit* pnode, set<Label>& subset)
 {
 
     //vector< vector<int> > allConfig;
@@ -322,7 +322,7 @@ void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subs
     Label node_id = pnode->get_node_id();
     for(set<Label>::iterator it= subset.begin(); it != subset.end(); it++){
 	Label nbr_id = (*it);
-	RagEdge<Label>* srag_edge = _srag->find_rag_edge(node_id, nbr_id);
+	RagEdge_uit* srag_edge = _srag->find_rag_edge(node_id, nbr_id);
 	
 	int elbl = get_gt(srag_edge);
 	gts.push_back(elbl);
@@ -339,7 +339,7 @@ void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subs
 
     for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
 	subset1.push_back((*it));
-	RagEdge<Label>* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
+	RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
 	edge_idx.push_back(edge1->get_qloc());
 	edge_prob.push_back(edge1->get_weight());
     }	
@@ -352,7 +352,7 @@ void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subs
 
     for(int i=0;i< allConfig.size();i++){	
 
-	//Rag<Label>* srag_copy = copy_srag(_srag);
+	//Rag_uit* srag_copy = copy_srag(_srag);
 
 	vector<int> config1 = allConfig[i];
 	vector<int> merge_idx;
@@ -398,7 +398,7 @@ void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subs
 
     	int count=0;	
     	for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
-	    RagEdge<Label>* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
+	    RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
 	    int qloc = edge1->get_qloc();
 	    if (subset_to_edge[qloc].size()==0)
 		subset_to_edge[qloc].resize(2);
@@ -410,7 +410,7 @@ void BatchMergeMRFh::compute_subset_cost(RagNode<Label>* pnode, set<Label>& subs
     }
     
     for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
-	RagEdge<Label>* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
+	RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
 	int qloc = edge1->get_qloc();
 	if (_edgeBlf[qloc].size()==0){
 	    _edgeBlf[qloc].resize(2);
@@ -431,13 +431,13 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
     double cost = 0;
     double thd = 1.0;	
     int node = subset[subset.size()-1];	
-    RagNode<Label>* srag_node = _srag->find_rag_node(node);	
+    RagNode_uit* srag_node = _srag->find_rag_node(node);	
     for (int i=0 ; i < morder.size() ; i++){
 	int idx = morder[i];
 	int label = config[idx];	
 	Label nbr = subset[idx];
-	RagNode<Label>* srag_nbr = _srag->find_rag_node(nbr); 
-	RagEdge<Label>* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
+	RagNode_uit* srag_nbr = _srag->find_rag_node(nbr); 
+	RagEdge_uit* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
 
 //	if (label == MERGE){
 	cost += MERGE_COST(srag_edge->get_weight(),thd);
@@ -445,12 +445,12 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
 	_sfeature_mgr->merge_features2(srag_node, srag_nbr,srag_edge);	
 	srag_node->set_size(srag_node->get_size() + srag_nbr->get_size());	
 
-	for (RagNode<Label>::edge_iterator it= srag_nbr->edge_begin(); it != srag_nbr->edge_end(); it++){
-	    RagNode<Label>* other_node = (*it)->get_other_node(srag_nbr);
+	for (RagNode_uit::edge_iterator it= srag_nbr->edge_begin(); it != srag_nbr->edge_end(); it++){
+	    RagNode_uit* other_node = (*it)->get_other_node(srag_nbr);
 	    if (other_node == srag_node)
 		continue;
 
-	    RagEdge<Label>* temp_edge = _srag->find_rag_edge(srag_node, other_node);
+	    RagEdge_uit* temp_edge = _srag->find_rag_edge(srag_node, other_node);
 	    if(temp_edge){ //merge features
 		    //(*it)->print_edge();
 		    //(temp_edge)->print_edge();	
@@ -461,7 +461,7 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
 	    }	
 	    else{ //copy features
 		    //(*it)->print_edge();
-		RagEdge<Label>* new_edge= _srag->insert_rag_edge(srag_node, other_node);	
+		RagEdge_uit* new_edge= _srag->insert_rag_edge(srag_node, other_node);	
 		_sfeature_mgr->mv_features(new_edge,(*it));
 		new_edge->set_weight((*it)->get_weight());
 		new_edge->set_size((*it)->get_size());		 	
@@ -476,8 +476,8 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
 	if (label==0)
 	    continue;		
 	Label nbr = subset[i];
-	RagNode<Label>* srag_nbr = _srag->find_rag_node(nbr); 
-	RagEdge<Label>* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
+	RagNode_uit* srag_nbr = _srag->find_rag_node(nbr); 
+	RagEdge_uit* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
 	
         cost += KEEP_COST(srag_edge->get_weight(),thd);	
     }		
@@ -491,12 +491,12 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
     double cost = 0;
     double thd = 1.0;	
     int node = subset[subset.size()-1];	
-    RagNode<Label>* srag_node = _srag->find_rag_node(node);	
+    RagNode_uit* srag_node = _srag->find_rag_node(node);	
     for (int i=0 ; i < config.size() ; i++){
 	int label = config[i];	
 	Label nbr = subset[i];
-	RagNode<Label>* srag_nbr = _srag->find_rag_node(nbr); 
-	RagEdge<Label>* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
+	RagNode_uit* srag_nbr = _srag->find_rag_node(nbr); 
+	RagEdge_uit* srag_edge = _srag->find_rag_edge(srag_node, srag_nbr);
 
 	if (label == MERGE){
 	    cost += MERGE_COST(srag_edge->get_weight(),thd);
@@ -504,12 +504,12 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
 	    _sfeature_mgr->merge_features(srag_node, srag_nbr);	
 	    srag_node->set_size(srag_node->get_size() + srag_nbr->get_size());	
 
-	    for (RagNode<Label>::edge_iterator it= srag_nbr->edge_begin(); it != srag_nbr->edge_end(); it++){
-		RagNode<Label>* other_node = (*it)->get_other_node(srag_nbr);
+	    for (RagNode_uit::edge_iterator it= srag_nbr->edge_begin(); it != srag_nbr->edge_end(); it++){
+		RagNode_uit* other_node = (*it)->get_other_node(srag_nbr);
 		if (other_node == srag_node)
 		    continue;
 
-		RagEdge<Label>* temp_edge = _srag->find_rag_edge(srag_node, other_node);
+		RagEdge_uit* temp_edge = _srag->find_rag_edge(srag_node, other_node);
 		if(temp_edge){ //merge features
 		    //(*it)->print_edge();
 		    //(temp_edge)->print_edge();	
@@ -520,7 +520,7 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
 		}	
 		else{ //copy features
 		    //(*it)->print_edge();
-		    RagEdge<Label>* new_edge= _srag->insert_rag_edge(srag_node, other_node);	
+		    RagEdge_uit* new_edge= _srag->insert_rag_edge(srag_node, other_node);	
 		    _sfeature_mgr->mv_features(new_edge,(*it));
 		    new_edge->set_weight((*it)->get_weight());
 		    new_edge->set_size((*it)->get_size());		 	
@@ -537,26 +537,26 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
 
 
 
-void BatchMergeMRFh::build_srag(RagNode<Label>* pnode, set<Label>& subset)
+void BatchMergeMRFh::build_srag(RagNode_uit* pnode, set<Label>& subset)
 {
 
-    for (Rag<Label>::nodes_iterator iter = _srag->nodes_begin(); iter != _srag->nodes_end(); ++iter) 
+    for (Rag_uit::nodes_iterator iter = _srag->nodes_begin(); iter != _srag->nodes_end(); ++iter) 
 	if (*iter)
 	    _srag->remove_rag_node((*iter));
 
     NodeCaches &rag_node_cache= _feature_mgr->get_node_cache();  	
     EdgeCaches &rag_edge_cache= _feature_mgr->get_edge_cache();  	
     	
-    RagNode<Label>* srag_common_node = _srag->insert_rag_node(pnode->get_node_id());
+    RagNode_uit* srag_common_node = _srag->insert_rag_node(pnode->get_node_id());
     _sfeature_mgr->copy_cache(rag_node_cache[pnode], srag_common_node);
     srag_common_node->set_border_size(pnode->get_border_size());	
     srag_common_node->set_size(pnode->get_size());
 
     for(set<Label>::iterator it = subset.begin(); it != subset.end(); it++){
  	Label nbr1 = *it;
-	RagNode<Label>* rag_nbr1= _rag->find_rag_node(nbr1);
+	RagNode_uit* rag_nbr1= _rag->find_rag_node(nbr1);
 
-    	RagNode<Label>* srag_node1 = _srag->insert_rag_node(rag_nbr1->get_node_id());
+    	RagNode_uit* srag_node1 = _srag->insert_rag_node(rag_nbr1->get_node_id());
     	_sfeature_mgr->copy_cache(rag_node_cache[rag_nbr1], srag_node1);
     	srag_node1->set_border_size(rag_nbr1->get_border_size());	
     	srag_node1->set_size(rag_nbr1->get_size());
@@ -565,15 +565,15 @@ void BatchMergeMRFh::build_srag(RagNode<Label>* pnode, set<Label>& subset)
 
     for(set<Label>::iterator it = subset.begin(); it != subset.end(); it++){
  	Label nbr1 = *it;
-	RagNode<Label>* rag_node1= _rag->find_rag_node(nbr1);
-	RagNode<Label>* srag_node1= _srag->find_rag_node(nbr1);
+	RagNode_uit* rag_node1= _rag->find_rag_node(nbr1);
+	RagNode_uit* srag_node1= _srag->find_rag_node(nbr1);
 	int edge_count=0;
 	int iter_count=0;
 
-	for(RagNode<Label>::edge_iterator eit=rag_node1->edge_begin(); eit!=rag_node1->edge_end(); eit++){
-	    RagNode<Label>* other_node = (*eit)->get_other_node(rag_node1);	
-	    RagNode<Label>* srag_other_node = _srag->find_rag_node(other_node->get_node_id());	
-	    RagEdge<Label>* srag_edge1=NULL;	
+	for(RagNode_uit::edge_iterator eit=rag_node1->edge_begin(); eit!=rag_node1->edge_end(); eit++){
+	    RagNode_uit* other_node = (*eit)->get_other_node(rag_node1);	
+	    RagNode_uit* srag_other_node = _srag->find_rag_node(other_node->get_node_id());	
+	    RagEdge_uit* srag_edge1=NULL;	
 
 	    if (other_node->get_node_id() == pnode->get_node_id() ||
 		subset.find(other_node->get_node_id()) != subset.end() ){
@@ -644,7 +644,7 @@ void BatchMergeMRFh::ComputeTempIndex(vector< vector<int> > &tupleLabelMat,int n
 }
 
 
-int BatchMergeMRFh::get_gt(RagEdge<Label>* pedge)
+int BatchMergeMRFh::get_gt(RagEdge_uit* pedge)
 {
     if(_assignment->size()<1)
 	return 0;

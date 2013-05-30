@@ -30,7 +30,9 @@ class Rag {
 
     size_t get_num_regions() const;
     size_t get_num_edges() const;
-    
+
+    unsigned long long get_rag_size();
+
     typedef std::tr1::unordered_set<RagEdge<Region>*, RagEdgePtrHash<Region>, RagEdgePtrEq<Region> >  EdgeHash;
     typedef std::tr1::unordered_set<RagNode<Region>*, RagNodePtrHash<Region>, RagNodePtrEq<Region> >  NodeHash;
 
@@ -167,6 +169,8 @@ class Rag {
     RagNode<Region>* probe_rag_node;
     RagNode<Region>* probe_rag_node2;
 };
+
+typedef Rag<Node_uit> Rag_uit;
 
 
 // Rag constructors/destructor
@@ -384,6 +388,16 @@ template <typename Region> void Rag<Region>::swap_em(Rag<Region>* rag_core)
     std::swap(probe_rag_edge, rag_core->probe_rag_edge);
     std::swap(probe_rag_node, rag_core->probe_rag_node);
     std::swap(probe_rag_node2, rag_core->probe_rag_node2);
+}
+
+template <typename Region> unsigned long long Rag<Region>::get_rag_size()
+{
+    unsigned long long total_size = 0;
+    for (typename Rag<Region>::nodes_iterator iter = nodes_begin();
+            iter != nodes_end(); ++iter) {
+        total_size += (*iter)->get_size();
+    }
+    return total_size;
 }
 
 }

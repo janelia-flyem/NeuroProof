@@ -24,7 +24,7 @@ void FeatureMgr::add_channel()
     ++num_channels;
 }
 
-void FeatureMgr::compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge)
+void FeatureMgr::compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge)
 {
     vector<vector<bool> > examine_equal(num_channels);
     vector<vector<unsigned int> > spot_equal(num_channels);
@@ -59,7 +59,7 @@ void FeatureMgr::compute_diff_features(std::vector<void*>* caches1, std::vector<
     }
 } 
 
-void FeatureMgr::compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge)
+void FeatureMgr::compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge)
 {
     unsigned int pos = 0;
     for (unsigned int i = 0; i < num_channels; i++) {
@@ -72,7 +72,7 @@ void FeatureMgr::compute_diff_features2(std::vector<void*>* caches1, std::vector
 }
 
 
-void FeatureMgr::compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_number)
+void FeatureMgr::compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_number)
 {
 
     unsigned int pos = 0;
@@ -86,7 +86,7 @@ void FeatureMgr::compute_features2(unsigned int prediction_type, std::vector<voi
 
 }
 
-void FeatureMgr::compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_number)
+void FeatureMgr::compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_number)
 {
     vector<vector<bool> > examine_equal(num_channels);
     vector<vector<unsigned int> > spot_equal(num_channels);
@@ -224,7 +224,7 @@ void FeatureMgr::set_python_rf_function(object pyfunc_)
 
 #endif
 
-void FeatureMgr::compute_node_features(RagNode<Label>* node, vector<double>& feature_results){
+void FeatureMgr::compute_node_features(RagNode_uit* node, vector<double>& feature_results){
 
     std::vector<void*>* node1_caches = 0;
 
@@ -237,7 +237,7 @@ void FeatureMgr::compute_node_features(RagNode<Label>* node, vector<double>& fea
 
 }
 
-void FeatureMgr::compute_all_features(RagEdge<Label>* edge, vector<double>& feature_results){
+void FeatureMgr::compute_all_features(RagEdge_uit* edge, vector<double>& feature_results){
 
     std::vector<void*>* edget_caches = 0;
     std::vector<void*>* node1_caches = 0;
@@ -247,11 +247,11 @@ void FeatureMgr::compute_all_features(RagEdge<Label>* edge, vector<double>& feat
         edget_caches = &(edge_caches[edge]);
     }
 
-    RagNode<Label>* node1 = edge->get_node1();
-    RagNode<Label>* node2 = edge->get_node2();
+    RagNode_uit* node1 = edge->get_node1();
+    RagNode_uit* node2 = edge->get_node2();
 
     if (node2->get_size() < node1->get_size()) {
-        RagNode<Label>* temp_node = node2;
+        RagNode_uit* temp_node = node2;
         node2 = node1;
         node1 = temp_node;
     }
@@ -274,7 +274,7 @@ void FeatureMgr::compute_all_features(RagEdge<Label>* edge, vector<double>& feat
 
 }
 
-void FeatureMgr::get_responses(RagEdge<Label>* edge, vector<double>& responses){
+void FeatureMgr::get_responses(RagEdge_uit* edge, vector<double>& responses){
 	
     vector<double> feature_results;
     
@@ -290,11 +290,11 @@ void FeatureMgr::set_overlap_function()
     overlap = true;
 }
 
-double FeatureMgr::get_prob(RagEdge<Label>* edge)
+double FeatureMgr::get_prob(RagEdge_uit* edge)
 {
     vector<double> feature_results;
-    RagNode<Label>* node1 = edge->get_node1();
-    RagNode<Label>* node2 = edge->get_node2();
+    RagNode_uit* node1 = edge->get_node1();
+    RagNode_uit* node2 = edge->get_node2();
 
 #ifdef SETPYTHON
     std::vector<void*>* edget_caches = 0;
@@ -306,7 +306,7 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     }
 
     if (node2->get_size() < node1->get_size()) {
-        RagNode<Label>* temp_node = node2;
+        RagNode_uit* temp_node = node2;
         node2 = node1;
         node1 = temp_node;
     }
@@ -351,12 +351,12 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
         unsigned long long total_edge_size1 = 0;
         unsigned long long total_edge_size2 = 0;
 
-        for (RagNode<Label>::edge_iterator eiter = node1->edge_begin(); eiter != node1->edge_end(); ++eiter) {
+        for (RagNode_uit::edge_iterator eiter = node1->edge_begin(); eiter != node1->edge_end(); ++eiter) {
             if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                 total_edge_size1 += (*eiter)->get_size();
             }
         }
-        for (RagNode<Label>::edge_iterator eiter = node2->edge_begin(); eiter != node2->edge_end(); ++eiter) {
+        for (RagNode_uit::edge_iterator eiter = node2->edge_begin(); eiter != node2->edge_end(); ++eiter) {
             if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                 total_edge_size2 += (*eiter)->get_size();
             }
@@ -382,7 +382,7 @@ double FeatureMgr::get_prob(RagEdge<Label>* edge)
     return prob;
 }
 
-void FeatureMgr::merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, RagEdge<Label>* edgeb)
+void FeatureMgr::merge_features2(RagNode_uit* node1, RagNode_uit* node2, RagEdge_uit* edgeb)
 {
     std::vector<void*>* node1_caches = 0; 
     std::vector<void*>* node2_caches = 0;
@@ -429,7 +429,7 @@ void FeatureMgr::merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, R
 
 
 
-void FeatureMgr::merge_features(RagNode<Label>* node1, RagNode<Label>* node2)
+void FeatureMgr::merge_features(RagNode_uit* node1, RagNode_uit* node2)
 {
     std::vector<void*>* node1_caches = 0; 
     std::vector<void*>* node2_caches = 0;
@@ -463,7 +463,7 @@ void FeatureMgr::merge_features(RagNode<Label>* node1, RagNode<Label>* node2)
     }
 }
 
-void FeatureMgr::merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2)
+void FeatureMgr::merge_features(RagEdge_uit* edge1, RagEdge_uit* edge2)
 {
     std::vector<void*>* edge1_caches = 0; 
     std::vector<void*>* edge2_caches = 0;
@@ -510,7 +510,7 @@ void FeatureMgr::copy_channel_features(FeatureMgr *pfmgr){
 
 }
 
-void FeatureMgr::copy_cache(std::vector<void*>& src_edge_caches, RagEdge<Label>* edge){
+void FeatureMgr::copy_cache(std::vector<void*>& src_edge_caches, RagEdge_uit* edge){
     
 
     bool cache_exists=false;	
@@ -540,7 +540,7 @@ void FeatureMgr::copy_cache(std::vector<void*>& src_edge_caches, RagEdge<Label>*
 
 }	
 
-void FeatureMgr::copy_cache(std::vector<void*>& src_node_caches , RagNode<Label>* node1){
+void FeatureMgr::copy_cache(std::vector<void*>& src_node_caches , RagNode_uit* node1){
     
 
     bool cache_exists=false;	
@@ -573,7 +573,7 @@ void FeatureMgr::copy_cache(std::vector<void*>& src_node_caches , RagNode<Label>
 }	
 
 
-void FeatureMgr::print_cache(RagEdge<Label>* edge){
+void FeatureMgr::print_cache(RagEdge_uit* edge){
 
     std::vector<void*>& dest_edge_caches = edge_caches[edge]; 
 
@@ -588,7 +588,7 @@ void FeatureMgr::print_cache(RagEdge<Label>* edge){
     }
 
 }	
-void FeatureMgr::print_cache(RagNode<Label>* node){
+void FeatureMgr::print_cache(RagNode_uit* node){
 
     std::vector<void*>& dest_node_caches = node_caches[node]; 
 

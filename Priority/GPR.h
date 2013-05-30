@@ -10,25 +10,24 @@
 
 namespace NeuroProof {
 
-template <typename Region>
 class GPR {
   public:
-    GPR(Rag<Region>& rag_, bool debug_ = false); 
+    GPR(Rag_uit& rag_, bool debug_ = false); 
     double calculateGPR(int num_paths, int num_threads); 
-    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode<Region>* >& node_list); 
+    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list); 
 
   private:
     double calculateMaxExpectedRand();
     double calculateNormalizedGPR();
 
-    Rag<Region>& rag;
+    Rag_uit& rag;
     unsigned long long max_rand_base;
     unsigned long long total_num_voxelpairs;
     bool debug;
-    typename AffinityPair<Region>::Hash affinity_pairs;
+    AffinityPair::Hash affinity_pairs;
 
     struct ThreadCompute {
-        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag<Region>& rag_, typename AffinityPair<Region>::Hash& affinity_pairs_, std::vector<RagNode<Region>* >& node_list_, bool debug_) : id(id_), num_threads(num_threads_), num_paths(num_paths_), rag(rag_), affinity_pairs(affinity_pairs_), node_list(node_list_), debug(debug_), EPSILON(0.000001), CONNECTION_THRESHOLD(0.01) { }
+        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag_uit& rag_, AffinityPair::Hash& affinity_pairs_, std::vector<RagNode_uit* >& node_list_, bool debug_) : id(id_), num_threads(num_threads_), num_paths(num_paths_), rag(rag_), affinity_pairs(affinity_pairs_), node_list(node_list_), debug(debug_), EPSILON(0.000001), CONNECTION_THRESHOLD(0.01) { }
 
         void operator()()
         {
@@ -56,20 +55,20 @@ class GPR {
         int id;
         int num_threads;
         int num_paths;
-        Rag<Region>& rag;
-        typename AffinityPair<Region>::Hash& affinity_pairs;
-        std::vector<RagNode<Region>* >& node_list;
+        Rag_uit& rag;
+        AffinityPair::Hash& affinity_pairs;
+        std::vector<RagNode_uit* >& node_list;
         bool debug;
         const double EPSILON;
         const double CONNECTION_THRESHOLD;
 
         static boost::mutex mutex;
-        typename AffinityPair<Region>::Hash affinity_pairs_local;
+        AffinityPair::Hash affinity_pairs_local;
         
         // used for finding path
         struct BestNode {
-            RagNode<Region>* rag_node_curr;
-            RagEdge<Region>* rag_edge_curr;
+            RagNode_uit* rag_node_curr;
+            RagEdge_uit* rag_edge_curr;
             double weight;
         };
         struct BestNodeCmp {
@@ -81,18 +80,18 @@ class GPR {
         typedef std::priority_queue<BestNode, std::vector<BestNode>, BestNodeCmp> BestNodeQueue;
         BestNode best_node_head;
         BestNodeQueue best_node_queue; 
-        typename AffinityPair<Region>::Hash temp_affinity_pairs;
+        AffinityPair::Hash temp_affinity_pairs;
 
-        void findBestPath(RagNode<Region>* rag_node_head);
+        void findBestPath(RagNode_uit* rag_node_head);
     };
 };
 
 
-template<typename Region> boost::mutex GPR<Region>::ThreadCompute::mutex;
+boost::mutex GPR::ThreadCompute::mutex;
 
-template<typename Region> GPR<Region>::GPR(Rag<Region>& rag_, bool debug_) : rag(rag_), debug(debug_), total_num_voxelpairs(0), max_rand_base(0)
+GPR::GPR(Rag_uit& rag_, bool debug_) : rag(rag_), debug(debug_), total_num_voxelpairs(0), max_rand_base(0)
 {
-    for (typename Rag<Region>::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
         unsigned long long val = (*iter)->get_size();
         max_rand_base += (val * (val-1)/2);
         total_num_voxelpairs += val;
@@ -101,27 +100,27 @@ template<typename Region> GPR<Region>::GPR(Rag<Region>& rag_, bool debug_) : rag
     
 }
 
-template<typename Region> double GPR<Region>::calculateMaxExpectedRand()
+double GPR::calculateMaxExpectedRand()
 {
     double max_rand = double(max_rand_base);
-    for (typename AffinityPair<Region>::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
+    for (AffinityPair::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
         max_rand += ( (iter->size * (iter->weight) * (iter->weight)) + (iter->size * (1-iter->weight) * iter->weight));
     }
     return max_rand;
 }
 
 
-template<typename Region> double GPR<Region>::calculateGPR(int num_paths, int num_threads)
+double GPR::calculateGPR(int num_paths, int num_threads)
 {
-    std::vector<RagNode<Region>* > node_list;
-    for (typename Rag<Region>::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
+    std::vector<RagNode_uit* > node_list;
+    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
         node_list.push_back(*iter);
     }
     return calculateGPR(num_paths, num_threads, node_list);
 }
 
 
-template<typename Region> double GPR<Region>::calculateGPR(int num_paths, int num_threads, std::vector<RagNode<Region>* >& node_list)
+double GPR::calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list)
 {
     boost::thread_group threads;
 
@@ -135,10 +134,10 @@ template<typename Region> double GPR<Region>::calculateGPR(int num_paths, int nu
     return gpr_index;
 }
 
-template<typename Region> double GPR<Region>::calculateNormalizedGPR()
+double GPR::calculateNormalizedGPR()
 {
     double total_diffs = 0.0;
-    for (typename AffinityPair<Region>::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
+    for (AffinityPair::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
         double prob = (1 - iter->weight) * iter->weight;
         total_diffs += (prob * iter->size);
     }
@@ -149,23 +148,23 @@ template<typename Region> double GPR<Region>::calculateNormalizedGPR()
     return adjusted_index;
 }
 
-template<typename Region> void GPR<Region>::ThreadCompute::findBestPath(RagNode<Region>* rag_node_head)
+void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
 {
     best_node_head.rag_node_curr = rag_node_head;
     best_node_head.rag_edge_curr = 0;
     best_node_head.weight= 1.0;
-    Region node_head = rag_node_head->get_node_id();
+    Node_uit node_head = rag_node_head->get_node_id();
     
     best_node_queue.push(best_node_head);
-    AffinityPair<Region> affinity_pair_head(node_head, node_head);
+    AffinityPair affinity_pair_head(node_head, node_head);
     affinity_pair_head.weight = 1.0;
 
     while (!best_node_queue.empty()) {
         BestNode best_node_curr = best_node_queue.top();
-        AffinityPair<Region> affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
+        AffinityPair affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
   
         if (temp_affinity_pairs.find(affinity_pair_curr) == temp_affinity_pairs.end()) { 
-            for (typename RagNode<Region>::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
+            for (RagNode_uit::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
                     edge_iter != best_node_curr.rag_node_curr->edge_end(); ++edge_iter) {
                 // avoid simple cycles
                 if (*edge_iter == best_node_curr.rag_edge_curr) {
@@ -173,10 +172,10 @@ template<typename Region> void GPR<Region>::ThreadCompute::findBestPath(RagNode<
                 }
 
                 // grab other node 
-                RagNode<Region>* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
+                RagNode_uit* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
 
                 // avoid duplicates
-                AffinityPair<Region> temp_pair(node_head, other_node->get_node_id());
+                AffinityPair temp_pair(node_head, other_node->get_node_id());
                 if (temp_affinity_pairs.find(temp_pair) != temp_affinity_pairs.end()) {
                     continue;
                 }

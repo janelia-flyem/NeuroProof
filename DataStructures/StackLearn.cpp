@@ -26,13 +26,13 @@ void StackLearn::learn_edge_classifier_flat(double threshold, UniqueRowFeature_L
 
 
     int count=0; 	
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
 
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
-	    RagEdge<Label>* rag_edge = *iter; 	
+	    RagEdge_uit* rag_edge = *iter; 	
 
-            RagNode<Label>* rag_node1 = rag_edge->get_node1();
-            RagNode<Label>* rag_node2 = rag_edge->get_node2();
+            RagNode_uit* rag_node1 = rag_edge->get_node1();
+            RagNode_uit* rag_node2 = rag_edge->get_node2();
             Label node1 = rag_node1->get_node_id(); 
             Label node2 = rag_node2->get_node_id(); 
 
@@ -107,7 +107,7 @@ void StackLearn::learn_edge_classifier_queue(double threshold, UniqueRowFeature_
     std::vector<QE> all_edges;	    	
 
     int count=0; 	
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
@@ -133,14 +133,14 @@ void StackLearn::learn_edge_classifier_queue(double threshold, UniqueRowFeature_
 
 	Label node1 = tmpqe.get_val().first;
 	Label node2 = tmpqe.get_val().second;
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(node1, node2);
+        RagEdge_uit* rag_edge = rag->find_rag_edge(node1, node2);
 
 
         if (!rag_edge || !tmpqe.valid()) {
             continue;
         }
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
 
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
@@ -241,7 +241,7 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
     std::vector<QE> all_edges;	    	
 
     int count=0; 	
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
@@ -268,7 +268,7 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
 
 	Label node1 = tmpqe.get_val().first;
 	Label node2 = tmpqe.get_val().second;
-        RagEdge<Label>* rag_edge = rag->find_rag_edge(node1, node2);
+        RagEdge_uit* rag_edge = rag->find_rag_edge(node1, node2);
 
 
         if (!rag_edge || !tmpqe.valid()) {
@@ -276,8 +276,8 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
         }
 
 
-        RagNode<Label>* rag_node1 = rag_edge->get_node1();
-        RagNode<Label>* rag_node2 = rag_edge->get_node2();
+        RagNode_uit* rag_node1 = rag_edge->get_node1();
+        RagNode_uit* rag_node2 = rag_edge->get_node2();
 
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 

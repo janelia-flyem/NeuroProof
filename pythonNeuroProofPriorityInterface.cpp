@@ -16,8 +16,8 @@ using namespace boost::python;
 using std::ifstream; using std::ofstream; using std::cout; using std::endl;
 using std::vector;
 
-static LocalEdgePriority<Label>* priority_scheduler = 0;
-Rag<Label>* rag = 0;
+static LocalEdgePriority* priority_scheduler = 0;
+Rag_uit* rag = 0;
 bool DebugMode = false;
 
 // false if file does not exist or json is not properly formatted
@@ -44,7 +44,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
         return false;
     }
 
-    priority_scheduler = new LocalEdgePriority<Label>(*rag, min_val, max_val, start_val, json_vals);
+    priority_scheduler = new LocalEdgePriority(*rag, min_val, max_val, start_val, json_vals);
     //priority_scheduler->updatePriority();
 
     return true;
@@ -193,7 +193,7 @@ double get_edge_val(PriorityInfo priority_info)
     Label l1 = extract<Label>(priority_info.body_pair[0]);
     Label l2 = extract<Label>(priority_info.body_pair[1]);
 
-    RagEdge<Label>* edge = rag->find_rag_edge(l1, l2);
+    RagEdge_uit* edge = rag->find_rag_edge(l1, l2);
 
     if (!edge) {
         throw ErrMsg("Edge not found");

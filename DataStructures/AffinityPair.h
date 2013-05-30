@@ -8,11 +8,9 @@
 namespace NeuroProof {
 
 
-
-template <typename Region>
 struct OrderedPair {
         OrderedPair() {}
-        OrderedPair(Region region1_, Region region2_)
+        OrderedPair(unsigned int region1_, unsigned int region2_)
         {
             if (region1_ < region2_) {
                 region1 = region1_;
@@ -30,7 +28,7 @@ struct OrderedPair {
 
         bool is_less(const OrderedPair& ordered_pair2) const
         {
-            if (region1 < ordered_pair2.body1) {
+            if (region1 < ordered_pair2.region1) {
                 return true;
             } else if (region1 == ordered_pair2.region1 && region2 < ordered_pair2.region2) {
                 return true;
@@ -62,15 +60,14 @@ struct OrderedPair {
             return seed;    
         }
         
-        Region region1;
-        Region region2;
+        unsigned int region1;
+        unsigned int region2;
 };
 
 
-template <typename Region>
-struct AffinityPair : public OrderedPair<Region> {
-        AffinityPair() : OrderedPair<Region>() {}
-        AffinityPair(Region region1_, Region region2_) : OrderedPair<Region>(region1_, region2_) { }
+struct AffinityPair : public OrderedPair {
+        AffinityPair() : OrderedPair() {}
+        AffinityPair(unsigned int region1_, unsigned int region2_) : OrderedPair(region1_, region2_) { }
 
         bool operator<(const AffinityPair& affinity_pair2) const
         {
@@ -89,7 +86,7 @@ struct AffinityPair : public OrderedPair<Region> {
         }
         
         // fundamental datastructure for using AffinityPairs
-        typedef std::tr1::unordered_set<AffinityPair<Region>, AffinityPair<Region> > Hash;
+        typedef std::tr1::unordered_set<AffinityPair, AffinityPair> Hash;
 
         // probability of connection
         double weight;
@@ -97,9 +94,8 @@ struct AffinityPair : public OrderedPair<Region> {
 };
 
 
-template <typename Region>
 struct AffinityPairWeightCmp {
-    bool operator()(const AffinityPair<Region>& p1, const AffinityPair<Region>& p2) const
+    bool operator()(const AffinityPair& p1, const AffinityPair& p2) const
     {
         return (p1.weight < p2.weight);
     }

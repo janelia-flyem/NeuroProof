@@ -351,8 +351,8 @@ int main(int argc, char** argv)
     stackp->determine_edge_locations(options.location_prob);
    
     // set edge properties for export 
-    Rag<Label>* rag = stackp->get_rag();
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+    Rag_uit* rag = stackp->get_rag();
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_false_edge())) {
             double val = stackp->get_edge_weight((*iter));
@@ -396,7 +396,7 @@ int main(int argc, char** argv)
     transform_data[0] = 0;
     transform_data[1] = 0;
     int tpos = 2;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
            iter != rag->nodes_end(); ++iter, tpos+=2) {
         transform_data[tpos] = (*iter)->get_node_id();
         transform_data[tpos+1] = (*iter)->get_node_id();

@@ -39,7 +39,7 @@ void FeatureHist::add_point(double val, void * cache, unsigned int x , unsigned 
         ++(hist_cache->count);
 }
     
-void FeatureHist::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num) {
+void FeatureHist::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num) {
         HistCache * hist_cache = (HistCache*) cache;
         for (unsigned int i = 0; i < thresholds.size(); ++i) {
             feature_array.push_back(get_data(hist_cache, thresholds[i]));
@@ -47,7 +47,7 @@ void FeatureHist::get_feature_array(void* cache, std::vector<double>& feature_ar
 } 
 
     // ?? difference feature -- not implemented because I am not returning histogram for now
-void  FeatureHist::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge) {
+void  FeatureHist::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge) {
         //throw ErrMsg("Not implemented");
 } 
 
@@ -134,12 +134,12 @@ void FeatureMoment::add_point(double val, void * cache, unsigned int x, unsigned
         } 
 }
     
-void FeatureMoment::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num){
+void FeatureMoment::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num){
         MomentCache * moment_cache = (MomentCache*) cache;
         get_data(moment_cache, feature_array);
 } 
 
-void  FeatureMoment::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge){
+void  FeatureMoment::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge){
         std::vector<double> vals1;
         std::vector<double> vals2;
         MomentCache * moment_cache1 = (MomentCache*) cache1;
@@ -203,12 +203,12 @@ void FeatureMoment::get_data(MomentCache * moment_cache, std::vector<double>& fe
 // ********************************************************************************************************
 
 
-void FeatureInclusiveness::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge<Label>* edge, unsigned int node_num){
-        RagNode<Label>* node1 = edge->get_node1();
-        RagNode<Label>* node2 = edge->get_node2();
+void FeatureInclusiveness::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num){
+        RagNode_uit* node1 = edge->get_node1();
+        RagNode_uit* node2 = edge->get_node2();
 
         if (node2->get_size() < node1->get_size()) {
-            RagNode<Label>* temp_node = node2;
+            RagNode_uit* temp_node = node2;
             node2 = node1;
             node1 = temp_node;
         }            
@@ -251,12 +251,12 @@ void FeatureInclusiveness::get_feature_array(void* cache, std::vector<double>& f
         }
     } 
 
-void  FeatureInclusiveness::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge<Label>* edge){
-        RagNode<Label>* node1 = edge->get_node1();
-        RagNode<Label>* node2 = edge->get_node2();
+void  FeatureInclusiveness::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge){
+        RagNode_uit* node1 = edge->get_node1();
+        RagNode_uit* node2 = edge->get_node2();
 
         if (node2->get_size() < node1->get_size()) {
-            RagNode<Label>* temp_node = node2;
+            RagNode_uit* temp_node = node2;
             node2 = node1;
             node1 = temp_node;
         }            
@@ -270,9 +270,9 @@ void  FeatureInclusiveness::get_diff_feature_array(void* cache2, void * cache1, 
         feature_array.push_back(temp_features1[1]-temp_features2[1]);
     } 
 
-unsigned long long FeatureInclusiveness::get_lengths(RagNode<Label>* node, std::set<unsigned long long>& lengths) {
+unsigned long long FeatureInclusiveness::get_lengths(RagNode_uit* node, std::set<unsigned long long>& lengths) {
         unsigned long long count = 0;
-        for (RagNode<Label>::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
+        for (RagNode_uit::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
             if ((*iter)->is_false_edge()) {
                 continue;
             }
@@ -284,7 +284,7 @@ unsigned long long FeatureInclusiveness::get_lengths(RagNode<Label>* node, std::
         return count;
     }
 
-void FeatureInclusiveness::get_node_features(RagNode<Label>* node, std::vector<double>& features){
+void FeatureInclusiveness::get_node_features(RagNode_uit* node, std::vector<double>& features){
         std::set<unsigned long long> lengths;
         unsigned long long tot = get_lengths(node, lengths);
         

@@ -21,8 +21,8 @@
 
 namespace NeuroProof {
     
-typedef std::tr1::unordered_map<RagEdge<Label>*, std::vector<void *>, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> > EdgeCaches; 
-typedef std::tr1::unordered_map<RagNode<Label>*, std::vector<void *>, RagNodePtrHash<Label>, RagNodePtrEq<Label> > NodeCaches; 
+typedef std::tr1::unordered_map<RagEdge_uit*, std::vector<void *>, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> > EdgeCaches; 
+typedef std::tr1::unordered_map<RagNode_uit*, std::vector<void *>, RagNodePtrHash<Label>, RagNodePtrEq<Label> > NodeCaches; 
 
 class FeatureMgr {
   public:
@@ -58,7 +58,7 @@ class FeatureMgr {
         return num_channels;
     }
 
-    void add_val(double val, RagNode<Label>* node)
+    void add_val(double val, RagNode_uit* node)
     {
         unsigned int starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
@@ -69,7 +69,7 @@ class FeatureMgr {
         } 
     } 
     
-    void add_val(double val, RagEdge<Label>* edge)
+    void add_val(double val, RagEdge_uit* edge)
     {
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
@@ -80,7 +80,7 @@ class FeatureMgr {
         } 
     } 
 
-    void add_val(std::vector<double>& vals, RagNode<Label>* node)
+    void add_val(std::vector<double>& vals, RagNode_uit* node)
     {
         node->incr_size();
         assert(vals.size() == num_channels);
@@ -98,7 +98,7 @@ class FeatureMgr {
         }        
     }
 
-    void add_val(std::vector<double>& vals, RagEdge<Label>* edge)
+    void add_val(std::vector<double>& vals, RagEdge_uit* edge)
     { 
         edge->incr_size();
         assert(vals.size() == num_channels);
@@ -116,7 +116,7 @@ class FeatureMgr {
         } 
     }
 
-    void mv_features(RagEdge<Label>* edge2, RagEdge<Label>* edge1)
+    void mv_features(RagEdge_uit* edge2, RagEdge_uit* edge1)
     {
         edge1->set_size(edge2->get_size());
         if (edge_caches.find(edge2) != edge_caches.end()) {
@@ -125,7 +125,7 @@ class FeatureMgr {
         }
     } 
 
-    void remove_edge(RagEdge<Label>* edge)
+    void remove_edge(RagEdge_uit* edge)
     {
         if (edge_caches.find(edge) != edge_caches.end()) {
             std::vector<void*>& edge_vec = edge_caches[edge];
@@ -142,14 +142,14 @@ class FeatureMgr {
         }
     }
 
-    void remove_node(RagNode<Label>* node)
+    void remove_node(RagNode_uit* node)
     {
         node_caches.erase(node);
     }
 
-    void merge_features(RagNode<Label>* node1, RagNode<Label>* node2);
-    void merge_features2(RagNode<Label>* node1, RagNode<Label>* node2, RagEdge<Label>* edge );
-    void merge_features(RagEdge<Label>* edge1, RagEdge<Label>* edge2);
+    void merge_features(RagNode_uit* node1, RagNode_uit* node2);
+    void merge_features2(RagNode_uit* node1, RagNode_uit* node2, RagEdge_uit* edge );
+    void merge_features(RagEdge_uit* edge1, RagEdge_uit* edge2);
 
     void set_classifier(EdgeClassifier* pclfr)
     {
@@ -179,24 +179,24 @@ class FeatureMgr {
     
     void add_inclusiveness_feature(bool use_diff);
 
-    double get_prob(RagEdge<Label>* edge);
+    double get_prob(RagEdge_uit* edge);
 
     void clear_features();
 
     ~FeatureMgr();
 
-    void get_responses(RagEdge<Label>* edge, vector<double>& responses);
+    void get_responses(RagEdge_uit* edge, vector<double>& responses);
 
-    void compute_all_features(RagEdge<Label>* edge, std::vector<double>&);
-    void compute_node_features(RagNode<Label>* edge, std::vector<double>&);
+    void compute_all_features(RagEdge_uit* edge, std::vector<double>&);
+    void compute_node_features(RagNode_uit* edge, std::vector<double>&);
 
     void copy_channel_features(FeatureMgr *pfmgr);   	
 
-    void copy_cache(std::vector<void*>& src_edge_cache, RagEdge<Label>* edge);	
-    void copy_cache(std::vector<void*>& src_node_cache, RagNode<Label>* node);	
+    void copy_cache(std::vector<void*>& src_edge_cache, RagEdge_uit* edge);	
+    void copy_cache(std::vector<void*>& src_node_cache, RagNode_uit* node);	
 
-    void print_cache(RagEdge<Label>* edge);	
-    void print_cache(RagNode<Label>* node);	
+    void print_cache(RagEdge_uit* edge);	
+    void print_cache(RagNode_uit* node);	
 
     std::vector<std::vector<FeatureCompute*> >& get_channel_features(){return channels_features;}; 	
     EdgeCaches& get_edge_cache(){return edge_caches;};  		
@@ -204,11 +204,11 @@ class FeatureMgr {
 
 
   private:
-    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
-    void compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge<Label>* edge);
+    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge);
+    void compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge);
      
-    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_num);
-    void compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge<Label>* edge, unsigned int node_num);
+    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_num);
+    void compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_num);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {
@@ -220,7 +220,7 @@ class FeatureMgr {
     }
     
     // !! assume all edge/node caches
-    std::vector<void*>& create_cache(RagEdge<Label>* edge)
+    std::vector<void*>& create_cache(RagEdge_uit* edge)
     {
         edge_caches[edge] = std::vector<void*>();
         std::vector<void*>& caches = edge_caches[edge];
@@ -234,7 +234,7 @@ class FeatureMgr {
         }
         return caches;
     }
-    std::vector<void*>& create_cache(RagNode<Label>* node)
+    std::vector<void*>& create_cache(RagNode_uit* node)
     {
         node_caches[node] = std::vector<void*>();
         std::vector<void*>& caches = node_caches[node];

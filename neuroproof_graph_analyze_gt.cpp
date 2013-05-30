@@ -282,23 +282,23 @@ Label* get_label_volume(string label_filename, bool enable_transforms, int& dept
     return zp_watershed_data; 
 }
 
-void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stack,
-        Stack* synapse_stack, Rag<Label>* opt_rag, int& num_modified,
+void get_num_edits(LocalEdgePriority& priority_scheduler, Stack* seg_stack,
+        Stack* synapse_stack, Rag_uit* opt_rag, int& num_modified,
         int& num_examined, bool use_exclusions)
 {
     int edges_examined = 0;
     int num_exclusions = 0;
-    Rag<Label>* rag = seg_stack->get_rag();
+    Rag_uit* rag = seg_stack->get_rag();
 
     while (!priority_scheduler.isFinished()) {
-        EdgePriority<Label>::Location location;
+        EdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
         
         Label node1 = boost::get<0>(pair);
         Label node2 = boost::get<1>(pair);
-        RagEdge<Label>* temp_edge = opt_rag->find_rag_edge(node1, node2);
+        RagEdge_uit* temp_edge = opt_rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
 
         bool merged = false;
@@ -325,8 +325,8 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
             if (!merged && (seg_stack->is_excluded(node2))) {
                 ++num_exclusions;
                 exclusion_found = true;
-                RagNode<Label>* rnode2 = rag->find_rag_node(node2);
-                for (RagNode<Label>::edge_iterator iter = rnode2->edge_begin();
+                RagNode_uit* rnode2 = rag->find_rag_node(node2);
+                for (RagNode_uit::edge_iterator iter = rnode2->edge_begin();
                         iter != rnode2->edge_end(); ++iter) {
                     (*iter)->set_preserve(true);
                 }
@@ -334,8 +334,8 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
             if (seg_stack->is_excluded(node1)) {
                 ++num_exclusions;
                 exclusion_found = true;
-                RagNode<Label>* rnode1 = rag->find_rag_node(node1);
-                for (RagNode<Label>::edge_iterator iter = rnode1->edge_begin();
+                RagNode_uit* rnode1 = rag->find_rag_node(node1);
+                for (RagNode_uit::edge_iterator iter = rnode1->edge_begin();
                         iter != rnode1->edge_end(); ++iter) {
                     (*iter)->set_preserve(true);
                 }
@@ -354,7 +354,7 @@ void get_num_edits(LocalEdgePriority<Label>& priority_scheduler, Stack* seg_stac
 }
 
 
-void load_orphans(Stack* stack, Rag<Label>* rag, std::tr1::unordered_set<Label>& orphans,
+void load_orphans(Stack* stack, Rag_uit* rag, std::tr1::unordered_set<Label>& orphans,
         int threshold, int synapse_threshold)
 {
     std::tr1::unordered_map<Label, int> synapse_counts;
@@ -362,14 +362,14 @@ void load_orphans(Stack* stack, Rag<Label>* rag, std::tr1::unordered_set<Label>&
     for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= synapse_threshold) {
-            RagNode<Label>* node = rag->find_rag_node(iter->first);
+            RagNode_uit* node = rag->find_rag_node(iter->first);
             if (!(node->is_border())) {
                 orphans.insert(iter->first);
             }
         }
     }
 
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
             orphans.insert((*iter)->get_node_id());
@@ -378,7 +378,7 @@ void load_orphans(Stack* stack, Rag<Label>* rag, std::tr1::unordered_set<Label>&
 }
 
 
-int num_synapse_errors(Stack* stack, Rag<Label>* rag, int threshold)
+int num_synapse_errors(Stack* stack, Rag_uit* rag, int threshold)
 {
     std::tr1::unordered_map<Label, int> synapse_counts;
     stack->load_synapse_counts(synapse_counts);
@@ -386,7 +386,7 @@ int num_synapse_errors(Stack* stack, Rag<Label>* rag, int threshold)
     for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= threshold) {
-            RagNode<Label>* node = rag->find_rag_node(iter->first);
+            RagNode_uit* node = rag->find_rag_node(iter->first);
             if (!(node->is_border())) {
                 ++synapse_errors;
             }
@@ -395,10 +395,10 @@ int num_synapse_errors(Stack* stack, Rag<Label>* rag, int threshold)
     return synapse_errors;
 }
 
-int num_body_errors(Rag<Label>* rag, int threshold)
+int num_body_errors(Rag_uit* rag, int threshold)
 {
     int body_errors = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
             ++body_errors;
@@ -408,10 +408,10 @@ int num_body_errors(Rag<Label>* rag, int threshold)
 }
 
 void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack, 
-        Rag<Label>* opt_rag, AnalyzeGTOptions& options)
+        Rag_uit* opt_rag, AnalyzeGTOptions& options)
 {
-    Rag<Label>* seg_rag = seg_stack->get_rag();
-    Rag<Label>* gt_rag = gt_stack->get_rag();
+    Rag_uit* seg_rag = seg_stack->get_rag();
+    Rag_uit* gt_rag = gt_stack->get_rag();
    
     cout << "************Printing Statistics**************" << endl; 
     cout << "Graph edges: " << seg_rag->get_num_edges() << endl;
@@ -478,9 +478,9 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
      
     // ?? might give weird results when dilation is done on GT
     seg_stack->compute_groundtruth_assignment();
-    vector<RagNode<Label>* > large_bodies;
+    vector<RagNode_uit* > large_bodies;
 
-    for (Rag<Label>::nodes_iterator iter = seg_rag->nodes_begin();
+    for (Rag_uit::nodes_iterator iter = seg_rag->nodes_begin();
            iter != seg_rag->nodes_end(); ++iter) {
         if ((*iter)->get_size() > options.body_error_size) {
             large_bodies.push_back((*iter));
@@ -513,17 +513,17 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
     
 
     std::tr1::unordered_map<Label, unsigned long long> body_changes;
-    Rag<Label> opt_rag_copy(*opt_rag);
+    Rag_uit opt_rag_copy(*opt_rag);
 
     bool change = true;
     while (change) {
         change = false;
-        for (Rag<Label>::edges_iterator iter = opt_rag_copy.edges_begin();
+        for (Rag_uit::edges_iterator iter = opt_rag_copy.edges_begin();
                 iter != opt_rag_copy.edges_end(); ++iter) {
             double weight = (*iter)->get_weight();
             if (weight < 0.0001) {
-                RagNode<Label>* node1 = (*iter)->get_node1();
-                RagNode<Label>* node2 = (*iter)->get_node2();
+                RagNode_uit* node1 = (*iter)->get_node1();
+                RagNode_uit* node2 = (*iter)->get_node2();
 
                 unsigned long long large1 = node1->get_size();
                 unsigned long long large2 = node2->get_size();
@@ -533,7 +533,7 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
                 if (body_changes.find(node2->get_node_id()) != body_changes.end()) {
                     large2 = body_changes[node2->get_node_id()];
                 }
-                RagNode<Label>* node_keep;
+                RagNode_uit* node_keep;
                 if (large1 > large2) {
                     body_changes[node1->get_node_id()] = large1;
                     node_keep = node1;
@@ -557,7 +557,7 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
     for (std::tr1::unordered_map<Label, unsigned long long>::iterator iter = body_changes.begin();
             iter != body_changes.end(); ++iter) {
         unsigned long long largest_orig = iter->second;
-        RagNode<Label>* node1 = opt_rag_copy.find_rag_node(iter->first);
+        RagNode_uit* node1 = opt_rag_copy.find_rag_node(iter->first);
         // TODO: should print size distribution since there is really nothing missed
         // higher above the threshold
         if ((node1->get_size() - largest_orig) >= options.body_error_size) {
@@ -581,8 +581,8 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
 }
 
 
-void run_body(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_vals,
-        Stack* seg_stack, Stack* synapse_stack, Rag<Label>* opt_rag,
+void run_body(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+        Stack* seg_stack, Stack* synapse_stack, Rag_uit* opt_rag,
         int& num_modified, int& num_examined)
 {
     unsigned int path_length = json_vals.get("path-length", 0).asUInt(); 
@@ -605,8 +605,8 @@ void run_body(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_val
     cout << "Body mode finished ... "; 
 }
 
-void run_synapse(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_vals,
-        Stack* seg_stack, Stack* synapse_stack, Rag<Label>* opt_rag,
+void run_synapse(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+        Stack* seg_stack, Stack* synapse_stack, Rag_uit* opt_rag,
         int& num_modified, int& num_examined)
 {
     double threshold = json_vals.get("threshold", 0.1).asDouble();
@@ -627,8 +627,8 @@ void run_synapse(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_
     cout << "Synapse mode finished ... "; 
 }
 
-void run_orphan(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_vals,
-        Stack* seg_stack, Stack* synapse_stack, Rag<Label>* opt_rag,
+void run_orphan(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+        Stack* seg_stack, Stack* synapse_stack, Rag_uit* opt_rag,
         int& num_modified, int& num_examined)
 {
     unsigned int threshold = json_vals.get("threshold", 25000).asUInt();
@@ -648,8 +648,8 @@ void run_orphan(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_v
     cout << "Orphan mode finished ... "; 
 }
 
-void run_edge(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_vals,
-        Stack* seg_stack, Stack* synapse_stack, Rag<Label>* opt_rag,
+void run_edge(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+        Stack* seg_stack, Stack* synapse_stack, Rag_uit* opt_rag,
         int& num_modified, int& num_examined)
 {
     double lower = json_vals.get("lower-prob", 0.0).asDouble();
@@ -672,8 +672,8 @@ void run_edge(LocalEdgePriority<Label>& priority_scheduler, Json::Value json_val
     cout << "Edge mode finished ... "; 
 }
 
-void set_rag_probs(Stack* seg_stack, Rag<Label>* seg_rag) {
-    for (Rag<Label>::edges_iterator iter = seg_rag->edges_begin();
+void set_rag_probs(Stack* seg_stack, Rag_uit* seg_rag) {
+    for (Rag_uit::edges_iterator iter = seg_rag->edges_begin();
             iter != seg_rag->edges_end(); ++iter) {
         // ?? mito mode a problem ??
         int val = seg_stack->decide_edge_label((*iter)->get_node1(), (*iter)->get_node2()); 
@@ -686,7 +686,7 @@ void set_rag_probs(Stack* seg_stack, Rag<Label>* seg_rag) {
 }
 
 void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, Stack* gt_stack,
-        Rag<Label>* opt_rag, AnalyzeGTOptions& options)
+        Rag_uit* opt_rag, AnalyzeGTOptions& options)
 {
     // open json file
     Json::Reader json_reader;
@@ -700,14 +700,14 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
     }
     fin.close();
 
-    Rag<Label>* rag = seg_stack->get_rag();
+    Rag_uit* rag = seg_stack->get_rag();
 
     Json::Value json_vals_priority;
     
     // load orphan information
     Json::Value orphan_bodies;
     unsigned int id = 0;
-    for (Rag<Label>::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if (!((*iter)->is_border())) {
             orphan_bodies[id++] = (*iter)->get_node_id(); 
@@ -715,7 +715,7 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
     }
     
     // load default information
-    for (Rag<Label>::edges_iterator iter = rag->edges_begin();
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         (*iter)->set_property("location", Location(0,0,0));
         (*iter)->set_property("edge_size", (*iter)->get_size());
@@ -737,7 +737,7 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
     }
     json_vals_priority["synapse_bodies"] = synapses;
 
-    LocalEdgePriority<Label> priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals_priority);
+    LocalEdgePriority priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals_priority);
     
     int num_examined = 0;
     int num_modified = 0;
@@ -810,33 +810,33 @@ int main(int argc, char** argv)
               height + 2*PADDING, width + 2*PADDING, PADDING);  
         gt_stack->build_rag();
         cout << "Built GT RAG" << endl;
-        Rag<Label>* gt_rag = gt_stack->get_rag();  
+        Rag_uit* gt_rag = gt_stack->get_rag();  
         
         // create seg stack
         Stack* seg_stack = new Stack(zp_labels, depth + 2*PADDING,
               height + 2*PADDING, width + 2*PADDING, PADDING);  
         seg_stack->build_rag();
         cout << "Built seg RAG" << endl;
-        Rag<Label>* seg_rag = seg_stack->get_rag();
+        Rag_uit* seg_rag = seg_stack->get_rag();
        
         seg_stack->set_groundtruth(gt_stack->get_label_volume());
         seg_stack->compute_groundtruth_assignment();
 
         if (options.graph_filename != "") {
             // use previously generated probs
-            Rag<Label>* seg_rag_probs = create_rag_from_jsonfile(options.graph_filename.c_str()); 
+            Rag_uit* seg_rag_probs = create_rag_from_jsonfile(options.graph_filename.c_str()); 
             if (!seg_rag_probs) {
                 throw ErrMsg("Problem processing graph file");
             }
 
-            for (Rag<Label>::edges_iterator iter = seg_rag_probs->edges_begin();
+            for (Rag_uit::edges_iterator iter = seg_rag_probs->edges_begin();
                     iter != seg_rag_probs->edges_end(); ++iter) {
                 Label node1 = (*iter)->get_node1()->get_node_id();
                 Label node2 = (*iter)->get_node2()->get_node_id();
 
                 if (!(*iter)->is_false_edge()) {
                     double prob = (*iter)->get_weight();
-                    RagEdge<Label>* edge = seg_rag->find_rag_edge(node1, node2);
+                    RagEdge_uit* edge = seg_rag->find_rag_edge(node1, node2);
                     edge->set_weight(prob);
                 }
             }
@@ -847,7 +847,7 @@ int main(int argc, char** argv)
         }
 
         // create ground truth assignments to be maintained with rag
-        Rag<Label>* rag_comp = new Rag<Label>(*seg_rag);
+        Rag_uit* rag_comp = new Rag_uit(*seg_rag);
         set_rag_probs(seg_stack, rag_comp);
 
         // set synapse exclusions and create synapse stack for VI comparisons 
