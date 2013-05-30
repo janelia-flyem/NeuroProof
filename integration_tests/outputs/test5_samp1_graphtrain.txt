@@ -1,0 +1,15 @@
+Reading data ...
+
+ ** Learning iteration 1  **
+
+Learn edge classifier ...
+Building RAG ...done with 164 regions
+Inclusion removal ...done with 163 regions
+gt label counting
+Features generated
+Number of samples and dimensions: 617, 190
+Number of merge: 192
+with training set accuracy :99.838
+Classifier learned 
+accuracy = 99.838
+done with 163 regions

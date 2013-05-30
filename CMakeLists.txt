@@ -180,6 +180,13 @@ else ()
         ${BUILDEM_DIR}
         ${CMAKE_SOURCE_DIR}
     )
-    
+   
+    add_test("test5_sample1_graphtrain"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/test5.py
+        ${BUILDEM_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
+
     ###############################################################################
 endif()

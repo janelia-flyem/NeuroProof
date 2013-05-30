@@ -87,7 +87,8 @@ void VigraRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, std
      _nfeatures = _rf->column_count();
      _nclass = _rf->class_count();
 
-     printf("Time required to learn RF: %.2f with oob :%f\n", ((double)clock() - start) / CLOCKS_PER_SEC, oob_v.oob_breiman);
+     printf("Time required to learn RF: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+     printf("with oob :%f\n", oob_v.oob_breiman);
 }
 
 void VigraRFclassifier::save_classifier(const char* rf_filename){

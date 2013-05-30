@@ -121,25 +121,48 @@ int main(int argc, char** argv)
     } 	
 
 
-    time_t start, end;
-    time(&start);	
+    //time_t start, end;
+    //time(&start);	
 
     //clock_t start = clock();
 
-    H5Read watershed(watershed_filename.c_str(), watershed_dataset_name.c_str());	
-    Label* watershed_data=NULL;	
-    watershed.readData(&watershed_data);	
+    H5Read watershed(watershed_filename.c_str(), watershed_dataset_name.c_str());
+    
     int depth =	 watershed.dim()[0];
     int height = watershed.dim()[1];
     int width =	 watershed.dim()[2];
 
+    Label* watershed_data=NULL;
 
-	
+    if (watershed.get_size() == sizeof(unsigned long long)) {
+        unsigned long long * temp_data = 0;
+        watershed.readData(&temp_data);
+        unsigned long long total_size = depth*height*width;
+        watershed_data = new Label[total_size];
+        for (unsigned long long i = 0; i < total_size; ++i) {
+            watershed_data[i] = temp_data[i];
+        }
+        delete [] temp_data;
+    } else {
+        watershed.readData(&watershed_data);
+    }        
+ 
 
     H5Read groundtruth(groundtruth_filename.c_str(),groundtruth_dataset_name.c_str());	
     Label* groundtruth_data=NULL;
-    groundtruth.readData(&groundtruth_data);	
 
+    if (groundtruth.get_size() == sizeof(unsigned long long)) {
+        unsigned long long * temp_data = 0;
+        groundtruth.readData(&temp_data);
+        unsigned long long total_size = depth*height*width;
+        groundtruth_data = new Label[total_size];
+        for (unsigned long long i = 0; i < total_size; ++i) {
+            groundtruth_data[i] = temp_data[i];
+        }
+        delete [] temp_data;
+    } else {
+        groundtruth.readData(&groundtruth_data);	
+    }
 
 
 
@@ -155,10 +178,6 @@ int main(int argc, char** argv)
     float* prediction_data=NULL;
     prediction.readData(&prediction_data);	
     double* prediction_ch1 = new double[depth*height*width];
-
-
-
-
 
     double threshold=0.2;
 
@@ -239,13 +258,13 @@ int main(int argc, char** argv)
 // end for
 
     eclfr->save_classifier(classifier_filename.c_str());  	
-    printf("Classifier saved to %s\n",classifier_filename.c_str());
+    //printf("Classifier saved to %s\n",classifier_filename.c_str());
 
 
  	
      
-    time(&end);	
-    printf("Time elapsed: %.2f\n", (difftime(end,start))*1.0/60);
+    //time(&end);	
+    //printf("Time elapsed: %.2f\n", (difftime(end,start))*1.0/60);
 
  
 //    printf("Time elapsed: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);

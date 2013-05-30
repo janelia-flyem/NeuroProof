@@ -31,7 +31,7 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
     testout_stdout = ""
     for iter1 in range(0, len(testout_stdout_arr)):
         line = testout_stdout_arr[iter1]
-        if "Time Elapsed" in line:
+        if "Time " in line:
             continue
         testout_stdout += line
         if iter1 != (len(testout_stdout_arr)-1):

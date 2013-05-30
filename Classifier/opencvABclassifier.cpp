@@ -157,7 +157,8 @@ void OpencvABclassifier::learn(std::vector< std::vector<double> >& pfeatures, st
       }
       	
 
-     printf("Time required to learn RF: %.2f with training set accuracy :%.3f\n", ((double)clock() - start) / CLOCKS_PER_SEC, correct/features->rows*100.);
+     printf("Time required to learn RF: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+     printf("with training set accuracy :%.3f\n", correct/features->rows*100.);
 
      cvReleaseMat( &features );
      cvReleaseMat( &weak_responses );
