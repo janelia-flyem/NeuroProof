@@ -8,7 +8,7 @@
 #ifndef RAGELEMENT_H
 #define RAGELEMENT_H
 
-#include "Properties/Property.h"
+#include "Property.h"
 #include "../Utilities/ErrMsg.h"
 #include <tr1/unordered_map>
 #include <string>

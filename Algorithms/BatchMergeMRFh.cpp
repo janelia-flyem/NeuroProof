@@ -1,5 +1,5 @@
 #include "BatchMergeMRFh.h"
-#include "../Rag/Properties/MitoTypeProperty.h"
+#include "../Refactoring/MitoTypeProperty.h"
 
 #include <ctime>
 #include <cstdlib>

@@ -1,6 +1,6 @@
 #include "Stack.h"
 
-#include "../Rag/Properties/MitoTypeProperty.h"
+#include "../Refactoring/MitoTypeProperty.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 
 using namespace NeuroProof;
