@@ -340,7 +340,14 @@ void BatchMergeMRFh::compute_subset_cost(RagNode_uit* pnode, set<Label>& subset)
     for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
 	subset1.push_back((*it));
 	RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
-	edge_idx.push_back(edge1->get_qloc());
+	
+        int qloc = -1;
+        try {
+            qloc = edge1->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
+
+        edge_idx.push_back(qloc);
 	edge_prob.push_back(edge1->get_weight());
     }	
     subset1.push_back(pnode->get_node_id());
@@ -399,8 +406,14 @@ void BatchMergeMRFh::compute_subset_cost(RagNode_uit* pnode, set<Label>& subset)
     	int count=0;	
     	for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
 	    RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
-	    int qloc = edge1->get_qloc();
-	    if (subset_to_edge[qloc].size()==0)
+	    
+            int qloc = -1;
+            try {
+                qloc = edge1->get_property<int>("qloc");
+            } catch (ErrMsg& msg) {
+            }
+	    
+            if (subset_to_edge[qloc].size()==0)
 		subset_to_edge[qloc].resize(2);
 	    
 	    (subset_to_edge[qloc][config1[count]]) += -log(val+C_EPS);	//dai::exp(-val) 	  	
@@ -411,8 +424,14 @@ void BatchMergeMRFh::compute_subset_cost(RagNode_uit* pnode, set<Label>& subset)
     
     for(set<Label>::iterator it= subset.begin(); it!=subset.end(); it++){
 	RagEdge_uit* edge1 = _rag->find_rag_edge(pnode->get_node_id(),(*it));
-	int qloc = edge1->get_qloc();
-	if (_edgeBlf[qloc].size()==0){
+	
+        int qloc = -1;
+        try {
+            qloc = edge1->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
+	
+        if (_edgeBlf[qloc].size()==0){
 	    _edgeBlf[qloc].resize(2);
 	    for(int ii=0; ii< _edgeBlf[qloc].size(); ii++)
 		_edgeBlf[qloc][ii] = 1;

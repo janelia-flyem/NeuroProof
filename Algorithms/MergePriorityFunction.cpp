@@ -76,7 +76,7 @@ void ProbPriority::clear_dirty()
 	    else{ 
 		kicked_out++;	
 		if (kicked_fid)
-		  fprintf(kicked_fid, "%u 0 %f %u %u %lu %lu\n",rag_edge->get_edge_id(),  val,
+		  fprintf(kicked_fid, "0 %f %u %u %lu %lu\n", val,
 		    node1, node2, rag_node1->get_size(), rag_node2->get_size());
 	    }
 	}
@@ -143,7 +143,7 @@ RagEdge_uit* ProbPriority::get_top_edge()
 	    //printf("edge prob changed from %.4f to %.4f\n",curr_threshold, val);
 	    kicked_out++;	
 	    if (kicked_fid)
-	      fprintf(kicked_fid, "%u 0 %f %u %u %lu %lu\n",rag_edge->get_edge_id(),  val,
+	      fprintf(kicked_fid, "0 %f %u %u %lu %lu\n", val,
 		node1, node2, rag_node1->get_size(), rag_node2->get_size());
 	    //fprintf(kicked_fid, "0 %f %u %u %lu %lu\n", rag_edge->get_weight(),node1, node2, rag_node1->get_size(), rag_node2->get_size());
 	    

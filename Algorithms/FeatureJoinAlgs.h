@@ -90,8 +90,13 @@ class PriorityQCombine : public FeatureCombine {
             RagEdge<unsigned int>* edge_remove)
     {
         FeatureCombine::post_edge_move(edge_new, edge_remove); 
-   
-        int qloc= edge_remove->get_qloc();	
+  
+        int qloc = -1;
+        try {
+            qloc = edge_remove->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
+
         if (qloc>=0) {
             priority->invalidate(qloc+1);
         }
@@ -101,8 +106,12 @@ class PriorityQCombine : public FeatureCombine {
             RagEdge<unsigned int>* edge_remove)
     {
         FeatureCombine::post_edge_join(edge_keep, edge_remove); 
-    
-        int qloc= edge_remove->get_qloc();	
+        
+        int qloc = -1;
+        try {
+            qloc = edge_remove->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
         if (qloc>=0) {
             priority->invalidate(qloc+1);
         }
@@ -123,7 +132,11 @@ class PriorityQCombine : public FeatureCombine {
 
             QE tmpelem(val, std::make_pair(node1,node2));	
 
-            int qloc= (*iter)->get_qloc();	
+            int qloc = -1;
+            try {
+                qloc = (*iter)->get_property<int>("qloc");
+            } catch (ErrMsg& msg) {
+            }
 
             if (qloc>=0){
                 if (val<prev_val) {
@@ -155,7 +168,13 @@ class FlatCombine : public FeatureCombine {
         FeatureCombine::post_edge_move(edge_new, edge_remove); 
    
         edge_new->set_weight(edge_remove->get_weight());	
-        int qloc= edge_remove->get_qloc();
+        
+        int qloc = -1;
+        try {
+            qloc = edge_remove->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
+
         if (qloc>=0){
             QE tmpelem(edge_new->get_weight(),
                     std::make_pair(edge_new->get_node1()->get_node_id(), 
@@ -174,7 +193,12 @@ class FlatCombine : public FeatureCombine {
         double prob = feature_mgr->get_prob(edge_keep);
         edge_keep->set_weight(prob);	
 
-        int qloc= edge_remove->get_qloc();	
+        int qloc = -1;
+        try {
+            qloc = edge_remove->get_property<int>("qloc");
+        } catch (ErrMsg& msg) {
+        }
+        
         if (qloc>=0) {
             (*priority).at(qloc).invalidate();
         }

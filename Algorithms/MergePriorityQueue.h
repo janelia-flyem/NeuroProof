@@ -36,8 +36,9 @@ public:
 	Label node2 = _val.second;
 	RagEdge_uit* rag_edge = prag->find_rag_edge(node1, node2);
 	if(!rag_edge)
-	    return;	
-	rag_edge->reassign_qloc(ploc);
+	    return;
+
+        rag_edge->set_property("qloc", ploc);
     };
     //QueueElement<K,T>& operator=(const QueueElement<K,T>& another);
 };

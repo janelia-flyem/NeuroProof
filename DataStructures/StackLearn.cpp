@@ -112,7 +112,7 @@ void StackLearn::learn_edge_classifier_queue(double threshold, UniqueRowFeature_
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
-	    (*iter)->reassign_qloc(count);
+	    (*iter)->set_property("qloc", count);
 	    Label node1 = (*iter)->get_node1()->get_node_id();	
 	    Label node2 = (*iter)->get_node2()->get_node_id();	
 
@@ -247,7 +247,7 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
-	    (*iter)->reassign_qloc(count);
+	    (*iter)->set_property("qloc", count);
 
 	    Label node1 = (*iter)->get_node1()->get_node_id();	
 	    Label node2 = (*iter)->get_node2()->get_node_id();	

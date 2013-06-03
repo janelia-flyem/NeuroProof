@@ -76,15 +76,8 @@ class RagEdge : public RagElement {
     bool is_equal(const RagEdge<Region>* edge2) const;
     std::size_t compute_hash(const RagEdge<Region>* edge) const;
 
-    void reassign_qloc(int pqloc){qloc=pqloc;};	
-    int get_qloc(){return qloc;}; 	
-
-
     void print_edge();
     
-    void set_edge_id(int pid){ edge_id = pid;};
-    int get_edge_id(){return edge_id;};
-
   private:
     RagEdge(RagNode<Region>* node1_, RagNode<Region>* node_);
     RagEdge<Region>&  operator=(const RagEdge<Region>& edge2) {}
@@ -95,11 +88,7 @@ class RagEdge : public RagElement {
     unsigned long long edge_size;
     bool preserve;
     bool false_edge;
-    bool dirty;
-
-    // FIX: potential bad additions to datastructure
-    int qloc;	
-    int edge_id;	
+    bool dirty; // can add one more bool if desired
 };
 
 typedef RagEdge<Node_uit> RagEdge_uit; 
@@ -109,7 +98,7 @@ template<typename Region> void RagEdge<Region>::print_edge()
     printf("edge : (%d, %d)\n", node1->get_node_id(), node2->get_node_id());
 }	
 
-template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false), qloc(-1)
+template<typename Region> RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) : weight(0.0), edge_size(0), preserve(false), false_edge(false), dirty(false)
 {
     RagNodePtrCmp<Region> cmp;
     if (cmp(node1_, node2_)) { 

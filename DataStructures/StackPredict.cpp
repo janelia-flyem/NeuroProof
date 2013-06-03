@@ -28,7 +28,7 @@ void StackPredict::agglomerate_rag_mrf(double threshold, bool read_off, string o
 		count++;
             (*iter)->set_weight(val);
 
-	    (*iter)->reassign_qloc(edgeCount);
+            (*iter)->set_property("qloc", edgeCount);
 
 	    Label node1 = (*iter)->get_node1()->get_node_id();	
 	    Label node2 = (*iter)->get_node2()->get_node_id();	
@@ -128,7 +128,7 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 		val = feature_mgr->get_prob(*iter);    
 	    
             (*iter)->set_weight(val);
-	    (*iter)->reassign_qloc(count);
+            (*iter)->set_property("qloc", count);
 
             QE tmpelem(val,std::make_pair(node1,node2));	
 	    all_edges.push_back(tmpelem); 
