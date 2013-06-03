@@ -2,10 +2,35 @@
 #define EDGEPRIORITY_H
 
 #include "../Rag/Rag.h"
+#include "../Rag/RagNodeCombineAlg.h"
 #include <vector>
 #include <boost/tuple/tuple.hpp>
 
 namespace NeuroProof {
+
+class LowWeightCombine : public RagNodeCombineAlg {
+  public:
+    void post_edge_move(RagEdge<unsigned int>* edge_new,
+            RagEdge<unsigned int>* edge_remove)
+    {
+        double weight = edge_remove->get_weight();
+        edge_new->set_weight(weight);
+    }
+
+    void post_edge_join(RagEdge<unsigned int>* edge_keep,
+            RagEdge<unsigned int>* edge_remove)
+    {
+        double weight = edge_remove->get_weight();
+        if ((weight <= edge_keep->get_weight() && (edge_keep->get_weight() <= 1.0))
+                || (weight > 1.0) ) { 
+            edge_keep->set_weight(weight);
+        }
+    }
+
+    void post_node_join(RagNode<unsigned int>* node_keep,
+            RagNode<unsigned int>* node_remove) {}
+};
+
 
 class EdgePriority {
   public:
@@ -61,6 +86,7 @@ class EdgePriority {
     std::vector<EdgeHistory> history_queue;
     std::vector<std::string> property_names;
     bool updated;
+    LowWeightCombine join_alg;
 };
 
 
@@ -228,7 +254,7 @@ void EdgePriority::removeEdge(NodePair node_pair, bool remove, std::vector<std::
         }
     }
 
-    rag_merge_edge(rag, edge, node1, property_names); 
+    rag_join_nodes(rag, node1, node2, &join_alg); 
     history_queue.push_back(history);
 }
 

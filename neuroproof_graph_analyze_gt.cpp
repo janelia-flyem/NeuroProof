@@ -289,6 +289,7 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, Stack* seg_stack,
     int edges_examined = 0;
     int num_exclusions = 0;
     Rag_uit* rag = seg_stack->get_rag();
+    LowWeightCombine join_alg;
 
     while (!priority_scheduler.isFinished()) {
         EdgePriority::Location location;
@@ -307,8 +308,8 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, Stack* seg_stack,
             ++num_modified;
             priority_scheduler.removeEdge(pair, true);
             // update rags and watersheds as appropriate
-            vector<string> property_names;
-            rag_merge_edge(*opt_rag, temp_edge, opt_rag->find_rag_node(node1), property_names); 
+            rag_join_nodes(*opt_rag, opt_rag->find_rag_node(node1),
+                    opt_rag->find_rag_node(node2), &join_alg); 
             seg_stack->merge_nodes(node1, node2);
             // no rag maintained for synapse stack
             if (synapse_stack) {
@@ -516,6 +517,7 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
     Rag_uit opt_rag_copy(*opt_rag);
 
     bool change = true;
+    LowWeightCombine join_alg;
     while (change) {
         change = false;
         for (Rag_uit::edges_iterator iter = opt_rag_copy.edges_begin();
@@ -534,19 +536,21 @@ void dump_differences(Stack* seg_stack, Stack* synapse_stack, Stack * gt_stack,
                     large2 = body_changes[node2->get_node_id()];
                 }
                 RagNode_uit* node_keep;
+                RagNode_uit* node_remove;
                 if (large1 > large2) {
                     body_changes[node1->get_node_id()] = large1;
                     node_keep = node1;
+                    node_remove = node2;
                     body_changes.erase(node2->get_node_id());
                 } else {
                     body_changes[node2->get_node_id()] = large2;
                     node_keep = node2;
+                    node_remove = node1;
                     body_changes.erase(node1->get_node_id());
                 }
 
                 vector<string> property_names;
-                rag_merge_edge(opt_rag_copy, *iter,
-                        node_keep, property_names); 
+                rag_join_nodes(opt_rag_copy, node_keep, node_remove, &join_alg); 
 
                 change = true;
                 break;

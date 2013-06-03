@@ -1,6 +1,7 @@
 #include "Stack.h"
 
 #include "../Rag/Properties/MitoTypeProperty.h"
+#include "../Algorithms/FeatureJoinAlgs.h"
 
 using namespace NeuroProof;
 using namespace std;
@@ -140,6 +141,8 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 
     MergePriorityQueue<QE> *Q = new MergePriorityQueue<QE>(rag);
     Q->set_storage(&all_edges);	
+    
+    PriorityQCombine node_combine_alg(feature_mgr, rag, Q); 
 	
     while (!Q->is_empty()){
 	QE tmpqe = Q->heap_extract_min();	
@@ -184,7 +187,7 @@ void StackPredict::agglomerate_rag_queue(double threshold, bool use_edge_weight,
 	    error += ((assignment.find(node1)->second == assignment.find(node2)->second) ? 0 : 1);
 	    
 	    
-        rag_merge_edge_priorityq(*rag, rag_edge, rag_node1, Q, feature_mgr);
+        rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
@@ -255,6 +258,8 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
     fclose(initial_fid_edge);
     fclose(fid_label);
     
+    FlatCombine node_combine_alg(feature_mgr, rag, &priority); 
+    
     int ii=0;	
     for(ii=0; ii< priority.size(); ii++) {
 	
@@ -293,7 +298,7 @@ void StackPredict::agglomerate_rag_flat(double threshold, bool use_edge_weight, 
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
 	//printf("node keep: %d, node remove :%d\n",node1,node2);
-        rag_merge_edge_flat(*rag, rag_edge, rag_node1, priority, feature_mgr);
+        rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
@@ -313,6 +318,7 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
     double error=0;  	
     MergePriority* priority = new ProbPriority(feature_mgr, rag, synapse_mode);
     priority->initialize_priority(threshold, use_edge_weight);
+    DelayedPriorityCombine node_combine_alg(feature_mgr, rag, priority); 
 
     while (!(priority->empty())) {
         RagEdge_uit* rag_edge = priority->get_top_edge();
@@ -347,7 +353,7 @@ void StackPredict::agglomerate_rag(double threshold, bool use_edge_weight, strin
 	if(gtruth)
 	    error += ((assignment.find(node1)->second == assignment.find(node2)->second) ? 0 : 1);
 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
+        rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
@@ -380,6 +386,8 @@ void StackPredict::merge_mitochondria_a()
 
     MergePriority* priority = new MitoPriority(feature_mgr, rag);
     priority->initialize_priority(0.8);
+    
+    DelayedPriorityCombine node_combine_alg(feature_mgr, rag, priority); 
 
     while (!(priority->empty())) {
 
@@ -420,7 +428,7 @@ void StackPredict::merge_mitochondria_a()
 	if(gtruth)
 	    error += ((assignment.find(node1)->second == assignment.find(node2)->second) ? 0 : 1);
 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
+        rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;

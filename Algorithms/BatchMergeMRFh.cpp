@@ -442,6 +442,7 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
 //	if (label == MERGE){
 	cost += MERGE_COST(srag_edge->get_weight(),thd);
 
+        // PREVIOUS ERROR?: in the original the sizes would have been inreased twice?
 	_sfeature_mgr->merge_features2(srag_node, srag_nbr,srag_edge);	
 	srag_node->set_size(srag_node->get_size() + srag_nbr->get_size());	
 
@@ -454,6 +455,7 @@ double BatchMergeMRFh::merge_by_order(vector<int>& config, vector<Label>& subset
 	    if(temp_edge){ //merge features
 		    //(*it)->print_edge();
 		    //(temp_edge)->print_edge();	
+                // PREVIOUS ERROR?: in the original the sizes would have been inreased twice?
 		_sfeature_mgr->merge_features(temp_edge,(*it));	
 		temp_edge->set_size(temp_edge->get_size() + (*it)->get_size());	
 		double prob= _sfeature_mgr->get_prob(temp_edge); 	
@@ -501,6 +503,7 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
 	if (label == MERGE){
 	    cost += MERGE_COST(srag_edge->get_weight(),thd);
 
+            // PREVIOUS ERROR?: in the original the sizes would have been inreased twice?
 	    _sfeature_mgr->merge_features(srag_node, srag_nbr);	
 	    srag_node->set_size(srag_node->get_size() + srag_nbr->get_size());	
 
@@ -513,6 +516,7 @@ double BatchMergeMRFh::merge_by_config(vector<int>& config, vector<Label>& subse
 		if(temp_edge){ //merge features
 		    //(*it)->print_edge();
 		    //(temp_edge)->print_edge();	
+                    // PREVIOUS ERROR?: in the original the sizes would have been inreased twice?
 		    _sfeature_mgr->merge_features(temp_edge,(*it));	
 		    temp_edge->set_size(temp_edge->get_size() + (*it)->get_size());	
 		    double prob= _sfeature_mgr->get_prob(temp_edge); 	

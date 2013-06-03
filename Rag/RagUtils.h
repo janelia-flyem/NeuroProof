@@ -9,10 +9,10 @@
 
 namespace NeuroProof {
 
+class RagNodeCombineAlg;
 
-// take smallest value edge and use that when connecting back
-void rag_merge_edge(Rag_uit& rag, RagEdge_uit* edge, RagNode_uit* node_keep, std::vector<std::string>& property_names);
-
+void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remove, 
+        RagNodeCombineAlg* combine_alg);
 }
 
 #endif

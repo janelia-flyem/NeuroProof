@@ -79,8 +79,6 @@ class RagEdge : public RagElement {
     void reassign_qloc(int pqloc){qloc=pqloc;};	
     int get_qloc(){return qloc;}; 	
 
-    void set_cc_id(int pid){cc_id = pid;}; 	
-    int get_cc_id(){return cc_id;}; 	
 
     void print_edge();
     
@@ -90,6 +88,7 @@ class RagEdge : public RagElement {
   private:
     RagEdge(RagNode<Region>* node1_, RagNode<Region>* node_);
     RagEdge<Region>&  operator=(const RagEdge<Region>& edge2) {}
+
     RagNode<Region>* node1;
     RagNode<Region>* node2;
     double weight;
@@ -100,7 +99,6 @@ class RagEdge : public RagElement {
 
     // FIX: potential bad additions to datastructure
     int qloc;	
-    int cc_id;	
     int edge_id;	
 };
 

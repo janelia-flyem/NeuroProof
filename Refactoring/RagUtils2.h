@@ -20,15 +20,6 @@ struct EdgeRanking {
 void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2, std::vector<double>& preds, 
         FeatureMgr * feature_mgr); 
 
-void rag_merge_edge_median(Rag_uit& rag, RagEdge_uit* edge, RagNode_uit* node_keep, MergePriority* priority, FeatureMgr* feature_mgr);
-
-void rag_merge_edge(Rag_uit& rag, RagEdge_uit* edge, RagNode_uit* node_keep, FeatureMgr* feature_mgr);
-
-void rag_merge_edge_priorityq(Rag_uit& rag, RagEdge_uit* edge, RagNode_uit* node_keep, MergePriorityQueue<QE>* priority, FeatureMgr* feature_mgr);
-
-void rag_merge_edge_flat(Rag_uit& rag, RagEdge_uit* edge, RagNode_uit* node_keep, std::vector<QE>& priority, FeatureMgr* feature_mgr);
-
-
 double mito_boundary_ratio(RagEdge_uit* edge);
 
 // assume that 0 body will never be added as a screen

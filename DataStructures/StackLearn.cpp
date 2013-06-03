@@ -1,6 +1,7 @@
 
 #include "Stack.h"
 #include <algorithm>
+#include "../Algorithms/FeatureJoinAlgs.h"
 
 using namespace NeuroProof;
 
@@ -126,6 +127,7 @@ void StackLearn::learn_edge_classifier_queue(double threshold, UniqueRowFeature_
     Q->set_storage(&all_edges);	
 
     clock_t start = clock();
+    PriorityQCombine node_combine_alg(feature_mgr, rag, Q); 
 
     while (!Q->is_empty()){
 	QE tmpqe = Q->heap_extract_min();	
@@ -178,7 +180,7 @@ void StackLearn::learn_edge_classifier_queue(double threshold, UniqueRowFeature_
 	if ( edge_label == -1 ){ //merge
 	    modify_assignment_after_merge(node1, node2);  	
 
-	    rag_merge_edge_priorityq(*rag, rag_edge, rag_node1, Q, feature_mgr);
+            rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
 	    watershed_to_body[node2] = node1;
 	    for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
 		watershed_to_body[*iter] = node1;
@@ -259,6 +261,7 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
 
     MergePriorityQueue<QE> *Q = new MergePriorityQueue<QE>(rag);
     Q->set_storage(&all_edges);	
+    PriorityQCombine node_combine_alg(feature_mgr, rag, Q); 
 
     clock_t start = clock();
 
@@ -304,7 +307,7 @@ void StackLearn::learn_edge_classifier_lash(double threshold, UniqueRowFeature_L
 	if ( edge_label == -1 ){ //merge
 	    modify_assignment_after_merge(node1, node2);  	
 
-	    rag_merge_edge_priorityq(*rag, rag_edge, rag_node1, Q, feature_mgr);
+            rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
 	    watershed_to_body[node2] = node1;
 	    for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
 		watershed_to_body[*iter] = node1;

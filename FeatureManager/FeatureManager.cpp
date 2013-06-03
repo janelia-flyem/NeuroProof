@@ -389,9 +389,6 @@ void FeatureMgr::merge_features2(RagNode_uit* node1, RagNode_uit* node2, RagEdge
     std::vector<void*>* edgeb_caches = 0;
 
 	
-    node1->incr_size(node2->get_size()+edgeb->get_size());
-    node1->incr_border_size(node2->get_border_size());
-
     if (node_caches.find(node1) != node_caches.end()) {
         node1_caches = &(node_caches[node1]);
     }
@@ -433,8 +430,6 @@ void FeatureMgr::merge_features(RagNode_uit* node1, RagNode_uit* node2)
 {
     std::vector<void*>* node1_caches = 0; 
     std::vector<void*>* node2_caches = 0;
-    node1->incr_size(node2->get_size());
-    node1->incr_border_size(node2->get_border_size());
 
     if (node_caches.find(node1) != node_caches.end()) {
         node1_caches = &(node_caches[node1]);
@@ -468,8 +463,6 @@ void FeatureMgr::merge_features(RagEdge_uit* edge1, RagEdge_uit* edge2)
     std::vector<void*>* edge1_caches = 0; 
     std::vector<void*>* edge2_caches = 0;
     
-    edge1->incr_size(edge2->get_size());
- 
     if (edge_caches.find(edge1) != edge_caches.end()) {
         edge1_caches = &(edge_caches[edge1]);
     }

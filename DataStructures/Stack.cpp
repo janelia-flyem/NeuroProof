@@ -1,6 +1,7 @@
 #include "Stack.h"
 
 #include "../Rag/Properties/MitoTypeProperty.h"
+#include "../Algorithms/FeatureJoinAlgs.h"
 
 using namespace NeuroProof;
 using namespace std;
@@ -526,6 +527,8 @@ int Stack::remove_inclusions()
     stack.clear();
     std::tr1::unordered_map<Label, Label> body_to_body; 
     std::tr1::unordered_map<Label, std::vector<Label> > merge_history2; 
+    
+    FeatureCombine node_combine_alg(feature_mgr, rag); 
 
     // merge nodes in biconnected_components (ignore components with '0' node)
     for (int i = 0; i < biconnected_components.size(); ++i) {
@@ -598,13 +601,9 @@ int Stack::remove_inclusions()
                 RagNode_uit* rag_node = rag->find_rag_node(region2);
                 assert(rag_node);
                 if (articulation_node != rag_node) {
-                    feature_mgr->merge_features(articulation_node, rag_node); 
+                    RagNode_uit::node_iterator n_iter = rag_node->node_begin();
+                    rag_join_nodes(*rag, *n_iter, rag_node, &node_combine_alg);  
                    
-                    for (RagNode_uit::edge_iterator iter2 = rag_node->edge_begin(); iter2 != rag_node->edge_end(); ++iter2) {
-                        feature_mgr->remove_edge(*iter2);
-                    } 
-                    rag->remove_rag_node(rag_node); 
-
                     watershed_to_body[region2] = articulation_region;
                     for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter2) {
                         watershed_to_body[*iter2] = articulation_region;
@@ -1181,7 +1180,7 @@ void Stack::agglomerate_rag(double threshold)
     MergePriority* priority = new ProbPriority(feature_mgr, rag);
     priority->initialize_priority(threshold);
 
-
+    DelayedPriorityCombine node_combine_alg(feature_mgr, rag, priority); 
     while (!(priority->empty())) {
 
         RagEdge_uit* rag_edge = priority->get_top_edge();
@@ -1193,8 +1192,8 @@ void Stack::agglomerate_rag(double threshold)
         RagNode_uit* rag_node1 = rag_edge->get_node1();
         RagNode_uit* rag_node2 = rag_edge->get_node2();
         Label node1 = rag_node1->get_node_id(); 
-        Label node2 = rag_node2->get_node_id(); 
-        rag_merge_edge_median(*rag, rag_edge, rag_node1, priority, feature_mgr);
+        Label node2 = rag_node2->get_node_id();
+        rag_join_nodes(*rag, rag_node1, rag_node2, &node_combine_alg);  
         watershed_to_body[node2] = node1;
         for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
             watershed_to_body[*iter] = node1;
