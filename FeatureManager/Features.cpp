@@ -279,8 +279,8 @@ unsigned long long FeatureInclusiveness::get_lengths(RagNode_uit* node, std::set
             count += (*iter)->get_size();
             lengths.insert((*iter)->get_size()); 
         }
-        count += (node->get_border_size());
-        lengths.insert(node->get_border_size());
+        count += (node->get_boundary_size());
+        lengths.insert(node->get_boundary_size());
         return count;
     }
 

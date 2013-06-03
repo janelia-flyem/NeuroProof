@@ -465,7 +465,7 @@ void Stack::build_rag()
                 }
 
                 if (!spot1 || !spot2 || !spot3 || !spot4 || !spot5 || !spot6) {
-                    node->incr_border_size();
+                    node->incr_boundary_size();
                 }
                 labels.clear();
 
@@ -506,7 +506,7 @@ int Stack::remove_inclusions()
 
     RagNode_uit* rag_node = 0;
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-        bool border = (*iter)->is_border();
+        bool border = (*iter)->is_boundary();
 
         if (border) {
             rag_node = *iter;
@@ -708,7 +708,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
             continue;
         }
 
-        bool border = rag_node->is_border();
+        bool border = rag_node->is_boundary();
         if (previous && border) {
             low_count[rag_node->get_node_id()] = 0;
             stack.push_back(OrderedPair(0, rag_node->get_node_id()));
@@ -1115,8 +1115,8 @@ void Stack::build_rag_border()
                 rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
                 rag_add_edge(rag, spot0, spot1, predictions2, feature_mgr);
 
-                node->incr_border_size();
-                node2->incr_border_size();
+                node->incr_boundary_size();
+                node2->incr_boundary_size();
 
                 border_edges.insert(rag->find_rag_edge(node, node2));
             }

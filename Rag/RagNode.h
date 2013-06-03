@@ -15,6 +15,8 @@
 #include <map>
 #include <set>
 
+#define BOUNDARY_SIZE "boundary-size"
+
 namespace NeuroProof {
 
 // forward declaration of RagEdge
@@ -58,9 +60,9 @@ class RagNode : public RagElement {
     
    
     // TODO: remove from interface 
-    void set_border_size(unsigned long long size_)
+    void set_boundary_size(unsigned long long size_)
     {
-        border_size = size_;
+        set_property(BOUNDARY_SIZE, size_);
     }
 
     /*!
@@ -79,15 +81,17 @@ class RagNode : public RagElement {
     }
 
     // TODO: remove from interface
-    void incr_border_size(unsigned long long incr = 1)
+    void incr_boundary_size(unsigned long long incr = 1)
     {
-        border_size += incr;
+        unsigned long long boundary_size = 
+            get_property<unsigned long long>(BOUNDARY_SIZE);
+        set_property(BOUNDARY_SIZE, (boundary_size + incr));
     }
 
     // TODO: remove from 
-    unsigned long long get_border_size()
+    unsigned long long get_boundary_size()
     {
-        return border_size;
+        return get_property<unsigned long long>(BOUNDARY_SIZE);
     }
 
     /*!
@@ -249,21 +253,23 @@ class RagNode : public RagElement {
         return node_iterator(this, edges.end());
     }
  
-    bool is_border()
+    bool is_boundary()
     {
-        return (border_size != 0);
+        return (get_property<unsigned long long>(BOUNDARY_SIZE) != 0);
     }
 
 
   private:
 
     RagNode<Region>&  operator=(const RagNode<Region>& node2) {}
-    RagNode(Region node_int_) : size(0), border_size(0), node_int(node_int_) {}
-    unsigned long long size;
-    unsigned long long border_size;
+    RagNode(Region node_int_) : size(0), node_int(node_int_)
+    {
+        set_property(BOUNDARY_SIZE, (unsigned long long)(0));
+    }
+    
     RagEdgeList edges;
+    unsigned long long size;
     Region node_int;
-
 };
 
 typedef unsigned int Node_uit;
@@ -277,7 +283,7 @@ template<typename Region> unsigned long long RagNode<Region>::compute_border_len
         }
         count += (*iter)->get_size();
     }
-    count += (get_border_size());
+    count += (get_boundary_size());
 
     return count;
 

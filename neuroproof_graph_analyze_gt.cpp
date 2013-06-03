@@ -364,7 +364,7 @@ void load_orphans(Stack* stack, Rag_uit* rag, std::tr1::unordered_set<Label>& or
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= synapse_threshold) {
             RagNode_uit* node = rag->find_rag_node(iter->first);
-            if (!(node->is_border())) {
+            if (!(node->is_boundary())) {
                 orphans.insert(iter->first);
             }
         }
@@ -372,7 +372,7 @@ void load_orphans(Stack* stack, Rag_uit* rag, std::tr1::unordered_set<Label>& or
 
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
-        if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
+        if ((!((*iter)->is_boundary())) && ((*iter)->get_size() >= threshold)) {
             orphans.insert((*iter)->get_node_id());
         }
     }
@@ -388,7 +388,7 @@ int num_synapse_errors(Stack* stack, Rag_uit* rag, int threshold)
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= threshold) {
             RagNode_uit* node = rag->find_rag_node(iter->first);
-            if (!(node->is_border())) {
+            if (!(node->is_boundary())) {
                 ++synapse_errors;
             }
         }
@@ -401,7 +401,7 @@ int num_body_errors(Rag_uit* rag, int threshold)
     int body_errors = 0;
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
-        if ((!((*iter)->is_border())) && ((*iter)->get_size() >= threshold)) {
+        if ((!((*iter)->is_boundary())) && ((*iter)->get_size() >= threshold)) {
             ++body_errors;
         }
     }
@@ -713,7 +713,7 @@ void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, 
     unsigned int id = 0;
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
-        if (!((*iter)->is_border())) {
+        if (!((*iter)->is_boundary())) {
             orphan_bodies[id++] = (*iter)->get_node_id(); 
         }
     }

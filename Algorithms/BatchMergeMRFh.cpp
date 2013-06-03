@@ -553,7 +553,7 @@ void BatchMergeMRFh::build_srag(RagNode_uit* pnode, set<Label>& subset)
     	
     RagNode_uit* srag_common_node = _srag->insert_rag_node(pnode->get_node_id());
     _sfeature_mgr->copy_cache(rag_node_cache[pnode], srag_common_node);
-    srag_common_node->set_border_size(pnode->get_border_size());	
+    srag_common_node->set_boundary_size(pnode->get_boundary_size());	
     srag_common_node->set_size(pnode->get_size());
 
     for(set<Label>::iterator it = subset.begin(); it != subset.end(); it++){
@@ -562,7 +562,7 @@ void BatchMergeMRFh::build_srag(RagNode_uit* pnode, set<Label>& subset)
 
     	RagNode_uit* srag_node1 = _srag->insert_rag_node(rag_nbr1->get_node_id());
     	_sfeature_mgr->copy_cache(rag_node_cache[rag_nbr1], srag_node1);
-    	srag_node1->set_border_size(rag_nbr1->get_border_size());	
+    	srag_node1->set_boundary_size(rag_nbr1->get_boundary_size());	
     	srag_node1->set_size(rag_nbr1->get_size());
 	
     } 	

@@ -39,8 +39,8 @@ void NeuroProof::rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_ui
     }
 
     node_keep->incr_size(node_remove->get_size());
-    node_keep->incr_border_size(node_remove->get_border_size());
-    
+    node_keep->incr_boundary_size(node_remove->get_boundary_size());
+     
     combine_alg->post_node_join(node_keep, node_remove);
     rag.remove_rag_node(node_remove);     
 }

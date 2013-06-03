@@ -128,7 +128,7 @@ class Stack {
 
     bool is_orphan(RagNode_uit* node)
     {
-        return !(node->is_border());
+        return !(node->is_boundary());
     }
         
     Rag_uit* get_rag()
