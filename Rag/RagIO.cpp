@@ -49,7 +49,7 @@ Rag_uit* create_rag_from_json(Json::Value& json_reader_vals)
             return 0;
         }
 
-        for (int i = 0; i < edge_list.size(); ++i) {
+        for (unsigned int i = 0; i < edge_list.size(); ++i) {
             Node_uit node1 = edge_list[i]["node1"].asUInt();
             Node_uit node2 = edge_list[i]["node2"].asUInt();
             unsigned int size1 = edge_list[i].get("size1", 1).asUInt();

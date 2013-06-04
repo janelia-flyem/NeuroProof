@@ -1,18 +1,19 @@
 #ifndef RAGUTILS_H
 #define RAGUTILS_H
 
-#include "Rag.h"
-
-#include <map>
-#include <string>
-#include <iostream>
-
 namespace NeuroProof {
 
 class RagNodeCombineAlg;
 
-void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remove, 
-        RagNodeCombineAlg* combine_alg);
+template <typename Region>
+class Rag;
+template <typename Region>
+class RagNode;
+template <typename Region>
+class RagEdge;
+
+void rag_join_nodes(Rag<unsigned int>& rag, RagNode<unsigned int>* node_keep,
+        RagNode<unsigned int>* node_remove, RagNodeCombineAlg* combine_alg);
 }
 
 #endif

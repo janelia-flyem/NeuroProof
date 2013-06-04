@@ -62,6 +62,7 @@ else ()
     
     # Compile NeuroProof components
 
+    enable_testing()
     add_subdirectory (Rag)
     add_subdirectory (FeatureManager)
     add_subdirectory (Algorithms)
@@ -151,7 +152,6 @@ else ()
 
 
     # ctests
-    enable_testing()
 
     add_test("test1_sample1_fullpredict"
         ${PYTHON_EXE}
