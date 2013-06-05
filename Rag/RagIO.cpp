@@ -49,6 +49,8 @@ Rag_uit* create_rag_from_json(Json::Value& json_reader_vals)
             return 0;
         }
 
+        // edge list must contain a node1 and node2 unique identifier
+        // other properties are specied for the nodes and edge
         for (unsigned int i = 0; i < edge_list.size(); ++i) {
             Node_uit node1 = edge_list[i]["node1"].asUInt();
             Node_uit node2 = edge_list[i]["node2"].asUInt();
@@ -71,15 +73,16 @@ Rag_uit* create_rag_from_json(Json::Value& json_reader_vals)
                 rag_node2 = rag->insert_rag_node(node2);
                 rag_node2->set_size(size2);
             }
-           
+          
+            // edge should be unique, might not need this check 
             if (!rag->find_rag_edge(rag_node1, rag_node2)) {
                 RagEdge_uit* rag_edge = rag->insert_rag_edge(rag_node1, rag_node2);
                 rag_edge->set_weight(weight);
-          
+         
+                // load x, y, and z location for all edges 
                 unsigned int x, y, z;
                 Json::Value location = edge_list[i]["location"];
                 if (!location.empty()) {
-                    //throw ErrMsg("location field does not exist for edge");
                     x = location[(unsigned int)(0)].asUInt();
                     y = location[(unsigned int)(1)].asUInt();
                     z = location[(unsigned int)(2)].asUInt();
@@ -141,6 +144,9 @@ bool create_json_from_rag(Rag_uit* rag, Json::Value& json_writer, bool debug_mod
             }
             ++edge_num;
             Json::Value json_edge;
+
+            // while node1 and node2 unique identifiers are mandatory, other
+            // properties are exported regardless of whether they were used 
             json_edge["node1"] = (*iter)->get_node1()->get_node_id();
             json_edge["node2"] = (*iter)->get_node2()->get_node_id();
             json_edge["size1"] = (unsigned int)((*iter)->get_node1()->get_size());

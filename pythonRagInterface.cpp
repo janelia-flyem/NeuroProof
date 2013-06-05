@@ -289,7 +289,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
 
 
     // denormalized edge data structure (unique for a node pair)
-    class_<RagEdge_uit>("RagEdge", no_init)
+    class_<RagEdge_uit, boost::noncopyable>("RagEdge", no_init)
         // get first rag node connected to edge
         .def("get_node1", &RagEdge_uit::get_node1, return_value_policy<reference_existing_object>()) 
         // get second rag node connected to edge
@@ -303,7 +303,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         ;
     
     // denormalized node data structure (unique for a node id)
-    class_<RagNode_uit>("RagNode", no_init)
+    class_<RagNode_uit, boost::noncopyable>("RagNode", no_init)
         // number of nodes connected to node
         .def("node_degree", &RagNode_uit::node_degree)
         // normalized, unique id for node (node_id, node_id is a normalized id for an edge)
