@@ -64,6 +64,7 @@ else ()
 
     enable_testing()
     add_subdirectory (Rag)
+    add_subdirectory (Stack)
     add_subdirectory (FeatureManager)
     add_subdirectory (Algorithms)
     add_subdirectory (Classifier)
