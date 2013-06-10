@@ -554,15 +554,7 @@ int Stack::remove_inclusions()
         }
         if (!found_zero) {
             Label articulation_region = biconnected_components[i][biconnected_components[i].size()-1].region1;
-            unsigned long long total_size = 0;
             RagNode_uit* articulation_node = rag->find_rag_node(articulation_region);
-            for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
-                Label region1 = *iter;
-                RagNode_uit* rag_node = rag->find_rag_node(region1);
-                total_size += rag_node->get_size();
-
-            }
-
             bool found_preserve = false; 
             for (std::tr1::unordered_set<Label>::iterator iter = merge_nodes.begin(); iter != merge_nodes.end(); ++iter) {
                 Label region2 = *iter;
@@ -571,6 +563,7 @@ int Stack::remove_inclusions()
                 }
 
                 RagNode_uit* rag_node = rag->find_rag_node(region2);
+
                 assert(rag_node);
                 if (articulation_node != rag_node) {
                     for (RagNode_uit::edge_iterator edge_iter = rag_node->edge_begin();
@@ -601,24 +594,26 @@ int Stack::remove_inclusions()
                 assert(rag_node);
                 if (articulation_node != rag_node) {
                     RagNode_uit::node_iterator n_iter = rag_node->node_begin();
+                  
+                    Label other_id = (*n_iter)->get_node_id();
                     rag_join_nodes(*rag, *n_iter, rag_node, &node_combine_alg);  
-                   
-                    watershed_to_body[region2] = articulation_region;
+ 
+                    watershed_to_body[region2] = other_id;
                     for (std::vector<Label>::iterator iter2 = merge_history[region2].begin(); iter2 != merge_history[region2].end(); ++iter2) {
-                        watershed_to_body[*iter2] = articulation_region;
+                        watershed_to_body[*iter2] = other_id;
                     }
 
-                    body_to_body[region2] = articulation_region;
+                    body_to_body[region2] = other_id;
                     for (std::vector<Label>::iterator iter2 = merge_history2[region2].begin(); iter2 != merge_history2[region2].end(); ++iter2) {
-                        body_to_body[*iter2] = articulation_region;
+                        body_to_body[*iter2] = other_id;
                     }
 
-                    merge_history[articulation_region].push_back(region2);
-                    merge_history[articulation_region].insert(merge_history[articulation_region].end(), merge_history[region2].begin(), merge_history[region2].end());
+                    merge_history[other_id].push_back(region2);
+                    merge_history[other_id].insert(merge_history[other_id].end(), merge_history[region2].begin(), merge_history[region2].end());
                     merge_history.erase(region2);
 
-                    merge_history2[articulation_region].push_back(region2); 
-                    merge_history2[articulation_region].insert(merge_history2[articulation_region].end(), merge_history2[region2].begin(), merge_history2[region2].end());
+                    merge_history2[other_id].push_back(region2); 
+                    merge_history2[other_id].insert(merge_history2[other_id].end(), merge_history2[region2].begin(), merge_history2[region2].end());
                     merge_history2.erase(region2);
                 }
             }
