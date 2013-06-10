@@ -677,16 +677,24 @@ void run_edge(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
 }
 
 void set_rag_probs(Stack* seg_stack, Rag_uit* seg_rag) {
+//    std::vector<int> bincount(101,0); 
+//    std::vector<int> splitcount(101,0); 
+    
     for (Rag_uit::edges_iterator iter = seg_rag->edges_begin();
             iter != seg_rag->edges_end(); ++iter) {
         // ?? mito mode a problem ??
+      //  bincount[int((*iter)->get_weight() * 100)]++;
+
         int val = seg_stack->decide_edge_label((*iter)->get_node1(), (*iter)->get_node2()); 
         if (val == -1) {
             (*iter)->set_weight(0.0);
         } else {
+//            splitcount[int((*iter)->get_weight() * 100)]++;
             (*iter)->set_weight(1.0);
         }
     }
+
+
 }
 
 void run_recipe(string recipe_filename, Stack* seg_stack, Stack* synapse_stack, Stack* gt_stack,
@@ -853,6 +861,11 @@ int main(int argc, char** argv)
         // create ground truth assignments to be maintained with rag
         Rag_uit* rag_comp = new Rag_uit(*seg_rag);
         set_rag_probs(seg_stack, rag_comp);
+
+        /*
+        for (Rag_uit::edges_iterator iter = seg_rag->edges_begin(); iter != seg_rag->edges_end(); ++iter) {
+            (*iter)->set_weight(redo_probs[int((*iter)->get_weight() * 100)]);
+        }*/
 
         // set synapse exclusions and create synapse stack for VI comparisons 
         Stack* synapse_stack = 0;

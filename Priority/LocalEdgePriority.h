@@ -1360,9 +1360,23 @@ void LocalEdgePriority::grabAffinityPairs(RagNode_uit* rag_node_head, int path_r
                 }
 
                 double edge_prob = 1.0 - (*edge_iter)->get_weight();
+            
+                /* 
+                if (edge_prob < 0.06) {
+
+                } else if (edge_prob < 0.1) {
+                    edge_prob -= 0.05;
+                } else if (edge_prob < 0.15) {
+                    edge_prob -= 0.10;
+                } else if (edge_prob < 0.4) {
+                    edge_prob -= 0.18;
+                } else if (edge_prob < 0.5) {
+                    edge_prob -= 0.05;
+                }*/
                 if (edge_prob < 0.000001) {
                     continue;
                 }
+                
                 edge_prob = best_node_curr.weight * edge_prob;
                 if (edge_prob < connection_threshold) {
                     continue;
