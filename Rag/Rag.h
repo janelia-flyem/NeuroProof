@@ -18,6 +18,8 @@
 // has set used for efficient accessing of edges and nodes
 #include <tr1/unordered_set>
 
+#include <boost/shared_ptr.hpp>
+
 namespace NeuroProof {
 
 /*!
@@ -227,6 +229,7 @@ class Rag {
 
 // unsigned int Rag type used in primarily in downstream NeuroProof
 typedef Rag<Node_uit> Rag_uit;
+typedef boost::shared_ptr<Rag_uit> RagPtr;
 
 
 template <typename Region> Rag<Region>::Rag()

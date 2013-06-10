@@ -24,9 +24,8 @@ void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2, std::vector<
 
     if (feature_mgr) {
         feature_mgr->add_val(preds, edge);
-    } else {
-        edge->incr_size();
     }
+    edge->incr_size();
 }  
 
 double mito_boundary_ratio(RagEdge_uit* edge)

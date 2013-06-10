@@ -424,9 +424,8 @@ void Stack::build_rag()
 
                 if (feature_mgr && !median_mode) {
                     feature_mgr->add_val(predictions, node);
-                } else {
-                    node->incr_size();
                 }
+                node->incr_size();
 
                 if (!predictions.empty() && merge_mito) {
                     mito_probs[spot0].update(predictions); 
@@ -1111,6 +1110,8 @@ void Stack::build_rag_border()
                     feature_mgr->add_val(predictions, node);
                     feature_mgr->add_val(predictions2, node2);
                 }
+                node->incr_size();
+                node2->incr_size();
 
                 rag_add_edge(rag, spot0, spot1, predictions, feature_mgr);
                 rag_add_edge(rag, spot0, spot1, predictions2, feature_mgr);

@@ -82,7 +82,7 @@ class FeatureMgr {
 
     void add_val(std::vector<double>& vals, RagNode_uit* node)
     {
-        node->incr_size();
+        //node->incr_size();
         assert(vals.size() == num_channels);
         unsigned starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
@@ -100,7 +100,7 @@ class FeatureMgr {
 
     void add_val(std::vector<double>& vals, RagEdge_uit* edge)
     { 
-        edge->incr_size();
+        //edge->incr_size();
         assert(vals.size() == num_channels);
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
