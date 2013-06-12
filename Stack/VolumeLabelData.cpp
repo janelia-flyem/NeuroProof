@@ -62,13 +62,5 @@ void VolumeLabelData::rebase_labels()
     label_mapping.clear();
 }
 
-Label_t VolumeLabelData::operator()(unsigned int x, unsigned int y, unsigned int z)
-{
-    Label_t label = this->MultiArrayView<3,Label_t>::operator()(x,y,z);
-    if (label_mapping.find(label) != label_mapping.end()) {
-        label = label_mapping[label];
-    }
-    return label;
-}
 
 

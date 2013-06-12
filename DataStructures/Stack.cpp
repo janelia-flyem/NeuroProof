@@ -1113,8 +1113,6 @@ void Stack::build_rag_border()
 
                 node->incr_boundary_size();
                 node2->incr_boundary_size();
-
-                border_edges.insert(rag->find_rag_edge(node, node2));
             }
         }
     }
@@ -1128,20 +1126,12 @@ void Stack::build_rag_border()
 
 void Stack::disable_nonborder_edges()
 {
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        if (border_edges.find(*iter) == border_edges.end()) {
-            (*iter)->set_false_edge(true);
-        }
-    }
+    return;
 }
 
 void Stack::enable_nonborder_edges()
 {
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-        if (!((*iter)->is_preserve())) {
-            (*iter)->set_false_edge(false);
-        }
-    }
+    return;
 }
 
 // merge node 2 onto node 1
@@ -1175,7 +1165,7 @@ void Stack::agglomerate_rag(double threshold)
 
     MergePriority* priority = new ProbPriority(feature_mgr, rag);
     priority->initialize_priority(threshold);
-
+    
     DelayedPriorityCombine node_combine_alg(feature_mgr, rag, priority); 
     while (!(priority->empty())) {
 
@@ -1197,41 +1187,6 @@ void Stack::agglomerate_rag(double threshold)
         merge_history[node1].push_back(node2);
         merge_history[node1].insert(merge_history[node1].end(), merge_history[node2].begin(), merge_history[node2].end());
         merge_history.erase(node2);
-    }
-
-    EdgeHash border_edges2 = border_edges;
-    border_edges.clear();
-    for (EdgeHash::iterator iter = border_edges2.begin(); iter != border_edges2.end(); ++iter) {
-        Label body1 = watershed_to_body[(*iter)->get_node1()->get_node_id()];
-        Label body2 = watershed_to_body[(*iter)->get_node2()->get_node_id()];
-
-        if (body1 != body2) {
-            border_edges.insert(rag->find_rag_edge(body1, body2)); 
-        
-            /*
-            RagNode_uit* n1 = rag->find_rag_node(body1);
-            RagNode_uit* n2 = rag->find_rag_node(body2);
-            // print info on edges
-            RagEdge_uit* temp_edge = rag->find_rag_edge(body1, body2);
-            unsigned long long edge_size = temp_edge->get_size();
-            unsigned long long total_edge_size1 = 0;
-            unsigned long long total_edge_size2 = 0;
-
-            for (RagNode_uit::edge_iterator eiter = n1->edge_begin(); eiter != n1->edge_end(); ++eiter) {
-                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
-                    total_edge_size1 += (*eiter)->get_size();
-                }
-            }
-            for (RagNode_uit::edge_iterator eiter = n2->edge_begin(); eiter != n2->edge_end(); ++eiter) {
-                if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
-                    total_edge_size2 += (*eiter)->get_size();
-                }
-            }
-            double prob1 = edge_size / double(total_edge_size1);
-            double prob2 = edge_size / double(total_edge_size2);
-            std::cout << "Body 1: " << body1 << " Body 2: " << body2 << " Size: " << edge_size << " overlap: " << prob1 << " " << prob2 << std::endl;
-            */
-        }
     }
 
     delete priority;

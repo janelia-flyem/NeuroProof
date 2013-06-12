@@ -35,6 +35,7 @@ class VolumeData : public vigra::MultiArray<3, T> {
 
   protected:
     VolumeData() : vigra::MultiArray<3,T>() {}
+    VolumeData(const vigra::MultiArrayView<3, T>& view_) : vigra::MultiArray<3,T>(view_) {}
 };
 
 
@@ -82,14 +83,12 @@ std::vector<boost::shared_ptr<VolumeData<T> > >
     shape2[1] = shape[2];
     shape2[2] = shape[1];
 
-    unsigned long long offset = 0;
+    //unsigned long long offset = 0;
     for (int i = 0; i < shape[0]; ++i) {
         VolumeData<T>* volumedata = new VolumeData<T>;
-        volumedata->reshape(shape2);
-        volumedata->allocate(volumedata->m_ptr, volumedata->elementCount(),
-                volumedata_temp.begin()+offset); 
-         
-        offset += volumedata->elementCount();
+        vigra::TinyVector<vigra::MultiArrayIndex, 1> channel(i);
+        (*volumedata) = volumedata_temp.bindOuter(channel); 
+        
         vol_array.push_back(boost::shared_ptr<VolumeData<T> >(volumedata));
     }
 
@@ -105,9 +104,9 @@ void VolumeData<T>::serialize(const char* h5_name, const char * h5_path)
 
 
 #define volume_forXYZ(volume,x,y,z) \
-    for (int z = 0; z < (int)(volume.shape(2); ++z) \
-        for (int y = 0; y < (int)(volume.shape(1); ++y) \
-            for (int x = 0; x < (int)(volume.shape(0); ++x) 
+    for (int z = 0; z < (int)(volume).shape(2); ++z) \
+        for (int y = 0; y < (int)(volume).shape(1); ++y) \
+            for (int x = 0; x < (int)(volume).shape(0); ++x) 
 
 
 }

@@ -20,7 +20,19 @@ class VolumeLabelData : public VolumeData<Label_t> {
     void reassign_label(Label_t old_label, Label_t new_label); 
     void rebase_labels();
 
-    Label_t operator()(unsigned int x, unsigned int y, unsigned int z);
+    Label_t operator()(unsigned int x, unsigned int y, unsigned int z)
+    {
+        Label_t label = this->MultiArrayView<3,Label_t>::operator()(x,y,z);
+        if (label_mapping.find(label) != label_mapping.end()) {
+            label = label_mapping[label];
+        }
+        return label;
+    }
+
+    void set(unsigned int x, unsigned int y, unsigned int z, Label_t val)
+    {
+        this->MultiArrayView<3,Label_t>::operator()(x,y,z) = val;
+    }
 
   private:
     VolumeLabelData() : VolumeData<Label_t>() {}

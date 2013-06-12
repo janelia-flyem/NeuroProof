@@ -8,9 +8,19 @@
 #ifndef RAGUTILS_H
 #define RAGUTILS_H
 
+#include <vector>
+
+namespace boost {
+
+template <typename T>
+class shared_ptr;
+
+}
+
 namespace NeuroProof {
 
 class RagNodeCombineAlg;
+class OrderedPair;
 
 template <typename Region>
 class Rag;
@@ -34,6 +44,15 @@ class RagEdge;
 */
 void rag_join_nodes(Rag<unsigned int>& rag, RagNode<unsigned int>* node_keep,
         RagNode<unsigned int>* node_remove, RagNodeCombineAlg* combine_alg);
+
+/*!
+ * Computes all of the biconnected components for the given graph
+ * \param rag Rag used to compute bi-connected components
+ * \param biconnected_components results from algorithm
+*/
+void find_biconnected_components(boost::shared_ptr<Rag<unsigned int> > rag,
+    std::vector<std::vector<OrderedPair> >& biconnected_components);
+
 }
 
 #endif
