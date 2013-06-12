@@ -374,6 +374,13 @@ double FeatureMgr::get_prob(RagEdge_uit* edge)
         }
 
         prob = 1-prob;
+
+        try {
+            prob = edge->get_property<double>("orig-prob");
+        } catch (ErrMsg& msg) {
+            edge->set_property("orig-prob", prob);
+        }
+
     } else {
         prob = feature_results[0];
     }

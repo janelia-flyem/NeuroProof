@@ -42,10 +42,17 @@ void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remo
             preserve = preserve || final_edge->is_preserve(); 
             false_edge = false_edge && final_edge->is_false_edge(); 
             final_edge->incr_size((*iter)->get_size());
-
             if (combine_alg) {
                 combine_alg->post_edge_join(final_edge, *iter);
             }
+
+            try {
+                double prob1 = (*iter)->get_property<double>("orig-prob");
+                double prob2 = final_edge->get_property<double>("orig-prob");
+                final_edge->set_property("orig-prob", double(std::min(prob1, prob2)));
+            } catch (ErrMsg& msg) {
+            }
+
         } else {
             // move old edge to newly created edge
             final_edge = rag.insert_rag_edge(node_keep, other_node);
