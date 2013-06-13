@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     BioStackController stack_controller(&stack);
 
     cout<<"Building RAG ..."; 	
-    stack_controller.build_rag();
+    stack_controller.build_rag_mito();
     cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
    
     // add synapse constraints (send json to stack function)

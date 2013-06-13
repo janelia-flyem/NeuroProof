@@ -150,6 +150,7 @@ void BioStackController::set_synapse_exclusions(const char* synapse_json)
 {
     RagPtr rag = biostack->get_rag();
     VolumeLabelPtr labelvol = biostack->get_labelvol();
+    unsigned int ysize = labelvol->shape(1);
 
     if (!rag) {
         throw ErrMsg("No RAG defined for stack");
@@ -177,7 +178,7 @@ void BioStackController::set_synapse_exclusions(const char* synapse_json)
         if (!location.empty()) {
             vector<unsigned int> loc;
             loc.push_back(location[(unsigned int)(0)].asUInt());
-            loc.push_back(location[(unsigned int)(1)].asUInt());
+            loc.push_back(ysize - location[(unsigned int)(1)].asUInt() - 1);
             loc.push_back(location[(unsigned int)(2)].asUInt());
             synapse_locations.push_back(loc);
             locations.push_back(loc);
@@ -188,7 +189,7 @@ void BioStackController::set_synapse_exclusions(const char* synapse_json)
             if (!location.empty()) {
                 vector<unsigned int> loc;
                 loc.push_back(location[(unsigned int)(0)].asUInt());
-                loc.push_back(location[(unsigned int)(1)].asUInt());
+                loc.push_back(ysize - location[(unsigned int)(1)].asUInt() - 1);
                 loc.push_back(location[(unsigned int)(2)].asUInt());
                 synapse_locations.push_back(loc);
                 locations.push_back(loc);
