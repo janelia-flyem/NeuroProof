@@ -6,7 +6,7 @@
 #include "../Rag/RagUtils.h"
 #include "../Algorithms/MergePriorityFunction.h"
 #include "../Algorithms/MergePriorityQueue.h"
-#include "MitoTypeProperty.h"
+#include "../BioPriors/MitoTypeProperty.h"
 
 namespace NeuroProof {
 

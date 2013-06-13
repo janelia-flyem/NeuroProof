@@ -1,5 +1,5 @@
 #include "BatchMergeMRFh.h"
-#include "../Refactoring/MitoTypeProperty.h"
+#include "../BioPriors/MitoTypeProperty.h"
 
 #include <ctime>
 #include <cstdlib>
