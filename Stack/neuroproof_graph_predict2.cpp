@@ -158,11 +158,11 @@ int main(int argc, char** argv)
     }
     
     remove_inclusions(stack_controller);
-    
-#if 0
+   #if 0 
     switch (options.agglo_type) {
         case 0: 
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
+            AgglomerateFlat
             stackp->agglomerate_rag_flat(options.threshold);	
             break;
         case 1:
@@ -185,9 +185,8 @@ int main(int argc, char** argv)
             break;
         default: throw ErrMsg("Illegal agglomeration type specified");
     }
-    cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
-    
-
+    cout << "Done with "<< stack_controller.get_num_labels()<< " regions\n";
+   
     if (options.post_synapse_threshold > 0.00001) {
         cout << "Agglomerating (agglo) ignoring synapse constraints upto threshold "
             << options.post_synapse_threshold << endl;
