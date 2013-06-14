@@ -12,6 +12,11 @@ class StackController {
   public:
     StackController(Stack2* stack_) : stack(stack_), updated(false) {}
 
+    Stack2* get_stack()
+    {
+        return stack;
+    }
+
     void build_rag();
     int remove_inclusions();
     void merge_labels(Label_t label1, Label_t label2, RagNodeCombineAlg* combine_alg);

@@ -4,6 +4,8 @@
 #include "../Rag/RagIO.h"
 
 #include "../Utilities/OptionParser.h"
+#include "../BioPriors/StackAgglom.h"
+
 
 #include <fstream>
 #include <sstream>
@@ -158,30 +160,27 @@ int main(int argc, char** argv)
     }
     
     remove_inclusions(stack_controller);
-   #if 0 
+    
     switch (options.agglo_type) {
         case 0: 
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
-            AgglomerateFlat
-            stackp->agglomerate_rag_flat(options.threshold);	
+            agglomerate_stack_flat(stack_controller, options.threshold, options.merge_mito);
             break;
         case 1:
             cout<<"Agglomerating (agglo) upto threshold "<< options.threshold<< " ..."; 
-            stackp->agglomerate_rag(options.threshold, false);
+            agglomerate_stack(stack_controller, options.threshold, options.merge_mito);
             break;        
         case 2:
             cout<<"Agglomerating (mrf) upto threshold "<< options.threshold<< " ..."; 
-            stackp->agglomerate_rag_mrf(options.threshold, false,
-                    options.output_filename, options.classifier_filename);	
+            agglomerate_stack_mrf(stack_controller, options.threshold, options.merge_mito);
             break;
         case 3:
             cout<<"Agglomerating (queue) upto threshold "<< options.threshold<< " ..."; 
-            stackp->agglomerate_rag_queue(options.threshold, false);	
+            agglomerate_stack_queue(stack_controller, options.threshold, options.merge_mito);
             break;
         case 4:
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
-            stackp->agglomerate_rag_flat(options.threshold, false, options.output_filename,
-                    options.classifier_filename);	
+            agglomerate_stack_flat(stack_controller, options.threshold, options.merge_mito);
             break;
         default: throw ErrMsg("Illegal agglomeration type specified");
     }
@@ -191,21 +190,22 @@ int main(int argc, char** argv)
         cout << "Agglomerating (agglo) ignoring synapse constraints upto threshold "
             << options.post_synapse_threshold << endl;
         string dummy1, dummy2;
-        stackp->agglomerate_rag(options.post_synapse_threshold, false,
-                dummy1, dummy2, true);
-        cout << "Done with "<< stackp->get_num_bodies()<< " regions\n";
+        agglomerate_stack(stack_controller, options.post_synapse_threshold,
+                    options.merge_mito, false, true);
+        cout << "Done with "<< stack_controller.get_num_labels() << " regions\n";
     }
     
     remove_inclusions(stack_controller);
 
     if (options.merge_mito){
 	cout<<"Merge Mitochondria (border-len) ..."; 
-	stackp->merge_mitochondria_a();
-    	cout<<"done with "<< stackp->get_num_bodies()<< " regions\n";	
+        agglomerate_stack_mito(stack_controller);
+    	cout<<"done with "<< stack_controller.get_num_labels() << " regions\n";	
 
         remove_inclusions(stack_controller);        
     } 	
 
+#if 0
     if (options.watershed_threshold > 0) {
         size_t dims_out[3];
         dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;

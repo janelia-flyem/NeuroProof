@@ -343,7 +343,7 @@ void StackController::compute_vi(double& merge, double& split,
     split = HgivenG;
 }
 
- 
+// retain label2 
 void StackController::merge_labels(Label_t label1, Label_t label2,
         RagNodeCombineAlg* combine_alg)
 {
