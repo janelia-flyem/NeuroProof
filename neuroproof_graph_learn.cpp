@@ -255,34 +255,10 @@ int main(int argc, char** argv)
 	delete stackp;
 
     }
-// end for
 
     eclfr->save_classifier(classifier_filename.c_str());  	
-    //printf("Classifier saved to %s\n",classifier_filename.c_str());
 
-
- 	
-     
-    //time(&end);	
-    //printf("Time elapsed: %.2f\n", (difftime(end,start))*1.0/60);
-
- 
-//    printf("Time elapsed: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
-
-
-//    if (watershed_data)  	
-//	delete[] watershed_data;
-//    delete[] zp_watershed_data;
-
-//    if (prediction_data)  	
-//	delete[] prediction_data;
-  //  delete[] prediction_ch1;	
-
-//    if (groundtruth_data)  	
-//	delete[] groundtruth_data;
-  //  delete[] zp_groundtruth_data;	
-
-     	
+    	
 
     return 0;
 }
