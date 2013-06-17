@@ -2,14 +2,19 @@
 #include "../Rag/RagUtils.h"
 #include "../Refactoring/RagUtils2.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
+#include "../Rag/RagIO.h"
 
 #include <vigra/multi_morphology.hxx>
+#include <vigra/seededregiongrowing3d.hxx>
+#include <fstream>
 
 using std::vector;
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
 
 namespace NeuroProof {
+
+static const char * SEG_DATASET_NAME = "stack";
 
 void StackController::build_rag()
 {
@@ -179,6 +184,119 @@ void StackController::dilate_labelvol(int disc_size)
     stack->set_labelvol(labelvol);
 }
 
+int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
+            int threshold, unordered_set<Label_t> exclusions)
+{
+    VolumeLabelPtr labelvol = stack->get_labelvol(); 
+    
+    std::tr1::unordered_map<Label, unsigned long long> regions_sz;
+    labelvol->rebase_labels();
+
+    for (VolumeLabelData::iterator iter = labelvol->begin();
+            iter != labelvol->end(); ++iter) {
+        regions_sz[*iter]++;
+    }
+
+    int num_removed = 0;    
+    unordered_set<Label_t> small_regions;
+
+    for(unordered_map<Label_t, unsigned long long>::iterator it = regions_sz.begin();
+                it != regions_sz.end(); it++) {
+	if ((exclusions.find(it->first) == exclusions.end()) &&
+                ((it->second) < threshold)) {
+	    small_regions.insert(it->first);
+	    ++num_removed;	
+        }
+    }
+
+    for (VolumeLabelData::iterator iter = labelvol->begin();
+            iter != labelvol->end(); ++iter) {
+	if (small_regions.find(*iter) != small_regions.end()) {
+	    *iter = 0;
+        }
+    }    
+    
+    vigra::ArrayOfRegionStatistics<vigra::SeedRgDirectValueFunctor<double> > stats;
+    vigra::seededRegionGrowing3D(srcMultiArrayRange(*boundary_pred), destMultiArray(*labelvol),
+                               destMultiArray(*labelvol), stats);
+
+
+    stack->set_rag(RagPtr());
+
+    return num_removed;
+
+}
+
+void StackController::serialize_stack(const char* h5_name, const char* graph_name, 
+        bool optimal_prob_edge_loc)
+{
+    serialize_graph(graph_name, optimal_prob_edge_loc);
+    serialize_labels(h5_name);
+}
+
+void StackController::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
+{
+    EdgeCount best_edge_z;
+    EdgeLoc best_edge_loc;
+    determine_edge_locations(best_edge_z, best_edge_loc, optimal_prob_edge_loc);
+    
+    RagPtr rag = stack->get_rag();
+    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    
+    // set edge properties for export 
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+           iter != rag->edges_end(); ++iter) {
+        if (!((*iter)->is_false_edge())) {
+            double val = feature_mgr->get_prob((*iter));
+            (*iter)->set_weight(val);
+        }
+        Label x = 0;
+        Label y = 0;
+        Label z = 0;
+        
+        if (best_edge_loc.find(*iter) != best_edge_loc.end()) {
+            Location loc = best_edge_loc[*iter];
+            x = boost::get<0>(loc);
+            y = boost::get<1>(loc); //height - boost::get<1>(loc) - 1;
+            z = boost::get<2>(loc);
+        }
+        
+        (*iter)->set_property("location", Location(x,y,z));
+    }
+
+    Json::Value json_writer;
+    bool status = create_json_from_rag(rag.get(), json_writer, false);
+    if (!status) {
+        throw ErrMsg("Error in rag export");
+    }
+
+    serialize_graph_info(json_writer);
+
+    int id = 0;
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+        if (!((*iter)->is_boundary())) {
+            json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
+            ++id;
+        } 
+    }
+    
+    // write out graph json
+    ofstream fout(graph_name);
+    if (!fout) {
+        throw ErrMsg("Error: output file " + string(graph_name) + " could not be opened");
+    }
+    
+    fout << json_writer;
+    fout.close();
+}
+
+void StackController::serialize_labels(const char* h5_name)
+{
+    VolumeLabelPtr final_labels = stack->get_labelvol(); 
+    final_labels->rebase_labels();
+    final_labels->serialize(h5_name, SEG_DATASET_NAME);
+}
+
 
 VolumeLabelPtr StackController::dilate_label_edges(VolumeLabelPtr labelvol, int disc_size)
 {
@@ -254,6 +372,90 @@ void StackController::compute_contingency_table()
         }
     }		
 }
+
+
+void StackController::determine_edge_locations(EdgeCount& best_edge_z,
+        EdgeLoc& best_edge_loc, bool use_probs)
+{
+    VolumeLabelPtr labelvol = stack->get_labelvol();
+    vector<VolumeProbPtr> prob_list = stack->get_prob_list();
+    RagPtr rag = stack->get_rag(); 
+    
+    unsigned int maxx = get_xsize() - 1; 
+    unsigned int maxy = get_ysize() - 1; 
+    unsigned int maxz = get_zsize() - 1; 
+
+    for (unsigned int z = 0; z < get_zsize(); ++z) {
+        EdgeCount curr_edge_z;
+        EdgeLoc curr_edge_loc;
+        
+        for (unsigned int y = 0; y < get_ysize(); ++y) {
+            for (unsigned int x = 0; x < get_xsize(); ++x) {
+                Label_t label = (*labelvol)(x,y,z); 
+                if (!label) {
+                    continue;
+                }
+
+                Label_t label2 = 0, label3 = 0, label4 = 0, label5 = 0, label6 = 0, label7 = 0;
+                if (x > 0) label2 = (*labelvol)(x-1,y,z);
+                if (x < maxx) label3 = (*labelvol)(x+1,y,z);
+                if (y > 0) label4 = (*labelvol)(x,y-1,z);
+                if (y < maxy) label5 = (*labelvol)(x,y+1,z);
+                if (z > 0) label6 = (*labelvol)(x,y,z-1);
+                if (z < maxz) label7 = (*labelvol)(x,y,z+1);
+
+
+                double incr = 1.0;
+                if (use_probs) {
+                    // pick plane with a lot of low edge probs
+                    incr = 1.0 - (*(prob_list[0]))(x,y,z);;
+                }
+
+                if (label2 && (label != label2)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label2);
+                    curr_edge_z[edge] += incr;  
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+                if (label3 && (label != label3)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label3);
+                    curr_edge_z[edge] += incr;  
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+                if (label4 && (label != label4)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label4);
+                    curr_edge_z[edge] += incr;  
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+                if (label5 && (label != label5)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label5);
+                    curr_edge_z[edge] += incr;  
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+                if (label6 && (label != label6)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label6);
+                    curr_edge_z[edge] += incr;  
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+                if (label7 && (label != label7)) {
+                    RagEdge_uit* edge = rag->find_rag_edge(label, label7);
+                    curr_edge_z[edge] += incr; 
+                    curr_edge_loc[edge] = Location(x,y,z);  
+                }
+
+            }
+        }
+    
+        for (EdgeCount::iterator iter = curr_edge_z.begin(); iter != curr_edge_z.end(); ++iter) {
+            if (iter->second > best_edge_z[iter->first]) {
+                best_edge_z[iter->first] = iter->second;
+                best_edge_loc[iter->first] = curr_edge_loc[iter->first];
+            }
+        }
+    }
+
+    return;
+}
+
 
 
 void StackController::compute_vi(double& merge, double& split, 

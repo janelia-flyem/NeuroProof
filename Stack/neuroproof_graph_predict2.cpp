@@ -31,6 +31,7 @@ using namespace NeuroProof;
 using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_map;
+using std::tr1::unordered_set;
 
 static const char * SEG_DATASET_NAME = "stack";
 static const char * PRED_DATASET_NAME = "volume/predictions";
@@ -205,25 +206,16 @@ int main(int argc, char** argv)
         remove_inclusions(stack_controller);        
     } 	
 
-#if 0
     if (options.watershed_threshold > 0) {
-        size_t dims_out[3];
-        dims_out[0]=depth; dims_out[1]= height; dims_out[2]= width;
-        Label * temp_label_volume1D = stackp->get_label_volume();       	    
         cout << "Removing small bodies ... ";
-        int num_removed = stackp->absorb_small_regions2(prediction_ch0, temp_label_volume1D,
-                options.watershed_threshold);
-        Label * padded_data;
-        padZero(temp_label_volume1D, dims_out, pad_len, &padded_data);
-        delete[] temp_label_volume1D;	
 
-        stackp->reinit_watershed(padded_data);
+        unordered_set<Label_t> synapse_labels;
+        stack_controller.load_synapse_labels(synapse_labels);
+        int num_removed = stack_controller.absorb_small_regions(boundary_channel,
+                        options.watershed_threshold, synapse_labels);
         cout << num_removed << " removed" << endl;	
     }
 
-    // recompute rag
-    stackp->reinit_rag();
-    stackp->get_feature_mgr()->clear_features();
     if (options.postseg_classifier_filename == "") {
         options.postseg_classifier_filename = options.classifier_filename;
     }
@@ -234,57 +226,18 @@ int main(int argc, char** argv)
     else if (ends_with(options.postseg_classifier_filename, ".xml")) 	
 	eclfr = new OpencvRFclassifier(options.postseg_classifier_filename.c_str());	
     
-    stackp->get_feature_mgr()->set_classifier(eclfr);   	 
-    stackp->build_rag();
+    feature_manager->clear_features();
+    feature_manager->set_classifier(eclfr);   	 
+    stack_controller.build_rag();
     
-
 
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
-        stackp->set_exclusions(options.synapse_filename);
-    }
-    stackp->determine_edge_locations(options.location_prob);
-   
-    // set edge properties for export 
-    Rag_uit* rag = stackp->get_rag();
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
-           iter != rag->edges_end(); ++iter) {
-        if (!((*iter)->is_false_edge())) {
-            double val = stackp->get_edge_weight((*iter));
-            (*iter)->set_weight(val);
-        }
-        Label x = 0;
-        Label y = 0;
-        Label z = 0;
-        try {
-            stackp->get_edge_loc((*iter), x, y, z);
-        } catch (ErrMsg& msg) {
-            //
-        }
-        (*iter)->set_property("location", Location(x,y,z));
+        stack_controller.set_synapse_exclusions(options.synapse_filename.c_str());
     }
 
-    // write out graph json
-    Json::Value json_writer;
-    ofstream fout(options.graph_filename.c_str());
-    if (!fout) {
-        throw ErrMsg("Error: output file " + options.graph_filename + " could not be opened");
-    }
-    
-    bool status = create_json_from_rag(stackp->get_rag(), json_writer, false);
-    if (!status) {
-        throw ErrMsg("Error in rag export");
-    }
-    stackp->write_graph_json(json_writer);
-    fout << json_writer;
-    fout.close();
- 
-#endif
-
-    VolumeLabelPtr final_labels = stack.get_labelvol(); 
-    final_labels->rebase_labels();
-    final_labels->serialize(options.output_filename.c_str(), SEG_DATASET_NAME);
-    
+    stack_controller.serialize_stack(options.output_filename.c_str(),
+                options.graph_filename.c_str(), options.location_prob);
 
     delete eclfr;
     return 0;

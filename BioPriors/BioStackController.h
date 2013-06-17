@@ -3,6 +3,8 @@
 
 #include "../Stack/StackController.h"
 #include "BioStack.h"
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
 
 namespace NeuroProof {
 
@@ -13,6 +15,10 @@ class BioStackController : public StackController {
     VolumeLabelPtr create_syn_label_volume();
     VolumeLabelPtr create_syn_gt_label_volume();
     void set_synapse_exclusions(const char * synapse_json);    
+    void load_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
+    void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
+
+    void serialize_graph_info(Json::Value& json_writer);
 
     void build_rag_mito();
 

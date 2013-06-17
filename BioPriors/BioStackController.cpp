@@ -8,6 +8,7 @@
 
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
+using std::vector;
 
 namespace NeuroProof {
 
@@ -53,6 +54,35 @@ VolumeLabelPtr BioStackController::create_syn_volume(VolumeLabelPtr labelvol)
 
     return synvol;
 }
+
+void BioStackController::load_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
+{
+    vector<vector<unsigned int> > synapse_locations = biostack->get_synapse_locations();
+    VolumeLabelPtr labelvol = biostack->get_labelvol();
+    
+    for (int i = 0; i < synapse_locations.size(); ++i) {
+        Label_t body_id = (*labelvol)(synapse_locations[i][0],
+                synapse_locations[i][1], synapse_locations[i][2]);
+
+        if (body_id) {
+            synapse_counts[body_id]++;
+        }
+    }
+}
+
+void BioStackController::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
+{
+    vector<vector<unsigned int> > synapse_locations = biostack->get_synapse_locations();
+    VolumeLabelPtr labelvol = biostack->get_labelvol();
+    
+    for (int i = 0; i < synapse_locations.size(); ++i) {
+        Label_t body_id = (*labelvol)(synapse_locations[i][0],
+                synapse_locations[i][1], synapse_locations[i][2]);
+        synapse_labels.insert(body_id);
+    }
+}
+
+
 
 void BioStackController::build_rag_mito()
 {
@@ -205,6 +235,20 @@ void BioStackController::set_synapse_exclusions(const char* synapse_json)
     }
 
     biostack->set_synapse_locations(synapse_locations);
+}
+    
+void BioStackController::serialize_graph_info(Json::Value& json_writer)
+{
+    unordered_map<Label_t, int> synapse_counts;
+    load_synapse_counts(synapse_counts);
+    int id = 0;
+    for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+            iter != synapse_counts.end(); ++iter, ++id) {
+        Json::Value synapse_pair;
+        synapse_pair[(unsigned int)(0)] = iter->first;
+        synapse_pair[(unsigned int)(1)] = iter->second;
+        json_writer["synapse_bodies"][id] =  synapse_pair;
+    }
 }
 
 void BioStackController::add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol, unsigned int x1,
