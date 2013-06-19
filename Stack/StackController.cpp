@@ -227,6 +227,47 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 
 }
 
+void StackController::compute_groundtruth_assignment()
+{
+    VolumeLabelPtr gtvol = stack->get_gt_labelvol(); 
+
+    compute_contingency_table();
+    assignment.clear();  	
+    
+    for(unordered_map<Label_t, vector<LabelCount> >::iterator mit = contingency.begin();
+            mit != contingency.end(); ++mit){
+        Label_t i = mit->first;
+        vector<LabelCount>& gt_vec = mit->second; 	
+        size_t max_count=0;
+        Label_t max_label=0;
+        for (unsigned int j=0; j < gt_vec.size(); ++j){
+            if (gt_vec[j].count > max_count){
+                max_count = gt_vec[j].count;
+                max_label = gt_vec[j].lbl;
+            }	
+        }
+        assignment[i] = max_label;
+    }	
+}
+
+int StackController::find_edge_label(Label_t label1, Label_t label2)
+{
+    int edge_label = 0;
+    Label_t label1gt = assignment[label1];
+    Label_t label2gt = assignment[label2];
+
+    if (!label1gt){
+        cerr << "no grountruth node " << label1 << endl;
+    }  	
+    if (!label2gt){
+        cerr << "no grountruth node " << label2 << endl;
+    }  	
+
+    edge_label = (label1gt == label2gt)? -1 : 1;
+        
+    return edge_label;	
+}
+
 void StackController::serialize_stack(const char* h5_name, const char* graph_name, 
         bool optimal_prob_edge_loc)
 {
@@ -334,8 +375,7 @@ void StackController::compute_contingency_table()
 {
     VolumeLabelPtr labelvol = stack->get_labelvol();
     VolumeLabelPtr gt_labelvol = stack->get_gt_labelvol();
-
-    if (labelvol) {
+    if (!labelvol) {
         throw ErrMsg("No label volume available to compute VI");
     }
     if (!gt_labelvol) {
@@ -350,7 +390,7 @@ void StackController::compute_contingency_table()
         if (!wlabel || !glabel) {
             continue;
         }
-        unordered_map<Label, vector<LabelCount> >::iterator mit = 
+        unordered_map<Label_t, vector<LabelCount> >::iterator mit = 
                 contingency.find(wlabel);
         if (mit != contingency.end()){
             vector<LabelCount>& gt_vec = mit->second;
@@ -471,11 +511,7 @@ void StackController::compute_vi(double& merge, double& split,
         throw ErrMsg("No GT volume available to compute VI");
     }
 
-    if (!updated) {
-        // ?!
-        compute_contingency_table();
-        updated = true;
-    }
+    compute_contingency_table();
 
     double sum_all=0;
 
@@ -545,24 +581,70 @@ void StackController::compute_vi(double& merge, double& split,
     split = HgivenG;
 }
 
+// ?! is this really necessary -- only if non-gt merge
+void StackController::update_assignment(Label_t label_remove, Label_t label_keep)
+{
+    if (assignment.empty()) {
+        return;
+    }
+    
+    Label label_remove_gtlbl = assignment[label_remove];
+    unsigned long long label_remove_gtoverlap = 0;
+
+    bool found = false;
+    vector<LabelCount>& gt_vecr = contingency[label_remove]; 
+    for (unsigned int j = 0; j < gt_vecr.size(); ++j){
+        if (gt_vecr[j].lbl == label_remove_gtlbl){
+            label_remove_gtoverlap = gt_vecr[j].count;
+            found = true;
+            break;
+        }	
+    }
+    assert(found); 
+
+    found = false;
+    vector<LabelCount>& gt_veck = contingency[label_keep]; 
+    for (unsigned int j = 0; j < gt_veck.size(); ++j){
+        if (gt_veck[j].lbl == label_remove_gtlbl){
+            (gt_veck[j].count) += label_remove_gtoverlap;
+            found = true;
+            break;
+        }	
+    }
+    
+    if (!found){ // i.e.,  a false merge
+        assert(0);
+        LabelCount lc(label_remove_gtlbl, label_remove_gtoverlap);
+        gt_veck.push_back(lc);
+    }
+
+    unsigned long long max_count = 0;
+    Label_t max_label = 0;
+    for (unsigned int j = 0; j < gt_veck.size(); j++){
+        if (gt_veck[j].count > max_count){
+            max_count = gt_veck[j].count;
+            max_label = gt_veck[j].lbl;
+        }	
+    }
+
+    assignment[label_keep] = max_label;
+}
+
 // retain label2 
-void StackController::merge_labels(Label_t label1, Label_t label2,
+void StackController::merge_labels(Label_t label_remove, Label_t label_keep,
         RagNodeCombineAlg* combine_alg)
 {
     updated = false;
+    update_assignment(label_remove, label_keep);
+    
     RagPtr rag = stack->get_rag();
     if (rag) {
-        rag_join_nodes(*rag, rag->find_rag_node(label2),
-            rag->find_rag_node(label1), combine_alg);  
+        rag_join_nodes(*rag, rag->find_rag_node(label_keep),
+            rag->find_rag_node(label_remove), combine_alg);  
     } 
     
     VolumeLabelPtr labelvol = stack->get_labelvol(); 
-
-    if (!labelvol) {
-        throw ErrMsg("No label volume defined for stack");
-    }
-
-    labelvol->reassign_label(label1, label2); 
+    labelvol->reassign_label(label_remove, label_keep); 
 }
 
 VolumeLabelPtr StackController::generate_boundary(VolumeLabelPtr labelvol)

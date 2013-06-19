@@ -22,7 +22,7 @@ class StackController {
 
     void build_rag();
     int remove_inclusions();
-    void merge_labels(Label_t label1, Label_t label2, RagNodeCombineAlg* combine_alg);
+    void merge_labels(Label_t label_remove, Label_t label_keep, RagNodeCombineAlg* combine_alg);
 
     int absorb_small_regions(VolumeProbPtr boundary_pred, int threshold,
                     std::tr1::unordered_set<Label_t> exclusions);
@@ -33,7 +33,9 @@ class StackController {
     void compute_vi(double& merge, double& split);    
     void compute_vi(double& merge, double& split, std::multimap<double, Label_t>& label_ranked,
             std::multimap<double, Label_t>& gt_ranked);
- 
+
+    bool is_true_edge(Label_t label1, Label_t label2);
+
     unsigned int get_num_labels()
     {
         RagPtr rag = stack->get_rag();
@@ -78,6 +80,8 @@ class StackController {
             bool optimal_prob_edge_loc);
     
     virtual void serialize_graph_info(Json::Value& json_write) {}
+    int find_edge_label(Label_t label1, Label_t label2);
+    void compute_groundtruth_assignment();
 
   private:
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
@@ -92,6 +96,7 @@ class StackController {
     };
     
 
+    void update_assignment(Label_t label_remove, Label_t label_keep);
     VolumeLabelPtr dilate_label_edges(VolumeLabelPtr ptr, int disc_size);
     VolumeLabelPtr generate_boundary(VolumeLabelPtr ptr);   
     void compute_contingency_table();
@@ -104,6 +109,7 @@ class StackController {
     Stack2* stack;
     bool updated;
     std::tr1::unordered_map<Label_t, std::vector<LabelCount> > contingency;	
+    std::tr1::unordered_map<Label_t, Label_t> assignment;
 };
 
 }

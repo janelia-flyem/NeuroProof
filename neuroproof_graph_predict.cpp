@@ -4,11 +4,10 @@
 #include "Utilities/OptionParser.h"
 #include "Rag/RagIO.h"
 
-#include "BioPriors/StackAgglom.h"
+#include "BioPriors/StackAgglomAlgs.h"
 
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <cassert>
 #include <iostream>
 
 

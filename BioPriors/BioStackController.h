@@ -18,6 +18,7 @@ class BioStackController : public StackController {
     void load_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
     void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
 
+    bool is_mito(Label_t label);
     void serialize_graph_info(Json::Value& json_writer);
 
     void build_rag_mito();

@@ -82,7 +82,23 @@ void BioStackController::load_synapse_labels(unordered_set<Label_t>& synapse_lab
     }
 }
 
+bool BioStackController::is_mito(Label_t label)
+{
+    RagPtr rag = biostack->get_rag();
 
+    RagNode_uit* rag_node = rag->find_rag_node(label);
+
+    MitoTypeProperty mtype;
+    try {
+        mtype = rag_node->get_property<MitoTypeProperty>("mito-type");
+    } catch (ErrMsg& msg) {
+    }
+
+    if ((mtype.get_node_type()==2)) {	
+        return true;
+    }
+    return false;
+}
 
 void BioStackController::build_rag_mito()
 {

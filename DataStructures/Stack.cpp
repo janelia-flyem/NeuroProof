@@ -1310,7 +1310,7 @@ int Stack::decide_edge_label(RagNode_uit* rag_node1, RagNode_uit* rag_node2)
             edge_label = 1;
         }
     }
-        
+       
     return edge_label;	
 }
 
