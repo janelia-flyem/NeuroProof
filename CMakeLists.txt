@@ -82,21 +82,25 @@ else ()
     add_executable (neuroproof_graph_analyze_gt neuroproof_graph_analyze_gt.cpp)
     add_executable (neuroproof_graph_learn neuroproof_graph_learn.cpp)
     add_executable (neuroproof_graph_predict neuroproof_graph_predict.cpp)
+    add_executable (neuroproof_create_spgraph neuroproof_create_spgraph.cpp)
 
     target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+    target_link_libraries (neuroproof_create_spgraph ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     
     add_dependencies (neuroproof_graph_analyze ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_analyze_gt ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_learn ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_predict ${NEUROPROOF_DEPS})
+    add_dependencies (neuroproof_create_spgraph ${NEUROPROOF_DEPS})
 
     get_target_property (neuroproof_graph_analyze_exe neuroproof_graph_analyze LOCATION)
     get_target_property (neuroproof_graph_analyze_gt_exe neuroproof_graph_analyze_gt LOCATION)
     get_target_property (neuroproof_graph_learn_exe neuroproof_graph_learn LOCATION)
     get_target_property (neuroproof_graph_predict_exe neuroproof_graph_predict LOCATION)
+    get_target_property (neuroproof_create_spgraph_exe neuroproof_create_spgraph LOCATION)
 
     add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
     target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -151,6 +155,14 @@ else ()
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
         COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_graph_predict_exe} ${BUILDEM_DIR}/bin)
+
+    add_custom_command (
+        TARGET neuroproof_create_spgraph
+        POST_BUILD
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${neuroproof_create_spgraph_exe} ${BUILDEM_DIR}/bin)
+
 
 
     # ctests

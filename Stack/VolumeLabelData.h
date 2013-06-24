@@ -15,7 +15,8 @@ typedef boost::shared_ptr<VolumeLabelData> VolumeLabelPtr;
 class VolumeLabelData : public VolumeData<Label_t> {
   public:
     static VolumeLabelPtr create_volume();
-    static VolumeLabelPtr create_volume(const char * h5_name, const char* dset);
+    static VolumeLabelPtr create_volume(const char * h5_name, const char* dset,
+            bool use_transforms = true);
 
     void reassign_label(Label_t old_label, Label_t new_label); 
     void rebase_labels();

@@ -8,7 +8,7 @@ VolumeLabelPtr VolumeLabelData::create_volume()
 }
 
 VolumeLabelPtr VolumeLabelData::create_volume(
-        const char * h5_name, const char * dset)
+        const char * h5_name, const char * dset, bool use_transforms)
 
 {
     vigra::HDF5ImportInfo info(h5_name, dset);
@@ -19,16 +19,18 @@ VolumeLabelPtr VolumeLabelData::create_volume(
     volumedata->reshape(shape);
     vigra::readHDF5(info, *volumedata);
 
-    try {
-        vigra::HDF5ImportInfo info(h5_name, "transforms");
-        vigra::TinyVector<long long unsigned int,2> tshape(info.shape().begin()); 
-        vigra::MultiArray<2,Label_t> transforms(tshape);
-        
-        for (int row = 0; row < transforms.shape(0); ++row) {
-            volumedata->label_mapping[transforms(row, 0)] = transforms(row,1);
+    if (use_transforms) {
+        try {
+            vigra::HDF5ImportInfo info(h5_name, "transforms");
+            vigra::TinyVector<long long unsigned int,2> tshape(info.shape().begin()); 
+            vigra::MultiArray<2,Label_t> transforms(tshape);
+
+            for (int row = 0; row < transforms.shape(0); ++row) {
+                volumedata->label_mapping[transforms(row, 0)] = transforms(row,1);
+            }
+            volumedata->rebase_labels();
+        } catch (std::runtime_error& err) {
         }
-        volumedata->rebase_labels();
-    } catch (std::runtime_error& err) {
     }
 
     return VolumeLabelPtr(volumedata); 
