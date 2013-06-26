@@ -49,17 +49,19 @@ void generate_sp_graph(SpOptions& options)
     vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     VolumeProbPtr boundary_channel = prob_list[0];
+    //(*boundary_channel) += (*(prob_list[2]));
     prob_list.clear();
     prob_list.push_back(boundary_channel);
     cout << "Read prediction array" << endl;
 
     VolumeLabelPtr raveler_labels = VolumeLabelData::create_volume(
             options.segmentation_filename.c_str(), SEG_DATASET_NAME, false);
-    
+   
+    // ?! do a max z and a max label check for encoding 
     volume_forXYZ((*raveler_labels), x, y, z) {
         if ((*raveler_labels)(x,y,z) != 0) {
             unsigned int zpos = z + options.start_plane;
-            raveler_labels->set(x, y, z, (zpos << 16) + (*raveler_labels)(x,y,z));
+            raveler_labels->set(x, y, z, (zpos*200000) + (*raveler_labels)(x,y,z));
         } 
     }   
     cout << "Read watershed" << endl;
@@ -93,19 +95,32 @@ void generate_sp_graph(SpOptions& options)
         Node_uit node1 = (*iter)->get_node1()->get_node_id();
         Node_uit node2 = (*iter)->get_node2()->get_node_id();
 
-        node1 = 0xffff & node1;
-        node2 = 0xffff & node2;
+        node1 = node1 % 200000; 
+        node2 = node2 % 200000;
 
         if (node1 == node2) {
             (*iter)->set_weight(-1.0);
         }
+    
+        (*iter)->set_property("edge_size", (unsigned int)((*iter)->get_size()));
     }
  
-    Json::Value json_writer;
-    create_json_from_rag(rag.get(), json_writer, false);
+    //Json::Value json_writer;
+    //create_json_from_rag(rag.get(), json_writer, false);
     // write out graph json
-    ofstream fout("graph.json");
-    fout << json_writer;
+    ofstream fout("graph.txt");
+    
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+            iter != rag->edges_end(); ++iter) {
+        fout << (*iter)->get_node1()->get_node_id() << " "; 
+        fout << (*iter)->get_node2()->get_node_id() << " ";
+        fout << (*iter)->get_node1()->get_size() << " "; 
+        fout << (*iter)->get_node2()->get_size() << " ";
+        fout << (*iter)->get_weight() << " ";
+        fout << (*iter)->get_size() << endl;
+    }
+
+    //fout << json_writer;
     fout.close();
 }
 
