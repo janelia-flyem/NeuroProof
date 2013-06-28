@@ -1,4 +1,4 @@
-#include "Stack/StackController.h"
+#include "BioPriors/BioStackController.h"
 #include "Stack/Stack.h"
 
 #include "Utilities/ScopeTime.h"
@@ -33,13 +33,16 @@ struct SpOptions
                 "ilastik h5 file (x,y,z,ch) that has pixel predictions"); 
         parser.add_option(start_plane, "starting-zplane",
                 "First z plane in Raveler space");
-
+        parser.add_positional(classifier_filename, "classifier-file",
+                "opencv or vigra agglomeration classifier"); 
+        
         parser.parse_options(argc, argv);
     }
 
     // manadatory positionals
     string segmentation_filename;
     string prediction_filename;
+    string classifier_filename;
     int start_plane;
 };
 
@@ -50,59 +53,101 @@ void generate_sp_graph(SpOptions& options)
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     VolumeProbPtr boundary_channel = prob_list[0];
     //(*boundary_channel) += (*(prob_list[2]));
-    prob_list.clear();
-    prob_list.push_back(boundary_channel);
     cout << "Read prediction array" << endl;
 
     VolumeLabelPtr raveler_labels = VolumeLabelData::create_volume(
             options.segmentation_filename.c_str(), SEG_DATASET_NAME, false);
    
+    cout << "Read watershed" << endl;
+
+  
+    FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
+    feature_manager->set_basic_features(); 
+
+    EdgeClassifier* eclfr;
+    if (ends_with(options.classifier_filename, ".h5"))
+    	eclfr = new VigraRFclassifier(options.classifier_filename.c_str());	
+    else if (ends_with(options.classifier_filename, ".xml")) 	
+	eclfr = new OpencvRFclassifier(options.classifier_filename.c_str());	
+    feature_manager->set_classifier(eclfr);   	 
+
+    BioStack stack(raveler_labels); 
+    stack.set_feature_manager(feature_manager);
+    stack.set_prob_list(prob_list);
+    BioStackController stack_controller(&stack);
+    cout<<"Building RAG ..."; 	
+    stack_controller.build_rag_mito();
+    cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
+
+
+
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    prob_list.clear();
+    prob_list.push_back(boundary_channel);
+    FeatureMgrPtr feature_manager2(new FeatureMgr(prob_list.size()));
+    feature_manager2->add_median_feature(); 
+
     // ?! do a max z and a max label check for encoding 
     volume_forXYZ((*raveler_labels), x, y, z) {
         if ((*raveler_labels)(x,y,z) != 0) {
             unsigned int zpos = z + options.start_plane;
             raveler_labels->set(x, y, z, (zpos*200000) + (*raveler_labels)(x,y,z));
         } 
-    }   
-    cout << "Read watershed" << endl;
+    }
 
-   
-    // TODO: move feature handling to controller (load classifier if file provided)
-    // create feature manager and load classifier
-    FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
-    feature_manager->add_median_feature(); 
-
-    
     // create stack to hold segmentation state
-    Stack2 stack(raveler_labels); 
-    stack.set_feature_manager(feature_manager);
-    stack.set_prob_list(prob_list);
+    Stack2 stack2(raveler_labels); 
+    stack2.set_feature_manager(feature_manager2);
+    stack2.set_prob_list(prob_list);
 
     // Controller with mito and synapse capability
-    StackController stack_controller(&stack);
+    StackController stack_controller2(&stack2);
 
     cout<<"Building RAG ..."; 	
-    stack_controller.build_rag();
-    cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
+    stack_controller2.build_rag();
+    cout<<"done with "<< stack_controller2.get_num_labels()<< " nodes\n";	
   
-    RagPtr rag = stack.get_rag();
- 
+    RagPtr rag = stack2.get_rag();
+    RagPtr rag_base = stack.get_rag();
+           
+    for (Rag_uit::edges_iterator iter = rag_base->edges_begin();
+            iter != rag_base->edges_end(); ++iter) {
+        //double weight = feature_manager->get_prob(*iter);
+        double weight = 1.0;
+        if ((stack_controller.is_mito((*iter)->get_node1()->get_node_id())) !=
+                (stack_controller.is_mito((*iter)->get_node2()->get_node_id()))) {
+            weight = -1.0;
+        }
+        (*iter)->set_weight(weight);
+    }
+    cout << "Examined mitos" << endl;
+
     for (Rag_uit::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
-        double val = feature_manager->get_prob((*iter));
-        (*iter)->set_weight(val);
+        double val = feature_manager2->get_prob((*iter));
+        //(*iter)->set_weight(val);
 
         Node_uit node1 = (*iter)->get_node1()->get_node_id();
         Node_uit node2 = (*iter)->get_node2()->get_node_id();
 
         node1 = node1 % 200000; 
         node2 = node2 % 200000;
-
         if (node1 == node2) {
             (*iter)->set_weight(-1.0);
-        }
-    
-        (*iter)->set_property("edge_size", (unsigned int)((*iter)->get_size()));
+        } else { 
+            RagNode_uit* rn1 = rag_base->find_rag_node(node1);
+            RagNode_uit* rn2 = rag_base->find_rag_node(node2);
+
+            assert(rn1 && rn2);
+            RagEdge_uit* rag_edge = rag_base->find_rag_edge(rn1, rn2);
+            assert(rag_edge);
+            if (rag_edge->get_weight() < 0) {
+                //val += (1 - val) / 2;
+            }
+            (*iter)->set_weight(val);
+        } 
     }
  
     //Json::Value json_writer;
