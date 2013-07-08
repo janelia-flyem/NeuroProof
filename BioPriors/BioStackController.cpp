@@ -46,12 +46,11 @@ VolumeLabelPtr BioStackController::create_syn_volume(VolumeLabelPtr labelvol)
     }
     
     VolumeLabelPtr synvol = VolumeLabelData::create_volume();   
-    synvol->reshape(VolumeLabelData::difference_type((labels.size(), 1, 1)));
+    synvol->reshape(VolumeLabelData::difference_type(labels.size(), 1, 1));
 
     for (int i = 0; i < labels.size(); ++i) {
         synvol->set(i, 0, 0, labels[i]);  
     }
-
     return synvol;
 }
 

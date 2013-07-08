@@ -8,7 +8,7 @@ Graph edges: 618
 Graph nodes: 164
 Body VI: MergeSplit: (0.112195, 0.565021)
 Number of orphan bodies with more than 1000 voxels : 5
-Synapse VI: MergeSplit: (0.000000, 0.333333)
+Synapse VI: MergeSplit: (0, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
 Percent orphans matched for seg: 0
 Percent orphans matched for GT: -nan
@@ -28,7 +28,7 @@ Graph edges: 486
 Graph nodes: 141
 Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
-Synapse VI: MergeSplit: (0.000000, 0.333333)
+Synapse VI: MergeSplit: (0, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan
@@ -46,7 +46,7 @@ Graph edges: 486
 Graph nodes: 141
 Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
-Synapse VI: MergeSplit: (0.000000, 0.333333)
+Synapse VI: MergeSplit: (0, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan
@@ -64,7 +64,7 @@ Graph edges: 486
 Graph nodes: 141
 Body VI: MergeSplit: (0.135052, 0.361467)
 Number of orphan bodies with more than 1000 voxels : 0
-Synapse VI: MergeSplit: (0.000000, 0.333333)
+Synapse VI: MergeSplit: (0, 0.333333)
 Number of orphan bodies with more than 1 synapse annotations : 0
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan

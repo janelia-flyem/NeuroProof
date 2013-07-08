@@ -184,8 +184,15 @@ void StackController::dilate_labelvol(int disc_size)
     stack->set_labelvol(labelvol);
 }
 
+int StackController::remove_small_regions(int threshold,
+        unordered_set<Label_t>& exclusions)
+{
+    VolumeProbPtr empty_pred;
+    return absorb_small_regions(empty_pred, threshold, exclusions);
+}
+
 int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
-            int threshold, unordered_set<Label_t> exclusions)
+            int threshold, unordered_set<Label_t>& exclusions)
 {
     VolumeLabelPtr labelvol = stack->get_labelvol(); 
     
@@ -215,17 +222,55 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 	    *iter = 0;
         }
     }    
-    
-    vigra::ArrayOfRegionStatistics<vigra::SeedRgDirectValueFunctor<double> > stats;
-    vigra::seededRegionGrowing3D(srcMultiArrayRange(*boundary_pred), destMultiArray(*labelvol),
-                               destMultiArray(*labelvol), stats);
 
+    if (boundary_pred) {    
+        vigra::ArrayOfRegionStatistics<vigra::SeedRgDirectValueFunctor<double> > stats;
+        vigra::seededRegionGrowing3D(srcMultiArrayRange(*boundary_pred), destMultiArray(*labelvol),
+                destMultiArray(*labelvol), stats);
 
-    stack->set_rag(RagPtr());
+        stack->set_rag(RagPtr());
+    }
 
     return num_removed;
 
 }
+
+// find regions that match a given region label
+// TODO: keep gt rag with gt_labelvol 
+int StackController::match_regions_overlap(Label_t label,
+        unordered_set<Label>& candidate_regions, RagPtr gt_rag,
+        unordered_set<Label>& labels_matched, unordered_set<Label>& gtlabels_matched)
+{
+    RagPtr rag = stack->get_rag();
+    unsigned long long seg_size = rag->find_rag_node(label)->get_size();
+    int matched = 0; 
+    
+    unordered_map<Label, vector<LabelCount> >::iterator mit = contingency.find(label);
+    
+    if (mit != contingency.end()) {
+        vector<LabelCount>& gt_vec = mit->second;
+        for (int j=0; j< gt_vec.size();j++){
+            if (candidate_regions.find(gt_vec[j].lbl) != candidate_regions.end()) {
+                unsigned long long gt_size = gt_rag->find_rag_node(gt_vec[j].lbl)->get_size();
+
+                if ((gt_vec[j].count / double(gt_size)) > 0.5) {
+                    gtlabels_matched.insert(gt_vec[j].lbl);
+                    labels_matched.insert(label);
+                    ++matched;
+                } else if ((gt_vec[j].count / double(seg_size)) > 0.5) {
+                    gtlabels_matched.insert(gt_vec[j].lbl);
+                    labels_matched.insert(label);
+                    ++matched;
+                }
+            }
+        }
+    }
+
+    return matched;
+}
+
+
+
 
 void StackController::compute_groundtruth_assignment()
 {
@@ -341,22 +386,22 @@ void StackController::serialize_labels(const char* h5_name)
 
 VolumeLabelPtr StackController::dilate_label_edges(VolumeLabelPtr labelvol, int disc_size)
 {
-    if (disc_size < 0) {
+    if (disc_size <= 0) {
         throw ErrMsg("Incorrect disc size specified");
     }
 
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
-
+    // disc size of 1 creates initial boundaries
     labelvol = generate_boundary(labelvol);
     
-    if (disc_size > 0) {
+    if (disc_size > 1) {
         VolumeLabelPtr labelmask = VolumeLabelData::create_volume();
         labelmask->reshape(labelvol->shape());
         
         vigra::multiBinaryErosion(srcMultiArrayRange(*labelvol),
-                destMultiArray(*labelmask), disc_size); 
+                destMultiArray(*labelmask), disc_size-1); 
 
         (*labelvol) *= (*labelmask);
     }
@@ -387,6 +432,7 @@ void StackController::compute_contingency_table()
     volume_forXYZ(*labelvol,x,y,z) {
         Label_t wlabel = (*labelvol)(x,y,z);
         Label_t glabel = (*gt_labelvol)(x,y,z);
+
         if (!wlabel || !glabel) {
             continue;
         }
@@ -497,6 +543,37 @@ void StackController::determine_edge_locations(EdgeCount& best_edge_z,
 }
 
 
+void StackController::set_body_exclusions(string exclusions_json)
+{
+    Json::Reader json_reader;
+    Json::Value json_vals;
+    unordered_set<Label> exclusion_set;
+    
+    ifstream fin(exclusions_json.c_str());
+    if (!fin) {
+        throw ErrMsg("Error: input file: " + exclusions_json + " cannot be opened");
+    }
+    if (!json_reader.parse(fin, json_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+    
+    Json::Value exclusions = json_vals["exclusions"];
+    for (unsigned int i = 0; i < json_vals["exclusions"].size(); ++i) {
+        exclusion_set.insert(exclusions[i].asUInt());
+    }
+
+    VolumeLabelPtr labelvol = stack->get_labelvol();
+    
+    volume_forXYZ(*labelvol, x, y, z) {
+        Label_t label = (*labelvol)(x,y,z);
+        if (exclusion_set.find(label) != exclusion_set.end()) {
+            labelvol->set(x,y,z,0);
+        }
+
+
+    }
+}
 
 void StackController::compute_vi(double& merge, double& split, 
         multimap<double, Label_t>& label_ranked, multimap<double, Label_t>& gt_ranked)
@@ -504,7 +581,7 @@ void StackController::compute_vi(double& merge, double& split,
     VolumeLabelPtr labelvol = stack->get_labelvol();
     VolumeLabelPtr gt_labelvol = stack->get_gt_labelvol();
 
-    if (labelvol) {
+    if (!labelvol) {
         throw ErrMsg("No label volume available to compute VI");
     }
     if (!gt_labelvol) {
@@ -591,6 +668,7 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
     Label label_remove_gtlbl = assignment[label_remove];
     unsigned long long label_remove_gtoverlap = 0;
 
+    // won't be found if label no longer exists after an image transformation
     bool found = false;
     vector<LabelCount>& gt_vecr = contingency[label_remove]; 
     for (unsigned int j = 0; j < gt_vecr.size(); ++j){
@@ -600,7 +678,6 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
             break;
         }	
     }
-    assert(found); 
 
     found = false;
     vector<LabelCount>& gt_veck = contingency[label_keep]; 
@@ -613,7 +690,6 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
     }
     
     if (!found){ // i.e.,  a false merge
-        assert(0);
         LabelCount lc(label_remove_gtlbl, label_remove_gtoverlap);
         gt_veck.push_back(lc);
     }
@@ -632,13 +708,13 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
 
 // retain label2 
 void StackController::merge_labels(Label_t label_remove, Label_t label_keep,
-        RagNodeCombineAlg* combine_alg)
+        RagNodeCombineAlg* combine_alg, bool ignore_rag)
 {
     updated = false;
     update_assignment(label_remove, label_keep);
     
     RagPtr rag = stack->get_rag();
-    if (rag) {
+    if (!ignore_rag && rag) {
         rag_join_nodes(*rag, rag->find_rag_node(label_keep),
             rag->find_rag_node(label_remove), combine_alg);  
     } 
@@ -650,7 +726,8 @@ void StackController::merge_labels(Label_t label_remove, Label_t label_keep,
 VolumeLabelPtr StackController::generate_boundary(VolumeLabelPtr labelvol)
 {
     VolumeLabelPtr labelvol_new = VolumeLabelData::create_volume();
-    
+    *labelvol_new = *labelvol;
+
     unsigned int maxx = get_xsize() - 1; 
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 

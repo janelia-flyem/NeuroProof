@@ -22,11 +22,18 @@ class StackController {
 
     void build_rag();
     int remove_inclusions();
-    void merge_labels(Label_t label_remove, Label_t label_keep, RagNodeCombineAlg* combine_alg);
+    void merge_labels(Label_t label_remove, Label_t label_keep,
+            RagNodeCombineAlg* combine_alg, bool ignore_rag = false);
 
     int absorb_small_regions(VolumeProbPtr boundary_pred, int threshold,
-                    std::tr1::unordered_set<Label_t> exclusions);
+                    std::tr1::unordered_set<Label_t>& exclusions);
+    int remove_small_regions(int threshold,
+                    std::tr1::unordered_set<Label_t>& exclusions);
 
+    int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label>& candidate_regions,
+        RagPtr gt_rag, std::tr1::unordered_set<Label>& labels_matched,
+        std::tr1::unordered_set<Label>& gtlabels_matched);
+    void set_body_exclusions(string exclusions_json);
     void dilate_labelvol(int disc_size);
     void dilate_gt_labelvol(int disc_size);
 
