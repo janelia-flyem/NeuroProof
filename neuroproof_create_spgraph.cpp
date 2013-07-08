@@ -33,8 +33,8 @@ struct SpOptions
                 "ilastik h5 file (x,y,z,ch) that has pixel predictions"); 
         parser.add_option(start_plane, "starting-zplane",
                 "First z plane in Raveler space");
-        parser.add_positional(classifier_filename, "classifier-file",
-                "opencv or vigra agglomeration classifier"); 
+        //parser.add_positional(classifier_filename, "classifier-file",
+        //        "opencv or vigra agglomeration classifier"); 
         
         parser.parse_options(argc, argv);
     }
@@ -42,7 +42,7 @@ struct SpOptions
     // manadatory positionals
     string segmentation_filename;
     string prediction_filename;
-    string classifier_filename;
+    //string classifier_filename;
     int start_plane;
 };
 
@@ -60,7 +60,8 @@ void generate_sp_graph(SpOptions& options)
    
     cout << "Read watershed" << endl;
 
-  
+ 
+    /* 
     FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
     feature_manager->set_basic_features(); 
 
@@ -78,7 +79,7 @@ void generate_sp_graph(SpOptions& options)
     cout<<"Building RAG ..."; 	
     stack_controller.build_rag_mito();
     cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
-
+    */
 
 
 
@@ -110,8 +111,9 @@ void generate_sp_graph(SpOptions& options)
     cout<<"done with "<< stack_controller2.get_num_labels()<< " nodes\n";	
   
     RagPtr rag = stack2.get_rag();
-    RagPtr rag_base = stack.get_rag();
-           
+    //RagPtr rag_base = stack.get_rag();
+      
+    /*    
     for (Rag_uit::edges_iterator iter = rag_base->edges_begin();
             iter != rag_base->edges_end(); ++iter) {
         //double weight = feature_manager->get_prob(*iter);
@@ -123,11 +125,12 @@ void generate_sp_graph(SpOptions& options)
         (*iter)->set_weight(weight);
     }
     cout << "Examined mitos" << endl;
+    */
 
     for (Rag_uit::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         double val = feature_manager2->get_prob((*iter));
-        //(*iter)->set_weight(val);
+        (*iter)->set_weight(val);
 
         Node_uit node1 = (*iter)->get_node1()->get_node_id();
         Node_uit node2 = (*iter)->get_node2()->get_node_id();
@@ -136,7 +139,7 @@ void generate_sp_graph(SpOptions& options)
         node2 = node2 % 200000;
         if (node1 == node2) {
             (*iter)->set_weight(-1.0);
-        } else { 
+        /*} else { 
             RagNode_uit* rn1 = rag_base->find_rag_node(node1);
             RagNode_uit* rn2 = rag_base->find_rag_node(node2);
 
@@ -146,7 +149,7 @@ void generate_sp_graph(SpOptions& options)
             if (rag_edge->get_weight() < 0) {
                 //val += (1 - val) / 2;
             }
-            (*iter)->set_weight(val);
+            (*iter)->set_weight(val); */
         } 
     }
  
