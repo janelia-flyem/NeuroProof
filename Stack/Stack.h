@@ -10,9 +10,9 @@
 
 namespace NeuroProof {
 
-class Stack2 {
+class Stack {
   public:
-    Stack2(VolumeLabelPtr labels_) : labelvol(labels_) {}
+    Stack(VolumeLabelPtr labels_) : labelvol(labels_) {}
     
     void set_labelvol(VolumeLabelPtr labelvol_)
     {

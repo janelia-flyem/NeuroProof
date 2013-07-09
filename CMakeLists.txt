@@ -69,9 +69,8 @@ else ()
     add_subdirectory (FeatureManager)
     add_subdirectory (Algorithms)
     add_subdirectory (Classifier)
-    add_subdirectory (DataStructures)
 
-    set (NEUROPROOF_INT_LIBS Rag Stack BioPriors FeatureManager Algorithms Classifier DataStructures)
+    set (NEUROPROOF_INT_LIBS Rag Stack BioPriors FeatureManager Algorithms Classifier)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
     set (NEUROPROOF_DEPS ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
 
@@ -107,7 +106,7 @@ else ()
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 
     # need to build components separately to set python flag
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp DataStructures/Stack.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Refactoring/RagUtils2.cpp Rag/RagUtils.cpp)
+    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Refactoring/RagUtils2.cpp Refactoring/Stack.cpp Rag/RagUtils.cpp)
     target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")

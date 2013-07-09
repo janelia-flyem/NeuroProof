@@ -99,7 +99,7 @@ void generate_sp_graph(SpOptions& options)
     }
 
     // create stack to hold segmentation state
-    Stack2 stack2(raveler_labels); 
+    Stack stack2(raveler_labels); 
     stack2.set_feature_manager(feature_manager2);
     stack2.set_prob_list(prob_list);
 

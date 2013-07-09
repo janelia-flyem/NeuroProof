@@ -4,7 +4,6 @@
 #include <boost/python.hpp>
 
 #include "../Rag/RagEdge.h"
-#include "../DataStructures/Glb.h"
 #include "Features.h"
 #include <tr1/unordered_map>
 
@@ -27,8 +26,8 @@ class shared_ptr;
 
 namespace NeuroProof {
     
-typedef std::tr1::unordered_map<RagEdge_uit*, std::vector<void *>, RagEdgePtrHash<Label>, RagEdgePtrEq<Label> > EdgeCaches; 
-typedef std::tr1::unordered_map<RagNode_uit*, std::vector<void *>, RagNodePtrHash<Label>, RagNodePtrEq<Label> > NodeCaches; 
+typedef std::tr1::unordered_map<RagEdge_uit*, std::vector<void *>, RagEdgePtrHash<Node_uit>, RagEdgePtrEq<Node_uit> > EdgeCaches; 
+typedef std::tr1::unordered_map<RagNode_uit*, std::vector<void *>, RagNodePtrHash<Node_uit>, RagNodePtrEq<Node_uit> > NodeCaches; 
 
 class FeatureMgr {
   public:

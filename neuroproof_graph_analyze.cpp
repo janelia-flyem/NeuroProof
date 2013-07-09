@@ -191,10 +191,10 @@ int get_num_edits(LocalEdgePriority& priority_scheduler, Rag_uit* rag)
         EdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
-        boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
+        boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);
         
-        Label node1 = boost::get<0>(pair);
-        Label node2 = boost::get<1>(pair);
+        Node_uit node1 = boost::get<0>(pair);
+        Node_uit node2 = boost::get<1>(pair);
         RagEdge_uit* temp_edge = rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
 
@@ -238,7 +238,7 @@ void est_edit_distance(Rag_uit* rag, int node_threshold,
 
         // determine the number of node above a certain size that do not
         // touch a boundary
-        vector<Label> violators = priority_scheduler.getQAViolators(node_threshold);
+        vector<Node_uit> violators = priority_scheduler.getQAViolators(node_threshold);
         cout << "Num nodes not touching boundary: " << violators.size() << endl; 
         
         // determine the number of nodes above a certain size with synapses

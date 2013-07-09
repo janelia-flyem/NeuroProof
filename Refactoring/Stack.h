@@ -7,8 +7,7 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include "../Rag/Rag.h"
-#include "AffinityPair.h"
-#include "Glb.h"
+#include "../DataStructures/AffinityPair.h"
 #include <boost/tuple/tuple.hpp>
 #include "../Algorithms/MergePriorityFunction.h"
 #include "../Algorithms/MergePriorityQueue.h"
@@ -26,17 +25,19 @@
 #include <json/json.h>
 #include <json/value.h>
 
+typedef unsigned int Label;
+
+
 namespace NeuroProof {
-class LabelCount;
-class Stack {
+class Stack2 {
   public:
-    Stack(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), gtruth(0), merge_mito(false)
+    Stack2(Label* watershed_, int depth_, int height_, int width_, int padding_=1) : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), gtruth(0), merge_mito(false)
     {
         rag = new Rag_uit();
         reinit_stack(watershed_, depth_, height_, width_, padding_);
     }
     
-    Stack() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0), gtruth(0), merge_mito(false)
+    Stack2() : watershed(0), watershed2(0), feature_mgr(0), median_mode(false), depth(0), width(0), height(0), gtruth(0), merge_mito(false)
     {
         rag = new Rag_uit();
     }
@@ -89,15 +90,11 @@ class Stack {
         padding2 = padding_;
     } 
 
-    void compute_synapse_volume(std::vector<Label>& seg_labels, std::vector<Label>& gt_labels);
     Label * get_label_volume();
-    Label * get_label_volume_reverse();
-    
     boost::python::tuple get_edge_loc2(RagEdge_uit* edge);
     void get_edge_loc(RagEdge_uit* edge, Label& x, Label& y, Label& z);
 
     void build_rag();
-    void create_0bounds();
     void build_rag_border();
     void determine_edge_locations(bool use_probs=false);
     boost::python::list get_transformations();
@@ -142,10 +139,6 @@ class Stack {
         return feature_mgr->get_prob(edge);
     }
 
-#ifndef SETPYTHON
-    void set_basic_features();
-#endif
-
     void set_groundtruth(Label* pgt)
     {
         if (gtruth) {
@@ -153,19 +146,8 @@ class Stack {
         }
         gtruth = pgt;
     }
-    int grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
-        Rag_uit* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
-        std::tr1::unordered_set<Label>& gt_matched);
-    void compute_groundtruth_assignment();     			
-    void compute_contingency_table();
-    void compute_vi();
-    void dump_vi_differences(double threshold);
-    void modify_assignment_after_merge(Label node_keep, Label node_remove);
-    void load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies);
-    bool is_excluded(Label node);
     void merge_nodes(Label node1, Label node2);
     void write_graph(string);
-    int decide_edge_label(RagNode_uit* node1, RagNode_uit* node2);
 
 
     
@@ -206,10 +188,6 @@ class Stack {
     }
 
     void write_graph_json(Json::Value& json_writer);
-    void set_exclusions(std::string synapse_json);
-    void set_gt_exclusions();
-    void set_body_exclusions(string exclusions_json);
-    int remove_small_regions(unsigned long long threshold);
     int remove_inclusions();
 
     void reinit_rag()
@@ -225,7 +203,7 @@ class Stack {
         rag = new Rag_uit();
     }
 
-    ~Stack()
+    ~Stack2()
     {
         delete rag;
         if (!prediction_array.empty()) {
@@ -246,13 +224,9 @@ class Stack {
         int start_pos;
     };
 
-    void set_merge_mito(bool flag)
-    {
-        merge_mito = flag;
-    }
-
   protected:
     void biconnected_dfs(std::vector<DFSStack>& dfs_stack);
+    void load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies);
     
     Rag_uit * rag;
     Label* watershed;
@@ -285,13 +259,11 @@ class Stack {
     FeatureMgr * feature_mgr;
     bool median_mode;
     EdgeHash border_edges;
-    std::tr1::unordered_set<Label> exclusion_set;
    
     std::vector<std::vector<unsigned int> > all_locations;
 
     Label* gtruth; 	// both derived classes may use groundtruth for either learning or validation
     std::multimap<Label, Label>	assignment;
-    std::multimap<Label, std::vector<LabelCount> > contingency;	
     std::multimap<double, Label> seg_overmerge_ranked;
     std::multimap<double, Label> gt_overmerge_ranked;
 
@@ -302,44 +274,6 @@ class Stack {
 
 
 
-class StackLearn: public Stack{
-
-public:
-
-    StackLearn(Label* watershed_, int depth_, int height_, int width_, int padding_=1): Stack(watershed_, depth_, height_, width_, padding_){}
-
-    void learn_edge_classifier_lash(double, UniqueRowFeature_Label& , std::vector<int>&, const char* clfr_filename = NULL);
-    void learn_edge_classifier_queue(double, UniqueRowFeature_Label& , std::vector<int>&, bool accumulate_all=false,  const char* clfr_filename = NULL);
-    void learn_edge_classifier_flat(double, UniqueRowFeature_Label& , std::vector<int>&, const char* clfr_filename = NULL);
-    void learn_edge_classifier_flat_subset(double, UniqueRowFeature_Label& , std::vector<int>&, const char* clfr_filename = NULL);
-
-};
-
-class StackPredict: public Stack{
-
-public:
-
-    StackPredict(Label* watershed_, int depth_, int height_, int width_, int padding_=1): Stack(watershed_, depth_, height_, width_, padding_){}
-    
-    void agglomerate_rag(double threshold, bool use_edge_weight, string output_path="", string classifier_path="", bool synapse_mode = false);
-    void agglomerate_rag_queue(double threshold, bool use_edge_weight=false, string output_path="", string classifier_path="");     			
-    void agglomerate_rag_flat(double threshold, bool use_edge_weight=false, string output_path="", string classifier_path="");
-    void agglomerate_rag_mrf(double threshold, bool read_off, string output_path, string classifier_path);
-    void agglomerate_rag_size(double threshold);
-
-    void merge_mitochondria_a();
-    void absorb_small_regions(double* prediction_vol, Label* label_vol);
-    int absorb_small_regions2(double* prediction_vol, Label* label_vol, int threshold);
-
-};
-
-class LabelCount{
-public:
-      Label lbl;
-      size_t count;
-      LabelCount(): lbl(0), count(0) {};	 	 		
-      LabelCount(Label plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
-};
 
 }
 

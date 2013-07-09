@@ -5,7 +5,6 @@
 #include "FeatureCache.h"
 #include "../Utilities/ErrMsg.h"
 #include "../Rag/RagEdge.h"
-#include "../DataStructures/Glb.h"
 #include <vector>
 #include <set>
 

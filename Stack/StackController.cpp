@@ -29,7 +29,7 @@ void StackController::build_rag()
     Rag_uit * rag = new Rag_uit;
 
     vector<double> predictions(prob_list.size(), 0.0);
-    unordered_set<Label> labels;
+    unordered_set<Label_t> labels;
    
     unsigned int maxx = get_xsize() - 1; 
     unsigned int maxy = get_ysize() - 1; 
@@ -131,7 +131,7 @@ int StackController::remove_inclusions()
             RagNode_uit* articulation_node = rag->find_rag_node(articulation_label);
 
             bool found_preserve = false; 
-            for (unordered_set<Label>::iterator iter = merge_nodes.begin();
+            for (unordered_set<Label_t>::iterator iter = merge_nodes.begin();
                     iter != merge_nodes.end(); ++iter) {
                 Node_uit node2 = *iter;
 
@@ -155,7 +155,7 @@ int StackController::remove_inclusions()
                 continue;
             }
 
-            for (unordered_set<Label>::iterator iter = merge_nodes.begin();
+            for (unordered_set<Label_t>::iterator iter = merge_nodes.begin();
                     iter != merge_nodes.end(); ++iter) {
                 Node_uit node2 = *iter;
                 RagNode_uit* rag_node = rag->find_rag_node(node2);
@@ -196,7 +196,7 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 {
     VolumeLabelPtr labelvol = stack->get_labelvol(); 
     
-    std::tr1::unordered_map<Label, unsigned long long> regions_sz;
+    std::tr1::unordered_map<Label_t, unsigned long long> regions_sz;
     labelvol->rebase_labels();
 
     for (VolumeLabelData::iterator iter = labelvol->begin();
@@ -238,14 +238,14 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 // find regions that match a given region label
 // TODO: keep gt rag with gt_labelvol 
 int StackController::match_regions_overlap(Label_t label,
-        unordered_set<Label>& candidate_regions, RagPtr gt_rag,
-        unordered_set<Label>& labels_matched, unordered_set<Label>& gtlabels_matched)
+        unordered_set<Label_t>& candidate_regions, RagPtr gt_rag,
+        unordered_set<Label_t>& labels_matched, unordered_set<Label_t>& gtlabels_matched)
 {
     RagPtr rag = stack->get_rag();
     unsigned long long seg_size = rag->find_rag_node(label)->get_size();
     int matched = 0; 
     
-    unordered_map<Label, vector<LabelCount> >::iterator mit = contingency.find(label);
+    unordered_map<Label_t, vector<LabelCount> >::iterator mit = contingency.find(label);
     
     if (mit != contingency.end()) {
         vector<LabelCount>& gt_vec = mit->second;
@@ -336,9 +336,9 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
             double val = feature_mgr->get_prob((*iter));
             (*iter)->set_weight(val);
         }
-        Label x = 0;
-        Label y = 0;
-        Label z = 0;
+        Label_t x = 0;
+        Label_t y = 0;
+        Label_t z = 0;
         
         if (best_edge_loc.find(*iter) != best_edge_loc.end()) {
             Location loc = best_edge_loc[*iter];
@@ -547,7 +547,7 @@ void StackController::set_body_exclusions(string exclusions_json)
 {
     Json::Reader json_reader;
     Json::Value json_vals;
-    unordered_set<Label> exclusion_set;
+    unordered_set<Label_t> exclusion_set;
     
     ifstream fin(exclusions_json.c_str());
     if (!fin) {
@@ -604,7 +604,7 @@ void StackController::compute_vi(double& merge, double& split,
         wp.insert(make_pair(i,0.0));
         for (int j=0; j< gt_vec.size();j++){
             unsigned int count = gt_vec[j].count;
-            Label gtlabel = gt_vec[j].lbl;
+            Label_t gtlabel = gt_vec[j].lbl;
 
             (wp.find(i)->second) += count;	
 
@@ -622,16 +622,16 @@ void StackController::compute_vi(double& merge, double& split,
     double HgivenW=0;
     double HgivenG=0;
 
-    unordered_map<Label, double> seg_overmerge;
-    unordered_map<Label, double> gt_overmerge;
+    unordered_map<Label_t, double> seg_overmerge;
+    unordered_map<Label_t, double> gt_overmerge;
 
     for(unordered_map<Label_t, vector<LabelCount> >::iterator mit = contingency.begin();
             mit != contingency.end(); ++mit){
-        Label i = mit->first;
+        Label_t i = mit->first;
         vector<LabelCount>& gt_vec = mit->second; 	
         for (int j=0; j< gt_vec.size();j++){
             unsigned int count = gt_vec[j].count;
-            Label gtlabel = gt_vec[j].lbl;
+            Label_t gtlabel = gt_vec[j].lbl;
 
             double p_wg = count/sum_all;
             double p_w = wp.find(i)->second/sum_all; 	
@@ -646,11 +646,11 @@ void StackController::compute_vi(double& merge, double& split,
         }
     }
 
-    for (std::tr1::unordered_map<Label, double>::iterator iter = seg_overmerge.begin();
+    for (std::tr1::unordered_map<Label_t, double>::iterator iter = seg_overmerge.begin();
             iter != seg_overmerge.end(); ++iter) {
         label_ranked.insert(make_pair(iter->second, iter->first));
     }
-    for (std::tr1::unordered_map<Label, double>::iterator iter = gt_overmerge.begin();
+    for (std::tr1::unordered_map<Label_t, double>::iterator iter = gt_overmerge.begin();
             iter != gt_overmerge.end(); ++iter) {
         gt_ranked.insert(make_pair(iter->second, iter->first));
     }
@@ -665,7 +665,7 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
         return;
     }
     
-    Label label_remove_gtlbl = assignment[label_remove];
+    Label_t label_remove_gtlbl = assignment[label_remove];
     unsigned long long label_remove_gtoverlap = 0;
 
     // won't be found if label no longer exists after an image transformation

@@ -33,7 +33,7 @@ void agglomerate_stack(StackController& controller, double threshold,
         return;
     }
 
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
@@ -57,8 +57,8 @@ void agglomerate_stack(StackController& controller, double threshold,
             }
         }
 
-        Label node1 = rag_node1->get_node_id(); 
-        Label node2 = rag_node2->get_node_id();
+        Node_uit node1 = rag_node1->get_node_id(); 
+        Node_uit node2 = rag_node2->get_node_id();
         
         // retain node1 
         controller.merge_labels(node2, node1, &node_combine_alg);
@@ -77,7 +77,7 @@ void agglomerate_stack_mrf(StackController& controller, double threshold, bool u
     controller.remove_inclusions();	  	
     cout <<  "Remaining regions: " << controller.get_num_labels();	
 
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
@@ -91,8 +91,8 @@ void agglomerate_stack_mrf(StackController& controller, double threshold, bool u
 
             (*iter)->set_property("qloc", edgeCount);
 
-	    Label node1 = (*iter)->get_node1()->get_node_id();	
-	    Label node2 = (*iter)->get_node2()->get_node_id();	
+	    Node_uit node1 = (*iter)->get_node1()->get_node_id();	
+	    Node_uit node2 = (*iter)->get_node2()->get_node_id();	
 
 	    edgeCount++;
 	}
@@ -108,7 +108,7 @@ void agglomerate_stack_queue(StackController& controller, double threshold,
         return;
     }
 
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
@@ -121,8 +121,8 @@ void agglomerate_stack_queue(StackController& controller, double threshold,
             RagNode_uit* rag_node1 = (*iter)->get_node1();
             RagNode_uit* rag_node2 = (*iter)->get_node2();
 
-            Label node1 = rag_node1->get_node_id(); 
-            Label node2 = rag_node2->get_node_id(); 
+            Node_uit node1 = rag_node1->get_node_id(); 
+            Node_uit node2 = rag_node2->get_node_id(); 
 
             double val;
             if(use_edge_weight)
@@ -151,8 +151,8 @@ void agglomerate_stack_queue(StackController& controller, double threshold,
         QE tmpqe = Q->heap_extract_min();	
 
         //RagEdge_uit* rag_edge = tmpqe.get_val();
-        Label node1 = tmpqe.get_val().first;
-        Label node2 = tmpqe.get_val().second;
+        Node_uit node1 = tmpqe.get_val().first;
+        Node_uit node2 = tmpqe.get_val().second;
         RagEdge_uit* rag_edge = rag->find_rag_edge(node1,node2);;
 
         if (!rag_edge || !tmpqe.valid()) {
@@ -187,7 +187,7 @@ void agglomerate_stack_flat(StackController& controller, double threshold, bool 
         return;
     }
 
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
@@ -196,8 +196,8 @@ void agglomerate_stack_flat(StackController& controller, double threshold, bool 
     
     for(int ii=0; ii< priority.size(); ++ii) {
 	QE tmpqe = priority[ii];	
-        Label node1 = tmpqe.get_val().first;
-        Label node2 = tmpqe.get_val().second;
+        Node_uit node1 = tmpqe.get_val().first;
+        Node_uit node2 = tmpqe.get_val().second;
 	if(node1==node2)
 	    continue;
 	
@@ -226,7 +226,7 @@ void agglomerate_stack_mito(StackController& controller, double threshold)
 {
     double error=0;  	
 
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
@@ -266,8 +266,8 @@ void agglomerate_stack_mito(StackController& controller, double threshold)
             continue;
         }
 
-        Label node1 = rag_node1->get_node_id(); 
-        Label node2 = rag_node2->get_node_id();
+        Node_uit node1 = rag_node1->get_node_id(); 
+        Node_uit node2 = rag_node2->get_node_id();
 
         // retain node1 
         controller.merge_labels(node2, node1, &node_combine_alg);

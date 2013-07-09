@@ -196,12 +196,12 @@ struct AnalyzeGTOptions
 
 int num_synapse_errors(BioStackController& controller, int threshold)
 {
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     unordered_map<Label_t, int> synapse_counts;
     controller.load_synapse_counts(synapse_counts);
     int synapse_errors = 0;
-    for (unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+    for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= threshold) {
             RagNode_uit* node = rag->find_rag_node(iter->first);
@@ -215,7 +215,7 @@ int num_synapse_errors(BioStackController& controller, int threshold)
 
 int num_body_errors(StackController& controller, int threshold)
 {
-    Stack2* stack = controller.get_stack();
+    Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     int body_errors = 0;
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
@@ -228,14 +228,14 @@ int num_body_errors(StackController& controller, int threshold)
 }
 
 
-void load_orphans(BioStackController& controller, unordered_set<Label>& orphans,
+void load_orphans(BioStackController& controller, unordered_set<Label_t>& orphans,
         int threshold, int synapse_threshold)
 {
-    unordered_map<Label, int> synapse_counts;
+    unordered_map<Label_t, int> synapse_counts;
     controller.load_synapse_counts(synapse_counts);
     RagPtr rag = controller.get_stack()->get_rag();
 
-    for (unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+    for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= synapse_threshold) {
             RagNode_uit* node = rag->find_rag_node(iter->first);
@@ -266,7 +266,7 @@ void dump_vi_differences(StackController& controller, double threshold)
     double totalS = 0.0;
     double totalG = 0.0;
     cout << endl << "******Seg Merged Bodies*****" << endl;
-    for (multimap<double, Label>::reverse_iterator iter = label_ranked.rbegin();
+    for (multimap<double, Label_t>::reverse_iterator iter = label_ranked.rbegin();
             iter != label_ranked.rend(); ++iter) {
         if (merge < threshold) {
             break;
@@ -277,7 +277,7 @@ void dump_vi_differences(StackController& controller, double threshold)
     cout << endl; 
 
     cout << endl << "******GT Merged Bodies*****" << endl;
-    for (multimap<double, Label>::reverse_iterator iter = gt_ranked.rbegin();
+    for (multimap<double, Label_t>::reverse_iterator iter = gt_ranked.rbegin();
             iter != gt_ranked.rend(); ++iter) {
         if (split < threshold) {
             break;
@@ -302,7 +302,7 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, StackController contro
         EdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
-        boost::tuple<Label, Label> pair = priority_scheduler.getTopEdge(location);
+        boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);
         
         Label_t node1 = boost::get<0>(pair);
         Label_t node2 = boost::get<1>(pair);
@@ -363,18 +363,18 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
             " synapse annotations : " << synapse_errors << endl;   
     }
     
-    unordered_set<Label> seg_orphans; 
-    unordered_set<Label> gt_orphans; 
+    unordered_set<Label_t> seg_orphans; 
+    unordered_set<Label_t> gt_orphans; 
     
     load_orphans(controller, seg_orphans, options.body_error_size,
             options.synapse_error_size);
     load_orphans(gt_controller, gt_orphans, options.body_error_size,
             options.synapse_error_size);
 
-    unordered_set<Label> seg_matched; 
-    unordered_set<Label> gt_matched; 
+    unordered_set<Label_t> seg_matched; 
+    unordered_set<Label_t> gt_matched; 
     int matched = 0;
-    for (std::tr1::unordered_set<Label>::iterator iter = seg_orphans.begin();
+    for (std::tr1::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
            iter != seg_orphans.end(); ++iter) {
         matched += controller.match_regions_overlap((*iter), gt_orphans,
                 gt_rag, seg_matched, gt_matched);
@@ -383,7 +383,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
     cout << "Percent orphans matched for seg: " <<
         seg_matched.size()/double(seg_orphans.size())*100 << endl;
     if (options.dump_orphans) {
-        for (std::tr1::unordered_set<Label>::iterator iter = seg_orphans.begin();
+        for (std::tr1::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
                 iter != seg_orphans.end(); ++iter) {
             if (seg_matched.find(*iter) == seg_matched.end()) {
                 cout << "Unmatched seg orphan body: " << *iter << endl;
@@ -394,7 +394,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
         double(gt_matched.size())/gt_orphans.size()*100 << endl;
     
     if (options.dump_orphans) {
-        for (std::tr1::unordered_set<Label>::iterator iter = gt_orphans.begin();
+        for (std::tr1::unordered_set<Label_t>::iterator iter = gt_orphans.begin();
                 iter != gt_orphans.end(); ++iter) {
             if (gt_matched.find(*iter) == gt_matched.end()) {
                 cout << "Unmatched GT orphan body: " << *iter << endl;
@@ -417,7 +417,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
 
     int num_unmerged = 0;
     Json::Value json_vals;
-    //LocalEdgePriority<Label> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
+    //LocalEdgePriority<Label_t> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
     for (int i = 0; i < large_bodies.size(); ++i) {
         for (int j = (i+1); j < large_bodies.size(); ++j) {
             int val = controller.find_edge_label(large_bodies[i]->get_node_id(),
@@ -441,7 +441,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
     // TODO get affinity pairs for missed node pairs
     
 
-    std::tr1::unordered_map<Label, unsigned long long> body_changes;
+    std::tr1::unordered_map<Label_t, unsigned long long> body_changes;
     Rag_uit opt_rag_copy(*opt_rag);
 
     bool change = true;
@@ -486,7 +486,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
         }
     }
     int num_undermerged_bodies = 0;
-    for (std::tr1::unordered_map<Label, unsigned long long>::iterator iter = body_changes.begin();
+    for (std::tr1::unordered_map<Label_t, unsigned long long>::iterator iter = body_changes.begin();
             iter != body_changes.end(); ++iter) {
         unsigned long long largest_orig = iter->second;
         RagNode_uit* node1 = opt_rag_copy.find_rag_node(iter->first);
@@ -657,11 +657,11 @@ void run_recipe(string recipe_filename, BioStackController& controller,
     json_vals_priority["orphan_bodies"] = orphan_bodies;
 
     // load synapse information
-    unordered_map<Label, int> synapse_counts;
+    unordered_map<Label_t, int> synapse_counts;
     controller.load_synapse_counts(synapse_counts);
     id = 0;
     Json::Value synapses;
-    for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+    for (std::tr1::unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         Json::Value val_pair;
         val_pair[(unsigned int)(0)] = iter->first;
@@ -749,8 +749,8 @@ void run_analyze_gt(AnalyzeGTOptions& options)
         RagPtr seg_rag = stack.get_rag();
         for (Rag_uit::edges_iterator iter = seg_rag_probs->edges_begin();
                 iter != seg_rag_probs->edges_end(); ++iter) {
-            Label node1 = (*iter)->get_node1()->get_node_id();
-            Label node2 = (*iter)->get_node2()->get_node_id();
+            Node_uit node1 = (*iter)->get_node1()->get_node_id();
+            Node_uit node2 = (*iter)->get_node2()->get_node_id();
 
             if (!(*iter)->is_false_edge()) {
                 double prob = (*iter)->get_weight();
@@ -771,7 +771,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     // set synapse exclusions and create synapse stack for VI comparisons 
     VolumeLabelPtr tptr;
-    Stack2 synapse_stack(tptr);
+    Stack synapse_stack(tptr);
     if (options.synapse_filename != "") {
         controller.set_synapse_exclusions(options.synapse_filename.c_str());
         gt_controller.set_synapse_exclusions(options.synapse_filename.c_str());

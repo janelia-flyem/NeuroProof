@@ -6,8 +6,6 @@
 #include <cstdlib>
 #include <vector>
 
-#include "../DataStructures/Glb.h"
-
 #include "../Rag/Rag.h"
 #include "../Rag/RagEdge.h"
 
@@ -32,8 +30,8 @@ public:
     void invalidate() {validity = false;};
     bool valid(){return validity;};	 		     	
     void reassign_qloc(int ploc, Rag_uit* prag){ 
-	Label node1 = _val.first;
-	Label node2 = _val.second;
+	Node_uit node1 = _val.first;
+        Node_uit node2 = _val.second;
 	RagEdge_uit* rag_edge = prag->find_rag_edge(node1, node2);
 	if(!rag_edge)
 	    return;
@@ -188,7 +186,7 @@ void MergePriorityQueue<T>::heap_insert(T qelem){
 
 
 
-typedef QueueElement< double, std::pair<Label, Label> >  QE;
+typedef QueueElement< double, std::pair<Node_uit, Node_uit> >  QE;
 
 
 

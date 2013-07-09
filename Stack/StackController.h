@@ -13,9 +13,9 @@ class RagNodeCombineAlg;
 
 class StackController {
   public:
-    StackController(Stack2* stack_) : stack(stack_), updated(false) {}
+    StackController(Stack* stack_) : stack(stack_), updated(false) {}
 
-    Stack2* get_stack()
+    Stack* get_stack()
     {
         return stack;
     }
@@ -30,9 +30,9 @@ class StackController {
     int remove_small_regions(int threshold,
                     std::tr1::unordered_set<Label_t>& exclusions);
 
-    int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label>& candidate_regions,
-        RagPtr gt_rag, std::tr1::unordered_set<Label>& labels_matched,
-        std::tr1::unordered_set<Label>& gtlabels_matched);
+    int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label_t>& candidate_regions,
+        RagPtr gt_rag, std::tr1::unordered_set<Label_t>& labels_matched,
+        std::tr1::unordered_set<Label_t>& gtlabels_matched);
     void set_body_exclusions(string exclusions_json);
     void dilate_labelvol(int disc_size);
     void dilate_gt_labelvol(int disc_size);
@@ -96,10 +96,10 @@ class StackController {
     typedef std::tr1::unordered_map<RagEdge_uit*, Location> EdgeLoc; 
     
     struct LabelCount{
-        Label lbl;
+        Label_t lbl;
         size_t count;
         LabelCount(): lbl(0), count(0) {};	 	 		
-        LabelCount(Label plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
+        LabelCount(Label_t plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
     };
     
 
@@ -113,7 +113,7 @@ class StackController {
     void serialize_graph(const char* graph_name, bool optimal_prob_edge_loc);
     void serialize_labels(const char* h5_name);
  
-    Stack2* stack;
+    Stack* stack;
     bool updated;
     std::tr1::unordered_map<Label_t, std::vector<LabelCount> > contingency;	
     std::tr1::unordered_map<Label_t, Label_t> assignment;

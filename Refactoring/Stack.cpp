@@ -6,8 +6,6 @@
 using namespace NeuroProof;
 using namespace std;
 
-
-
 Label find_max(Label* data, const size_t* dims)
 {
     Label max=0;  	
@@ -25,364 +23,8 @@ Label find_max(Label* data, const size_t* dims)
     return max;	
 }
 
-void Stack::compute_contingency_table()
-{
-    if(!gtruth)
-        return;		
 
-    size_t i,j,k;
-    const size_t dimn[]={depth-2*padding,height-2*padding,width-2*padding};
-    Label *watershed_data = get_label_volume(); 		
-
-    Label ws_max = find_max(watershed_data,dimn);  	
-
-    contingency.clear();	
-    //contingency.resize(ws_max+1);
-    unsigned long ws_size = dimn[0]*dimn[1]*dimn[2];	
-    for(unsigned long itr=0; itr<ws_size ; itr++){
-        Label wlabel = watershed_data[itr];
-        Label glabel = gtruth[itr];
-
-        if (!wlabel || !glabel) {
-            continue;
-        } 
-        multimap<Label, vector<LabelCount> >::iterator mit;
-        mit = contingency.find(wlabel);
-        if (mit != contingency.end()){
-            vector<LabelCount>& gt_vec = mit->second;
-            for (j=0; j< gt_vec.size();j++)
-                if (gt_vec[j].lbl == glabel){
-                    (gt_vec[j].count)++;
-                    break;
-                }
-            if (j==gt_vec.size()){
-                LabelCount lc(glabel,1);
-                gt_vec.push_back(lc);	
-            }
-        }
-        else{
-            vector<LabelCount> gt_vec;	
-            gt_vec.push_back(LabelCount(glabel,1));	
-            contingency.insert(make_pair(wlabel, gt_vec));	
-        }
-    }		
-
-    delete[] watershed_data;	
-}
-
-int Stack::remove_small_regions(unsigned long long threshold)
-{
-    std::tr1::unordered_map<Label, unsigned long long> regions_sz;
-
-    unsigned long long volsz = (depth)*(height)*(width);
-    std::tr1::unordered_map<Label, unsigned long long>::iterator it;
-    for(unsigned long long i=0; i< volsz; ++i){
-        Label body_id = watershed[i];
-        if (body_id != 0) {
-            if (!watershed_to_body.empty()) {
-                body_id = watershed_to_body[body_id];
-            }
-            regions_sz[body_id]++;
-        }
-    } 
-    
-    int num_removed = 0;    
-    std::tr1::unordered_set<Label> small_regions;
-    for(it = regions_sz.begin(); it != regions_sz.end(); it++) {
-        if ((it->second) < threshold) {
-	    small_regions.insert(it->first);
-	    ++num_removed;
-        }
-    }
-
-    for(unsigned long i=0; i< volsz; i++) {
-        Label body_id = watershed[i];
-        if (!watershed_to_body.empty()) {
-            body_id = watershed_to_body[body_id];
-        }
-	if (small_regions.find(body_id) != small_regions.end()){
-	    watershed[i] = 0;	
-	}
-    } 
-
-    return num_removed;
-}
-
-
-void Stack::compute_vi()
-{
-    if(!gtruth)
-        return;		
-
-    int j, k;
-    compute_contingency_table();
-
-    double sum_all=0;
-
-    int nn = contingency.size();
-
-    multimap<Label, double>  wp;	 		
-    multimap<Label, double>  gp;	 		
-
-    for(multimap<Label, vector<LabelCount> >::iterator mit = contingency.begin(); mit != contingency.end(); ++mit){
-        Label i = mit->first;
-        vector<LabelCount>& gt_vec = mit->second; 	
-        wp.insert(make_pair(i,0.0));
-        for (j=0; j< gt_vec.size();j++){
-            unsigned int count = gt_vec[j].count;
-            Label gtlabel = gt_vec[j].lbl;
-
-            (wp.find(i)->second) += count;	
-
-            if(gp.find(gtlabel) != gp.end())
-                (gp.find(gtlabel)->second) += count;
-            else
-                gp.insert(make_pair(gtlabel,count));	
-
-            sum_all += count;
-        }
-        int tt=1;
-    }
-
-    double HgivenW=0;
-    double HgivenG=0;
-
-    std::tr1::unordered_map<Label, double> seg_overmerge;
-    std::tr1::unordered_map<Label, double> gt_overmerge;
-
-    for(multimap<Label, vector<LabelCount> >::iterator mit = contingency.begin(); mit != contingency.end(); ++mit){
-        Label i = mit->first;
-        vector<LabelCount>& gt_vec = mit->second; 	
-        for (j=0; j< gt_vec.size();j++){
-            unsigned int count = gt_vec[j].count;
-            Label gtlabel = gt_vec[j].lbl;
-
-            double p_wg = count/sum_all;
-            double p_w = wp.find(i)->second/sum_all; 	
-
-            HgivenW += p_wg* log(p_w/p_wg)/log(2.0);
-            seg_overmerge[i] += p_wg* log(p_w/p_wg)/log(2.0);
-
-            double p_g = gp.find(gtlabel)->second/sum_all;	
-
-            HgivenG += p_wg * log(p_g/p_wg)/log(2.0);	
-            gt_overmerge[gtlabel] += p_wg * log(p_g/p_wg)/log(2.0);
-        }
-    }
-
-    seg_overmerge_ranked.clear();
-    gt_overmerge_ranked.clear();
-
-    for (std::tr1::unordered_map<Label, double>::iterator iter = seg_overmerge.begin();
-            iter != seg_overmerge.end(); ++iter) {
-        seg_overmerge_ranked.insert(make_pair(iter->second, iter->first));
-    }
-    for (std::tr1::unordered_map<Label, double>::iterator iter = gt_overmerge.begin();
-            iter != gt_overmerge.end(); ++iter) {
-        gt_overmerge_ranked.insert(make_pair(iter->second, iter->first));
-    }
-        
-    printf("MergeSplit: (%f, %f)\n",HgivenW, HgivenG);
-    merge_vi = HgivenW;
-    split_vi = HgivenG;
-}
-
-void Stack::dump_vi_differences(double threshold)
-{
-    cout << "Dumping VI differences to threshold: " << threshold << " where MergeSplit: ("
-        << merge_vi << ", " << split_vi << ")" << endl;
-
-    double totalS = 0.0;
-    double totalG = 0.0;
-    cout << endl << "******Seg Merged Bodies*****" << endl;
-    for (multimap<double, Label>::reverse_iterator iter = seg_overmerge_ranked.rbegin();
-            iter != seg_overmerge_ranked.rend(); ++iter) {
-        if (merge_vi < threshold) {
-            break;
-        }
-        cout << iter->second << " " << iter->first << endl;
-        merge_vi -= iter->first;
-    }
-    cout << endl; 
-
-    cout << endl << "******GT Merged Bodies*****" << endl;
-    for (multimap<double, Label>::reverse_iterator iter = gt_overmerge_ranked.rbegin();
-            iter != gt_overmerge_ranked.rend(); ++iter) {
-        if (split_vi < threshold) {
-            break;
-        }
-        cout << iter->second << " " << iter->first << endl;
-        split_vi -= iter->first;
-    }
-    cout << endl; 
-}
-
-int Stack::grab_max_overlap(Label seg_body, std::tr1::unordered_set<Label>& gt_orphans,
-        Rag_uit* gt_rag, std::tr1::unordered_set<Label>& seg_matched,
-        std::tr1::unordered_set<Label>& gt_matched)
-{
-    multimap<Label, vector<LabelCount> >::iterator mit = contingency.find(seg_body);
-    vector<LabelCount>& gt_vec = mit->second;
-    unsigned long long seg_size = rag->find_rag_node(seg_body)->get_size();
-   
-    int matched = 0; 
-    for (int j=0; j< gt_vec.size();j++){
-        if (gt_orphans.find(gt_vec[j].lbl) != gt_orphans.end()) {
-            unsigned long long gt_size = gt_rag->find_rag_node(gt_vec[j].lbl)->get_size();
-
-            if ((gt_vec[j].count / double(gt_size)) > 0.5) {
-                gt_matched.insert(gt_vec[j].lbl);
-                seg_matched.insert(seg_body);
-                ++matched;
-            } else if ((gt_vec[j].count / double(seg_size)) > 0.5) {
-                gt_matched.insert(gt_vec[j].lbl);
-                seg_matched.insert(seg_body);
-                ++matched;
-            }
-        }
-    }
-    
-    return matched;
-}
-
-void Stack::compute_groundtruth_assignment()
-{
-    if(!gtruth)
-        return;		
-
-    size_t j,k;
-    const size_t dimn[]={depth-2*padding,height-2*padding,width-2*padding};
-
-    Label gt_max = find_max(gtruth,dimn);  	
-
-    compute_contingency_table();
-
-    assignment.clear();  	
-    for(multimap<Label, vector<LabelCount> >::iterator mit = contingency.begin(); mit != contingency.end(); ++mit){
-        Label i = mit->first;
-        vector<LabelCount>& gt_vec = mit->second; 	
-        size_t max_count=0;
-        Label max_label=0;
-        for (j=0; j< gt_vec.size();j++){
-            if (gt_vec[j].count > max_count){
-                max_count = gt_vec[j].count;
-                max_label = gt_vec[j].lbl;
-            }	
-        }
-        assignment.insert(make_pair(i,max_label));
-    }	
-
-    //printf("gt label determined for %d nodes\n", assignment.size());
-}
-void Stack::modify_assignment_after_merge(Label node_keep, Label node_remove)
-{
-    if(!gtruth)
-        return;		
-
-    Label node_remove_gtlbl = assignment.find(node_remove)->second;
-    size_t node_remove_gtoverlap = 0;
-    size_t j;
-
-    multimap<Label, vector<LabelCount> >::iterator mit; 
-    mit = contingency.find(node_remove);	
-    vector<LabelCount>& gt_vecr = mit->second; 	
-    for (j=0; j < gt_vecr.size();j++){
-        if (gt_vecr[j].lbl == node_remove_gtlbl){
-            node_remove_gtoverlap = gt_vecr[j].count;
-            break;
-        }	
-    }
-    if (j == gt_vecr.size())
-        printf("Something wrong with gt assignment of node remove %d\n",node_remove); 	
-
-
-    mit = contingency.find(node_keep);	
-    vector<LabelCount>& gt_veck = mit->second; 	
-
-    for (j=0; j< gt_veck.size();j++){
-        if (gt_veck[j].lbl == node_remove_gtlbl){
-            (gt_veck[j].count) += node_remove_gtoverlap;
-            break;
-        }	
-    }
-    if (j == gt_veck.size()){ // i.e.,  a false merge
-        //printf("Node keep %d does not overlap with node remove %d gt \n",node_keep, node_remove); 	
-
-        LabelCount lc(node_remove_gtlbl,node_remove_gtoverlap);
-        gt_veck.push_back(lc);
-    }
-
-    size_t max_count=0;
-    Label max_label=0;
-    for (j=0; j< gt_veck.size();j++){
-        if (gt_veck[j].count > max_count){
-            max_count = gt_veck[j].count;
-            max_label = gt_veck[j].lbl;
-        }	
-    }
-    assignment.find(node_keep)->second = max_label;
-
-
-}
-
-/*********************************************************************************/
-
-void Stack::create_0bounds()
-{
-    unsigned int plane_size = width * height;
-    std::tr1::unordered_set<Label> labels;
-
-    // initialize new label array to all 0
-    Label * new_vol = new Label[width*height*depth]();
-
-    for (unsigned int z = 1; z < (depth-1); ++z) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 1; y < (height-1); ++y) {
-            int y_spot = y * width;
-            for (unsigned int x = 1; x < (width-1); ++x) {
-                unsigned long long curr_spot = x + y_spot + z_spot;
-                unsigned int spot0 = watershed[curr_spot];
-                unsigned int spot1 = watershed[curr_spot-1];
-                unsigned int spot2 = watershed[curr_spot+1];
-                unsigned int spot3 = watershed[curr_spot-width];
-                unsigned int spot4 = watershed[curr_spot+width];
-                unsigned int spot5 = watershed[curr_spot-plane_size];
-                unsigned int spot6 = watershed[curr_spot+plane_size];
-
-                new_vol[curr_spot] = spot0;
-
-                if (!spot0) {
-                    continue;
-                }
-
-                if (spot1 && (spot0 != spot1)) {
-                    new_vol[curr_spot] = 0;
-                }
-                if (spot2 && (spot0 != spot2)) {
-                    new_vol[curr_spot] = 0;
-                }
-                if (spot3 && (spot0 != spot3)) {
-                    new_vol[curr_spot] = 0;
-                }
-                if (spot4 && (spot0 != spot4)) {
-                    new_vol[curr_spot] = 0;
-                }
-                if (spot5 && (spot0 != spot5)) {
-                    new_vol[curr_spot] = 0;
-                }
-                if (spot6 && (spot0 != spot6)) {
-                    new_vol[curr_spot] = 0;
-                }
-            }
-        }
-    } 
-
-    delete watershed;
-    watershed = new_vol;
-}
-
-
-void Stack::build_rag()
+void Stack2::build_rag()
 {
     if (feature_mgr && (feature_mgr->get_num_features() == 0)) {
         feature_mgr->add_median_feature();
@@ -484,7 +126,7 @@ void Stack::build_rag()
     }
 }
 
-void Stack::init_mappings()
+void Stack2::init_mappings()
 {
     unsigned long long total_size = width*height*depth;
     for (unsigned long long i = 0; i < total_size; ++i) {
@@ -492,7 +134,7 @@ void Stack::init_mappings()
     }
 }
 
-int Stack::remove_inclusions()
+int Stack2::remove_inclusions()
 {
     int num_removed = 0;
 
@@ -631,7 +273,7 @@ int Stack::remove_inclusions()
 }
 
 // return low point (0 is default edge)
-void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
+void Stack2::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
 {
     while (!dfs_stack.empty()) {
         DFSStack entry = dfs_stack.back();
@@ -710,184 +352,7 @@ void Stack::biconnected_dfs(std::vector<DFSStack>& dfs_stack)
     }
 }
 
-Label* Stack::get_label_volume(){
-
-    Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
-    Label * temp_labels_iter = temp_labels;
-    unsigned int plane_size = width * height;
-
-    for (int z = padding; z < (depth - padding); ++z) {
-        int z_spot = z * plane_size;
-        for (int y = padding; y < (height - padding); ++y) {
-            int y_spot = y * width;
-            for (int x = padding; x < (width - padding); ++x) {
-                unsigned long long curr_spot = x+y_spot+z_spot;
-                Label sv_id = watershed[curr_spot];
-                Label body_id;
-                if (!watershed_to_body.empty()) {
-                    body_id = watershed_to_body[sv_id];
-                } else {
-                    body_id = sv_id;
-                }
-                *temp_labels_iter = body_id;
-                ++temp_labels_iter;
-            }
-        }
-    }
-
-    return temp_labels;
-}
-
-void Stack::set_body_exclusions(string exclusions_json)
-{
-    assert(watershed_to_body.size() > 0);
-    Json::Reader json_reader;
-    Json::Value json_vals;
-    exclusion_set.clear();
-    
-    ifstream fin(exclusions_json.c_str());
-    if (!fin) {
-        throw ErrMsg("Error: input file: " + exclusions_json + " cannot be opened");
-    }
-    if (!json_reader.parse(fin, json_vals)) {
-        throw ErrMsg("Error: Json incorrectly formatted");
-    }
-    fin.close();
-    
-    Json::Value exclusions = json_vals["exclusions"];
-    for (unsigned int i = 0; i < json_vals["exclusions"].size(); ++i) {
-        exclusion_set.insert(exclusions[i].asUInt());
-    }
-
-    // assume watershed has already been built
-    for (std::tr1::unordered_map<Label, Label>::iterator iter = watershed_to_body.begin();
-           iter != watershed_to_body.end(); ++iter) {
-        if (exclusion_set.find(iter->second) != exclusion_set.end()) {
-            watershed_to_body[iter->first] = 0;
-        }
-    } 
-}
-
-void Stack::set_gt_exclusions()
-{
-    assert(watershed_to_body.size() > 0);
-    exclusion_set.clear();
-    
-    Label *watershed_data = get_label_volume(); 		
-    const size_t dimn[]={depth-2*padding,height-2*padding,width-2*padding};
-
-    unsigned long int ws_size = dimn[0]*dimn[1]*dimn[2];	
-    
-    std::tr1::unordered_map<Label, unsigned long int> body_excl_count;
-
-    for (unsigned long int iter = 0; iter < ws_size; ++iter) {
-        if (!(gtruth[iter])) {
-            body_excl_count[(watershed_to_body[(watershed_data[iter])])]++;
-        }
-    }
-
-    for (std::tr1::unordered_map<Label, unsigned long int>::iterator iter = body_excl_count.begin();
-            iter != body_excl_count.end(); ++iter) {
-        RagNode_uit* node = rag->find_rag_node(iter->first);
-        if (iter->second > (node->get_size() / 2)) {
-            exclusion_set.insert(iter->first);
-        }
-    }
-    delete [] watershed_data;
-}
-
-void Stack::set_exclusions(std::string synapse_json)
-{
-    Json::Reader json_reader;
-    Json::Value json_reader_vals;
-    ifstream fin(synapse_json.c_str());
-    if (!fin) {
-        throw ErrMsg("Error: input file: " + synapse_json + " cannot be opened");
-    }
-
-    if (!json_reader.parse(fin, json_reader_vals)) {
-        throw ErrMsg("Error: Json incorrectly formatted");
-    }
-    fin.close();
- 
-    all_locations.clear();
-
-    Json::Value synapses = json_reader_vals["data"];
-
-    for (int i = 0; i < synapses.size(); ++i) {
-        vector<vector<unsigned int> > locations;
-        Json::Value location = synapses[i]["T-bar"]["location"];
-        if (!location.empty()) {
-            vector<unsigned int> loc;
-            loc.push_back(location[(unsigned int)(0)].asUInt());
-            loc.push_back(location[(unsigned int)(1)].asUInt());
-            loc.push_back(location[(unsigned int)(2)].asUInt());
-            all_locations.push_back(loc);
-            locations.push_back(loc);
-        }
-        Json::Value psds = synapses[i]["partners"];
-        for (int i = 0; i < psds.size(); ++i) {
-            Json::Value location = psds[i]["location"];
-            if (!location.empty()) {
-                vector<unsigned int> loc;
-                loc.push_back(location[(unsigned int)(0)].asUInt());
-                loc.push_back(location[(unsigned int)(1)].asUInt());
-                loc.push_back(location[(unsigned int)(2)].asUInt());
-                all_locations.push_back(loc);
-                locations.push_back(loc);
-            }
-        }
-
-        for (int iter1 = 0; iter1 < locations.size(); ++iter1) {
-            for (int iter2 = (iter1 + 1); iter2 < locations.size(); ++iter2) {
-                add_edge_constraint2(locations[iter1][0], locations[iter1][1], locations[iter1][2],
-                    locations[iter2][0], locations[iter2][1], locations[iter2][2]);           
-            }
-        }
-    }
-}
-
-void Stack::compute_synapse_volume(vector<Label>& seg_labels, vector<Label>& gt_labels)
-{
-    for (int i = 0; i < all_locations.size(); ++i) {
-        Label body_id = get_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
-        seg_labels.push_back(body_id);
-        body_id = get_gt_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
-        gt_labels.push_back(body_id);
-    }
-}
-
-
-Label* Stack::get_label_volume_reverse(){
-
-    Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
-    Label * temp_labels_iter = temp_labels;
-    unsigned int plane_size = width * height;
-
-    for (int x = padding; x < (width - padding); ++x) {
-        for (int y = padding; y < (height - padding); ++y) {
-            int y_spot = y * width;
-            for (int z = padding; z < (depth - padding); ++z) {
-                int z_spot = z * plane_size;
-                unsigned long long curr_spot = x+y_spot+z_spot;
-                Label sv_id = watershed[curr_spot];
-                Label body_id;
-                if (!watershed_to_body.empty()) {
-                    body_id = watershed_to_body[sv_id];
-                } else {
-                    body_id = sv_id;
-                }
-                *temp_labels_iter = body_id;
-                ++temp_labels_iter;
-            }
-        }
-    }
-
-    return temp_labels;
-}
-
-
-void Stack::determine_edge_locations(bool use_probs)
+void Stack2::determine_edge_locations(bool use_probs)
 {
     best_edge_z.clear();
     best_edge_loc.clear();
@@ -968,7 +433,7 @@ void Stack::determine_edge_locations(bool use_probs)
     return;
 }
 
-bool Stack::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int z1,
+bool Stack2::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int z1,
         unsigned int x2, unsigned int y2, unsigned int z2)
 {
     Label body1 = get_body_id(x1, y1, z1);    
@@ -997,7 +462,7 @@ bool Stack::add_edge_constraint2(unsigned int x1, unsigned int y1, unsigned int 
 }
 
 
-bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
+bool Stack2::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
 {
     return add_edge_constraint2(boost::python::extract<int>(loc1[0]),
             boost::python::extract<int>(loc1[1]), boost::python::extract<int>(loc1[2]),
@@ -1005,7 +470,7 @@ bool Stack::add_edge_constraint(boost::python::tuple loc1, boost::python::tuple 
             boost::python::extract<int>(loc2[2]));    
 }
 
-Label Stack::get_body_id(unsigned int x, unsigned int y, unsigned int z)
+Label Stack2::get_body_id(unsigned int x, unsigned int y, unsigned int z)
 {
     x += padding;
     //y += padding;
@@ -1020,7 +485,7 @@ Label Stack::get_body_id(unsigned int x, unsigned int y, unsigned int z)
     return body_id;
 }
 
-Label Stack::get_gt_body_id(unsigned int x, unsigned int y, unsigned int z)
+Label Stack2::get_gt_body_id(unsigned int x, unsigned int y, unsigned int z)
 {
     unsigned int w2 = width - 2*padding;
     unsigned int h2 = height - 2*padding;
@@ -1032,7 +497,34 @@ Label Stack::get_gt_body_id(unsigned int x, unsigned int y, unsigned int z)
     return body_id;
 }
 
-boost::python::tuple Stack::get_edge_loc2(RagEdge_uit* edge)
+Label* Stack2::get_label_volume(){
+
+    Label * temp_labels = new Label[(width-(2*padding))*(height-(2*padding))*(depth-(2*padding))];
+    Label * temp_labels_iter = temp_labels;
+    unsigned int plane_size = width * height;
+
+    for (int z = padding; z < (depth - padding); ++z) {
+        int z_spot = z * plane_size;
+        for (int y = padding; y < (height - padding); ++y) {
+            int y_spot = y * width;
+            for (int x = padding; x < (width - padding); ++x) {
+                unsigned long long curr_spot = x+y_spot+z_spot;
+                Label sv_id = watershed[curr_spot];
+                Label body_id;
+                if (!watershed_to_body.empty()) {
+                    body_id = watershed_to_body[sv_id];
+                } else {
+                    body_id = sv_id;
+                }
+                *temp_labels_iter = body_id;
+                ++temp_labels_iter;
+            }
+        }
+    }
+
+    return temp_labels;
+}
+boost::python::tuple Stack2::get_edge_loc2(RagEdge_uit* edge)
 {
     if (best_edge_loc.find(edge) == best_edge_loc.end()) {
         throw ErrMsg("Edge location was not loaded!");
@@ -1045,7 +537,7 @@ boost::python::tuple Stack::get_edge_loc2(RagEdge_uit* edge)
     return boost::python::make_tuple(x, y, z); 
 }
 
-void Stack::get_edge_loc(RagEdge_uit* edge, Label&x, Label& y, Label& z)
+void Stack2::get_edge_loc(RagEdge_uit* edge, Label&x, Label& y, Label& z)
 {
     if (best_edge_loc.find(edge) == best_edge_loc.end()) {
         throw ErrMsg("Edge location was not loaded!");
@@ -1057,7 +549,7 @@ void Stack::get_edge_loc(RagEdge_uit* edge, Label&x, Label& y, Label& z)
 
 }
 
-void Stack::build_rag_border()
+void Stack2::build_rag_border()
 {
     if (feature_mgr && (feature_mgr->get_num_features() == 0)) {
         feature_mgr->add_median_feature();
@@ -1124,40 +616,17 @@ void Stack::build_rag_border()
     }
 }
 
-void Stack::disable_nonborder_edges()
+void Stack2::disable_nonborder_edges()
 {
     return;
 }
 
-void Stack::enable_nonborder_edges()
+void Stack2::enable_nonborder_edges()
 {
     return;
 }
 
-// merge node 2 onto node 1
-void Stack::merge_nodes(Label node1, Label node2)
-{
-    watershed_to_body[node2] = node1;
-    for (std::vector<Label>::iterator iter = merge_history[node2].begin(); iter != merge_history[node2].end(); ++iter) {
-        watershed_to_body[*iter] = node1;
-    }
-
-    merge_history[node1].push_back(node2);
-    merge_history[node1].insert(merge_history[node1].end(), merge_history[node2].begin(), merge_history[node2].end());
-    merge_history.erase(node2);
-
-    if (exclusion_set.find(node2) != exclusion_set.end()) {
-        exclusion_set.insert(node1);
-        exclusion_set.erase(node2);
-    }
-}
-
-bool Stack::is_excluded(Label node)
-{
-    return (exclusion_set.find(node) != exclusion_set.end());    
-}
-
-void Stack::agglomerate_rag(double threshold)
+void Stack2::agglomerate_rag(double threshold)
 {
     if (threshold == 0.0) {
         return;
@@ -1192,7 +661,7 @@ void Stack::agglomerate_rag(double threshold)
     delete priority;
 }
 
-boost::python::list Stack::get_transformations()
+boost::python::list Stack2::get_transformations()
 {
     boost::python::list transforms;
 
@@ -1208,7 +677,7 @@ boost::python::list Stack::get_transformations()
     return transforms;
 }
 
-void Stack::load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies)
+void Stack2::load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bodies)
 {
     for (int i = 0; i < all_locations.size(); ++i) {
         Label body_id = get_body_id(all_locations[i][0], all_locations[i][1], all_locations[i][2]); 
@@ -1222,7 +691,7 @@ void Stack::load_synapse_counts(std::tr1::unordered_map<Label, int>& synapse_bod
 
 }
 
-void Stack::write_graph_json(Json::Value& json_writer)
+void Stack2::write_graph_json(Json::Value& json_writer)
 {
     std::tr1::unordered_map<Label, int> synapse_bodies;
     load_synapse_counts(synapse_bodies);
@@ -1245,7 +714,7 @@ void Stack::write_graph_json(Json::Value& json_writer)
     }
 }
 
-void Stack::write_graph(string output_path)
+void Stack2::write_graph(string output_path)
 {
 
     unsigned found = output_path.find_last_of(".");
@@ -1276,56 +745,5 @@ void Stack::write_graph(string output_path)
 
 }
 
-int Stack::decide_edge_label(RagNode_uit* rag_node1, RagNode_uit* rag_node2)
-{
-    int edge_label = 0;
-    Label node1 = rag_node1->get_node_id();	
-    Label node2 = rag_node2->get_node_id();	
 
-    Label node1gt = assignment.find(node1)->second;
-    Label node2gt = assignment.find(node2)->second;
-
-    if (!node1gt){
-        printf("no grountruth node %d\n",node1);
-    }  	
-    if (!node2gt){
-        printf("no grountruth node %d\n",node2);
-    }  	
-
-    edge_label = (node1gt == node2gt)? -1 : 1;
-
-    MitoTypeProperty mtype1;
-    MitoTypeProperty mtype2;
-    try {        
-        mtype1 = rag_node1->get_property<MitoTypeProperty>("mito-type");
-    } catch (ErrMsg& msg) {
-    }
-    try {
-        mtype2 = rag_node2->get_property<MitoTypeProperty>("mito-type");
-    } catch (ErrMsg& msg) {
-    }
-
-    if (merge_mito) {
-        if ( mtype1.get_node_type() == 2 || mtype2.get_node_type() == 2 ) {
-            edge_label = 1;
-        }
-    }
-       
-    return edge_label;	
-}
-
-#ifndef SETPYTHON
-void Stack::set_basic_features()
-{
-    double hist_percentiles[]={0.1, 0.3, 0.5, 0.7, 0.9};
-    std::vector<double> percentiles(hist_percentiles, hist_percentiles+sizeof(hist_percentiles)/sizeof(double));		
-
-    // ** for Toufiq's version ** feature_mgr->add_inclusiveness_feature(true);  	
-    feature_mgr->add_moment_feature(4,true);	
-    feature_mgr->add_hist_feature(25,percentiles,false); 	
-
-    //cout << "Number of features, channels:" << feature_mgr->get_num_features()<< ","<<feature_mgr->get_num_channels()<<"\n";	
-
-}
-#endif
 

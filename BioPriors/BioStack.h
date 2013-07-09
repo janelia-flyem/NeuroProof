@@ -5,9 +5,9 @@
 
 namespace NeuroProof {
 
-class BioStack : public Stack2 {
+class BioStack : public Stack {
   public:
-    BioStack(VolumeLabelPtr labels_) : Stack2(labels_) {}
+    BioStack(VolumeLabelPtr labels_) : Stack(labels_) {}
 
     std::vector<std::vector<unsigned int> >& get_synapse_locations()
     {

@@ -85,7 +85,7 @@ class ProbPriority : public MergePriority {
 
     double threshold;
     const double Epsilon;
-    typedef std::multimap<double, std::pair<Label, Label> > EdgeRank_t; 
+    typedef std::multimap<double, std::pair<Node_uit, Node_uit> > EdgeRank_t; 
     typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;
@@ -116,7 +116,7 @@ class MitoPriority : public MergePriority {
 
     double threshold;
     const double Epsilon;
-    typedef std::multimap<double, std::pair<Label, Label> > EdgeRank_t; 
+    typedef std::multimap<double, std::pair<Node_uit, Node_uit> > EdgeRank_t; 
     typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;

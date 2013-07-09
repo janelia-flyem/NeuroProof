@@ -127,8 +127,8 @@ class PriorityQCombine : public FeatureCombine {
             double val = feature_mgr->get_prob(*iter);
             double prev_val = (*iter)->get_weight(); 
             (*iter)->set_weight(val);
-            Label node1 = (*iter)->get_node1()->get_node_id();
-            Label node2 = (*iter)->get_node2()->get_node_id();
+            Node_uit node1 = (*iter)->get_node1()->get_node_id();
+            Node_uit node2 = (*iter)->get_node2()->get_node_id();
 
             QE tmpelem(val, std::make_pair(node1,node2));	
 

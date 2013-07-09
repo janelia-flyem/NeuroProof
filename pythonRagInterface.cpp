@@ -3,7 +3,7 @@
 #include "Refactoring/RagUtils2.h"
 #include "Rag/RagIO.h"
 #include "Utilities/ErrMsg.h"
-#include "DataStructures/Stack.h"
+#include "Refactoring/Stack.h"
 
 #include <boost/python.hpp>
 
@@ -12,6 +12,7 @@
 using namespace NeuroProof;
 using namespace boost::python;
 using std::cout;
+
 
 RagNode_uit* (Rag_uit::*find_rag_node_ptr)(Label) = &Rag_uit::find_rag_node;
 RagNode_uit* (Rag_uit::*insert_rag_node_ptr)(Label) = &Rag_uit::insert_rag_node;
@@ -98,7 +99,7 @@ Rag_nodeiterator_wrapper rag_get_nodes(Rag_uit& rag)
 }
 
 
-void write_volume_to_buffer(Stack* stack, object np_buffer)
+void write_volume_to_buffer(Stack2* stack, object np_buffer)
 {
     unsigned width, height, depth; 
     boost::python::tuple np_buffer_shape(np_buffer.attr("shape"));
@@ -126,9 +127,9 @@ void write_volume_to_buffer(Stack* stack, object np_buffer)
     delete temp_label_volume;
 }
 
-Stack* init_stack()
+Stack2* init_stack()
 {
-    Stack * stack = new Stack; 
+    Stack2 * stack = new Stack2; 
     stack->set_feature_mgr(new FeatureMgr());
     return stack;
 }
@@ -162,7 +163,7 @@ unsigned int* init_watershed(object watershed, unsigned int& width, unsigned int
 
 
 // ?! how to add features to RAG
-void reinit_stack(Stack* stack, object watershed)
+void reinit_stack(Stack2* stack, object watershed)
 {
     // there will be 0 padding around image
     unsigned int width, height, depth; 
@@ -171,7 +172,7 @@ void reinit_stack(Stack* stack, object watershed)
     stack->reinit_stack(watershed_array, depth, height, width, 1);
 }
 
-void reinit_stack2(Stack* stack, object watershed)
+void reinit_stack2(Stack2* stack, object watershed)
 {
     // there will be 0 padding around image
     unsigned int width, height, depth; 
@@ -206,13 +207,13 @@ double * create_prediction(object prediction)
     return prediction_array;
 }   
 
-void add_prediction_channel(Stack* stack, object prediction)
+void add_prediction_channel(Stack2* stack, object prediction)
 {
     double * prediction_array = create_prediction(prediction);
     stack->add_prediction_channel(prediction_array);
 }
 
-void add_prediction_channel2(Stack* stack, object prediction)
+void add_prediction_channel2(Stack2* stack, object prediction)
 {
     double * prediction_array = create_prediction(prediction);
     stack->add_prediction_channel2(prediction_array);
@@ -260,29 +261,29 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         ;
 
     // initialization actually occurs within custom build
-    class_<Stack>("Stack", no_init)
+    class_<Stack2>("Stack", no_init)
         // returns number of bodies
-        .def("get_num_bodies", &Stack::get_num_bodies)
+        .def("get_num_bodies", &Stack2::get_num_bodies)
         // agglomerate to a threshold
-        .def("agglomerate_rag", &Stack::agglomerate_rag)
+        .def("agglomerate_rag", &Stack2::agglomerate_rag)
         // build rag based on loaded features and prediction images 
-        .def("build_rag", &Stack::build_rag)
-        .def("build_rag_border", &Stack::build_rag_border)
-        .def("add_empty_channel", &Stack::add_empty_channel)
-        .def("get_transformations", &Stack::get_transformations)
-        .def("disable_nonborder_edges", &Stack::disable_nonborder_edges)
-        .def("enable_nonborder_edges", &Stack::enable_nonborder_edges)
-        .def("get_feature_mgr", &Stack::get_feature_mgr, return_value_policy<reference_existing_object>())
+        .def("build_rag", &Stack2::build_rag)
+        .def("build_rag_border", &Stack2::build_rag_border)
+        .def("add_empty_channel", &Stack2::add_empty_channel)
+        .def("get_transformations", &Stack2::get_transformations)
+        .def("disable_nonborder_edges", &Stack2::disable_nonborder_edges)
+        .def("enable_nonborder_edges", &Stack2::enable_nonborder_edges)
+        .def("get_feature_mgr", &Stack2::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
-        .def("remove_inclusions", &Stack::remove_inclusions)
+        .def("remove_inclusions", &Stack2::remove_inclusions)
         // set edge constraints, will create false edges
-        .def("add_edge_constraint", &Stack::add_edge_constraint)
-        .def("get_rag", &Stack::get_rag, return_value_policy<reference_existing_object>())
-        .def("get_body_id", &Stack::get_body_id)
-        .def("determine_edge_locations", &Stack::determine_edge_locations)
-        .def("get_edge_weight", &Stack::get_edge_weight)
-        .def("get_edge_loc", &Stack::get_edge_loc2)
-        .def("is_orphan", &Stack::is_orphan)
+        .def("add_edge_constraint", &Stack2::add_edge_constraint)
+        .def("get_rag", &Stack2::get_rag, return_value_policy<reference_existing_object>())
+        .def("get_body_id", &Stack2::get_body_id)
+        .def("determine_edge_locations", &Stack2::determine_edge_locations)
+        .def("get_edge_weight", &Stack2::get_edge_weight)
+        .def("get_edge_loc", &Stack2::get_edge_loc2)
+        .def("is_orphan", &Stack2::is_orphan)
         ;
 
 

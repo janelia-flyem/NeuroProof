@@ -16,6 +16,8 @@ using namespace boost::python;
 using std::ifstream; using std::ofstream; using std::cout; using std::endl;
 using std::vector;
 
+typedef unsigned int Label;
+
 static LocalEdgePriority* priority_scheduler = 0;
 Rag_uit* rag = 0;
 bool DebugMode = false;

@@ -49,8 +49,8 @@ void ProbPriority::initialize_random(double pthreshold){
 void ProbPriority::clear_dirty()
 {
     for (Dirty_t::iterator iter = dirty_edges.begin(); iter != dirty_edges.end(); ++iter) {
-	Label node1 = (*iter).region1;
-	Label node2 = (*iter).region2;
+	Node_uit node1 = (*iter).region1;
+	Node_uit node2 = (*iter).region2;
 	RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
 	RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
 
@@ -97,8 +97,8 @@ RagEdge_uit* ProbPriority::get_top_edge()
 {
     EdgeRank_t::iterator first_entry = ranking.begin();
     double curr_threshold = (*first_entry).first;
-    Label node1 = (*first_entry).second.first;
-    Label node2 = (*first_entry).second.second;
+    Node_uit node1 = (*first_entry).second.first;
+    Node_uit node2 = (*first_entry).second.second;
     ranking.erase(first_entry);
 
     //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;
@@ -195,8 +195,8 @@ void MitoPriority::initialize_priority(double threshold_, bool use_edge_weight)
 void MitoPriority::clear_dirty()
 {
     for (Dirty_t::iterator iter = dirty_edges.begin(); iter != dirty_edges.end(); ++iter) {
-	Label node1 = (*iter).region1;
-	Label node2 = (*iter).region2;
+	Node_uit node1 = (*iter).region1;
+	Node_uit node2 = (*iter).region2;
 	RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
 	RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
 
@@ -236,8 +236,8 @@ RagEdge_uit* MitoPriority::get_top_edge()
 {
     EdgeRank_t::iterator first_entry = ranking.begin();
     double curr_threshold = (*first_entry).first;
-    Label node1 = (*first_entry).second.first;
-    Label node2 = (*first_entry).second.second;
+    Node_uit node1 = (*first_entry).second.first;
+    Node_uit node2 = (*first_entry).second.second;
     ranking.erase(first_entry);
 
     //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;

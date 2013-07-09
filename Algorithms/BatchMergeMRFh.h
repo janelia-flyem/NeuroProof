@@ -4,7 +4,6 @@
 #include "../FeatureManager/FeatureManager.h"
 #include <vector>
 #include "../Rag/Rag.h"
-#include "../DataStructures/Glb.h"
 
 #define MERGE 0
 #define KEEP 1
@@ -28,12 +27,12 @@ class BatchMergeMRFh{
     double _thd;	
 //    int _edgeCount;	
 
-    vector< vector<Label> > _subsets; 	
+    vector< vector<Node_uit> > _subsets; 	
     vector< vector<double> > _costs; 	
     			
     vector< vector<int> > _labelConfig; 
 
-    multimap<Label, Label>* _assignment;
+    multimap<Node_uit, Node_uit>* _assignment;
 
     FILE* _fp; 	
 //    vector<double> _edgeWt;
@@ -42,7 +41,7 @@ class BatchMergeMRFh{
 
     multimap<int, vector< vector<int> > > _configList;
 public:
-    BatchMergeMRFh(Rag_uit* prag, FeatureMgr* pfmgr, multimap<Label, Label>* assignment, double pthd=0.5, size_t psz=4): _rag(prag), _feature_mgr(pfmgr), _subsetSz(psz), _thd(pthd) {
+    BatchMergeMRFh(Rag_uit* prag, FeatureMgr* pfmgr, multimap<Node_uit, Node_uit>* assignment, double pthd=0.5, size_t psz=4): _rag(prag), _feature_mgr(pfmgr), _subsetSz(psz), _thd(pthd) {
 
         _assignment = assignment;
 	if (_subsetSz==2){
@@ -64,16 +63,16 @@ public:
 	}
     };
 
-    double compute_merge_prob( int iterCount, std::vector< std::pair<Label, Label> >& allEdges, string wts_path, string analysis_path);	
+    double compute_merge_prob( int iterCount, std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string wts_path, string analysis_path);	
     void generate_subsets(RagNode_uit* pnode);
-    void compute_subset_cost(RagNode_uit* pnode, set<Label>& subset);
-    double merge_by_config(vector<int>& config, vector<Label>& subset);
-    double merge_by_order(vector<int>& config, vector<Label>& subset, vector<int>& morder);
-    void build_srag(RagNode_uit* pnode, set<Label>& subset);
+    void compute_subset_cost(RagNode_uit* pnode, set<Node_uit>& subset);
+    double merge_by_config(vector<int>& config, vector<Node_uit>& subset);
+    double merge_by_order(vector<int>& config, vector<Node_uit>& subset, vector<int>& morder);
+    void build_srag(RagNode_uit* pnode, set<Node_uit>& subset);
     int oneDaddress(int rr, int cc, int nCols);
     void ComputeTempIndex(vector< vector<int> > &tupleLabelMat,int nClass,int tupleSz);
     void read_and_set_tree_weights(string sol_fname, vector<double>& tree_wts);
-    double refine_edge_weights(std::vector< std::pair<Label, Label> >& allEdges, string tmp_filename);
+    double refine_edge_weights(std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string tmp_filename);
 
     void write_in_file(const char *filename);
     int get_gt(RagEdge_uit* pedge);

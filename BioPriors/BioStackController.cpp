@@ -112,7 +112,7 @@ void BioStackController::build_rag_mito()
     Rag_uit * rag = new Rag_uit;
 
     vector<double> predictions(prob_list.size(), 0.0);
-    unordered_set<Label> labels;
+    unordered_set<Label_t> labels;
    
     unsigned int maxx = get_xsize() - 1; 
     unsigned int maxy = get_ysize() - 1; 
@@ -257,7 +257,7 @@ void BioStackController::serialize_graph_info(Json::Value& json_writer)
     unordered_map<Label_t, int> synapse_counts;
     load_synapse_counts(synapse_counts);
     int id = 0;
-    for (std::tr1::unordered_map<Label, int>::iterator iter = synapse_counts.begin();
+    for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter, ++id) {
         Json::Value synapse_pair;
         synapse_pair[(unsigned int)(0)] = iter->first;
