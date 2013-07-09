@@ -57,6 +57,7 @@ void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remo
             // move old edge to newly created edge
             final_edge = rag.insert_rag_edge(node_keep, other_node);
             (*iter)->mv_properties(final_edge); 
+            final_edge->set_size((*iter)->get_size());
             if (combine_alg) { 
                 combine_alg->post_edge_move(final_edge, *iter);
             }
