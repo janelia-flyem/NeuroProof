@@ -2,7 +2,12 @@
 #define STACKCONTROLLER_H
 
 #include "Stack.h"
+#include <boost/tuple/tuple.hpp>
+
+#include <tr1/unordered_set>
+#include <tr1/unordered_map>
 #include <map>
+#include <string>
 
 #include <json/json.h>
 #include <json/value.h>
@@ -33,7 +38,7 @@ class StackController {
     int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label_t>& candidate_regions,
         RagPtr gt_rag, std::tr1::unordered_set<Label_t>& labels_matched,
         std::tr1::unordered_set<Label_t>& gtlabels_matched);
-    void set_body_exclusions(string exclusions_json);
+    void set_body_exclusions(std::string exclusions_json);
     void dilate_labelvol(int disc_size);
     void dilate_gt_labelvol(int disc_size);
 

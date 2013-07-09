@@ -95,7 +95,7 @@ class OptionParser
         for (unsigned int i = 0; i < positional_ids.size(); ++i) {
             // TODO: proper multi-line formatting
             std::cout << "  " << std::setw(31) << std::left << positional_ids[i];
-            std::cout << positional_descr[i] << endl;
+            std::cout << positional_descr[i] << std::endl;
         }
         std::cout << generic_options <<std::endl;
     }

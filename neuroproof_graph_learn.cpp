@@ -1,3 +1,4 @@
+#include "FeatureManager/FeatureManager.h"
 #include "BioPriors/BioStackController.h"
 #include "BioPriors/StackLearnAlgs.h"
 

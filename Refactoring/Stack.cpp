@@ -5,6 +5,7 @@
 
 using namespace NeuroProof;
 using namespace std;
+using std::string;
 
 Label find_max(Label* data, const size_t* dims)
 {

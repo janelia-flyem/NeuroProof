@@ -1,3 +1,5 @@
+#include "FeatureManager/FeatureManager.h"
+
 #include "BioPriors/BioStackController.h"
 #include "Stack/Stack.h"
 
@@ -7,6 +9,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
+
 
 
 using namespace NeuroProof;

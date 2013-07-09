@@ -1,7 +1,6 @@
-#ifndef STACK2_H
-#define STACK2_H
+#ifndef STACK_H
+#define STACK_H
 
-#include "../FeatureManager/FeatureManager.h"
 #include "VolumeData.h"
 #include "VolumeLabelData.h"
 #include "../Rag/Rag.h"
@@ -9,6 +8,9 @@
 #include <vector>
 
 namespace NeuroProof {
+
+class FeatureMgr;
+typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;
 
 class Stack {
   public:

@@ -1,3 +1,4 @@
+#include "../FeatureManager/FeatureManager.h"
 #include "StackController.h"
 #include "../Rag/RagUtils.h"
 #include "../Refactoring/RagUtils2.h"

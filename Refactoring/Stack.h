@@ -1,5 +1,5 @@
-#ifndef STACK_H
-#define STACK_H
+#ifndef STACK2_H
+#define STACK2_H
 
 #include <boost/python.hpp>
 #include "../FeatureManager/FeatureManager.h"
@@ -147,8 +147,7 @@ class Stack2 {
         gtruth = pgt;
     }
     void merge_nodes(Label node1, Label node2);
-    void write_graph(string);
-
+    void write_graph(std::string output_path);
 
     
     Label get_body_id(unsigned int x, unsigned int y, unsigned int z);

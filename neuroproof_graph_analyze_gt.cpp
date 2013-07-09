@@ -18,6 +18,9 @@
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */
 
+// feature manager
+#include "FeatureManager/FeatureManager.h"
+
 // controller for stack containing label volume and rag
 #include "BioPriors/BioStackController.h"
 
