@@ -9,6 +9,7 @@
 #define RAGUTILS_H
 
 #include <vector>
+#include <boost/graph/adjacency_list.hpp>
 
 namespace boost {
 
@@ -52,6 +53,50 @@ void rag_join_nodes(Rag<unsigned int>& rag, RagNode<unsigned int>* node_keep,
 */
 void find_biconnected_components(boost::shared_ptr<Rag<unsigned int> > rag,
     std::vector<std::vector<OrderedPair> >& biconnected_components);
+
+
+/*!
+ * Holds properties for boost vertex
+*/
+struct BoostVertexData {
+    //! corresponds to RagNode size
+    unsigned long long size;
+    
+    //! corresponds to RagNode boundary_size
+    unsigned long long boundary_size;
+};
+
+/*!
+ * Holds properties for boost edge
+*/
+struct BoostEdgeData {
+    //! corresponds to RagEdge size
+    unsigned long long size;
+    
+    //! corresponds to RagEdge weight
+    double weight;
+};
+
+
+/*!
+ * typedefs used to make handling the Boost graph library more
+ * manageable by focusing the templates in a manner most
+ * compatible with the way NeuroProof RAG library is implemented
+*/
+typedef boost::adjacency_list< boost::hash_setS, boost::vecS, boost::undirectedS, BoostVertexData, BoostEdgeData> BoostGraph;
+typedef BoostGraph::vertex_descriptor BoostVertex;
+typedef BoostGraph::edge_descriptor BoostEdge;
+
+//! accessing an edge returns a descriptor and a bool
+typedef std::pair<BoostEdge, bool> BoostEdgeBool;
+
+/*!
+ * Generates an boost graph from rag.  Only the edge size and weight
+ * and node size and boundary size are added as properties.
+ * \param rag shared pointer to rag
+ * \return boost graph corresponding to rag
+*/
+BoostGraph* create_boost_graph(boost::shared_ptr<Rag<unsigned int> > rag);
 
 }
 

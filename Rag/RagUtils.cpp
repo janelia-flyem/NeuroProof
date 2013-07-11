@@ -12,6 +12,8 @@
 #include <tr1/unordered_set>
 #include <tr1/unordered_map>
 
+#include <boost/graph/graph_traits.hpp>
+
 using std::vector;
 using std::tr1::unordered_map;
 using std::tr1::unordered_set;
@@ -229,6 +231,46 @@ void find_biconnected_components(RagPtr rag, vector<vector<OrderedPair> >& bicon
 
     biconnected_recurs(params);
 }
+
+
+BoostGraph* create_boost_graph(RagPtr rag)
+{
+    BoostGraph* graph = new BoostGraph;
+
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+            iter != rag->edges_end(); ++iter) {
+        BoostEdgeBool edge = boost::add_edge((*iter)->get_node1()->get_node_id(),
+                (*iter)->get_node2()->get_node_id(), *graph);
+
+        // add edge properties       
+        (*graph)[edge.first].size = (*iter)->get_size();
+        (*graph)[edge.first].weight = (*iter)->get_weight();
+    }
+
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
+        // add vertex properties
+        (*graph)[((*iter)->get_node_id())].size = (*iter)->get_size();
+        (*graph)[((*iter)->get_node_id())].boundary_size =
+            (*iter)->get_boundary_size();
+    }
+
+    /*
+     To get both vertices corresponding to a given edge, use
+     boost::target(BoostEdge& edge) and boost::source(BoostEdge& edge).
+     The following code can be used to traverse the graph vertices:
+     
+     std::pair<Graph::vertex_iterator, Graph::vertex_iterator>
+        vertexIteratorRange = boost::vertices(*graph);
+     for(Graph::vertex_iterator vertexIterator = vertexIteratorRange.first;
+        vertexIterator != vertexIteratorRange.second; ++vertexIterator)
+
+     Graph edges can be traversed by replacing 'vertex' with 'edge'
+    */
+
+    return graph;
+}
+
 
 
 }
