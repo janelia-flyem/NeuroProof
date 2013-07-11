@@ -17,8 +17,6 @@
 #include "../Algorithms/BatchMergeMRFh.h"
 #include "../Utilities/unique_row_matrix.h"
 
-#include "../Watershed/vigra_watershed.h"
-
 #include "../Refactoring/RagUtils2.h"
 #include "../Rag/RagUtils.h"
 

@@ -1,6 +1,6 @@
+#include "../Refactoring/RagUtils2.h"
 #include "BioStackController.h"
 #include "MitoTypeProperty.h"
-#include "../Refactoring/RagUtils2.h"
 
 #include <json/value.h>
 #include <json/reader.h>

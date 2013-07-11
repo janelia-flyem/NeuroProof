@@ -1,9 +1,9 @@
-#include "FeatureManager/FeatureManager.h"
-#include "Rag/Rag.h"
-#include "Refactoring/RagUtils2.h"
-#include "Rag/RagIO.h"
-#include "Utilities/ErrMsg.h"
-#include "Refactoring/Stack.h"
+#include "../FeatureManager/FeatureManager.h"
+#include "../Rag/Rag.h"
+#include "../Refactoring/RagUtils2.h"
+#include "../Rag/RagIO.h"
+#include "../Utilities/ErrMsg.h"
+#include "../Refactoring/Stack.h"
 
 #include <boost/python.hpp>
 

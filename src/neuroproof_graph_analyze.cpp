@@ -17,22 +17,22 @@
 */
 
 // algorithms used to estimate how many edges need to be examine
-#include "Priority/LocalEdgePriority.h"
+#include "../Priority/LocalEdgePriority.h"
 
 // contains library for storing a region adjacency graph (RAG)
-#include "Rag/Rag.h"
+#include "../Rag/Rag.h"
 
 // algorithms to calculate generalized probabilistic rand (GPR)
-#include "Priority/GPR.h"
+#include "../Priority/GPR.h"
 
 // simple function for measuring runtime
-#include "Utilities/ScopeTime.h"
+#include "../Utilities/ScopeTime.h"
 
 // utilties for importing rags
-#include "Rag/RagIO.h"
+#include "../Rag/RagIO.h"
 
 // utitlies for parsing options
-#include "Utilities/OptionParser.h"
+#include "../Utilities/OptionParser.h"
 
 #include <vector>
 #include <fstream>

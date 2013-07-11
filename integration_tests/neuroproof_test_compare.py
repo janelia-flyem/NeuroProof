@@ -20,7 +20,6 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
  
     testout_stdout, err = p.communicate()
 
-
     # error returned from call
     if err is not None:
         exit(1)

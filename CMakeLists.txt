@@ -77,11 +77,11 @@ else ()
     include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
 
     # Handle all of NeuroProof sources and dependent code
-    add_executable (neuroproof_graph_analyze neuroproof_graph_analyze.cpp)
-    add_executable (neuroproof_graph_analyze_gt neuroproof_graph_analyze_gt.cpp)
-    add_executable (neuroproof_graph_learn neuroproof_graph_learn.cpp)
-    add_executable (neuroproof_graph_predict neuroproof_graph_predict.cpp)
-    add_executable (neuroproof_create_spgraph neuroproof_create_spgraph.cpp)
+    add_executable (neuroproof_graph_analyze src/neuroproof_graph_analyze.cpp)
+    add_executable (neuroproof_graph_analyze_gt src/neuroproof_graph_analyze_gt.cpp)
+    add_executable (neuroproof_graph_learn src/neuroproof_graph_learn.cpp)
+    add_executable (neuroproof_graph_predict src/neuroproof_graph_predict.cpp)
+    add_executable (neuroproof_create_spgraph src/neuroproof_create_spgraph.cpp)
 
     target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -101,12 +101,12 @@ else ()
     get_target_property (neuroproof_graph_predict_exe neuroproof_graph_predict LOCATION)
     get_target_property (neuroproof_create_spgraph_exe neuroproof_create_spgraph LOCATION)
 
-    add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp)
+    add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp)
     target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 
     # need to build components separately to set python flag
-    add_library (NeuroProofRag SHARED pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Refactoring/RagUtils2.cpp Refactoring/Stack.cpp Rag/RagUtils.cpp)
+    add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureManager.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Refactoring/RagUtils2.cpp Refactoring/Stack.cpp Rag/RagUtils.cpp)
     target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
     set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
@@ -119,13 +119,13 @@ else ()
         TARGET NeuroProofPriority
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${BUILDEM_DIR}/lib)
+        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${BUILDEM_DIR}/lib/python2.7/site-packages)
 
     add_custom_command (
         TARGET NeuroProofRag
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILDEM_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${BUILDEM_DIR}/lib)
+        COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${BUILDEM_DIR}/lib/python2.7/site-packages)
 
     add_custom_command (
         TARGET neuroproof_graph_analyze 
@@ -199,6 +199,20 @@ else ()
         ${CMAKE_SOURCE_DIR}/integration_tests/test5.py
         ${BUILDEM_DIR}
         ${CMAKE_SOURCE_DIR}
+    )
+
+    add_test("test_rag_python"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/testragscript.py
+        ${CMAKE_SOURCE_DIR}/integration_tests/temp_data/temp_rag.json
+    )
+
+    add_test("test_priority_python"
+        ${PYTHON_EXE}
+        ${CMAKE_SOURCE_DIR}/integration_tests/testpriority.py
+        ${CMAKE_SOURCE_DIR}/integration_tests/inputs/samp1_graph_processed.json
+        ${CMAKE_SOURCE_DIR}/integration_tests/temp_data/proofread_samp1_graph.json
+        ${CMAKE_SOURCE_DIR}/integration_tests/outputs/proofread_samp1_graph.json
     )
 
     ###############################################################################

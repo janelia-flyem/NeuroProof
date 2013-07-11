@@ -1,6 +1,6 @@
+#include "../Algorithms/MergePriorityFunction.h"
 #include "StackAgglomAlgs.h"
 #include "../Stack/StackController.h"
-#include "../Algorithms/MergePriorityFunction.h"
 #include "MitoTypeProperty.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 

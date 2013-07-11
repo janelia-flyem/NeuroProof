@@ -5,9 +5,14 @@
 #include "../Algorithms/FeatureJoinAlgs.h"
 #include "../Rag/RagIO.h"
 
-#include <vigra/multi_morphology.hxx>
-#include <vigra/seededregiongrowing3d.hxx>
 #include <fstream>
+
+// needed for erosion/dilation algorithms
+#include <vigra/multi_morphology.hxx>
+
+// needed for seeded watershed
+#include <vigra/seededregiongrowing3d.hxx>
+
 
 using std::vector;
 using std::tr1::unordered_set;
@@ -15,6 +20,7 @@ using std::tr1::unordered_map;
 
 namespace NeuroProof {
 
+// assume all label volumes are written to "stack" for now
 static const char * SEG_DATASET_NAME = "stack";
 
 void StackController::build_rag()
@@ -45,14 +51,18 @@ void StackController::build_rag()
 
         RagNode_uit * node = rag->find_rag_node(label);
 
+        // create node
         if (!node) {
             node =  rag->insert_rag_node(label); 
         }
         node->incr_size();
-                
+        
+        // load all prediction values for a given x,y,z 
         for (unsigned int i = 0; i < prob_list.size(); ++i) {
             predictions[i] = (*(prob_list[i]))(x,y,z);
         }
+
+        // add array of features/predictions for a given node
         if (feature_mgr) {
             feature_mgr->add_val(predictions, node);
         }
@@ -65,6 +75,7 @@ void StackController::build_rag()
         if (z > 0) label6 = (*labelvol)(x,y,z-1);
         if (z < maxz) label7 = (*labelvol)(x,y,z+1);
 
+        // if it is not a 0 label and is different from the current label, add edge
         if (label2 && (label != label2)) {
             rag_add_edge(rag, label, label2, predictions, feature_mgr.get());
             labels.insert(label2);
@@ -89,12 +100,14 @@ void StackController::build_rag()
             rag_add_edge(rag, label, label7, predictions, feature_mgr.get());
         }
 
+        // if it is on the border of the image, increase the boundary size
         if (!label2 || !label3 || !label4 || !label5 || !label6 || !label7) {
             node->incr_boundary_size();
         }
         labels.clear();
     }
-    
+   
+    // load the new rag 
     stack->set_rag(RagPtr(rag));
 }
 
@@ -141,6 +154,7 @@ int StackController::remove_inclusions()
                 if (articulation_node != rag_node) {
                     for (RagNode_uit::edge_iterator edge_iter = rag_node->edge_begin();
                             edge_iter != rag_node->edge_end(); ++edge_iter) {
+                        // if the edge is protected than don't remove component
                         if ((*edge_iter)->is_preserve()) {
                             found_preserve = true;
                             break;
@@ -156,6 +170,7 @@ int StackController::remove_inclusions()
                 continue;
             }
 
+            // reassign labels in component to be removed
             for (unordered_set<Label_t>::iterator iter = merge_nodes.begin();
                     iter != merge_nodes.end(); ++iter) {
                 Node_uit node2 = *iter;
@@ -210,6 +225,7 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 
     for(unordered_map<Label_t, unsigned long long>::iterator it = regions_sz.begin();
                 it != regions_sz.end(); it++) {
+        // do not remove small bodies that are in the exclusions set
 	if ((exclusions.find(it->first) == exclusions.end()) &&
                 ((it->second) < threshold)) {
 	    small_regions.insert(it->first);
@@ -223,7 +239,8 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
 	    *iter = 0;
         }
     }    
-
+    
+    // if a boundary volume is provided, perform a seeded watershed
     if (boundary_pred) {    
         vigra::ArrayOfRegionStatistics<vigra::SeedRgDirectValueFunctor<double> > stats;
         vigra::seededRegionGrowing3D(srcMultiArrayRange(*boundary_pred), destMultiArray(*labelvol),
@@ -233,10 +250,8 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
     }
 
     return num_removed;
-
 }
 
-// find regions that match a given region label
 // TODO: keep gt rag with gt_labelvol 
 int StackController::match_regions_overlap(Label_t label,
         unordered_set<Label_t>& candidate_regions, RagPtr gt_rag,
@@ -254,6 +269,8 @@ int StackController::match_regions_overlap(Label_t label,
             if (candidate_regions.find(gt_vec[j].lbl) != candidate_regions.end()) {
                 unsigned long long gt_size = gt_rag->find_rag_node(gt_vec[j].lbl)->get_size();
 
+                // use 50% overlap threshold to find a match
+                // can match multiple gt labels with label
                 if ((gt_vec[j].count / double(gt_size)) > 0.5) {
                     gtlabels_matched.insert(gt_vec[j].lbl);
                     labels_matched.insert(label);
@@ -277,6 +294,7 @@ void StackController::compute_groundtruth_assignment()
 {
     VolumeLabelPtr gtvol = stack->get_gt_labelvol(); 
 
+    // recompute contigency table
     compute_contingency_table();
     assignment.clear();  	
     
@@ -287,6 +305,7 @@ void StackController::compute_groundtruth_assignment()
         size_t max_count=0;
         Label_t max_label=0;
         for (unsigned int j=0; j < gt_vec.size(); ++j){
+            // assign based to gt body with maximum overlap
             if (gt_vec[j].count > max_count){
                 max_count = gt_vec[j].count;
                 max_label = gt_vec[j].lbl;
@@ -309,6 +328,7 @@ int StackController::find_edge_label(Label_t label1, Label_t label2)
         cerr << "no grountruth node " << label2 << endl;
     }  	
 
+    // -1 is merge, 1 is no merge
     edge_label = (label1gt == label2gt)? -1 : 1;
         
     return edge_label;	
@@ -344,6 +364,8 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
         if (best_edge_loc.find(*iter) != best_edge_loc.end()) {
             Location loc = best_edge_loc[*iter];
             x = boost::get<0>(loc);
+            // assume y is bottom of image
+            // (technically ignored by raveler so okay)
             y = boost::get<1>(loc); //height - boost::get<1>(loc) - 1;
             z = boost::get<2>(loc);
         }
@@ -357,6 +379,7 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
         throw ErrMsg("Error in rag export");
     }
 
+    // biopriors might write specific information -- calls derived function
     serialize_graph_info(json_writer);
 
     int id = 0;
@@ -472,6 +495,7 @@ void StackController::determine_edge_locations(EdgeCount& best_edge_z,
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 
 
+    // find z plane with the most edge points or edge probability points
     for (unsigned int z = 0; z < get_zsize(); ++z) {
         EdgeCount curr_edge_z;
         EdgeLoc curr_edge_loc;
@@ -559,20 +583,20 @@ void StackController::set_body_exclusions(string exclusions_json)
     }
     fin.close();
     
+    // all exclusions should be in a json list
     Json::Value exclusions = json_vals["exclusions"];
     for (unsigned int i = 0; i < json_vals["exclusions"].size(); ++i) {
         exclusion_set.insert(exclusions[i].asUInt());
     }
 
     VolumeLabelPtr labelvol = stack->get_labelvol();
-    
+
+    // 0 out all bodies in the exclusion list    
     volume_forXYZ(*labelvol, x, y, z) {
         Label_t label = (*labelvol)(x,y,z);
         if (exclusion_set.find(label) != exclusion_set.end()) {
             labelvol->set(x,y,z,0);
         }
-
-
     }
 }
 
@@ -647,6 +671,7 @@ void StackController::compute_vi(double& merge, double& split,
         }
     }
 
+    // load all labels and gt labels with the VI contribution
     for (std::tr1::unordered_map<Label_t, double>::iterator iter = seg_overmerge.begin();
             iter != seg_overmerge.end(); ++iter) {
         label_ranked.insert(make_pair(iter->second, iter->first));
@@ -659,7 +684,7 @@ void StackController::compute_vi(double& merge, double& split,
     split = HgivenG;
 }
 
-// ?! is this really necessary -- only if non-gt merge
+// might not be necessary if the update agrees with ground truth
 void StackController::update_assignment(Label_t label_remove, Label_t label_keep)
 {
     if (assignment.empty()) {
@@ -707,13 +732,13 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
     assignment[label_keep] = max_label;
 }
 
-// retain label2 
 void StackController::merge_labels(Label_t label_remove, Label_t label_keep,
         RagNodeCombineAlg* combine_alg, bool ignore_rag)
 {
-    updated = false;
+    // might be unnecessary, does nothing without ground truth
     update_assignment(label_remove, label_keep);
     
+    // update rag by merging nodes
     RagPtr rag = stack->get_rag();
     if (!ignore_rag && rag) {
         rag_join_nodes(*rag, rag->find_rag_node(label_keep),
@@ -764,10 +789,7 @@ VolumeLabelPtr StackController::generate_boundary(VolumeLabelPtr labelvol)
     }
 
     return labelvol_new;
-
 }
 
 }
-
-
 

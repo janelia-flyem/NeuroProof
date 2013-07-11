@@ -1,9 +1,9 @@
-#include "FeatureManager/FeatureManager.h"
-#include "BioPriors/BioStackController.h"
-#include "BioPriors/StackLearnAlgs.h"
+#include "../FeatureManager/FeatureManager.h"
+#include "../BioPriors/BioStackController.h"
+#include "../BioPriors/StackLearnAlgs.h"
 
-#include "Utilities/ScopeTime.h"
-#include "Utilities/OptionParser.h"
+#include "../Utilities/ScopeTime.h"
+#include "../Utilities/OptionParser.h"
 
 #include <iostream>
 

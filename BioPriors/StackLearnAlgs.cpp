@@ -1,7 +1,7 @@
-#include "BioStackController.h"
-#include "StackLearnAlgs.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 #include "../Algorithms/MergePriorityQueue.h"
+#include "BioStackController.h"
+#include "StackLearnAlgs.h"
 
 namespace NeuroProof {
 

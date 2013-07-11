@@ -1,11 +1,11 @@
-#include "FeatureManager/FeatureManager.h"
-#include "BioPriors/BioStackController.h"
+#include "../FeatureManager/FeatureManager.h"
+#include "../BioPriors/BioStackController.h"
 
-#include "Utilities/ScopeTime.h"
-#include "Utilities/OptionParser.h"
-#include "Rag/RagIO.h"
+#include "../Utilities/ScopeTime.h"
+#include "../Utilities/OptionParser.h"
+#include "../Rag/RagIO.h"
 
-#include "BioPriors/StackAgglomAlgs.h"
+#include "../BioPriors/StackAgglomAlgs.h"
 
 
 #include <boost/algorithm/string/predicate.hpp>

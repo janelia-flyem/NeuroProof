@@ -19,28 +19,25 @@
 */
 
 // feature manager
-#include "FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureManager.h"
 
 // controller for stack containing label volume and rag
-#include "BioPriors/BioStackController.h"
+#include "../BioPriors/BioStackController.h"
 
 // contains library for storing a region adjacency graph (RAG)
-#include "Rag/Rag.h"
+#include "../Rag/Rag.h"
 
 // algorithms used to estimate how many edges need to be examine
-#include "Priority/LocalEdgePriority.h"
+#include "../Priority/LocalEdgePriority.h"
 
 // simple function for measuring runtime
-#include "Utilities/ScopeTime.h"
+#include "../Utilities/ScopeTime.h"
 
 // utilties for importing rags
-#include "Rag/RagIO.h"
+#include "../Rag/RagIO.h"
 
 // utitlies for parsing options
-#include "Utilities/OptionParser.h"
-
-// utility to read label volumes
-#include "Utilities/h5read.h"
+#include "../Utilities/OptionParser.h"
 
 #include <vector>
 #include <fstream>

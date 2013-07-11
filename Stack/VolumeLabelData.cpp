@@ -9,7 +9,6 @@ VolumeLabelPtr VolumeLabelData::create_volume()
 
 VolumeLabelPtr VolumeLabelData::create_volume(
         const char * h5_name, const char * dset, bool use_transforms)
-
 {
     vigra::HDF5ImportInfo info(h5_name, dset);
     vigra_precondition(info.numDimensions() == 3, "Dataset must be 3-dimensional.");
@@ -20,6 +19,8 @@ VolumeLabelPtr VolumeLabelData::create_volume(
     vigra::readHDF5(info, *volumedata);
 
     if (use_transforms) {
+        // looks for a dataset called transforms which is a label
+        // to label mapping
         try {
             vigra::HDF5ImportInfo info(h5_name, "transforms");
             vigra::TinyVector<long long unsigned int,2> tshape(info.shape().begin()); 
@@ -28,6 +29,7 @@ VolumeLabelPtr VolumeLabelData::create_volume(
             for (int row = 0; row < transforms.shape(0); ++row) {
                 volumedata->label_mapping[transforms(row, 0)] = transforms(row,1);
             }
+            // rebase all of the labels so the initial label hash is empty
             volumedata->rebase_labels();
         } catch (std::runtime_error& err) {
         }
@@ -45,6 +47,8 @@ void VolumeLabelData::reassign_label(Label_t old_label, Label_t new_label)
         label_mapping[*iter] = new_label;
     }
 
+    // update the mappings of all labels previously mapped to the
+    // old label
     label_remapping_history[new_label].push_back(old_label);
     label_remapping_history[new_label].insert(label_remapping_history[new_label].end(),
             label_remapping_history[old_label].begin(), label_remapping_history[old_label].end());
@@ -54,6 +58,7 @@ void VolumeLabelData::reassign_label(Label_t old_label, Label_t new_label)
 void VolumeLabelData::rebase_labels()
 {
     if (!label_mapping.empty()) {
+        // linear pass throw entire volume if remappings have occured
         for (VolumeLabelData::iterator iter = this->begin(); iter != this->end(); ++iter) {
             if (label_mapping.find(*iter) != label_mapping.end()) {
                 *iter = label_mapping[*iter];

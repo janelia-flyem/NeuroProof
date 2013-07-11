@@ -1,7 +1,7 @@
 #include "pythonNeuroProofPriorityInterface.h"
-#include "Utilities/ErrMsg.h"
-#include "Priority/LocalEdgePriority.h"
-#include "Rag/RagIO.h"
+#include "../Utilities/ErrMsg.h"
+#include "../Priority/LocalEdgePriority.h"
+#include "../Rag/RagIO.h"
 
 #include <json/json.h>
 #include <json/value.h>
@@ -241,8 +241,6 @@ void set_edge_result(tuple body_pair, bool remove)
     priority_scheduler->removeEdge(body_pair_temp, remove);
 }
 
-
-
 bool undo()
 {
     if (!priority_scheduler) {
@@ -251,7 +249,6 @@ bool undo()
 
     return priority_scheduler->undo();
 }
-
 
 BOOST_PYTHON_MODULE(libNeuroProofPriority)
 {
