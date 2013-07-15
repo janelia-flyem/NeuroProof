@@ -40,14 +40,13 @@ Rag<unsigned int>* create_rag_from_json(Json::Value& json_reader_vals);
 bool create_jsonfile_from_rag(Rag<unsigned int>* rag, const char * file_name);
 
 /*!
- * Generates json lists all the edges in the provided rag excepting edges
- * that are not being preserved when debug mode is true
+ * Generates json lists all the edges in the provided rag.
  * \param rag to be exported to json
  * \param json_writer json data that will be written
  * \param debug_mode determines whether certain edges are listed or not
  * \return true if successful, false otherwise
 */
-bool create_json_from_rag(Rag<unsigned int>* rag, Json::Value& json_writer, bool debug_mode=false);
+bool create_json_from_rag(Rag<unsigned int>* rag, Json::Value& json_writer);
 
 }
 

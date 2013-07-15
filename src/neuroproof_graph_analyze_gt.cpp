@@ -39,6 +39,8 @@
 // utitlies for parsing options
 #include "../Utilities/OptionParser.h"
 
+#include "../Rag/RagUtils.h"
+
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -299,7 +301,7 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, StackController contro
     LowWeightCombine join_alg;
 
     while (!priority_scheduler.isFinished()) {
-        EdgePriority::Location location;
+        LocalEdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);

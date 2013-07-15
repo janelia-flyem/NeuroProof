@@ -1,4 +1,4 @@
-#include "../Refactoring/RagUtils2.h"
+#include "../FeatureManager/FeatureManager.h"
 #include "BioStackController.h"
 #include "MitoTypeProperty.h"
 
@@ -150,27 +150,27 @@ void BioStackController::build_rag_mito()
         if (z < maxz) label7 = (*labelvol)(x,y,z+1);
 
         if (label2 && (label != label2)) {
-            rag_add_edge(rag, label, label2, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label2, predictions, feature_mgr);
             labels.insert(label2);
         }
         if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
-            rag_add_edge(rag, label, label3, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label3, predictions, feature_mgr);
             labels.insert(label3);
         }
         if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
-            rag_add_edge(rag, label, label4, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label4, predictions, feature_mgr);
             labels.insert(label4);
         }
         if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
-            rag_add_edge(rag, label, label5, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label5, predictions, feature_mgr);
             labels.insert(label5);
         }
         if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
-            rag_add_edge(rag, label, label6, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label6, predictions, feature_mgr);
             labels.insert(label6);
         }
         if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
-            rag_add_edge(rag, label, label7, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label7, predictions, feature_mgr);
         }
 
         if (!label2 || !label3 || !label4 || !label5 || !label6 || !label7) {

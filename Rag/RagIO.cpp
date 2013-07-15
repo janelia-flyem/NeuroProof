@@ -132,16 +132,13 @@ bool create_jsonfile_from_rag(Rag_uit* rag, const char * file_name)
     return true;
 }
 
-bool create_json_from_rag(Rag_uit* rag, Json::Value& json_writer, bool debug_mode)
+bool create_json_from_rag(Rag_uit* rag, Json::Value& json_writer)
 {
     try {
         int edge_num = -1;
         for (Rag_uit::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter)
         {
-            if (debug_mode && !((*iter)->is_preserve())) {
-                continue;
-            }
             ++edge_num;
             Json::Value json_edge;
 

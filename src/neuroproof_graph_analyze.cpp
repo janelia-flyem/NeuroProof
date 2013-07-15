@@ -188,7 +188,7 @@ int get_num_edits(LocalEdgePriority& priority_scheduler, Rag_uit* rag)
 {
     int edges_examined = 0;
     while (!priority_scheduler.isFinished()) {
-        EdgePriority::Location location;
+        LocalEdgePriority::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);

@@ -7,6 +7,34 @@ using namespace NeuroProof;
 using namespace std;
 using std::string;
 
+void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2, std::vector<double>& preds, 
+        FeatureMgr * feature_mgr)
+{
+    RagNode_uit * node1 = rag->find_rag_node(id1);
+    if (!node1) {
+        node1 = rag->insert_rag_node(id1);
+    }
+    
+    RagNode_uit * node2 = rag->find_rag_node(id2);
+    if (!node2) {
+        node2 = rag->insert_rag_node(id2);
+    }
+   
+    assert(node1 != node2);
+
+    RagEdge_uit* edge = rag->find_rag_edge(node1, node2);
+    if (!edge) {
+        edge = rag->insert_rag_edge(node1, node2);
+    }
+
+    if (feature_mgr) {
+        feature_mgr->add_val(preds, edge);
+    }
+    edge->incr_size();
+}  
+
+
+
 Label find_max(Label* data, const size_t* dims)
 {
     Label max=0;  	

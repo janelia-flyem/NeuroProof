@@ -1,7 +1,6 @@
 #include "../FeatureManager/FeatureManager.h"
 #include "StackController.h"
 #include "../Rag/RagUtils.h"
-#include "../Refactoring/RagUtils2.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 #include "../Rag/RagIO.h"
 
@@ -77,27 +76,27 @@ void StackController::build_rag()
 
         // if it is not a 0 label and is different from the current label, add edge
         if (label2 && (label != label2)) {
-            rag_add_edge(rag, label, label2, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label2, predictions, feature_mgr);
             labels.insert(label2);
         }
         if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
-            rag_add_edge(rag, label, label3, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label3, predictions, feature_mgr);
             labels.insert(label3);
         }
         if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
-            rag_add_edge(rag, label, label4, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label4, predictions, feature_mgr);
             labels.insert(label4);
         }
         if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
-            rag_add_edge(rag, label, label5, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label5, predictions, feature_mgr);
             labels.insert(label5);
         }
         if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
-            rag_add_edge(rag, label, label6, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label6, predictions, feature_mgr);
             labels.insert(label6);
         }
         if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
-            rag_add_edge(rag, label, label7, predictions, feature_mgr.get());
+            rag_add_edge(rag, label, label7, predictions, feature_mgr);
         }
 
         // if it is on the border of the image, increase the boundary size
@@ -110,6 +109,33 @@ void StackController::build_rag()
     // load the new rag 
     stack->set_rag(RagPtr(rag));
 }
+
+void StackController::rag_add_edge(Rag_uit* rag, unsigned int id1,
+        unsigned int id2, vector<double>& preds, FeatureMgrPtr feature_mgr)
+{
+    RagNode_uit * node1 = rag->find_rag_node(id1);
+    if (!node1) {
+        node1 = rag->insert_rag_node(id1);
+    }
+    
+    RagNode_uit * node2 = rag->find_rag_node(id2);
+    if (!node2) {
+        node2 = rag->insert_rag_node(id2);
+    }
+   
+    assert(node1 != node2);
+
+    RagEdge_uit* edge = rag->find_rag_edge(node1, node2);
+    if (!edge) {
+        edge = rag->insert_rag_edge(node1, node2);
+    }
+
+    if (feature_mgr) {
+        feature_mgr->add_val(preds, edge);
+    }
+    edge->incr_size();
+}
+
 
 int StackController::remove_inclusions()
 {
@@ -374,7 +400,7 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
     }
 
     Json::Value json_writer;
-    bool status = create_json_from_rag(rag.get(), json_writer, false);
+    bool status = create_json_from_rag(rag.get(), json_writer);
     if (!status) {
         throw ErrMsg("Error in rag export");
     }

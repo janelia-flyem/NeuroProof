@@ -20,7 +20,6 @@ typedef unsigned int Label;
 
 static LocalEdgePriority* priority_scheduler = 0;
 Rag_uit* rag = 0;
-bool DebugMode = false;
 
 // false if file does not exist or json is not properly formatted
 // exception thrown if min, max, or start val are illegal
@@ -66,7 +65,7 @@ bool export_priority_scheduler(const char * json_file)
             throw ErrMsg("Error: output file could not be opened");
         }
 
-        bool status = create_json_from_rag(rag, json_writer, DebugMode);
+        bool status = create_json_from_rag(rag, json_writer);
         if (!status) {
             throw ErrMsg("Error in rag export");
         }
@@ -104,23 +103,11 @@ unsigned int get_estimated_num_remaining_edges()
     return priority_scheduler->getNumRemaining();
 }
 
-void set_debug_mode()
-{
-    if (!priority_scheduler) {
-        throw ErrMsg("Scheduler not initialized");
-    }
-    DebugMode = true;
-    priority_scheduler->set_debug_mode();
-}
-
-
 void set_synapse_mode(double ignore_size)
 {
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
-    DebugMode = false;
-
     priority_scheduler->set_synapse_mode(ignore_size);
 }
 
@@ -129,8 +116,6 @@ void set_body_mode(double ignore_size, int depth)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
-    DebugMode = false;
-
     priority_scheduler->set_body_mode(ignore_size, depth);
 }
 
@@ -139,8 +124,6 @@ void set_orphan_mode(double ignore_size, double threshold, bool synapse_orphan)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
-    DebugMode = false;
-
     priority_scheduler->set_orphan_mode(ignore_size, threshold, synapse_orphan);
 }
 
@@ -149,17 +132,12 @@ void set_edge_mode(double lower, double upper, double start)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
-    DebugMode = false;
-
     priority_scheduler->set_edge_mode(lower, upper, start);
 }
 
 
 void estimate_work()
 {
-    if (DebugMode) {
-        return;
-    }
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
@@ -207,10 +185,6 @@ double get_edge_val(PriorityInfo priority_info)
 
 boost::python::list get_qa_violators(unsigned int threshold)
 {
-    if (DebugMode) {
-        boost::python::list violators_np;
-        return violators_np;
-    }
     PriorityInfo priority_info;
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
@@ -262,7 +236,6 @@ BOOST_PYTHON_MODULE(libNeuroProofPriority)
     def("get_average_prediction_error", get_average_prediction_error);
     def("get_estimated_num_remaining_edges", get_estimated_num_remaining_edges);
     def("set_synapse_mode", set_synapse_mode);
-    def("set_debug_mode", set_debug_mode);
     def("set_body_mode", set_body_mode);
     def("set_orphan_mode", set_orphan_mode);
     def("set_edge_mode", set_edge_mode);

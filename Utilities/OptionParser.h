@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 namespace NeuroProof {
 class OptionParser
@@ -33,7 +34,7 @@ class OptionParser
                 exit(0);
             }
             notify(vm);
-        } catch (exception& e) {
+        } catch (std::exception& e) {
             std::cout << "ERROR: " << e.what() << std::endl;
             print_help();
             exit(-1);

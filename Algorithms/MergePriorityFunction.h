@@ -8,6 +8,8 @@
 
 namespace NeuroProof {
 
+typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t; 
+
 class MergePriority {
   public:
     MergePriority(FeatureMgr* feature_mgr_, Rag_uit* rag_) : 

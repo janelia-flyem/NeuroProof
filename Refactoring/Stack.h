@@ -17,7 +17,6 @@
 #include "../Algorithms/BatchMergeMRFh.h"
 #include "../Utilities/unique_row_matrix.h"
 
-#include "../Refactoring/RagUtils2.h"
 #include "../Rag/RagUtils.h"
 
 #include <json/json.h>

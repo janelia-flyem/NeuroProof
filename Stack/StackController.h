@@ -258,6 +258,18 @@ class StackController {
     */
     void compute_groundtruth_assignment();
 
+  protected:
+    /*!
+     * Add edge to rag and update feature manager.
+     * \param rag rag being constructed
+     * \param id1 region1 label id
+     * \param id2 region2 label id
+     * \param preds array of features
+     * \param feature_mgr feature manager
+    */
+    void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2,
+            std::vector<double>& preds, FeatureMgrPtr feature_mgr);
+
   private:
     //! declaration of typedef for x,y,z location representation
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
@@ -339,6 +351,7 @@ class StackController {
      * \param h5_name name of h5 file
     */
     void serialize_labels(const char* h5_name);
+
 
     //! pointer to stack model handled by controller
     Stack* stack;

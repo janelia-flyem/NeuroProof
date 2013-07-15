@@ -1,9 +1,56 @@
 #include "MergePriorityFunction.h"
-#include "../Refactoring/RagUtils2.h"
+#include "../BioPriors/MitoTypeProperty.h"
 
 #include <cstdio>
 
 using namespace NeuroProof;
+
+double mito_boundary_ratio(RagEdge_uit* edge)
+{
+    RagNode_uit* node1 = edge->get_node1();
+    RagNode_uit* node2 = edge->get_node2();
+    double ratio = 0.0;
+
+    try {
+        MitoTypeProperty& type1_mito = node1->get_property<MitoTypeProperty>("mito-type");
+        MitoTypeProperty& type2_mito = node2->get_property<MitoTypeProperty>("mito-type");
+        int type1 = type1_mito.get_node_type(); 
+        int type2 = type2_mito.get_node_type(); 
+
+        RagNode_uit* mito_node = 0;		
+        RagNode_uit* other_node = 0;		
+
+        if ((type1 == 2) && (type2 == 1) ){
+            mito_node = node1;
+            other_node = node2;
+        } else if((type2 == 2) && (type1 == 1) ){
+            mito_node = node2;
+            other_node = node1;
+        } else { 
+            return 0.0; 	
+        }
+
+        if (mito_node->get_size() > other_node->get_size()) {
+            return 0.0;
+        }
+
+        unsigned long long mito_node_border_len = mito_node->compute_border_length();		
+
+        ratio = (edge->get_size())*1.0/mito_node_border_len; 
+
+        if (ratio > 1.0){
+            printf("ratio > 1 for %d %d\n", mito_node->get_node_id(), other_node->get_node_id());
+            return 0.0;
+        }
+
+    } catch (ErrMsg& err) {
+        // # just return 
+    } 
+
+    return ratio;
+}
+
+
 
 void ProbPriority::initialize_priority(double threshold_, bool use_edge_weight)
 {
