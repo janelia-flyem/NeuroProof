@@ -75,6 +75,8 @@ class EdgeEditor {
   
     bool isFinished();
 
+    void set_custom_mode(EdgeRank* edge_mode_);
+
     ~EdgeEditor();
 
   private:
@@ -132,9 +134,6 @@ class EdgeEditor {
     unsigned int current_depth;
     unsigned int num_est_remaining;    
     
-    bool orphan_mode;
-    bool synapse_mode;
-    bool prob_mode;
     double ignore_size;
     unsigned long long volume_size;
 
@@ -142,6 +141,11 @@ class EdgeEditor {
 
     const std::string SynapseStr;
 
+    // ordering algorithms supported by builtin
+    // import utility -- this can be extended easily
+    // other rank algorithms can always be used
+    // generically but its stats and mode will
+    // not be exportable by the edge editor
     ProbEdgeRank* prob_edge_mode;
     OrphanRank* orphan_edge_mode;
     SynapseRank* synapse_edge_mode;

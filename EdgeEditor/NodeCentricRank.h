@@ -1,5 +1,5 @@
-#ifndef NODEEDGERANK_H
-#define NODEEDGERANK_H
+#ifndef NODECENTRICRANK_H
+#define NODECENTRICRANK_H
 
 #include "EdgeRank.h"
 
@@ -54,9 +54,9 @@ class NodeRankList {
     std::vector<std::vector<HistoryElement> > history;
 };
 
-class NodeEdgeRank : public EdgeRank {
+class NodeCentricRank : public EdgeRank {
   public:
-    NodeEdgeRank(Rag_uit* rag_) : EdgeRank(rag_), node_list(rag_) {}
+    NodeCentricRank(Rag_uit* rag_) : EdgeRank(rag_), node_list(rag_) {}
     
     void examined_edge(NodePair node_pair, bool remove);
     void update_priority();
@@ -73,7 +73,7 @@ class NodeEdgeRank : public EdgeRank {
         return node_list.size();
     }
     
-    virtual ~NodeEdgeRank() {}
+    virtual ~NodeCentricRank() {}
 
   protected:
     virtual RagNode_uit* find_most_uncertain_node(RagNode_uit* head_node) = 0;

@@ -7470,14 +7470,12 @@
 		4772,
 		993
 	],
-	"orphan_mode" : false,
-	"prob_mode" : true,
+	"probedge_mode" : true,
 	"range" : [ 0.10, 0.90 ],
 	"synapse_bodies" : 
 	[
 		[ 3584, 1 ],
 		[ 7411, 1 ],
 		[ 267, 4 ]
-	],
-	"synapse_mode" : false
+	]
 }

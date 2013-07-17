@@ -76,7 +76,7 @@ class VolumeLabelData : public VolumeData<Label_t> {
     */
     Label_t operator()(unsigned int x, unsigned int y, unsigned int z)
     {
-        Label_t label = MultiArrayView<3,Label_t>::operator()(x,y,z);
+        Label_t label = VolumeData<Label_t>::operator()(x,y,z);
         if (label_mapping.find(label) != label_mapping.end()) {
             label = label_mapping[label];
         }
@@ -92,7 +92,7 @@ class VolumeLabelData : public VolumeData<Label_t> {
     */
     void set(unsigned int x, unsigned int y, unsigned int z, Label_t val)
     {
-        MultiArrayView<3,Label_t>::operator()(x,y,z) = val;
+        VolumeData<Label_t>::operator()(x,y,z) = val;
     }
 
   private:

@@ -2,17 +2,13 @@
 
 #include "EdgeEditor.h"
 
-#include <cmath>
 #include <iostream>
 #include <map>
 
 using std::vector; using std::set; using std::tr1::unordered_set; using std::tr1::unordered_map;
 using std::string;
-using std::log;
 using std::cerr; using std::cout; using std::endl;
 using std::pair;
-using std::multimap;
-using std::make_pair;
 
 namespace NeuroProof {
 
@@ -40,7 +36,6 @@ void EdgeEditor::set_synapse_mode(double ignore_size_)
 {
     reinitialize_scheduler();
 
-    synapse_mode = true;    
     ignore_size = ignore_size_;
     synapse_edge_mode->initialize(ignore_size_);
     edge_mode = synapse_edge_mode;
@@ -61,10 +56,15 @@ void EdgeEditor::set_orphan_mode(double ignore_size_)
 {
     reinitialize_scheduler();
     
-    orphan_mode = true;    
     ignore_size = ignore_size_;
     orphan_edge_mode->initialize(ignore_size_);
     edge_mode = orphan_edge_mode;
+}
+
+void EdgeEditor::set_custom_mode(EdgeRank* edge_mode_)
+{
+    reinitialize_scheduler();
+    edge_mode = edge_mode_;
 }
 
 // synapse orphan currently not used
@@ -72,7 +72,6 @@ void EdgeEditor::set_edge_mode(double lower, double upper, double start, double 
 {
     reinitialize_scheduler();
     
-    prob_mode = true;    
     ignore_size = ignore_size_;
     prob_edge_mode->initialize(lower, upper, start, ignore_size);
     edge_mode = prob_edge_mode;
@@ -112,9 +111,6 @@ void EdgeEditor::reinitialize_scheduler()
 {
     volume_size = 0;
     history_queue.clear();
-    synapse_mode = false;
-    orphan_mode = false;
-    prob_mode = true;
     num_est_remaining = 0;
 }
 
@@ -127,9 +123,21 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
 
     // Dead Cell -- 140 sections 10nm 14156 pixels 
 
-    orphan_mode = json_vals.get("orphan_mode", false).asBool(); 
-    prob_mode = json_vals.get("prob_mode", false).asBool(); 
-    synapse_mode = json_vals.get("synapse_mode", false).asBool(); 
+    // default modes checked for now (could make a special mode loader
+    // function in the future) -- default to node edge mode
+   
+    prob_edge_mode = new ProbEdgeRank(&rag);
+    orphan_edge_mode = new OrphanRank(&rag);
+    synapse_edge_mode = new SynapseRank(&rag);
+    body_edge_mode = new NodeSizeRank(&rag);
+
+    string orphan_str = orphan_edge_mode->get_identifier() + string("_mode");
+    string prob_str = prob_edge_mode->get_identifier() + string("_mode");
+    string synapse_str = synapse_edge_mode->get_identifier() + string("_mode");
+
+    bool orphan_mode = json_vals.get(orphan_str, false).asBool(); 
+    bool prob_mode = json_vals.get(prob_str, false).asBool(); 
+    bool synapse_mode = json_vals.get(synapse_str, false).asBool(); 
 
     // set parameters from JSON (explicitly set options later) 
     // prob mode and orphan mode
@@ -180,11 +188,6 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
         }
     }
 
-    prob_edge_mode = new ProbEdgeRank(&rag);
-    orphan_edge_mode = new OrphanRank(&rag);
-    synapse_edge_mode = new SynapseRank(&rag);
-    body_edge_mode = new NodeSizeRank(&rag);
-
     if (synapse_mode) {
         ignore_size = json_vals.get("ignore_size", 0.1).asDouble();
         set_synapse_mode(ignore_size);
@@ -233,10 +236,9 @@ void EdgeEditor::export_json(Json::Value& json_writer)
     // applicable, in different senses, to all modes 
     json_writer["ignore_size"] = ignore_size;
 
-    // 4 modes supported currently 
-    json_writer["orphan_mode"] = orphan_mode;
-    json_writer["synapse_mode"] = synapse_mode;
-    json_writer["prob_mode"] = prob_mode;
+    // 4 modes supported currently
+    string current_mode = edge_mode->get_identifier() + string("_mode");
+    json_writer[current_mode] = true;
 
     int i = 0;
     int orphan_count = 0;

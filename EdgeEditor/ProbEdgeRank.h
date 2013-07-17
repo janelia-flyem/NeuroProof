@@ -19,6 +19,10 @@ class ProbEdgeRank : public EdgeRank {
     void undo();
     bool is_finished(); 
     unsigned int get_num_remaining();
+    std::string get_identifier()
+    {
+        return std::string("probedge");
+    }
 
   private:    
     void grab_edge_ranking();

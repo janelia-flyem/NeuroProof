@@ -1,4 +1,4 @@
-#include "NodeEdgeRank.h"
+#include "NodeCentricRank.h"
 #include <cmath>
 
 using std::vector;
@@ -102,7 +102,7 @@ void NodeRankList::undo_one()
 
 
 
-bool NodeEdgeRank::get_top_edge(NodePair& top_edge_ret)
+bool NodeCentricRank::get_top_edge(NodePair& top_edge_ret)
 {
     if ((boost::get<0>(top_edge) == 0) && (boost::get<1>(top_edge) == 0)) {
         assert(node_list.empty());
@@ -113,7 +113,7 @@ bool NodeEdgeRank::get_top_edge(NodePair& top_edge_ret)
     return true;
 }
 
-void NodeEdgeRank::update_priority()
+void NodeCentricRank::update_priority()
 {
     top_edge = NodePair(0,0);
     while (!node_list.empty()) {
@@ -140,7 +140,7 @@ void NodeEdgeRank::update_priority()
     }
 }
 
-void NodeEdgeRank::undo()
+void NodeCentricRank::undo()
 {
     --num_processed;
     node_list.undo_one();
@@ -148,7 +148,7 @@ void NodeEdgeRank::undo()
 }
 
 // called after node merge
-void NodeEdgeRank::examined_edge(NodePair node_pair, bool remove)
+void NodeCentricRank::examined_edge(NodePair node_pair, bool remove)
 {
     ++num_processed;
     Node_uit keep_node = boost::get<0>(node_pair);
@@ -169,7 +169,7 @@ void NodeEdgeRank::examined_edge(NodePair node_pair, bool remove)
     node_list.stop_checkpoint();
 }
 
-double NodeEdgeRank::calc_voi_change(double size1, double size2,
+double NodeCentricRank::calc_voi_change(double size1, double size2,
         unsigned long long total_volume)
 {
     double part1 = log(size1/total_volume)/log(2.0)*size1/total_volume + 

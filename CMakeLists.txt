@@ -102,7 +102,7 @@ else ()
     get_target_property (neuroproof_graph_predict_exe neuroproof_graph_predict LOCATION)
     get_target_property (neuroproof_create_spgraph_exe neuroproof_create_spgraph LOCATION)
 
-    add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeEdgeRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
+    add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
     target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
 

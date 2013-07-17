@@ -3,6 +3,7 @@
 
 #include "../Rag/Rag.h"
 #include <boost/tuple/tuple.hpp>
+#include <string>
 
 namespace NeuroProof {
 
@@ -18,6 +19,7 @@ class EdgeRank {
     virtual void undo() = 0;
     virtual bool is_finished() = 0; 
     virtual unsigned int get_num_remaining() = 0;
+    virtual std::string get_identifier() = 0;
 
     unsigned int get_num_processed()
     {
