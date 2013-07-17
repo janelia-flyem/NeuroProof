@@ -7472,7 +7472,6 @@
 	],
 	"orphan_mode" : false,
 	"prob_mode" : true,
-	"prune_small_edges" : false,
 	"range" : [ 0.10, 0.90 ],
 	"synapse_bodies" : 
 	[

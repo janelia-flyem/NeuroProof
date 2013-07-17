@@ -17,13 +17,13 @@
 */
 
 // algorithms used to estimate how many edges need to be examine
-#include "../Priority/LocalEdgePriority.h"
+#include "../EdgeEditor/EdgeEditor.h"
 
 // contains library for storing a region adjacency graph (RAG)
 #include "../Rag/Rag.h"
 
 // algorithms to calculate generalized probabilistic rand (GPR)
-#include "../Priority/GPR.h"
+#include "../EdgeEditor/GPR.h"
 
 // simple function for measuring runtime
 #include "../Utilities/ScopeTime.h"
@@ -86,53 +86,6 @@ void parse_options(int argc, char** argv, int& num_threads,
     parser.add_positional(graph_file, "graph-file", "graph file"); 
     parser.add_option(random_seed, "random-seed", "Set seed for random computation", true, false, true);
     parser.parse_options(argc, argv);
-    
-    /*
-    string prgm_message = "analyze_segmentation_graph [graph-file]\n\tProgram that quantifies the uncertainty found in the segmentation graph";
-    options_description generic_options("Options");
-    generic_options.add_options()
-        ("help,h", "Show help message")
-        ("calc-gpr,g", value<bool>(&calc_gpr)->zero_tokens(),
-         "Calculate the uncertainty in the graph using GPR")
-        ("est-edit-distance,b", value<bool>(&est_edit_distance)->zero_tokens(),
-         "Estimate the number of operations to prevent large errors in the graph")
-        ("num-threads", value<int>(&num_threads), 
-         "Number of threads used in computing GPR")
-        ("node-size-threshold", value<int>(&node_threshold),
-         "Size threshold below which errors are considered insignificant")
-        ("synapse-size-threshold", value<double>(&synapse_threshold),
-         "Size threshold based on the number of synapse in the node below which are considered insignificant");
-
-    // following options will not be shown in help message 
-    options_description hidden_options("Hidden options");
-    hidden_options.add_options()
-        ("graph-file", value<string>(&graph_file)->required(), "graph file")
-        ("random-seed", value<int>(&random_seed),
-         "Set seed for random computation");
-
-    // graph file is a positional arguments
-    options_description cmdline_options;
-    cmdline_options.add(generic_options).add(hidden_options);
-    positional_options_description pos;
-    pos.add("graph-file", 1);
-
-    variables_map vm;
-    
-    try {
-        store(command_line_parser(argc, argv).options(cmdline_options).positional(pos).run(), vm);
-        if (vm.count("help")) {
-            cout << prgm_message << endl;
-            cout << generic_options <<endl;
-            exit(0);
-        }
-        notify(vm);
-    } catch (exception& e) {
-        cout << "ERROR: " << e.what() << endl;
-        cout << prgm_message << endl;
-        cout << generic_options <<endl;
-        exit(-1);
-    }
-    */
 }
 
 /*!
@@ -184,11 +137,11 @@ void calc_gpr(Rag_uit* rag, int num_threads)
  * \param priority_scheduler scheduler to find uncertain edges
  * \param rag graph whose uncertain edges are analyzed
 */
-int get_num_edits(LocalEdgePriority& priority_scheduler, Rag_uit* rag)
+int get_num_edits(EdgeEditor& priority_scheduler, Rag_uit* rag)
 {
     int edges_examined = 0;
     while (!priority_scheduler.isFinished()) {
-        LocalEdgePriority::Location location;
+        EdgeEditor::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);
@@ -197,7 +150,7 @@ int get_num_edits(LocalEdgePriority& priority_scheduler, Rag_uit* rag)
         Node_uit node2 = boost::get<1>(pair);
         RagEdge_uit* temp_edge = rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
-
+        
         // simulate the edge as true or false as function of edge certainty
         int weightint = int(100 * weight);
         if ((rand() % 100) > (weightint)) {
@@ -234,7 +187,7 @@ void est_edit_distance(Rag_uit* rag, int node_threshold,
         cout << "Node size threshold: " << node_threshold << endl;
         cout << "Synapse size threshold: " << synapse_threshold << endl;
 
-        LocalEdgePriority priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
+        EdgeEditor priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals);
 
         // determine the number of node above a certain size that do not
         // touch a boundary
@@ -272,7 +225,7 @@ void est_edit_distance(Rag_uit* rag, int node_threshold,
 
         // determine number of edges to analyze to trace large bodies
         // to a boundary
-        priority_scheduler.set_orphan_mode(node_threshold, 0, 0);
+        priority_scheduler.set_orphan_mode(node_threshold);
         cout << "Estimated num edge operations to connect orphans to a boundary: "
             << get_num_edits(priority_scheduler, rag) << endl;
     } catch (ErrMsg& msg) {
@@ -297,6 +250,7 @@ int main(int argc, char** argv)
     int random_seed = 1;
     bool enable_calc_gpr = false;
     bool enable_est_edit_distance = false;
+
 
     // load options from users
     parse_options(argc, argv, num_threads,
@@ -330,5 +284,6 @@ int main(int argc, char** argv)
         cout << endl;
     }
 
+    delete rag;
     return 0;
 }

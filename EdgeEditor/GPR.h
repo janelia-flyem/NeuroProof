@@ -216,10 +216,6 @@ void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
 
 
 
-
-
-
-
 }
 
 #endif

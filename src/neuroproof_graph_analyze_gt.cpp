@@ -28,7 +28,7 @@
 #include "../Rag/Rag.h"
 
 // algorithms used to estimate how many edges need to be examine
-#include "../Priority/LocalEdgePriority.h"
+#include "../EdgeEditor/EdgeEditor.h"
 
 // simple function for measuring runtime
 #include "../Utilities/ScopeTime.h"
@@ -291,7 +291,7 @@ void dump_vi_differences(StackController& controller, double threshold)
 
 } 
 
-void get_num_edits(LocalEdgePriority& priority_scheduler, StackController controller,
+void get_num_edits(EdgeEditor& priority_scheduler, StackController controller,
         StackController synapse_controller, RagPtr opt_rag, int& num_modified,
         int& num_examined, bool use_exclusions)
 {
@@ -301,7 +301,7 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, StackController contro
     LowWeightCombine join_alg;
 
     while (!priority_scheduler.isFinished()) {
-        LocalEdgePriority::Location location;
+        EdgeEditor::Location location;
 
         // choose most impactful edge given pre-determined strategy
         boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);
@@ -310,7 +310,7 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, StackController contro
         Label_t node2 = boost::get<1>(pair);
         RagEdge_uit* temp_edge = opt_rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
-
+      
         bool merged = false;
         // use optimal prediction for decision
         if (weight < 0.00001) {
@@ -328,7 +328,6 @@ void get_num_edits(LocalEdgePriority& priority_scheduler, StackController contro
         } else {
             priority_scheduler.removeEdge(pair, false);
         }
-       
         ++num_examined;
     }
 }
@@ -419,7 +418,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
 
     int num_unmerged = 0;
     Json::Value json_vals;
-    //LocalEdgePriority<Label_t> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
+    //EdgeEditor<Label_t> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
     for (int i = 0; i < large_bodies.size(); ++i) {
         for (int j = (i+1); j < large_bodies.size(); ++j) {
             int val = controller.find_edge_label(large_bodies[i]->get_node_id(),
@@ -511,7 +510,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
 }
 
 
-void run_body(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+void run_body(EdgeEditor& priority_scheduler, Json::Value json_vals,
         StackController& controller, StackController& synapse_controller,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
@@ -536,7 +535,7 @@ void run_body(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
     cout << "Body mode finished ... "; 
 }
 
-void run_synapse(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+void run_synapse(EdgeEditor& priority_scheduler, Json::Value json_vals,
         StackController& controller, StackController& synapse_controller,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
@@ -559,7 +558,7 @@ void run_synapse(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
     cout << "Synapse mode finished ... "; 
 }
 
-void run_orphan(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+void run_orphan(EdgeEditor& priority_scheduler, Json::Value json_vals,
         StackController& controller, StackController& synapse_controller,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
@@ -571,7 +570,7 @@ void run_orphan(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
     ScopeTime timer;
     cout << endl << "Starting orphan mode with threshold " << threshold << endl;
 
-    priority_scheduler.set_orphan_mode(threshold, 0, 0);
+    priority_scheduler.set_orphan_mode(threshold);
 
     get_num_edits(priority_scheduler, controller, synapse_controller, opt_rag,
             num_modified, num_examined, use_exclusions); 
@@ -581,7 +580,7 @@ void run_orphan(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
     cout << "Orphan mode finished ... "; 
 }
 
-void run_edge(LocalEdgePriority& priority_scheduler, Json::Value json_vals,
+void run_edge(EdgeEditor& priority_scheduler, Json::Value json_vals,
         StackController& controller, StackController& synapse_controller,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
@@ -672,7 +671,7 @@ void run_recipe(string recipe_filename, BioStackController& controller,
     }
     json_vals_priority["synapse_bodies"] = synapses;
 
-    LocalEdgePriority priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals_priority);
+    EdgeEditor priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals_priority);
     
     int num_examined = 0;
     int num_modified = 0;

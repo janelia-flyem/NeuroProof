@@ -6,13 +6,13 @@
 #include "RagUtils.h"
 #include "RagNodeCombineAlg.h"
 #include "Rag.h"
-#include "../DataStructures/AffinityPair.h"
 
 #include <boost/shared_ptr.hpp>
 #include <tr1/unordered_set>
 #include <tr1/unordered_map>
 
 #include <boost/graph/graph_traits.hpp>
+#include <queue>
 
 using std::vector;
 using std::tr1::unordered_map;
@@ -271,6 +271,133 @@ BoostGraph* create_boost_graph(RagPtr rag)
     return graph;
 }
 
+struct BestNode {
+    RagNode_uit* rag_node_curr;
+    RagEdge_uit* rag_edge_curr;
+    double weight;
+    int path;
+    Node_uit second_node;
+};
+struct BestNodeCmp {
+    bool operator()(const BestNode& q1, const BestNode& q2) const
+    {
+        return (q1.weight < q2.weight);
+    }
+};
 
+void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_restriction,
+        double connection_threshold, bool preserve, AffinityPair::Hash& affinity_pairs)
+{
+    typedef std::priority_queue<BestNode, std::vector<BestNode>, BestNodeCmp> BestNodeQueue;
+    BestNode best_node_head;
+    BestNodeQueue best_node_queue; 
+    
+    best_node_head.rag_node_curr = rag_node_head;
+    best_node_head.rag_edge_curr = 0;
+    best_node_head.weight= 1.0;
+    best_node_head.path = 0;
+    Node_uit node_head = rag_node_head->get_node_id();
+
+    best_node_queue.push(best_node_head);
+    AffinityPair affinity_pair_head(node_head, node_head);
+    affinity_pair_head.weight = 1.0;
+    affinity_pair_head.size = 0;
+
+    affinity_pairs.clear();
+
+    while (!best_node_queue.empty()) {
+        BestNode best_node_curr = best_node_queue.top();
+        AffinityPair affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
+
+        if (affinity_pairs.find(affinity_pair_curr) == affinity_pairs.end()) { 
+            for (RagNode_uit::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
+                    edge_iter != best_node_curr.rag_node_curr->edge_end(); ++edge_iter) {
+                // avoid simple cycles
+                if (*edge_iter == best_node_curr.rag_edge_curr) {
+                    continue;
+                }
+
+                // grab other node 
+                RagNode_uit* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
+
+                // avoid duplicates
+                AffinityPair temp_pair(node_head, other_node->get_node_id());
+                if (affinity_pairs.find(temp_pair) != affinity_pairs.end()) {
+                    continue;
+                }
+
+                if (path_restriction && (best_node_curr.path == path_restriction)) {
+                    continue;
+                }
+
+                RagEdge_uit* rag_edge_temp = rag.find_rag_edge(rag_node_head, other_node); 
+                if (rag_edge_temp && rag_edge_temp->get_weight() > 1.00001) {
+                    continue;
+                }
+
+                if (preserve) {
+                    if ((rag_edge_temp && rag_edge_temp->is_preserve()) || (!rag_edge_temp && ((*edge_iter)->is_preserve()))) {
+                        continue;
+                    }
+                }
+
+                if (rag_edge_temp && rag_edge_temp->is_false_edge()) {
+                    rag_edge_temp = 0;
+                }
+
+                double edge_prob = 1.0 - (*edge_iter)->get_weight();
+
+                if (edge_prob < 0.000001) {
+                    continue;
+                }
+
+                edge_prob = best_node_curr.weight * edge_prob;
+                if (edge_prob < connection_threshold) {
+                    continue;
+                }
+
+                BestNode best_node_new;
+                best_node_new.rag_node_curr = other_node;
+                best_node_new.rag_edge_curr = *edge_iter;
+                best_node_new.weight = edge_prob;
+                best_node_new.path = best_node_curr.path + 1;
+                if (best_node_new.path > 1) {
+                    best_node_new.second_node = best_node_curr.second_node;
+                } else {
+                    best_node_new.second_node = best_node_new.rag_node_curr->get_node_id();
+                }
+                if (rag_edge_temp) {
+                    best_node_new.second_node = best_node_new.rag_node_curr->get_node_id();
+                }
+
+                best_node_queue.push(best_node_new);
+            }
+            affinity_pair_curr.weight = best_node_curr.weight;
+            if (best_node_curr.path >= 1) {
+                affinity_pair_curr.size = best_node_curr.second_node;
+            }
+            affinity_pairs.insert(affinity_pair_curr);
+        }
+
+        best_node_queue.pop();
+    }
+
+    affinity_pairs.erase(affinity_pair_head);
+}
+
+double find_affinity_path(Rag_uit& rag, RagNode_uit* rag_node_head, RagNode_uit* rag_node_dest)
+{
+    AffinityPair::Hash affinity_pairs;
+    
+    grab_affinity_pairs(rag, rag_node_head, 0, 0.01, false, affinity_pairs); 
+    AffinityPair apair(rag_node_head->get_node_id(), rag_node_dest->get_node_id()); 
+
+    AffinityPair::Hash::iterator iter = affinity_pairs.find(apair);
+    if (iter == affinity_pairs.end()) {
+        return 0.0;
+    } else {
+        return iter->weight;
+    }
+}
 
 }

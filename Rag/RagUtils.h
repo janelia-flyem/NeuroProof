@@ -8,6 +8,7 @@
 #ifndef RAGUTILS_H
 #define RAGUTILS_H
 
+#include "../DataStructures/AffinityPair.h"
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
 
@@ -97,6 +98,13 @@ typedef std::pair<BoostEdge, bool> BoostEdgeBool;
  * \return boost graph corresponding to rag
 */
 BoostGraph* create_boost_graph(boost::shared_ptr<Rag<unsigned int> > rag);
+
+void grab_affinity_pairs(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
+        int path_restriction, double connection_threshold, bool preserve,
+        AffinityPair::Hash& affinity_pairs);
+
+double find_affinity_path(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
+        RagNode<unsigned int>* rag_node_dest);
 
 }
 

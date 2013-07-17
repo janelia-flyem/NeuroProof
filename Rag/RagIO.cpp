@@ -4,6 +4,7 @@
 
 #include <json/json.h>
 #include <json/value.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,7 +35,6 @@ Rag_uit* create_rag_from_jsonfile(const char * file_name)
     } catch (ErrMsg& msg) {
         cout << msg.str << endl;
     }  
-
     return 0;
 }
 

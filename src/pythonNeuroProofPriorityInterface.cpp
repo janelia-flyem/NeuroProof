@@ -1,6 +1,6 @@
 #include "pythonNeuroProofPriorityInterface.h"
 #include "../Utilities/ErrMsg.h"
-#include "../Priority/LocalEdgePriority.h"
+#include "../EdgeEditor/EdgeEditor.h"
 #include "../Rag/RagIO.h"
 
 #include <json/json.h>
@@ -18,7 +18,7 @@ using std::vector;
 
 typedef unsigned int Label;
 
-static LocalEdgePriority* priority_scheduler = 0;
+static EdgeEditor* priority_scheduler = 0;
 Rag_uit* rag = 0;
 
 // false if file does not exist or json is not properly formatted
@@ -45,7 +45,7 @@ bool initialize_priority_scheduler(const char * json_file, double min_val, doubl
         return false;
     }
 
-    priority_scheduler = new LocalEdgePriority(*rag, min_val, max_val, start_val, json_vals);
+    priority_scheduler = new EdgeEditor(*rag, min_val, max_val, start_val, json_vals);
     //priority_scheduler->updatePriority();
 
     return true;
@@ -124,7 +124,7 @@ void set_orphan_mode(double ignore_size, double threshold, bool synapse_orphan)
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");
     }
-    priority_scheduler->set_orphan_mode(ignore_size, threshold, synapse_orphan);
+    priority_scheduler->set_orphan_mode(ignore_size);
 }
 
 void set_edge_mode(double lower, double upper, double start)
