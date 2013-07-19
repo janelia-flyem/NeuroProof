@@ -95,6 +95,15 @@ class VolumeLabelData : public VolumeData<Label_t> {
         VolumeData<Label_t>::operator()(x,y,z) = val;
     }
 
+    /*!
+     * Retrieve all of the transform mappings since last rebasing.
+     * \return copy of label mapping
+    */
+    std::tr1::unordered_map<Label_t, Label_t> get_mappings()
+    {
+        return label_mapping;
+    }
+
   private:
     /*!
      * Private definition of constructor to prevent stack allocation.

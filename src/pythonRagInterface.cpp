@@ -2,7 +2,8 @@
 #include "../Rag/Rag.h"
 #include "../Rag/RagIO.h"
 #include "../Utilities/ErrMsg.h"
-#include "../Refactoring/Stack.h"
+#include "../Stack/StackController.h"
+#include "../BioPriors/StackAgglomAlgs.h"
 
 #include <boost/python.hpp>
 
@@ -11,30 +12,304 @@
 using namespace NeuroProof;
 using namespace boost::python;
 using std::cout;
+using std::vector;
+using std::tr1::unordered_map;
+using std::tr1::unordered_set;
 
-
-RagNode_uit* (Rag_uit::*find_rag_node_ptr)(Label) = &Rag_uit::find_rag_node;
-RagNode_uit* (Rag_uit::*insert_rag_node_ptr)(Label) = &Rag_uit::insert_rag_node;
+RagNode_uit* (Rag_uit::*find_rag_node_ptr)(Label_t) = &Rag_uit::find_rag_node;
+RagNode_uit* (Rag_uit::*insert_rag_node_ptr)(Label_t) = &Rag_uit::insert_rag_node;
 RagEdge_uit* (Rag_uit::*insert_rag_edge_ptr)(RagNode_uit*, RagNode_uit*) = &Rag_uit::insert_rag_edge;
-RagEdge_uit* (Rag_uit::*find_rag_edge_ptr1)(Label, Label) = &Rag_uit::find_rag_edge;
+RagEdge_uit* (Rag_uit::*find_rag_edge_ptr1)(Label_t, Label_t) = &Rag_uit::find_rag_edge;
 RagEdge_uit* (Rag_uit::*find_rag_edge_ptr2)(RagNode_uit*, RagNode_uit*) = &Rag_uit::find_rag_edge;
 
+// label volume should have a 1 pixel 0 padding surrounding it
+class StackControllerPython : public StackController {
+  public:
+    StackControllerPython(Stack* stack) : StackController(stack) 
+    {
+        VolumeLabelPtr emptypointer;
+        stack2 = new Stack(emptypointer);
+    }
 
-// add some documentation and produce a simple case (showing that copying works and use of generic properties)
+    void build_rag_padded()
+    {
+        Stack* stack = get_stack();
+        FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+        vector<VolumeProbPtr> prob_list = stack->get_prob_list();
+        VolumeLabelPtr labelvol = stack->get_labelvol();
 
-// exception handling??
-// allow import/export from json to read location property 
-// add a serialize and load rag function -- serialize/deserialize individual properties too (Thrift?)
-// add a sort function for default types??
-// add specific templates for list and double, etc
-// expose property list interface
-// make c++ rag algorithms to traverse graph, shortest path, etc
+        if (!labelvol) {
+            throw ErrMsg("No label volume defined for stack");
+        }
 
+        Rag_uit * rag = new Rag_uit;
 
-// add specific boost types that allows for specific copies -- how to return templated type unless specific??
-// !!pass internal reference already for objects where I want to hold the pointer -- transfer pointer perhaps for other situations like a copy of a Rag -- manage_new_object
-// ??still can't pass simple types as references or pointers
-// ?? return tuple of pointers??
+        vector<double> predictions(prob_list.size(), 0.0);
+        unordered_set<Label_t> labels;
+
+        // adjust because of padding used by gala
+        unsigned int maxx = get_xsize() - 2; 
+        unsigned int maxy = get_ysize() - 2; 
+        unsigned int maxz = get_zsize() - 2; 
+
+        volume_forXYZ(*labelvol, x, y, z) {
+            Label_t label = (*labelvol)(x,y,z); 
+
+            if (!label) {
+                continue;
+            }
+
+            RagNode_uit * node = rag->find_rag_node(label);
+
+            // create node
+            if (!node) {
+                node =  rag->insert_rag_node(label); 
+            }
+            node->incr_size();
+
+            // load all prediction values for a given x,y,z 
+            for (unsigned int i = 0; i < prob_list.size(); ++i) {
+                predictions[i] = (*(prob_list[i]))(x,y,z);
+            }
+
+            // add array of features/predictions for a given node
+            if (feature_mgr) {
+                feature_mgr->add_val(predictions, node);
+            }
+
+            Label_t label2 = 0, label3 = 0, label4 = 0, label5 = 0, label6 = 0, label7 = 0;
+            if (x > 1) label2 = (*labelvol)(x-1,y,z);
+            if (x < maxx) label3 = (*labelvol)(x+1,y,z);
+            if (y > 1) label4 = (*labelvol)(x,y-1,z);
+            if (y < maxy) label5 = (*labelvol)(x,y+1,z);
+            if (z > 1) label6 = (*labelvol)(x,y,z-1);
+            if (z < maxz) label7 = (*labelvol)(x,y,z+1);
+
+            // if it is not a 0 label and is different from the current label, add edge
+            if (label2 && (label != label2)) {
+                rag_add_edge(rag, label, label2, predictions, feature_mgr);
+                labels.insert(label2);
+            }
+            if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
+                rag_add_edge(rag, label, label3, predictions, feature_mgr);
+                labels.insert(label3);
+            }
+            if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
+                rag_add_edge(rag, label, label4, predictions, feature_mgr);
+                labels.insert(label4);
+            }
+            if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
+                rag_add_edge(rag, label, label5, predictions, feature_mgr);
+                labels.insert(label5);
+            }
+            if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
+                rag_add_edge(rag, label, label6, predictions, feature_mgr);
+                labels.insert(label6);
+            }
+            if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
+                rag_add_edge(rag, label, label7, predictions, feature_mgr);
+            }
+
+            // if it is on the border of the image, increase the boundary size
+            if (!label2 || !label3 || !label4 || !label5 || !label6 || !label7) {
+                node->incr_boundary_size();
+            }
+            labels.clear();
+        }
+
+        // load the new rag 
+        stack->set_rag(RagPtr(rag));
+    }
+
+    void build_rag_border()
+    {
+        FeatureMgrPtr feature_mgr = get_stack()->get_feature_manager();
+
+        vector<VolumeProbPtr> prob_list = get_stack()->get_prob_list();
+        vector<VolumeProbPtr> prob_list2 = stack2->get_prob_list();
+
+        vector<double> predictions(prob_list.size(), 0.0);
+        vector<double> predictions2(prob_list2.size(), 0.0);
+
+        VolumeLabelPtr labelvol =  get_stack()->get_labelvol();
+        VolumeLabelPtr labelvol2 =  stack2->get_labelvol();
+
+        RagPtr rag = get_stack()->get_rag();
+
+        for (int z = 1; z < (labelvol->shape(2)-1); ++z) { 
+            for (int y = 1; y < (labelvol->shape(1)-1); ++y) {
+                for (int x = 1; x < (labelvol->shape(0)-1); ++x) {
+
+                    Label_t label0 = (*labelvol)(x,y,z);
+                    Label_t label1 = (*labelvol2)(x,y,z);
+
+                    if (!label0 || !label1) {
+                        continue;
+                    }
+                    assert(label0 != label1);
+
+                    RagNode_uit * node = rag->find_rag_node(label0);
+                    if (!node) {
+                        node = rag->insert_rag_node(label0);
+                    }
+
+                    RagNode_uit * node2 = rag->find_rag_node(label1);
+
+                    if (!node2) {
+                        node2 = rag->insert_rag_node(label1);
+                    }
+
+                    for (unsigned int i = 0; i < prob_list.size(); ++i) {
+                        predictions[i] = (*(prob_list[i]))(x,y,z);
+                    }
+                    for (unsigned int i = 0; i < prob_list2.size(); ++i) {
+                        predictions2[i] = (*(prob_list2[i]))(x,y,z);
+                    }
+
+                    feature_mgr->add_val(predictions, node);
+                    feature_mgr->add_val(predictions2, node2);
+                    
+                    node->incr_size();
+                    node2->incr_size();
+
+                    rag_add_edge(rag.get(), label0, label1, predictions, feature_mgr);
+                    rag_add_edge(rag.get(), label0, label1, predictions2, feature_mgr);
+
+                    node->incr_boundary_size();
+                    node2->incr_boundary_size();
+                }
+            }
+        }
+    }
+
+    boost::python::list get_transformations()
+    {
+        boost::python::list transforms;
+        VolumeLabelPtr labelvol =  get_stack()->get_labelvol();
+
+        unordered_map<Label_t, Label_t> label_mappings = labelvol->get_mappings();
+
+        for (unordered_map<Label_t, Label_t>::iterator iter = label_mappings.begin();
+                iter != label_mappings.end(); ++iter)
+        {
+            if (iter->first != iter->second) {
+                transforms.append(boost::python::make_tuple(iter->first, iter->second));
+            }
+        } 
+
+        return transforms;
+    }
+   
+    void agglomerate(double threshold)
+    {
+        agglomerate_stack(*this, threshold, false);
+    } 
+
+    bool add_edge_constraint(boost::python::tuple loc1, boost::python::tuple loc2)
+    {
+        unsigned int x1 = boost::python::extract<int>(loc1[0]);
+        unsigned int y1 = boost::python::extract<int>(loc1[1]);
+        unsigned int z1 = boost::python::extract<int>(loc1[2]);
+        unsigned int x2 = boost::python::extract<int>(loc2[0]);
+        unsigned int y2 = boost::python::extract<int>(loc2[1]);
+        unsigned int z2 = boost::python::extract<int>(loc2[2]);
+
+        Label_t body1 = get_body_id(x1, y1, z1);    
+        Label_t body2 = get_body_id(x2, y2, z2);    
+
+        RagPtr rag = get_stack()->get_rag();
+
+        if (body1 == body2) {
+            return false;
+        }
+        if (!body1 || !body2) {
+            return true;
+        }
+
+        RagEdge_uit* edge = rag->find_rag_edge(body1, body2);
+
+        if (!edge) {
+            RagNode_uit* node1 = rag->find_rag_node(body1);
+            RagNode_uit* node2 = rag->find_rag_node(body2);
+            edge = rag->insert_rag_edge(node1, node2);
+            edge->set_weight(1.0);
+            edge->set_false_edge(true);
+        }
+        edge->set_preserve(true);
+
+        return true;
+    } 
+    
+    void determine_edge_locations(bool use_probs=false)
+    {
+        StackController::determine_edge_locations(best_edge_z, best_edge_loc, use_probs);      
+    }
+
+    // adjust assuming the input has a 1 pixel padding
+    boost::python::tuple get_edge_loc(RagEdge_uit* edge)
+    {
+        if (best_edge_loc.find(edge) == best_edge_loc.end()) {
+            throw ErrMsg("Edge location was not loaded!");
+        }
+
+        Location loc = best_edge_loc[edge];
+        unsigned int x = boost::get<0>(loc) - 1;
+        unsigned int y = boost::get<1>(loc) - 1;
+        unsigned int z = boost::get<2>(loc) - 1;
+
+        return boost::python::make_tuple(x, y, z); 
+    }
+
+    // adjust assuming the input has a 1 pixel padding
+    Label_t get_body_id(unsigned int x, unsigned int y, unsigned int z)
+    {
+        VolumeLabelPtr labelvol =  get_stack()->get_labelvol();
+        return (*labelvol)(x+1,labelvol->shape(1)-y-2,z+1);
+    }
+
+    FeatureMgr* get_feature_mgr()
+    {
+        return get_stack()->get_feature_manager().get();
+    }
+
+    Rag_uit* get_rag()
+    {
+        return get_stack()->get_rag().get();
+    }
+
+    double get_edge_weight(RagEdge_uit* edge)
+    {
+        return get_stack()->get_feature_manager()->get_prob(edge);
+    }
+
+    void add_empty_channel()
+    {
+        get_stack()->get_feature_manager()->add_channel();
+    }
+
+    bool is_orphan(RagNode_uit* node)
+    {
+        return !(node->is_boundary());
+    }
+    
+    void noop() {}
+
+    Stack* get_stack2()
+    {
+        return stack2;
+    }
+
+    ~StackControllerPython()
+    {
+        delete stack2;
+        delete get_stack();
+    }
+  private:
+    Stack* stack2;
+    EdgeCount best_edge_z;
+    EdgeLoc best_edge_loc;
+};
+
 
 
 class RagNode_edgeiterator_wrapper {
@@ -98,7 +373,7 @@ Rag_nodeiterator_wrapper rag_get_nodes(Rag_uit& rag)
 }
 
 
-void write_volume_to_buffer(Stack2* stack, object np_buffer)
+void write_volume_to_buffer(StackControllerPython* controller, object np_buffer)
 {
     unsigned width, height, depth; 
     boost::python::tuple np_buffer_shape(np_buffer.attr("shape"));
@@ -107,81 +382,78 @@ void write_volume_to_buffer(Stack2* stack, object np_buffer)
     height = boost::python::extract<unsigned>(np_buffer_shape[1]);
     depth = boost::python::extract<unsigned>(np_buffer_shape[0]);
 
-    if ((width != (stack->get_width()-2)) || (height != (stack->get_height()-2)) || (depth != (stack->get_depth()-2))) {
+    VolumeLabelPtr labelvol = controller->get_stack()->get_labelvol();
+        
+    if ((width != (labelvol->shape(0)-2)) || (height != (labelvol->shape(1)-2))
+            || (depth != (labelvol->shape(2)-2))) {
         throw ErrMsg("Buffer has wrong dimensions"); 
     }
-    
-    Label * temp_label_volume = stack->get_label_volume();
-    Label * temp_label_iter = temp_label_volume;
-
-    for (unsigned int z = 0; z < depth; ++z) {
-        for (unsigned int y = 0; y < height; ++y) {
-            for (unsigned int x = 0; x < width; ++x) {
-                np_buffer[boost::python::make_tuple(z,y,x)] = *(temp_label_iter);
-                ++temp_label_iter; 
+   
+    // a volume that is buffered is passed to the algorithm 
+    for (int z = 1; z < (labelvol->shape(2)-1); ++z) { 
+        for (int y = 1; y < (labelvol->shape(1)-1); ++y) {
+            for (int x = 1; x < (labelvol->shape(0)-1); ++x) {
+                np_buffer[boost::python::make_tuple(z-1,y-1,x-1)] = (*labelvol)(x,y,z);
             }
         }
-    }
- 
-    delete temp_label_volume;
+    } 
 }
 
-Stack2* init_stack()
+StackControllerPython* init_stack()
 {
-    Stack2 * stack = new Stack2; 
-    stack->set_feature_mgr(new FeatureMgr());
-    return stack;
+    VolumeLabelPtr emptypointer;
+    Stack* temp_stack = new Stack(emptypointer);
+    temp_stack->set_feature_manager(FeatureMgrPtr(new FeatureMgr)); 
+    StackControllerPython* controller = new StackControllerPython(temp_stack);
+    temp_stack->set_rag(RagPtr(new Rag_uit()));
+    return controller;
 }
 
-unsigned int* init_watershed(object watershed, unsigned int& width, unsigned int& height, unsigned int& depth)
+VolumeLabelPtr init_watershed(object watershed)
 {
     boost::python::tuple watershed_shape(watershed.attr("shape"));
 
-    width = boost::python::extract<unsigned>(watershed_shape[2]);
-    height = boost::python::extract<unsigned>(watershed_shape[1]);
-    depth = boost::python::extract<unsigned>(watershed_shape[0]);
+    unsigned int width = boost::python::extract<unsigned int>(watershed_shape[2]);
+    unsigned int height = boost::python::extract<unsigned int>(watershed_shape[1]);
+    unsigned int depth = boost::python::extract<unsigned int>(watershed_shape[0]);
 
-    unsigned int * watershed_array = new unsigned int[width*height*depth];
+    VolumeLabelPtr labels = VolumeLabelData::create_volume();
+    labels->reshape(vigra::MultiArrayShape<3>::type(width, height, depth));
 
-    unsigned int plane_size = width * height;
-
-    for (unsigned int z = 0; z < depth; ++z) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 0; y < height; ++y) {
-            int y_spot = y * width;
-            for (unsigned int x = 0; x < width; ++x) {
-                unsigned long long curr_spot = x+y_spot+z_spot;
-                watershed_array[curr_spot] =
-                    (unsigned int)(boost::python::extract<double>(watershed[boost::python::make_tuple(z,y,x)]));
-            }
-        }
+    volume_forXYZ(*labels,x,y,z) {
+        labels->set(x,y,z, boost::python::extract<double>(watershed[boost::python::make_tuple(z,y,x)]));
     }
-    return watershed_array; 
-
+    return labels;
 }
 
 
-// ?! how to add features to RAG
-void reinit_stack(Stack2* stack, object watershed)
+// how to add features to RAG?
+void reinit_stack(StackControllerPython* controller, object watershed)
 {
     // there will be 0 padding around image
-    unsigned int width, height, depth; 
-    unsigned int * watershed_array = init_watershed(watershed, width, height, depth);
-   
-    stack->reinit_stack(watershed_array, depth, height, width, 1);
+    VolumeLabelPtr labelvol = init_watershed(watershed);
+    
+    Stack* stack = controller->get_stack();
+    stack->set_labelvol(labelvol);
+
+    vector<VolumeProbPtr> prob_list;
+    stack->set_prob_list(prob_list);
 }
 
-void reinit_stack2(Stack2* stack, object watershed)
+void reinit_stack2(StackControllerPython* controller, object watershed)
 {
     // there will be 0 padding around image
-    unsigned int width, height, depth; 
-    unsigned int * watershed_array = init_watershed(watershed, width, height, depth);
-   
-    stack->reinit_stack2(watershed_array, depth, height, width, 1);
+    VolumeLabelPtr labelvol = init_watershed(watershed);
+    
+    Stack* stack = controller->get_stack2();
+    stack->set_labelvol(labelvol);
+
+    vector<VolumeProbPtr> prob_list;
+    stack->set_prob_list(prob_list);
 }
 
 
-double * create_prediction(object prediction)
+VolumeProbPtr create_prediction(object prediction)
 {
     unsigned width, height, depth; 
     boost::python::tuple prediction_shape(prediction.attr("shape"));
@@ -189,33 +461,28 @@ double * create_prediction(object prediction)
     height = boost::python::extract<unsigned>(prediction_shape[1]);
     depth = boost::python::extract<unsigned>(prediction_shape[0]);
 
-    double * prediction_array = new double[width*height*depth];
-    unsigned int plane_size = width * height;
+    VolumeProbPtr prob = VolumeProb::create_volume();
+    prob->reshape(vigra::MultiArrayShape<3>::type(width, height, depth));
 
-    for (unsigned int z = 0; z < depth; ++z) {
-        int z_spot = z * plane_size;
-        for (unsigned int y = 0; y < height; ++y) {
-            int y_spot = y * width;
-            for (unsigned int x = 0; x < width; ++x) {
-                unsigned long long curr_spot = x+y_spot+z_spot;
-                prediction_array[curr_spot] =
-                    boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
-            }
-        }
+    volume_forXYZ(*prob,x,y,z) {
+        (*prob)(x,y,z) = boost::python::extract<double>(prediction[boost::python::make_tuple(z,y,x)]);
     }
-    return prediction_array;
+    
+    return prob;
 }   
 
-void add_prediction_channel(Stack2* stack, object prediction)
+void add_prediction_channel(StackControllerPython* controller, object prediction)
 {
-    double * prediction_array = create_prediction(prediction);
-    stack->add_prediction_channel(prediction_array);
+    Stack* stack = controller->get_stack();
+    VolumeProbPtr prob = create_prediction(prediction);
+    stack->add_prob(prob);
 }
 
-void add_prediction_channel2(Stack2* stack, object prediction)
+void add_prediction_channel2(StackControllerPython* controller, object prediction)
 {
-    double * prediction_array = create_prediction(prediction);
-    stack->add_prediction_channel2(prediction_array);
+    Stack* stack = controller->get_stack2();
+    VolumeProbPtr prob = create_prediction(prediction);
+    stack->add_prob(prob);
 }
 
 
@@ -233,20 +500,6 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
     def("add_prediction_channel2", add_prediction_channel2);
     def("write_volume_to_buffer", write_volume_to_buffer);
 
-#if 0
-    // add property to a rag (params: <rag>, <edge/node>, <property_string>, <data>)
-    def("rag_add_property", rag_add_property_ptr1);
-    def("rag_add_property", rag_add_property_ptr2);
-
-    // remove property from a rag (params: <rag>, <edge/node>, <property_string>)
-    def("rag_remove_property", rag_remove_property_ptr1);
-    def("rag_remove_property", rag_remove_property_ptr2);
-    
-    // retrieve property from a rag (return <data>, params: <rag>, <edge/node>, <property_string>)
-    def("rag_retrieve_property", rag_retrieve_property_ptr1);
-    def("rag_retrieve_property", rag_retrieve_property_ptr2);
-#endif
-
     // initialization actually occurs within custom build
     class_<FeatureMgr>("FeatureMgr", no_init)
         .def("set_python_rf_function", &FeatureMgr::set_python_rf_function)
@@ -260,33 +513,30 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         ;
 
     // initialization actually occurs within custom build
-    class_<Stack2>("Stack", no_init)
+    class_<StackControllerPython>("Stack", no_init)
         // returns number of bodies
-        .def("get_num_bodies", &Stack2::get_num_bodies)
+        .def("get_num_bodies", &StackControllerPython::get_num_labels)
         // agglomerate to a threshold
-        .def("agglomerate_rag", &Stack2::agglomerate_rag)
+        .def("agglomerate_rag", &StackControllerPython::agglomerate)
         // build rag based on loaded features and prediction images 
-        .def("build_rag", &Stack2::build_rag)
-        .def("build_rag_border", &Stack2::build_rag_border)
-        .def("add_empty_channel", &Stack2::add_empty_channel)
-        .def("get_transformations", &Stack2::get_transformations)
-        .def("disable_nonborder_edges", &Stack2::disable_nonborder_edges)
-        .def("enable_nonborder_edges", &Stack2::enable_nonborder_edges)
-        .def("get_feature_mgr", &Stack2::get_feature_mgr, return_value_policy<reference_existing_object>())
+        .def("build_rag", &StackControllerPython::build_rag_padded)
+        .def("build_rag_border", &StackControllerPython::build_rag_border)
+        .def("add_empty_channel", &StackControllerPython::add_empty_channel)
+        .def("get_transformations", &StackControllerPython::get_transformations)
+        .def("disable_nonborder_edges", &StackControllerPython::noop)
+        .def("enable_nonborder_edges", &StackControllerPython::noop)
+        .def("get_feature_mgr", &StackControllerPython::get_feature_mgr, return_value_policy<reference_existing_object>())
         // remove inclusions 
-        .def("remove_inclusions", &Stack2::remove_inclusions)
+        .def("remove_inclusions", &StackControllerPython::remove_inclusions)
         // set edge constraints, will create false edges
-        .def("add_edge_constraint", &Stack2::add_edge_constraint)
-        .def("get_rag", &Stack2::get_rag, return_value_policy<reference_existing_object>())
-        .def("get_body_id", &Stack2::get_body_id)
-        .def("determine_edge_locations", &Stack2::determine_edge_locations)
-        .def("get_edge_weight", &Stack2::get_edge_weight)
-        .def("get_edge_loc", &Stack2::get_edge_loc2)
-        .def("is_orphan", &Stack2::is_orphan)
+        .def("add_edge_constraint", &StackControllerPython::add_edge_constraint)
+        .def("get_rag", &StackControllerPython::get_rag, return_value_policy<reference_existing_object>())
+        .def("get_body_id", &StackControllerPython::get_body_id)
+        .def("determine_edge_locations", &StackControllerPython::determine_edge_locations)
+        .def("get_edge_weight", &StackControllerPython::get_edge_weight)
+        .def("get_edge_loc", &StackControllerPython::get_edge_loc)
+        .def("is_orphan", &StackControllerPython::is_orphan)
         ;
-
-
-
 
     // denormalized edge data structure (unique for a node pair)
     class_<RagEdge_uit, boost::noncopyable>("RagEdge", no_init)
@@ -364,62 +614,3 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
 }
 
 
-
-
-/*
-stupid& extra_blah(Rag_ui& self, object obj)
-{
-    stupid& b = (extract<stupid&>(obj));
-} 
-
-
-void* extract_vtk_wrapped_pointer(PyObject* obj)
-{
-    char thisStr[] = "__this__";
-    if (!PyObject_HasAttrString(obj, thisStr))
-        return NULL;
-
-    PyObject* thisAttr = PyObject_GetAttrString(obj, thisStr);
-    if (thisAttr == NULL)
-        return NULL;
-
-    const char* str = PyString_AsString(thisAttr);
-    if(str == 0 || strlen(str) < 1)
-        return NULL;
-
-    char hex_address[32], *pEnd;
-    char *_p_ = strstr(str, "_p_vtk");
-    if(_p_ == NULL) return NULL;
-    char *class_name = strstr(_p_, "vtk");
-    if(class_name == NULL) return NULL;
-    strcpy(hex_address, str+1);
-    hex_address[_p_-str-1] = '\0';
-
-    long address = strtol(hex_address, &pEnd, 16);
-
-    vtkObjectBase* vtk_object = (vtkObjectBase*)((void*)address);
-    if(vtk_object->IsA(class_name))
-    {
-        return vtk_object;
-    }
-
-    return NULL;
-}
-
-*/
-
-//#define VTK_PYTHON_CONVERSION(type) \
-//    /* register the from-python converter */ \
-//    converter::registry::insert(&extract_vtk_wrapped_pointer, type_id<type>());
- 
-
-
-
-//lvalue_from_pytype<extract_identity<int>,&int>();
-//return_internal_reference<1, with_custodian_and_ward<1, 2, with_custodian_and_ward<1, 3> > >());
-// copy_const_reference
-//object set_object(object obj)
-//
-//
-//
-//class_<Base, boost::noncopyable>("Base", no_init);

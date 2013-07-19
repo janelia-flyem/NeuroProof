@@ -270,7 +270,6 @@ class StackController {
     void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2,
             std::vector<double>& preds, FeatureMgrPtr feature_mgr);
 
-  private:
     //! declaration of typedef for x,y,z location representation
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     
@@ -279,7 +278,19 @@ class StackController {
 
     //! declaration of typedef for mapping of rag edges to location 
     typedef std::tr1::unordered_map<RagEdge_uit*, Location> EdgeLoc; 
-    
+   
+    /*!
+     * Support function called by 'serialize_graph_info' to find the
+     * ideal point on the edge between two labels for examination.
+     * Currently the strategy is to find an XY plane with the maximum
+     * amount of 'edgyness'.
+     * \param best_edge_z count associated with each edge
+     * \param best_edge_loc location associated with each edge
+     * \param optimal_prob_edge_loc determine strategy to select edge location
+    */
+    void determine_edge_locations(EdgeCount& best_edge_z,
+        EdgeLoc& best_edge_loc, bool use_probs);
+
     // TODO: remove labelcount in favor of an unordered_map
     /*!
      * Structure to associate a count with each label used
@@ -292,6 +303,7 @@ class StackController {
         LabelCount(Label_t plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
     };
     
+  private:
     /*!
      * Updates the assignment of labels to ground truth labels when
      * two labels have been merged together.  This update should be
@@ -325,17 +337,7 @@ class StackController {
     */
     void compute_contingency_table();
     
-    /*!
-     * Support function called by 'serialize_graph_info' to find the
-     * ideal point on the edge between two labels for examination.
-     * Currently the strategy is to find an XY plane with the maximum
-     * amount of 'edgyness'.
-     * \param best_edge_z count associated with each edge
-     * \param best_edge_loc location associated with each edge
-     * \param optimal_prob_edge_loc determine strategy to select edge location
-    */
-    void determine_edge_locations(EdgeCount& best_edge_z,
-        EdgeLoc& best_edge_loc, bool use_probs);
+
 
     /*!
      * Support function called by 'serialize_stack' that actually writes
