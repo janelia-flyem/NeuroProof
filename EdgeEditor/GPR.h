@@ -1,3 +1,16 @@
+/*!
+ * This file implements the core algorithm described in
+ *u http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448
+ * [Plaza '12].  In particular, the implementation concerns
+ * only examining a single path determine affinity between two
+ * nodes.  The paper also generalizes and explains assesing affinity
+ * by considering multiple paths.  In general, we don't find this
+ * more computationally intensive calculation to be beneficial even
+ * if it is presumably more accurate.
+ *
+ * \author Stephen Plaza (plaza.stephen@gmail.com)
+*/
+
 #ifndef GPR_H
 #define GPR_H
 
@@ -10,25 +23,106 @@
 
 namespace NeuroProof {
 
+/*!
+ * Calculate the uncertainty of a given segmentation graph
+ * (Generalized Probabilistic Rand -- GPR)  by computating
+ * the node affinities between each pair of nodes in the
+ * graph (that are reasonably close) using the edge weights.
+ * The algorithm requires running a dijkstra's search algorithm
+ * over each node in the graph.  In practice this is not require
+ * an all paths algorithm since some nodes will effectively not
+ * connect (will be below some threshold beyond which we ignore).
+*/
 class GPR {
   public:
+    /*!
+     * Constructor that requires a RAG with edges that have
+     * weights that give an estimate of how like the edge is
+     * true.  1 is a prediction for a true edge.  0 is a 
+     * prediction for a false edge.
+     * \param rag_ reference to RAG
+     * \debug_ enables some debug output
+    */
     GPR(Rag_uit& rag_, bool debug_ = false); 
+    
+    /*!
+     * Calculate the GPR for the RAG.
+     * \param num_paths num paths to compute GPR [values not 1 unsupported]
+     * \param num_threads num threads to compute GPR
+     * \return value of GPR
+    */
     double calculateGPR(int num_paths, int num_threads); 
-    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list); 
 
   private:
+    /*!
+     * Calculate the GPR for the RAG.
+     * \param num_paths num paths to compute GPR [values not 1 unsupported]
+     * \param num_threads num threads to compute GPR 
+     * \param node_list nodes to be examined
+     * \return value of GPR
+    */
+    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list); 
+
+    /*!
+     * Calculates the maximum expected rand index using
+     * the affinities computed between the nodes.
+     * \return maximum rand index
+    */
     double calculateMaxExpectedRand();
+    
+    /*!
+     * Normalize GPR value using an normalization scheme
+     * similar to the one used in adjusting rand index.
+     * \return value of GPR
+    */
     double calculateNormalizedGPR();
 
+    //! Reference to rag analyzed for uncertainty 
     Rag_uit& rag;
+
+    //! The minimum rand correspondence independent of edge decisions 
     unsigned long long max_rand_base;
+
+    //! Total number of pairs of points over whole rag
     unsigned long long total_num_voxelpairs;
+    
+    //! Debug mode flag
     bool debug;
+
+    //! Structure for holding pairs of nodes and the affinity weight
     AffinityPair::Hash affinity_pairs;
 
+    /*!
+     * Struct for assign the GPR calculation work to different worker
+     * threads.  The GPR calculation cost is dominated by analyzing
+     * the paths for each node.  The algorithm can be trivially
+     * parallelized by assigning nodes to different threads.
+    */
     struct ThreadCompute {
-        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag_uit& rag_, AffinityPair::Hash& affinity_pairs_, std::vector<RagNode_uit* >& node_list_, bool debug_) : id(id_), num_threads(num_threads_), num_paths(num_paths_), rag(rag_), affinity_pairs(affinity_pairs_), node_list(node_list_), debug(debug_), EPSILON(0.000001), CONNECTION_THRESHOLD(0.01) { }
+        /*!
+         * Constructor for an individual thread of computation
+         * that assigns a thread id, the number of paths used (1 is only
+         * supported), and a shared affinity_pairs structure where
+         * results are written back.
+         * \param id_ thread id
+         * \param num_threads_ number of threads to use
+         * \param num_paths_ number of paths to find affinty (1 supported)
+         * \param rag_ reference to RAG
+         * \param affinity_pair_ set of node pairs with affinities
+         * \param node_list_ set of nodes that will be analyzed
+        */ 
+        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag_uit& rag_, 
+                AffinityPair::Hash& affinity_pairs_, 
+                std::vector<RagNode_uit* >& node_list_, bool debug_) : 
+            id(id_), num_threads(num_threads_), num_paths(num_paths_), 
+            rag(rag_), affinity_pairs(affinity_pairs_), node_list(node_list_), 
+            debug(debug_), EPSILON(0.000001), CONNECTION_THRESHOLD(0.01) {}
 
+        /*!
+         * Function overloaded operation to be called by the boost
+         * threading library and actually perform the path examination
+         * algorithms to determine the node affinities.
+        */
         void operator()()
         {
             int num_regions = rag.get_num_regions() / num_threads;
@@ -39,7 +133,8 @@ class GPR {
                 if (num_paths == 1) {
                     if (debug && (id == 0)) {
                         if (increment && !(curr_num++ % increment)) {
-                            std::cout << curr_num/double(num_regions) * 100 << "% done" << std::endl;
+                            std::cout << curr_num/double(num_regions) * 100 << 
+                                "% done" << std::endl;
                         }
                     }
                     findBestPath(node_list[i]);
@@ -52,169 +147,84 @@ class GPR {
             affinity_pairs.insert(affinity_pairs_local.begin(), affinity_pairs_local.end());
         }
 
+        //! Thread id
         int id;
+
+        //! Number of threads
         int num_threads;
+
+        //! Number of paths to calculate affinity (should be 1 for now)
         int num_paths;
+
+        //! Reference to RAG
         Rag_uit& rag;
+
+        //! Affinity between node pairs (not necessarily directly connected)
         AffinityPair::Hash& affinity_pairs;
+
+        //! List of nodes to be considered for affinity
         std::vector<RagNode_uit* >& node_list;
+
+        //! Enables debug mode
         bool debug;
+
+        //! If below this, treat edge as a true edge 
         const double EPSILON;
+
+        //! Minimum affinity allowed between nodes before being ignored 
         const double CONNECTION_THRESHOLD;
 
+        //! Mutex for protecting affinity nodes structures
         static boost::mutex mutex;
+
+        //! Thread memory for affinity pairs
         AffinityPair::Hash affinity_pairs_local;
         
-        // used for finding path
+        /*!
+         *  Element to rank highest affinity nodes.
+        */
         struct BestNode {
+            //! Current node in path being examined
             RagNode_uit* rag_node_curr;
+        
+            //! Current edge traversed to get to node
             RagEdge_uit* rag_edge_curr;
+            
+            //! Current connection of weight
             double weight;
         };
+        
+        /*!
+         * Structure to rank nodes by connection weight.
+        */
         struct BestNodeCmp {
             bool operator()(const BestNode& q1, const BestNode& q2) const
             {
                 return (q1.weight < q2.weight);
             }
         };
+
+        //! Defines priority queue for running Dijkstra's algorithm
         typedef std::priority_queue<BestNode, std::vector<BestNode>, BestNodeCmp> BestNodeQueue;
+
+        //! Starting node in path
         BestNode best_node_head;
-        BestNodeQueue best_node_queue; 
+
+        //! Queue of nodes being examined
+        BestNodeQueue best_node_queue;
+
+        //! Temporary affinity pairs stored
         AffinityPair::Hash temp_affinity_pairs;
 
+        /*
+         * Runs a version of Dijkstra's algorithm with multiplication
+         * where edges range in values from 0 to 1.  The result
+         * is a set of affinity pairs with the starting head node.
+         * \param rag_node_head Starting node for path search
+        */
         void findBestPath(RagNode_uit* rag_node_head);
     };
 };
-
-
-boost::mutex GPR::ThreadCompute::mutex;
-
-GPR::GPR(Rag_uit& rag_, bool debug_) : rag(rag_), debug(debug_), total_num_voxelpairs(0), max_rand_base(0)
-{
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
-        unsigned long long val = (*iter)->get_size();
-        max_rand_base += (val * (val-1)/2);
-        total_num_voxelpairs += val;
-    }
-    total_num_voxelpairs = total_num_voxelpairs * (total_num_voxelpairs - 1) / 2;
-    
-}
-
-double GPR::calculateMaxExpectedRand()
-{
-    double max_rand = double(max_rand_base);
-    for (AffinityPair::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
-        max_rand += ( (iter->size * (iter->weight) * (iter->weight)) + (iter->size * (1-iter->weight) * iter->weight));
-    }
-    return max_rand;
-}
-
-
-double GPR::calculateGPR(int num_paths, int num_threads)
-{
-    std::vector<RagNode_uit* > node_list;
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
-        node_list.push_back(*iter);
-    }
-    return calculateGPR(num_paths, num_threads, node_list);
-}
-
-
-double GPR::calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list)
-{
-    boost::thread_group threads;
-
-    for (int i = 0; i < num_threads; ++i) {
-        threads.create_thread(ThreadCompute(i, num_threads, num_paths, rag, affinity_pairs, node_list, debug));
-    } 
-
-    threads.join_all();
-
-    double gpr_index = calculateNormalizedGPR();
-    return gpr_index;
-}
-
-double GPR::calculateNormalizedGPR()
-{
-    double total_diffs = 0.0;
-    for (AffinityPair::Hash::iterator iter = affinity_pairs.begin(); iter != affinity_pairs.end(); ++iter) {
-        double prob = (1 - iter->weight) * iter->weight;
-        total_diffs += (prob * iter->size);
-    }
-   
-    double max_rand = calculateMaxExpectedRand();
-    double expected_rand = max_rand * max_rand / (total_num_voxelpairs);
-    double adjusted_index = ((max_rand - total_diffs) - expected_rand) / (max_rand - expected_rand) * 100;
-    return adjusted_index;
-}
-
-void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
-{
-    best_node_head.rag_node_curr = rag_node_head;
-    best_node_head.rag_edge_curr = 0;
-    best_node_head.weight= 1.0;
-    Node_uit node_head = rag_node_head->get_node_id();
-    
-    best_node_queue.push(best_node_head);
-    AffinityPair affinity_pair_head(node_head, node_head);
-    affinity_pair_head.weight = 1.0;
-
-    while (!best_node_queue.empty()) {
-        BestNode best_node_curr = best_node_queue.top();
-        AffinityPair affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
-  
-        if (temp_affinity_pairs.find(affinity_pair_curr) == temp_affinity_pairs.end()) { 
-            for (RagNode_uit::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
-                    edge_iter != best_node_curr.rag_node_curr->edge_end(); ++edge_iter) {
-                // avoid simple cycles
-                if (*edge_iter == best_node_curr.rag_edge_curr) {
-                    continue;
-                }
-
-                // grab other node 
-                RagNode_uit* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
-
-                // avoid duplicates
-                AffinityPair temp_pair(node_head, other_node->get_node_id());
-                if (temp_affinity_pairs.find(temp_pair) != temp_affinity_pairs.end()) {
-                    continue;
-                }
-
-                double edge_prob = (*edge_iter)->get_weight();
-                if (edge_prob < EPSILON) {
-                    continue;
-                }
-                edge_prob = best_node_curr.weight * edge_prob;
-                if (edge_prob < CONNECTION_THRESHOLD) {
-                    continue;
-                }
-
-                BestNode best_node_new;
-                best_node_new.rag_node_curr = other_node;
-                best_node_new.rag_edge_curr = *edge_iter;
-                best_node_new.weight = edge_prob;
-                best_node_queue.push(best_node_new);
-            }
-            affinity_pair_curr.weight = best_node_curr.weight; 
-            affinity_pair_curr.size = rag_node_head->get_size() * best_node_curr.rag_node_curr->get_size();
-            temp_affinity_pairs.insert(affinity_pair_curr);
-        }
-
-        best_node_queue.pop();
-    }
-    
-    temp_affinity_pairs.erase(affinity_pair_head);
-    affinity_pairs_local.insert(temp_affinity_pairs.begin(), temp_affinity_pairs.end());
-    temp_affinity_pairs.clear();
-}
-
-
-
-
-
-
-
-
 
 }
 

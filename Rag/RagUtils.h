@@ -99,10 +99,29 @@ typedef std::pair<BoostEdge, bool> BoostEdgeBool;
 */
 BoostGraph* create_boost_graph(boost::shared_ptr<Rag<unsigned int> > rag);
 
+/*!
+ * For a given node find all of the nodes connected to it and the cost
+ * to reach this node using a shortest-path algorithm over the edge
+ * weights.  This algorithm will ignore paths that go through edges
+ * with the 'preserve' flag if specified.
+ * \param rag rag with edge weights set for each edge
+ * \param rag_node_head starting node for the path search
+ * \param path_restriction the max length of any path (0 = unbounded)
+ * \param connection_threshold the minimum connection between nodes considered
+ * \param preserve if true do not consider paths through preserved edges
+ * \param affinity_pairs contains nodes connected to the head
+*/
 void grab_affinity_pairs(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
         int path_restriction, double connection_threshold, bool preserve,
         AffinityPair::Hash& affinity_pairs);
 
+/*!
+ * Calls 'grab_affinity_pairs' to find the affinity beetween two nodes.
+ * \param rag rag with edge weights set for each edge
+ * \param rag_node_head start rag node
+ * \param rag_node_dest final rag node
+ * \return connection weight between nodes
+*/
 double find_affinity_path(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
         RagNode<unsigned int>* rag_node_dest);
 

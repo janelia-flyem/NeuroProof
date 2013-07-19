@@ -7,6 +7,7 @@ namespace NeuroProof {
 
 void NodeRankList::insert(NodeRank item)
 {
+    // store insertion in history if checkpointing is enabled
     if (checkpoint) {
         history[history.size()-1].push_back(HistoryElement(item, true));
     }
@@ -99,9 +100,6 @@ void NodeRankList::undo_one()
     history.pop_back(); 
 }
 
-
-
-
 bool NodeCentricRank::get_top_edge(NodePair& top_edge_ret)
 {
     if ((boost::get<0>(top_edge) == 0) && (boost::get<1>(top_edge) == 0)) {
@@ -116,6 +114,9 @@ bool NodeCentricRank::get_top_edge(NodePair& top_edge_ret)
 void NodeCentricRank::update_priority()
 {
     top_edge = NodePair(0,0);
+    // examine first node that has strong affinity to another node
+    // that is considered important -- this is discerned by calling
+    // the 'find_most_uncertain_node'
     while (!node_list.empty()) {
         Node_uit head_id = node_list.first().id; 
 
@@ -160,8 +161,9 @@ void NodeCentricRank::examined_edge(NodePair node_pair, bool remove)
         
         // virtual call to add node if it still qualifies
         insert_node(keep_node);
-        // potentially put neighboring nodes back in body list
-        // virtual function call
+
+        // virtual call to potentially put neighboring
+        // nodes back in body list
         update_neighboring_nodes(keep_node);
     }
     

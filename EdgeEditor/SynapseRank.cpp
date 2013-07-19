@@ -10,6 +10,7 @@ void SynapseRank::initialize(double ignore_size_)
     
     node_list.clear(); 
 
+    // designate the number of synapse annotations as being a node's size
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         unsigned long long synapse_weight = 0;
@@ -29,6 +30,7 @@ void SynapseRank::initialize(double ignore_size_)
         node_list.insert(body_rank);
     }
     
+    // the information change threshold below which is concerned insignificant 
     voi_change_thres = calc_voi_change(ignore_size, ignore_size, volume_size);
     update_priority();
 }
@@ -42,6 +44,8 @@ RagNode_uit* SynapseRank::find_most_uncertain_node(RagNode_uit* head_node)
     double total_information_affinity = 0.0;
     RagNode_uit* strongest_affinity_node = 0;
 
+    // find nodes with largest affinity that could affect the change
+    // in synapses the most
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;
@@ -105,6 +109,8 @@ void SynapseRank::update_neighboring_nodes(Node_uit keep_node)
     AffinityPair::Hash affinity_pairs;
     grab_affinity_pairs(*rag, head_node, 0, 0.01, true, affinity_pairs);
 
+    // reinsert all nodes with synapse annotations that could have
+    // been affected by a change in the RAG
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;

@@ -9,9 +9,11 @@ void NodeSizeRank::initialize(double ignore_size_, unsigned int depth_)
     ignore_size = ignore_size_;
     depth = depth_;
     volume_size = rag->get_rag_size();
+    // hack: BIGBODY10NM represents the 'smallest' allowable volume
     voi_change_thres = calc_voi_change(BIGBODY10NM, ignore_size, volume_size);
     node_list.clear(); 
 
+    // add bodies above the the threshold
     for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((*iter)->get_size() >= ignore_size) {
@@ -24,7 +26,6 @@ void NodeSizeRank::initialize(double ignore_size_, unsigned int depth_)
     update_priority();
 }
 
-
 RagNode_uit* NodeSizeRank::find_most_uncertain_node(RagNode_uit* head_node)
 {
     AffinityPair::Hash affinity_pairs;
@@ -33,6 +34,7 @@ RagNode_uit* NodeSizeRank::find_most_uncertain_node(RagNode_uit* head_node)
     double total_information_affinity = 0.0;
     RagNode_uit* strongest_affinity_node = 0;
 
+    // prioritize high affinity nodes that have large sizes
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;
@@ -77,6 +79,8 @@ void NodeSizeRank::update_neighboring_nodes(Node_uit keep_node)
     AffinityPair::Hash affinity_pairs;
     grab_affinity_pairs(*rag, head_node, depth, 0.01, true, affinity_pairs);
 
+    // reinsert all nodes that may have been affected
+    // by a change in the RAG
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;

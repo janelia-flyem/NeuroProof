@@ -9,7 +9,10 @@ void OrphanRank::initialize(double ignore_size_)
     ignore_size = ignore_size_;
     node_list.clear(); 
 
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    // grab all nodes that are orphan above the size threshold
+    // or that have a synapse annotation
+    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
         unsigned long long synapse_weight = 0;
         try {   
             synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
@@ -40,6 +43,7 @@ RagNode_uit* OrphanRank::find_most_uncertain_node(RagNode_uit* head_node)
     double biggest_change = 0;
     RagNode_uit* strongest_affinity_node = 0;
 
+    // look for the highest affinity path betwee node and non-orphan
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;
@@ -66,8 +70,6 @@ RagNode_uit* OrphanRank::find_most_uncertain_node(RagNode_uit* head_node)
     return strongest_affinity_node;
 }
 
-
-
 void OrphanRank::insert_node(Node_uit node)
 {
     RagNode_uit* head_node = rag->find_rag_node(node);
@@ -76,6 +78,7 @@ void OrphanRank::insert_node(Node_uit node)
     master_item.id = head_node->get_node_id();
     master_item.size = head_node->get_size();
 
+    // don't insert node if not an orphan
     if (!(head_node->is_boundary())) {
         node_list.insert(master_item);
     }
@@ -87,6 +90,8 @@ void OrphanRank::update_neighboring_nodes(Node_uit keep_node)
     AffinityPair::Hash affinity_pairs;
     grab_affinity_pairs(*rag, head_node, 0, 0.01, false, affinity_pairs);
 
+    // reinsert nodes into the queue who may have been affected
+    // by a change in the RAG
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
         Node_uit other_id = iter->region1;

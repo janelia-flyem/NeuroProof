@@ -271,10 +271,16 @@ BoostGraph* create_boost_graph(RagPtr rag)
     return graph;
 }
 
+/*!
+ * Structure used in the Dijkstra's algorithm implementation of finding
+ * the shortest multiplicative path in the graph.
+*/
 struct BestNode {
     RagNode_uit* rag_node_curr;
     RagEdge_uit* rag_edge_curr;
+    //! weight of the current path (1 is short, 0 is infinite)
     double weight;
+    //! length of the current path
     int path;
     Node_uit second_node;
 };
@@ -304,7 +310,9 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
     affinity_pair_head.size = 0;
 
     affinity_pairs.clear();
-
+    
+    // finding the shortest current path (connection strenght closest to 1
+    // and pop this value off the list)
     while (!best_node_queue.empty()) {
         BestNode best_node_curr = best_node_queue.top();
         AffinityPair affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
@@ -387,8 +395,11 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
 
 double find_affinity_path(Rag_uit& rag, RagNode_uit* rag_node_head, RagNode_uit* rag_node_dest)
 {
+    // TODO restrict path search algorithm so that it terminates after
+    // finding the destination node
     AffinityPair::Hash affinity_pairs;
     
+    // current ignore preserve nodes 
     grab_affinity_pairs(rag, rag_node_head, 0, 0.01, false, affinity_pairs); 
     AffinityPair apair(rag_node_head->get_node_id(), rag_node_dest->get_node_id()); 
 

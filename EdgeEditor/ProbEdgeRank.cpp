@@ -23,12 +23,13 @@ void ProbEdgeRank::examined_edge(NodePair node_pair, bool remove)
     } 
 }
 
-// assume that 0 body will never be added as a screen
 void ProbEdgeRank::grab_edge_ranking()
 {
     edge_ranking.clear();
 
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    // iterate all edges and add those in a specified range
+    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+            iter != rag->edges_end(); ++iter) {
         double val = (*iter)->get_weight();
         if ((val <= upper) && (val >= lower)) {
             if (((*iter)->get_node1()->get_size() > ignore_size) &&
@@ -38,7 +39,6 @@ void ProbEdgeRank::grab_edge_ranking()
         } 
     }
 }
-
 
 bool ProbEdgeRank::get_top_edge(NodePair& top_edge_ret)
 {

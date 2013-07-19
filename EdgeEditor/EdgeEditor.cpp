@@ -5,7 +5,8 @@
 #include <iostream>
 #include <map>
 
-using std::vector; using std::set; using std::tr1::unordered_set; using std::tr1::unordered_map;
+using std::vector; using std::set;
+using std::tr1::unordered_set; using std::tr1::unordered_map;
 using std::string;
 using std::cerr; using std::cout; using std::endl;
 using std::pair;
@@ -16,7 +17,8 @@ vector<Node_uit> EdgeEditor::getQAViolators(unsigned int threshold)
 {
     vector<Node_uit> violators;
 
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); iter != rag.nodes_end(); ++iter) {
+    for (Rag_uit::nodes_iterator iter = rag.nodes_begin();
+            iter != rag.nodes_end(); ++iter) {
         unsigned long long synapse_weight = 0;
         try {   
             synapse_weight = (*iter)->get_property<unsigned long long>(SynapseStr);
@@ -25,7 +27,8 @@ vector<Node_uit> EdgeEditor::getQAViolators(unsigned int threshold)
         }
         bool is_orphan = !((*iter)->is_boundary());
 
-        if (is_orphan && ( (synapse_weight > 0) || ((*iter)->get_size() >= threshold) )) {
+        if (is_orphan && ( (synapse_weight > 0) ||
+                ((*iter)->get_size() >= threshold) )) {
             violators.push_back((*iter)->get_node_id());
         }
     } 
@@ -41,7 +44,6 @@ void EdgeEditor::set_synapse_mode(double ignore_size_)
     edge_mode = synapse_edge_mode;
 }
 
-// depth currently not set
 void EdgeEditor::set_body_mode(double ignore_size_, int depth)
 {
     reinitialize_scheduler();
@@ -51,7 +53,6 @@ void EdgeEditor::set_body_mode(double ignore_size_, int depth)
     edge_mode = body_edge_mode;
 }
 
-// synapse orphan currently not used
 void EdgeEditor::set_orphan_mode(double ignore_size_)
 {
     reinitialize_scheduler();
@@ -67,9 +68,10 @@ void EdgeEditor::set_custom_mode(EdgeRank* edge_mode_)
     edge_mode = edge_mode_;
 }
 
-// synapse orphan currently not used
-void EdgeEditor::set_edge_mode(double lower, double upper, double start, double ignore_size_)
+void EdgeEditor::set_edge_mode(double lower, double upper, double start,
+        double ignore_size_)
 {
+    // default to ignore size of 1 which means don't ignore anything
     reinitialize_scheduler();
     
     ignore_size = ignore_size_;
@@ -80,7 +82,9 @@ void EdgeEditor::set_edge_mode(double lower, double upper, double start, double 
 void EdgeEditor::estimateWork()
 {
     int num_edges = 0;
-    
+
+    // estimator decides true or false by random assignment
+    // weighted by the confidence for a certain edge    
     while (!(edge_mode->is_finished())) {
         boost::tuple<Node_uit, Node_uit> pair;
         edge_mode->get_top_edge(pair);
@@ -99,6 +103,7 @@ void EdgeEditor::estimateWork()
         ++num_edges;
     }
 
+    // all speculative actions are undone -- the estimate can be time-consuming
     int num_rolls = num_edges;
     while (num_rolls--) {
         undo();
@@ -109,10 +114,10 @@ void EdgeEditor::estimateWork()
 
 void EdgeEditor::reinitialize_scheduler()
 {
-    volume_size = 0;
     history_queue.clear();
     num_est_remaining = 0;
 }
+
 
 EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
         double max_val_, double start_val_, Json::Value& json_vals) : 
@@ -121,11 +126,6 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
 {
     reinitialize_scheduler();
 
-    // Dead Cell -- 140 sections 10nm 14156 pixels 
-
-    // default modes checked for now (could make a special mode loader
-    // function in the future) -- default to node edge mode
-   
     prob_edge_mode = new ProbEdgeRank(&rag);
     orphan_edge_mode = new OrphanRank(&rag);
     synapse_edge_mode = new SynapseRank(&rag);
@@ -135,12 +135,11 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
     string prob_str = prob_edge_mode->get_identifier() + string("_mode");
     string synapse_str = synapse_edge_mode->get_identifier() + string("_mode");
 
+    // only the edge rank algorithm explicitly supported are checked for
     bool orphan_mode = json_vals.get(orphan_str, false).asBool(); 
     bool prob_mode = json_vals.get(prob_str, false).asBool(); 
     bool synapse_mode = json_vals.get(synapse_str, false).asBool(); 
 
-    // set parameters from JSON (explicitly set options later) 
-    // prob mode and orphan mode
     Json::Value json_range = json_vals["range"];
     if (!json_range.empty()) {
         min_val = json_range[(unsigned int)(0)].asDouble();
@@ -156,8 +155,7 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
     num_slices = json_vals.get("num_slices", 250).asUInt();
     current_depth = json_vals.get("current_depth", 0).asUInt();
 
-    /* -------- initial datastructures used in each mode ----------- */
-
+    // properties to be saved when modifying the RAG
     node_properties.push_back(SynapseStr);
 
     // load synapse info
@@ -236,7 +234,7 @@ void EdgeEditor::export_json(Json::Value& json_writer)
     // applicable, in different senses, to all modes 
     json_writer["ignore_size"] = ignore_size;
 
-    // 4 modes supported currently
+    // show the current mode as the active mode 
     string current_mode = edge_mode->get_identifier() + string("_mode");
     json_writer[current_mode] = true;
 
@@ -260,16 +258,15 @@ void EdgeEditor::export_json(Json::Value& json_writer)
         }
 
         if (synapse_weight > 0) {
-            json_writer["synapse_bodies"][synapse_count][(unsigned int)(0)] = (*iter)->get_node_id();
-            json_writer["synapse_bodies"][synapse_count][(unsigned int)(1)] = (unsigned int)(synapse_weight);
+            json_writer["synapse_bodies"][synapse_count][(unsigned int)(0)] =
+                (*iter)->get_node_id();
+            json_writer["synapse_bodies"][synapse_count][(unsigned int)(1)] = 
+                (unsigned int)(synapse_weight);
             ++synapse_count;
         }
     }
 }
 
-
-
-// size is determined by edges or nodes in queue
 unsigned int EdgeEditor::getNumRemaining() 
 {
     if (edge_mode->is_finished()) {
@@ -278,6 +275,8 @@ unsigned int EdgeEditor::getNumRemaining()
     if (num_est_remaining > 0) {
         return num_est_remaining;
     }
+
+    // size is determined by edges or nodes in queue
     return edge_mode->get_num_remaining();
 }
 
@@ -288,6 +287,7 @@ bool EdgeEditor::isFinished()
 
 void EdgeEditor::setEdge(NodePair node_pair, double weight)
 {
+    // only called to set weight for true edges
     EdgeHistory history;
     history.node1 = boost::get<0>(node_pair);
     history.node2 = boost::get<1>(node_pair);
@@ -297,11 +297,12 @@ void EdgeEditor::setEdge(NodePair node_pair, double weight)
     history.false_edge = edge->is_false_edge();
     history.remove = false;
     history_queue.push_back(history);
-    edge->set_weight(weight);}
+    edge->set_weight(weight);
+}
 
-// just grabs top edge or errors -- no real computation
 boost::tuple<Node_uit, Node_uit> EdgeEditor::getTopEdge(Location& location)
 {
+    // just grabs top edge or errors -- no real computation
     NodePair node_pair;
     try {
         bool status = edge_mode->get_top_edge(node_pair);
@@ -319,10 +320,6 @@ boost::tuple<Node_uit, Node_uit> EdgeEditor::getTopEdge(Location& location)
     return node_pair;
 }
 
-
-
-
-
 bool EdgeEditor::undo()
 {
     bool ret = undo2();
@@ -334,7 +331,6 @@ bool EdgeEditor::undo()
     return ret; 
 }
 
-// remove other id (as appropriate) from the body list (don't need to mark as examined)
 void EdgeEditor::removeEdge(NodePair node_pair, bool remove)
 {
     ++num_processed;
@@ -360,6 +356,7 @@ void EdgeEditor::removeEdge(NodePair node_pair, bool remove)
             //
         }
 
+        // modifies rag
         removeEdge2(node_pair, true, node_properties);
         node_keep->set_property(SynapseStr, synapse_weight1+synapse_weight2);
 
@@ -367,10 +364,9 @@ void EdgeEditor::removeEdge(NodePair node_pair, bool remove)
         setEdge(node_pair, 1.2);
     }
 
+    // updates focused algorithm
     edge_mode->examined_edge(node_pair, remove);
 }
-
-
 
 void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
         vector<string>& node_properties)
@@ -412,7 +408,8 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
         }
     }
 
-    for (RagNode_uit::edge_iterator iter = node1->edge_begin(); iter != node1->edge_end(); ++iter) {
+    for (RagNode_uit::edge_iterator iter = node1->edge_begin();
+            iter != node1->edge_end(); ++iter) {
         RagNode_uit* other_node = (*iter)->get_other_node(node1);
         if (other_node != node2) {
             history.node_list1.push_back(other_node->get_node_id());
@@ -427,7 +424,8 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
         }
     } 
 
-    for (RagNode_uit::edge_iterator iter = node2->edge_begin(); iter != node2->edge_end(); ++iter) {
+    for (RagNode_uit::edge_iterator iter = node2->edge_begin();
+            iter != node2->edge_end(); ++iter) {
         RagNode_uit* other_node = (*iter)->get_other_node(node2);
         if (other_node != node1) {
             history.node_list2.push_back(other_node->get_node_id());
@@ -464,7 +462,8 @@ bool EdgeEditor::undo2()
         temp_node2->set_boundary_size(history.bound_size2);
 
         for (int i = 0; i < history.node_list1.size(); ++i) {
-            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node1, rag.find_rag_node(history.node_list1[i]));
+            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node1,
+                    rag.find_rag_node(history.node_list1[i]));
             temp_edge->set_weight(history.edge_weight1[i]);
             temp_edge->set_preserve(history.preserve_edge1[i]);
             temp_edge->set_false_edge(history.false_edge1[i]);
@@ -473,7 +472,8 @@ bool EdgeEditor::undo2()
             temp_edge->set_property_ptr("edge_size", history.property_list1[i][1]);
         } 
         for (int i = 0; i < history.node_list2.size(); ++i) {
-            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node2, rag.find_rag_node(history.node_list2[i]));
+            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node2,
+                    rag.find_rag_node(history.node_list2[i]));
             temp_edge->set_weight(history.edge_weight2[i]);
             temp_edge->set_preserve(history.preserve_edge2[i]);
             temp_edge->set_false_edge(history.false_edge2[i]);
