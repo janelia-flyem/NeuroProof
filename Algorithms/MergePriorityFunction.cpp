@@ -5,10 +5,10 @@
 
 using namespace NeuroProof;
 
-double mito_boundary_ratio(RagEdge_uit* edge)
+double mito_boundary_ratio(RagEdge_t* edge)
 {
-    RagNode_uit* node1 = edge->get_node1();
-    RagNode_uit* node2 = edge->get_node2();
+    RagNode_t* node1 = edge->get_node1();
+    RagNode_t* node2 = edge->get_node2();
     double ratio = 0.0;
 
     try {
@@ -17,8 +17,8 @@ double mito_boundary_ratio(RagEdge_uit* edge)
         int type1 = type1_mito.get_node_type(); 
         int type2 = type2_mito.get_node_type(); 
 
-        RagNode_uit* mito_node = 0;		
-        RagNode_uit* other_node = 0;		
+        RagNode_t* mito_node = 0;		
+        RagNode_t* other_node = 0;		
 
         if ((type1 == 2) && (type2 == 1) ){
             mito_node = node1;
@@ -55,7 +55,7 @@ double mito_boundary_ratio(RagEdge_uit* edge)
 void ProbPriority::initialize_priority(double threshold_, bool use_edge_weight)
 {
     threshold = threshold_;
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
 	if (valid_edge(*iter)) {
 	    double val;
 	    if (use_edge_weight)
@@ -76,7 +76,7 @@ void ProbPriority::initialize_priority(double threshold_, bool use_edge_weight)
 void ProbPriority::initialize_random(double pthreshold){
 
     threshold = pthreshold;
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
 	if (valid_edge(*iter)) {
 
 	    double val1 = feature_mgr->get_prob(*iter);
@@ -96,15 +96,15 @@ void ProbPriority::initialize_random(double pthreshold){
 void ProbPriority::clear_dirty()
 {
     for (Dirty_t::iterator iter = dirty_edges.begin(); iter != dirty_edges.end(); ++iter) {
-	Node_uit node1 = (*iter).region1;
-	Node_uit node2 = (*iter).region2;
-	RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
-	RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
+	Node_t node1 = (*iter).region1;
+	Node_t node2 = (*iter).region2;
+	RagNode_t* rag_node1 = rag->find_rag_node(node1); 
+	RagNode_t* rag_node2 = rag->find_rag_node(node2); 
 
 	if (!(rag_node1 && rag_node2)) {
 	    continue;
 	}
-	RagEdge_uit* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
+	RagEdge_t* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
 
 	if (!rag_edge) {
 	    continue;
@@ -140,12 +140,12 @@ bool ProbPriority::empty()
 }
 
 
-RagEdge_uit* ProbPriority::get_top_edge()
+RagEdge_t* ProbPriority::get_top_edge()
 {
     EdgeRank_t::iterator first_entry = ranking.begin();
     double curr_threshold = (*first_entry).first;
-    Node_uit node1 = (*first_entry).second.first;
-    Node_uit node2 = (*first_entry).second.second;
+    Node_t node1 = (*first_entry).second.first;
+    Node_t node2 = (*first_entry).second.second;
     ranking.erase(first_entry);
 
     //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;
@@ -155,13 +155,13 @@ RagEdge_uit* ProbPriority::get_top_edge()
 	return 0;
     }
 
-    RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
-    RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
+    RagNode_t* rag_node1 = rag->find_rag_node(node1); 
+    RagNode_t* rag_node2 = rag->find_rag_node(node2); 
 
     if (!(rag_node1 && rag_node2)) {
 	return 0;
     }
-    RagEdge_uit* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
+    RagEdge_t* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
 
     if (!rag_edge) {
 	return 0;
@@ -201,7 +201,7 @@ RagEdge_uit* ProbPriority::get_top_edge()
     return rag_edge; 
 }
 
-void ProbPriority::add_dirty_edge(RagEdge_uit* edge)
+void ProbPriority::add_dirty_edge(RagEdge_t* edge)
 {
     if (valid_edge(edge)) {
 	edge->set_dirty(true);
@@ -224,7 +224,7 @@ void ProbPriority::add_dirty_edge(RagEdge_uit* edge)
 void MitoPriority::initialize_priority(double threshold_, bool use_edge_weight)
 {
     threshold = threshold_;
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if (valid_edge(*iter)) {
 	    double val;
 	    val = 1 - mito_boundary_ratio((*iter));
@@ -242,15 +242,15 @@ void MitoPriority::initialize_priority(double threshold_, bool use_edge_weight)
 void MitoPriority::clear_dirty()
 {
     for (Dirty_t::iterator iter = dirty_edges.begin(); iter != dirty_edges.end(); ++iter) {
-	Node_uit node1 = (*iter).region1;
-	Node_uit node2 = (*iter).region2;
-	RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
-	RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
+	Node_t node1 = (*iter).region1;
+	Node_t node2 = (*iter).region2;
+	RagNode_t* rag_node1 = rag->find_rag_node(node1); 
+	RagNode_t* rag_node2 = rag->find_rag_node(node2); 
 
 	if (!(rag_node1 && rag_node2)) {
 	    continue;
 	}
-	RagEdge_uit* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
+	RagEdge_t* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
 
 	if (!rag_edge) {
 	    continue;
@@ -279,12 +279,12 @@ bool MitoPriority::empty()
 }
 
 
-RagEdge_uit* MitoPriority::get_top_edge()
+RagEdge_t* MitoPriority::get_top_edge()
 {
     EdgeRank_t::iterator first_entry = ranking.begin();
     double curr_threshold = (*first_entry).first;
-    Node_uit node1 = (*first_entry).second.first;
-    Node_uit node2 = (*first_entry).second.second;
+    Node_t node1 = (*first_entry).second.first;
+    Node_t node2 = (*first_entry).second.second;
     ranking.erase(first_entry);
 
     //cout << curr_threshold << " " << node1 << " " << node2 << std::endl;
@@ -294,13 +294,13 @@ RagEdge_uit* MitoPriority::get_top_edge()
 	return 0;
     }
 
-    RagNode_uit* rag_node1 = rag->find_rag_node(node1); 
-    RagNode_uit* rag_node2 = rag->find_rag_node(node2); 
+    RagNode_t* rag_node1 = rag->find_rag_node(node1); 
+    RagNode_t* rag_node2 = rag->find_rag_node(node2); 
 
     if (!(rag_node1 && rag_node2)) {
 	return 0;
     }
-    RagEdge_uit* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
+    RagEdge_t* rag_edge = rag->find_rag_edge(rag_node1, rag_node2);
 
     if (!rag_edge) {
 	return 0;
@@ -334,7 +334,7 @@ RagEdge_uit* MitoPriority::get_top_edge()
     return rag_edge; 
 }
 
-void MitoPriority::add_dirty_edge(RagEdge_uit* edge)
+void MitoPriority::add_dirty_edge(RagEdge_t* edge)
 {
     if (valid_edge(edge)) {
 	edge->set_dirty(true);

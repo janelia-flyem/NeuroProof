@@ -85,7 +85,7 @@ bool BioStackController::is_mito(Label_t label)
 {
     RagPtr rag = biostack->get_rag();
 
-    RagNode_uit* rag_node = rag->find_rag_node(label);
+    RagNode_t* rag_node = rag->find_rag_node(label);
 
     MitoTypeProperty mtype;
     try {
@@ -109,7 +109,7 @@ void BioStackController::build_rag_mito()
         throw ErrMsg("No label volume defined for stack");
     }
 
-    Rag_uit * rag = new Rag_uit;
+    Rag_t * rag = new Rag_t;
 
     vector<double> predictions(prob_list.size(), 0.0);
     unordered_set<Label_t> labels;
@@ -126,7 +126,7 @@ void BioStackController::build_rag_mito()
             continue;
         }
 
-        RagNode_uit * node = rag->find_rag_node(label);
+        RagNode_t * node = rag->find_rag_node(label);
 
         if (!node) {
             node =  rag->insert_rag_node(label); 
@@ -179,7 +179,7 @@ void BioStackController::build_rag_mito()
         labels.clear();
     }
    
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label_t id = (*iter)->get_node_id();
         MitoTypeProperty mtype = mito_probs[id];
         mtype.set_type(); 
@@ -273,10 +273,10 @@ void BioStackController::add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol
     Label_t label2 = (*labelvol)(x2,y2,z2);
 
     if (label1 && label2 && (label1 != label2)) {
-        RagEdge_uit* edge = rag->find_rag_edge(label1, label2);
+        RagEdge_t* edge = rag->find_rag_edge(label1, label2);
         if (!edge) {
-            RagNode_uit* node1 = rag->find_rag_node(label1);
-            RagNode_uit* node2 = rag->find_rag_node(label2);
+            RagNode_t* node1 = rag->find_rag_node(label1);
+            RagNode_t* node2 = rag->find_rag_node(label2);
             edge = rag->insert_rag_edge(node1, node2);
             edge->set_weight(1.0);
             edge->set_false_edge(true);

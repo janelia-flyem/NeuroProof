@@ -19,7 +19,7 @@ using std::vector;
 typedef unsigned int Label;
 
 static EdgeEditor* priority_scheduler = 0;
-Rag_uit* rag = 0;
+Rag_t* rag = 0;
 
 // false if file does not exist or json is not properly formatted
 // exception thrown if min, max, or start val are illegal
@@ -173,7 +173,7 @@ double get_edge_val(PriorityInfo priority_info)
     Label l1 = extract<Label>(priority_info.body_pair[0]);
     Label l2 = extract<Label>(priority_info.body_pair[1]);
 
-    RagEdge_uit* edge = rag->find_rag_edge(l1, l2);
+    RagEdge_t* edge = rag->find_rag_edge(l1, l2);
 
     if (!edge) {
         throw ErrMsg("Edge not found");

@@ -32,7 +32,7 @@ void StackController::build_rag()
         throw ErrMsg("No label volume defined for stack");
     }
 
-    Rag_uit * rag = new Rag_uit;
+    Rag_t * rag = new Rag_t;
 
     vector<double> predictions(prob_list.size(), 0.0);
     unordered_set<Label_t> labels;
@@ -48,7 +48,7 @@ void StackController::build_rag()
             continue;
         }
 
-        RagNode_uit * node = rag->find_rag_node(label);
+        RagNode_t * node = rag->find_rag_node(label);
 
         // create node
         if (!node) {
@@ -110,22 +110,22 @@ void StackController::build_rag()
     stack->set_rag(RagPtr(rag));
 }
 
-void StackController::rag_add_edge(Rag_uit* rag, unsigned int id1,
+void StackController::rag_add_edge(Rag_t* rag, unsigned int id1,
         unsigned int id2, vector<double>& preds, FeatureMgrPtr feature_mgr)
 {
-    RagNode_uit * node1 = rag->find_rag_node(id1);
+    RagNode_t * node1 = rag->find_rag_node(id1);
     if (!node1) {
         node1 = rag->insert_rag_node(id1);
     }
     
-    RagNode_uit * node2 = rag->find_rag_node(id2);
+    RagNode_t * node2 = rag->find_rag_node(id2);
     if (!node2) {
         node2 = rag->insert_rag_node(id2);
     }
    
     assert(node1 != node2);
 
-    RagEdge_uit* edge = rag->find_rag_edge(node1, node2);
+    RagEdge_t* edge = rag->find_rag_edge(node1, node2);
     if (!edge) {
         edge = rag->insert_rag_edge(node1, node2);
     }
@@ -155,8 +155,8 @@ int StackController::remove_inclusions()
         bool found_zero = false;
         unordered_set<Label_t> merge_nodes;
         for (int j = 0; j < biconnected_components[i].size()-1; ++j) {
-            Node_uit node1 = biconnected_components[i][j].region1;     
-            Node_uit node2 = biconnected_components[i][j].region2;
+            Node_t node1 = biconnected_components[i][j].region1;     
+            Node_t node2 = biconnected_components[i][j].region2;
             if (!node1 || !node2) {
                 found_zero = true;
             }
@@ -166,19 +166,19 @@ int StackController::remove_inclusions()
             merge_nodes.insert(node2);
         }
         if (!found_zero) {
-            Node_uit articulation_label =
+            Node_t articulation_label =
                 biconnected_components[i][biconnected_components[i].size()-1].region1;
-            RagNode_uit* articulation_node = rag->find_rag_node(articulation_label);
+            RagNode_t* articulation_node = rag->find_rag_node(articulation_label);
 
             bool found_preserve = false; 
             for (unordered_set<Label_t>::iterator iter = merge_nodes.begin();
                     iter != merge_nodes.end(); ++iter) {
-                Node_uit node2 = *iter;
+                Node_t node2 = *iter;
 
-                RagNode_uit* rag_node = rag->find_rag_node(node2);
+                RagNode_t* rag_node = rag->find_rag_node(node2);
                 assert(rag_node);
                 if (articulation_node != rag_node) {
-                    for (RagNode_uit::edge_iterator edge_iter = rag_node->edge_begin();
+                    for (RagNode_t::edge_iterator edge_iter = rag_node->edge_begin();
                             edge_iter != rag_node->edge_end(); ++edge_iter) {
                         // if the edge is protected than don't remove component
                         if ((*edge_iter)->is_preserve()) {
@@ -199,11 +199,11 @@ int StackController::remove_inclusions()
             // reassign labels in component to be removed
             for (unordered_set<Label_t>::iterator iter = merge_nodes.begin();
                     iter != merge_nodes.end(); ++iter) {
-                Node_uit node2 = *iter;
-                RagNode_uit* rag_node = rag->find_rag_node(node2);
+                Node_t node2 = *iter;
+                RagNode_t* rag_node = rag->find_rag_node(node2);
                 if (articulation_node != rag_node) {
-                    RagNode_uit::node_iterator n_iter = rag_node->node_begin();
-                    Node_uit node1 = (*n_iter)->get_node_id();
+                    RagNode_t::node_iterator n_iter = rag_node->node_begin();
+                    Node_t node1 = (*n_iter)->get_node_id();
                     merge_labels(node2, node1, &node_combine_alg);
                 }
             }
@@ -377,7 +377,7 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
     
     // set edge properties for export 
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_false_edge())) {
             double val = feature_mgr->get_prob((*iter));
@@ -409,7 +409,7 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
     serialize_graph_info(json_writer);
 
     int id = 0;
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         if (!((*iter)->is_boundary())) {
             json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
             ++id;
@@ -549,32 +549,32 @@ void StackController::determine_edge_locations(EdgeCount& best_edge_z,
                 }
 
                 if (label2 && (label != label2)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label2);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label2);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (label3 && (label != label3)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label3);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label3);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (label4 && (label != label4)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label4);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label4);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (label5 && (label != label5)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label5);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label5);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (label6 && (label != label6)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label6);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label6);
                     curr_edge_z[edge] += incr;  
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }
                 if (label7 && (label != label7)) {
-                    RagEdge_uit* edge = rag->find_rag_edge(label, label7);
+                    RagEdge_t* edge = rag->find_rag_edge(label, label7);
                     curr_edge_z[edge] += incr; 
                     curr_edge_loc[edge] = Location(x,y,z);  
                 }

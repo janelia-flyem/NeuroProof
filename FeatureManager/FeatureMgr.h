@@ -26,8 +26,8 @@ class shared_ptr;
 
 namespace NeuroProof {
     
-typedef std::tr1::unordered_map<RagEdge_uit*, std::vector<void *>, RagEdgePtrHash<Node_uit>, RagEdgePtrEq<Node_uit> > EdgeCaches; 
-typedef std::tr1::unordered_map<RagNode_uit*, std::vector<void *>, RagNodePtrHash<Node_uit>, RagNodePtrEq<Node_uit> > NodeCaches; 
+typedef std::tr1::unordered_map<RagEdge_t*, std::vector<void *>, RagEdgePtrHash<Node_t>, RagEdgePtrEq<Node_t> > EdgeCaches; 
+typedef std::tr1::unordered_map<RagNode_t*, std::vector<void *>, RagNodePtrHash<Node_t>, RagNodePtrEq<Node_t> > NodeCaches; 
 
 class FeatureMgr {
   public:
@@ -73,7 +73,7 @@ class FeatureMgr {
 
     void set_basic_features();
 
-    void add_val(double val, RagNode_uit* node)
+    void add_val(double val, RagNode_t* node)
     {
         unsigned int starting_pos = 0;
         if (node_caches.find(node) != node_caches.end()) {
@@ -84,7 +84,7 @@ class FeatureMgr {
         } 
     } 
     
-    void add_val(double val, RagEdge_uit* edge)
+    void add_val(double val, RagEdge_t* edge)
     {
         unsigned int starting_pos = 0;
         if (edge_caches.find(edge) != edge_caches.end()) {
@@ -95,7 +95,7 @@ class FeatureMgr {
         } 
     } 
 
-    void add_val(std::vector<double>& vals, RagNode_uit* node)
+    void add_val(std::vector<double>& vals, RagNode_t* node)
     {
         //node->incr_size();
         assert(vals.size() == num_channels);
@@ -113,7 +113,7 @@ class FeatureMgr {
         }        
     }
 
-    void add_val(std::vector<double>& vals, RagEdge_uit* edge)
+    void add_val(std::vector<double>& vals, RagEdge_t* edge)
     { 
         //edge->incr_size();
         assert(vals.size() == num_channels);
@@ -131,18 +131,18 @@ class FeatureMgr {
         } 
     }
 
-    void mv_features(RagEdge_uit* edge2, RagEdge_uit* edge1);
+    void mv_features(RagEdge_t* edge2, RagEdge_t* edge1);
 
-    void remove_edge(RagEdge_uit* edge);
+    void remove_edge(RagEdge_t* edge);
 
-    void remove_node(RagNode_uit* node)
+    void remove_node(RagNode_t* node)
     {
         node_caches.erase(node);
     }
 
-    void merge_features(RagNode_uit* node1, RagNode_uit* node2);
-    void merge_features2(RagNode_uit* node1, RagNode_uit* node2, RagEdge_uit* edge );
-    void merge_features(RagEdge_uit* edge1, RagEdge_uit* edge2);
+    void merge_features(RagNode_t* node1, RagNode_t* node2);
+    void merge_features2(RagNode_t* node1, RagNode_t* node2, RagEdge_t* edge );
+    void merge_features(RagEdge_t* edge1, RagEdge_t* edge2);
 
     void set_classifier(EdgeClassifier* pclfr)
     {
@@ -172,24 +172,24 @@ class FeatureMgr {
     
     void add_inclusiveness_feature(bool use_diff);
 
-    double get_prob(RagEdge_uit* edge);
+    double get_prob(RagEdge_t* edge);
 
     void clear_features();
 
     ~FeatureMgr();
 
-    void get_responses(RagEdge_uit* edge, vector<double>& responses);
+    void get_responses(RagEdge_t* edge, vector<double>& responses);
 
-    void compute_all_features(RagEdge_uit* edge, std::vector<double>&);
-    void compute_node_features(RagNode_uit* edge, std::vector<double>&);
+    void compute_all_features(RagEdge_t* edge, std::vector<double>&);
+    void compute_node_features(RagNode_t* edge, std::vector<double>&);
 
     void copy_channel_features(FeatureMgr *pfmgr);   	
 
-    void copy_cache(std::vector<void*>& src_edge_cache, RagEdge_uit* edge);	
-    void copy_cache(std::vector<void*>& src_node_cache, RagNode_uit* node);	
+    void copy_cache(std::vector<void*>& src_edge_cache, RagEdge_t* edge);	
+    void copy_cache(std::vector<void*>& src_node_cache, RagNode_t* node);	
 
-    void print_cache(RagEdge_uit* edge);	
-    void print_cache(RagNode_uit* node);	
+    void print_cache(RagEdge_t* edge);	
+    void print_cache(RagNode_t* node);	
 
     std::vector<std::vector<FeatureCompute*> >& get_channel_features(){return channels_features;}; 	
     EdgeCaches& get_edge_cache(){return edge_caches;};  		
@@ -197,11 +197,11 @@ class FeatureMgr {
 
 
   private:
-    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge);
-    void compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_uit* edge);
+    void compute_diff_features(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_t* edge);
+    void compute_diff_features2(std::vector<void*>* caches1, std::vector<void*>* caches2, std::vector<double>& feature_results, RagEdge_t* edge);
      
-    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_num);
-    void compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_uit* edge, unsigned int node_num);
+    void compute_features(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_t* edge, unsigned int node_num);
+    void compute_features2(unsigned int prediction_type, std::vector<void*>* caches, std::vector<double>& feature_results, RagEdge_t* edge, unsigned int node_num);
 
     void add_val(double val, unsigned int channel, unsigned int& starting_pos, std::vector<void *>& feature_caches)
     {
@@ -213,7 +213,7 @@ class FeatureMgr {
     }
     
     // !! assume all edge/node caches
-    std::vector<void*>& create_cache(RagEdge_uit* edge)
+    std::vector<void*>& create_cache(RagEdge_t* edge)
     {
         edge_caches[edge] = std::vector<void*>();
         std::vector<void*>& caches = edge_caches[edge];
@@ -227,7 +227,7 @@ class FeatureMgr {
         }
         return caches;
     }
-    std::vector<void*>& create_cache(RagNode_uit* node)
+    std::vector<void*>& create_cache(RagNode_t* node)
     {
         node_caches[node] = std::vector<void*>();
         std::vector<void*>& caches = node_caches[node];

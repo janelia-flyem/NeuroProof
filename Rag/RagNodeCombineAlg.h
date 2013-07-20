@@ -7,6 +7,8 @@
 #ifndef RAGNODECOMBINEALG_H
 #define RAGNODECOMBINEALG_H
 
+#include "../Utilities/Glb.h"
+
 namespace NeuroProof {
 
 template <typename Region>
@@ -32,8 +34,8 @@ class RagNodeCombineAlg {
      * \param edge_new pointer to rag edge that is newly created
      * \param edge_remove pointer to rag edge that will be removed
     */
-    virtual void post_edge_move(RagEdge<unsigned int>* edge_new,
-            RagEdge<unsigned int>* edge_remove) = 0;
+    virtual void post_edge_move(RagEdge<Index_t>* edge_new,
+            RagEdge<Index_t>* edge_remove) = 0;
 
     /*!
      * Actions that should be done after an edge connected to a node being
@@ -41,8 +43,8 @@ class RagNodeCombineAlg {
      * \param edge_keep pointer to rag edge that will be kept
      * \param edge_remove pointer to rag edge that will be removed
     */
-    virtual void post_edge_join(RagEdge<unsigned int>* edge_keep,
-            RagEdge<unsigned int>* edge_remove) = 0;
+    virtual void post_edge_join(RagEdge<Index_t>* edge_keep,
+            RagEdge<Index_t>* edge_remove) = 0;
 
     /*!
      * Actions that should be done after internal node values are
@@ -50,8 +52,8 @@ class RagNodeCombineAlg {
      * \param node_keep pointer to rag node that will be kept
      * \param node_remove pointer to rag node that will be removed 
     */
-    virtual void post_node_join(RagNode<unsigned int>* node_keep,
-            RagNode<unsigned int>* node_remove) = 0;
+    virtual void post_node_join(RagNode<Index_t>* node_keep,
+            RagNode<Index_t>* node_remove) = 0;
 
     /*!
      * Virtual destructor to be reimplemented by derived classes

@@ -17,14 +17,14 @@ BOOST_AUTO_TEST_SUITE (rag_simple)
 
 BOOST_AUTO_TEST_CASE (rag_general)
 {
-    Rag_uit* test_rag = new Rag_uit();
-    RagNode_uit* node = test_rag->insert_rag_node(5);
+    Rag_t* test_rag = new Rag_t();
+    RagNode_t* node = test_rag->insert_rag_node(5);
     node->set_property("temp", int(9));
     int temp_var = node->get_property<int>("temp");
     BOOST_CHECK(9 == temp_var);
 
-    RagNode_uit* node2 = test_rag->insert_rag_node(6);
-    RagNode_uit* node3 = test_rag->insert_rag_node(7);
+    RagNode_t* node2 = test_rag->insert_rag_node(6);
+    RagNode_t* node3 = test_rag->insert_rag_node(7);
 
     node2->set_size(10);
     node->set_size(1);
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE (rag_general)
     BOOST_CHECK(test_rag->get_num_regions() == 3);
     BOOST_CHECK(test_rag->get_num_edges() == 3);
 
-    Rag_uit* test_rag2 = new Rag_uit(*test_rag);
+    Rag_t* test_rag2 = new Rag_t(*test_rag);
     
     node->rm_property("temp");
     test_rag->remove_rag_node(node);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE (rag_general)
     
     delete test_rag;
     
-    RagNode_uit* node_temp = test_rag2->find_rag_node(5);
+    RagNode_t* node_temp = test_rag2->find_rag_node(5);
     temp_var = node_temp->get_property<int>("temp");
     BOOST_CHECK(9 == temp_var);
     BOOST_CHECK(test_rag2->get_num_regions() == 3);
@@ -61,12 +61,12 @@ BOOST_AUTO_TEST_CASE (rag_general)
 
 BOOST_AUTO_TEST_CASE (rag_node_combine)
 {
-    Rag_uit* test_rag = new Rag_uit();
-    RagNode_uit* node = test_rag->insert_rag_node(5);
+    Rag_t* test_rag = new Rag_t();
+    RagNode_t* node = test_rag->insert_rag_node(5);
     node->set_property("temp", int(9));
 
-    RagNode_uit* node2 = test_rag->insert_rag_node(6);
-    RagNode_uit* node3 = test_rag->insert_rag_node(7);
+    RagNode_t* node2 = test_rag->insert_rag_node(6);
+    RagNode_t* node3 = test_rag->insert_rag_node(7);
 
     node2->set_size(10);
     node->set_size(1);
@@ -113,14 +113,14 @@ BOOST_AUTO_TEST_CASE (rag_json_create)
     json_edge["weight"] = 0.5; 
     json_vals["edge_list"][(unsigned int) 1] = json_edge;
     
-    Rag_uit* rag = create_rag_from_json(json_vals);
+    Rag_t* rag = create_rag_from_json(json_vals);
 
 
     BOOST_CHECK(rag->get_num_regions() == 3);
     BOOST_CHECK(rag->get_num_edges() == 2);
     BOOST_CHECK(rag->get_rag_size() == 7000);
 
-    RagEdge_uit* edge = rag->find_rag_edge(5, 9);
+    RagEdge_t* edge = rag->find_rag_edge(5, 9);
     BOOST_CHECK_CLOSE(edge->get_weight(), 0.3, 0.000001);
     
     delete rag;

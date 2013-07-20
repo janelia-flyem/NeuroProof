@@ -252,7 +252,7 @@ class RagEdge : public RagElement {
 };
 
 // default Rag Edge type used for most of NeuroProof
-typedef RagEdge<Node_uit> RagEdge_uit; 
+typedef RagEdge<Node_t> RagEdge_t; 
 
 // inlined functions
 template<typename Region> inline RagEdge<Region>::RagEdge(RagNode<Region>* node1_, RagNode<Region>* node2_) :

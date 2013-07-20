@@ -36,14 +36,14 @@ void learn_edge_classifier_flat(BioStackController& controller, double threshold
     RagPtr rag = stack->get_rag();
     FeatureMgrPtr feature_mgr = stack->get_feature_manager();
 
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
-	    RagEdge_uit* rag_edge = *iter; 	
+	    RagEdge_t* rag_edge = *iter; 	
 
-            RagNode_uit* rag_node1 = rag_edge->get_node1();
-            RagNode_uit* rag_node2 = rag_edge->get_node2();
-            Node_uit label1 = rag_node1->get_node_id(); 
-            Node_uit label2 = rag_node2->get_node_id(); 
+            RagNode_t* rag_node1 = rag_edge->get_node1();
+            RagNode_t* rag_node2 = rag_edge->get_node2();
+            Node_t label1 = rag_node1->get_node_id(); 
+            Node_t label2 = rag_node2->get_node_id(); 
 
 	    int edge_label = controller.find_edge_label(label1, label2);
             if (use_mito && (controller.is_mito(label1) || 
@@ -90,13 +90,13 @@ void learn_edge_classifier_queue(BioStackController& controller, double threshol
    
     vector<QE> all_edges;	    	
     int count = 0; 	
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
 	    (*iter)->set_property("qloc", count);
-	    Node_uit node1 = (*iter)->get_node1()->get_node_id();	
-	    Node_uit node2 = (*iter)->get_node2()->get_node_id();	
+	    Node_t node1 = (*iter)->get_node1()->get_node_id();	
+	    Node_t node2 = (*iter)->get_node2()->get_node_id();	
 
             QE tmpelem(val, make_pair(node1, node2));	
 	    all_edges.push_back(tmpelem); 
@@ -114,16 +114,16 @@ void learn_edge_classifier_queue(BioStackController& controller, double threshol
     while (!Q->is_empty()){
 	QE tmpqe = Q->heap_extract_min();	
 
-	Node_uit node1 = tmpqe.get_val().first;
-	Node_uit node2 = tmpqe.get_val().second;
-        RagEdge_uit* rag_edge = rag->find_rag_edge(node1, node2);
+	Node_t node1 = tmpqe.get_val().first;
+	Node_t node2 = tmpqe.get_val().second;
+        RagEdge_t* rag_edge = rag->find_rag_edge(node1, node2);
 
 
         if (!rag_edge || !tmpqe.valid()) {
             continue;
         }
-        RagNode_uit* rag_node1 = rag_edge->get_node1();
-        RagNode_uit* rag_node2 = rag_edge->get_node2();
+        RagNode_t* rag_node1 = rag_edge->get_node1();
+        RagNode_t* rag_node2 = rag_edge->get_node2();
 
         Label_t label1 = rag_node1->get_node_id(); 
         Label_t label2 = rag_node2->get_node_id(); 
@@ -191,14 +191,14 @@ void learn_edge_classifier_lash(BioStackController& controller, double threshold
     vector<QE> all_edges;	    	
 
     int count=0; 	
-    for (Rag_uit::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
             double val = feature_mgr->get_prob(*iter);
             (*iter)->set_weight(val);
 	    (*iter)->set_property("qloc", count);
 
-	    Node_uit node1 = (*iter)->get_node1()->get_node_id();	
-	    Node_uit node2 = (*iter)->get_node2()->get_node_id();	
+	    Node_t node1 = (*iter)->get_node1()->get_node_id();	
+	    Node_t node2 = (*iter)->get_node2()->get_node_id();	
 
             QE tmpelem(val, make_pair(node1, node2));	
 	    all_edges.push_back(tmpelem); 
@@ -215,9 +215,9 @@ void learn_edge_classifier_lash(BioStackController& controller, double threshold
     while (!Q->is_empty()){
 	QE tmpqe = Q->heap_extract_min();	
 
-	Node_uit node1 = tmpqe.get_val().first;
-	Node_uit node2 = tmpqe.get_val().second;
-        RagEdge_uit* rag_edge = rag->find_rag_edge(node1, node2);
+	Node_t node1 = tmpqe.get_val().first;
+	Node_t node2 = tmpqe.get_val().second;
+        RagEdge_t* rag_edge = rag->find_rag_edge(node1, node2);
 
 
         if (!rag_edge || !tmpqe.valid()) {
@@ -225,8 +225,8 @@ void learn_edge_classifier_lash(BioStackController& controller, double threshold
         }
 
 
-        RagNode_uit* rag_node1 = rag_edge->get_node1();
-        RagNode_uit* rag_node2 = rag_edge->get_node2();
+        RagNode_t* rag_node1 = rag_edge->get_node1();
+        RagNode_t* rag_node2 = rag_edge->get_node2();
 
         Label_t label1 = rag_node1->get_node_id(); 
         Label_t label2 = rag_node2->get_node_id(); 

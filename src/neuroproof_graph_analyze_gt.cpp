@@ -206,7 +206,7 @@ int num_synapse_errors(BioStackController& controller, int threshold)
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= threshold) {
-            RagNode_uit* node = rag->find_rag_node(iter->first);
+            RagNode_t* node = rag->find_rag_node(iter->first);
             if (!(node->is_boundary())) {
                 ++synapse_errors;
             }
@@ -220,7 +220,7 @@ int num_body_errors(StackController& controller, int threshold)
     Stack* stack = controller.get_stack();
     RagPtr rag = stack->get_rag();
     int body_errors = 0;
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((!((*iter)->is_boundary())) && ((*iter)->get_size() >= threshold)) {
             ++body_errors;
@@ -240,14 +240,14 @@ void load_orphans(BioStackController& controller, unordered_set<Label_t>& orphan
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= synapse_threshold) {
-            RagNode_uit* node = rag->find_rag_node(iter->first);
+            RagNode_t* node = rag->find_rag_node(iter->first);
             if (!(node->is_boundary())) {
                 orphans.insert(iter->first);
             }
         }
     }
 
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((!((*iter)->is_boundary())) && ((*iter)->get_size() >= threshold)) {
             orphans.insert((*iter)->get_node_id());
@@ -304,11 +304,11 @@ void get_num_edits(EdgeEditor& priority_scheduler, StackController controller,
         EdgeEditor::Location location;
 
         // choose most impactful edge given pre-determined strategy
-        boost::tuple<Node_uit, Node_uit> pair = priority_scheduler.getTopEdge(location);
+        boost::tuple<Node_t, Node_t> pair = priority_scheduler.getTopEdge(location);
         
         Label_t node1 = boost::get<0>(pair);
         Label_t node2 = boost::get<1>(pair);
-        RagEdge_uit* temp_edge = opt_rag->find_rag_edge(node1, node2);
+        RagEdge_t* temp_edge = opt_rag->find_rag_edge(node1, node2);
         double weight = temp_edge->get_weight();
       
         bool merged = false;
@@ -407,9 +407,9 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
      
     // might give weird results when dilation is done on GT ??
     controller.compute_groundtruth_assignment();
-    vector<RagNode_uit* > large_bodies;
+    vector<RagNode_t* > large_bodies;
 
-    for (Rag_uit::nodes_iterator iter = seg_rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = seg_rag->nodes_begin();
            iter != seg_rag->nodes_end(); ++iter) {
         if ((*iter)->get_size() > options.body_error_size) {
             large_bodies.push_back((*iter));
@@ -443,18 +443,18 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
     
 
     std::tr1::unordered_map<Label_t, unsigned long long> body_changes;
-    Rag_uit opt_rag_copy(*opt_rag);
+    Rag_t opt_rag_copy(*opt_rag);
 
     bool change = true;
     LowWeightCombine join_alg;
     while (change) {
         change = false;
-        for (Rag_uit::edges_iterator iter = opt_rag_copy.edges_begin();
+        for (Rag_t::edges_iterator iter = opt_rag_copy.edges_begin();
                 iter != opt_rag_copy.edges_end(); ++iter) {
             double weight = (*iter)->get_weight();
             if (weight < 0.0001) {
-                RagNode_uit* node1 = (*iter)->get_node1();
-                RagNode_uit* node2 = (*iter)->get_node2();
+                RagNode_t* node1 = (*iter)->get_node1();
+                RagNode_t* node2 = (*iter)->get_node2();
 
                 unsigned long long large1 = node1->get_size();
                 unsigned long long large2 = node2->get_size();
@@ -464,8 +464,8 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
                 if (body_changes.find(node2->get_node_id()) != body_changes.end()) {
                     large2 = body_changes[node2->get_node_id()];
                 }
-                RagNode_uit* node_keep;
-                RagNode_uit* node_remove;
+                RagNode_t* node_keep;
+                RagNode_t* node_remove;
                 if (large1 > large2) {
                     body_changes[node1->get_node_id()] = large1;
                     node_keep = node1;
@@ -490,7 +490,7 @@ void dump_differences(BioStackController& controller, StackController& synapse_c
     for (std::tr1::unordered_map<Label_t, unsigned long long>::iterator iter = body_changes.begin();
             iter != body_changes.end(); ++iter) {
         unsigned long long largest_orig = iter->second;
-        RagNode_uit* node1 = opt_rag_copy.find_rag_node(iter->first);
+        RagNode_t* node1 = opt_rag_copy.find_rag_node(iter->first);
         // TODO: should print size distribution since there is really nothing missed
         // higher above the threshold
         if ((node1->get_size() - largest_orig) >= options.body_error_size) {
@@ -606,7 +606,7 @@ void run_edge(EdgeEditor& priority_scheduler, Json::Value json_vals,
 }
 
 void set_rag_probs(StackController& controller, RagPtr rag) {
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         int val = controller.find_edge_label((*iter)->get_node1()->get_node_id(),
                 (*iter)->get_node2()->get_node_id()); 
@@ -641,7 +641,7 @@ void run_recipe(string recipe_filename, BioStackController& controller,
     // load orphan information
     Json::Value orphan_bodies;
     unsigned int id = 0;
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if (!((*iter)->is_boundary())) {
             orphan_bodies[id++] = (*iter)->get_node_id(); 
@@ -649,7 +649,7 @@ void run_recipe(string recipe_filename, BioStackController& controller,
     }
     
     // load default information
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         (*iter)->set_property("location", Location(0,0,0));
         (*iter)->set_property("edge_size", (*iter)->get_size());
@@ -748,14 +748,14 @@ void run_analyze_gt(AnalyzeGTOptions& options)
         }
 
         RagPtr seg_rag = stack.get_rag();
-        for (Rag_uit::edges_iterator iter = seg_rag_probs->edges_begin();
+        for (Rag_t::edges_iterator iter = seg_rag_probs->edges_begin();
                 iter != seg_rag_probs->edges_end(); ++iter) {
-            Node_uit node1 = (*iter)->get_node1()->get_node_id();
-            Node_uit node2 = (*iter)->get_node2()->get_node_id();
+            Node_t node1 = (*iter)->get_node1()->get_node_id();
+            Node_t node2 = (*iter)->get_node2()->get_node_id();
 
             if (!(*iter)->is_false_edge()) {
                 double prob = (*iter)->get_weight();
-                RagEdge_uit* edge = seg_rag->find_rag_edge(node1, node2);
+                RagEdge_t* edge = seg_rag->find_rag_edge(node1, node2);
                 edge->set_weight(prob);
             }
         }
@@ -766,7 +766,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     // create ground truth assignments to be maintained with rag
     RagPtr seg_rag = stack.get_rag();
-    RagPtr rag_comp = RagPtr(new Rag_uit(*seg_rag));
+    RagPtr rag_comp = RagPtr(new Rag_t(*seg_rag));
     set_rag_probs(controller, rag_comp);
 
 

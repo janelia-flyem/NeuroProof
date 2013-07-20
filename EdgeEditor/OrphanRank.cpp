@@ -11,7 +11,7 @@ void OrphanRank::initialize(double ignore_size_)
 
     // grab all nodes that are orphan above the size threshold
     // or that have a synapse annotation
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         unsigned long long synapse_weight = 0;
         try {   
@@ -36,21 +36,21 @@ void OrphanRank::initialize(double ignore_size_)
 }
 
 
-RagNode_uit* OrphanRank::find_most_uncertain_node(RagNode_uit* head_node)
+RagNode_t* OrphanRank::find_most_uncertain_node(RagNode_t* head_node)
 {
     AffinityPair::Hash affinity_pairs;
     grab_affinity_pairs(*rag, head_node, 0, 0.01, false, affinity_pairs);
     double biggest_change = 0;
-    RagNode_uit* strongest_affinity_node = 0;
+    RagNode_t* strongest_affinity_node = 0;
 
     // look for the highest affinity path betwee node and non-orphan
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
-        Node_uit other_id = iter->region1;
+        Node_t other_id = iter->region1;
         if (head_node->get_node_id() == other_id) {
             other_id = iter->region2;
         }
-        RagNode_uit* other_node = rag->find_rag_node(other_id);
+        RagNode_t* other_node = rag->find_rag_node(other_id);
 
         double local_information_affinity = -1;
 
@@ -62,7 +62,7 @@ RagNode_uit* OrphanRank::find_most_uncertain_node(RagNode_uit* head_node)
         }
 
         if (local_information_affinity >= biggest_change) {
-            strongest_affinity_node = rag->find_rag_node(Node_uit(iter->size));
+            strongest_affinity_node = rag->find_rag_node(Node_t(iter->size));
             biggest_change = local_information_affinity;
         }
     }
@@ -70,9 +70,9 @@ RagNode_uit* OrphanRank::find_most_uncertain_node(RagNode_uit* head_node)
     return strongest_affinity_node;
 }
 
-void OrphanRank::insert_node(Node_uit node)
+void OrphanRank::insert_node(Node_t node)
 {
-    RagNode_uit* head_node = rag->find_rag_node(node);
+    RagNode_t* head_node = rag->find_rag_node(node);
     
     NodeRank master_item;
     master_item.id = head_node->get_node_id();
@@ -84,9 +84,9 @@ void OrphanRank::insert_node(Node_uit node)
     }
 }
 
-void OrphanRank::update_neighboring_nodes(Node_uit keep_node)
+void OrphanRank::update_neighboring_nodes(Node_t keep_node)
 {
-    RagNode_uit* head_node = rag->find_rag_node(keep_node);
+    RagNode_t* head_node = rag->find_rag_node(keep_node);
     AffinityPair::Hash affinity_pairs;
     grab_affinity_pairs(*rag, head_node, 0, 0.01, false, affinity_pairs);
 
@@ -94,11 +94,11 @@ void OrphanRank::update_neighboring_nodes(Node_uit keep_node)
     // by a change in the RAG
     for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
             iter != affinity_pairs.end(); ++iter) {
-        Node_uit other_id = iter->region1;
+        Node_t other_id = iter->region1;
         if (keep_node == other_id) {
             other_id = iter->region2;
         }
-        RagNode_uit* rag_other_node2 = rag->find_rag_node(other_id);
+        RagNode_t* rag_other_node2 = rag->find_rag_node(other_id);
 
         node_list.remove(other_id); 
         NodeRank item;

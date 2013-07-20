@@ -4,11 +4,11 @@ using namespace NeuroProof;
 
 boost::mutex GPR::ThreadCompute::mutex;
 
-GPR::GPR(Rag_uit& rag_, bool debug_) : rag(rag_), debug(debug_),
+GPR::GPR(Rag_t& rag_, bool debug_) : rag(rag_), debug(debug_),
     total_num_voxelpairs(0), max_rand_base(0)
 {
     // establish number of pixel pairs and baseline for a given RAG
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); 
+    for (Rag_t::nodes_iterator iter = rag.nodes_begin(); 
             iter != rag.nodes_end(); ++iter) {
         unsigned long long val = (*iter)->get_size();
         max_rand_base += (val * (val-1)/2);
@@ -34,8 +34,8 @@ double GPR::calculateMaxExpectedRand()
 
 double GPR::calculateGPR(int num_paths, int num_threads)
 {
-    std::vector<RagNode_uit* > node_list;
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin(); 
+    std::vector<RagNode_t* > node_list;
+    for (Rag_t::nodes_iterator iter = rag.nodes_begin(); 
             iter != rag.nodes_end(); ++iter) {
         node_list.push_back(*iter);
     }
@@ -44,7 +44,7 @@ double GPR::calculateGPR(int num_paths, int num_threads)
 
 
 double GPR::calculateGPR(int num_paths, int num_threads, 
-        std::vector<RagNode_uit* >& node_list)
+        std::vector<RagNode_t* >& node_list)
 {
     boost::thread_group threads;
 
@@ -77,12 +77,12 @@ double GPR::calculateNormalizedGPR()
     return adjusted_index;
 }
 
-void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
+void GPR::ThreadCompute::findBestPath(RagNode_t* rag_node_head)
 {
     best_node_head.rag_node_curr = rag_node_head;
     best_node_head.rag_edge_curr = 0;
     best_node_head.weight= 1.0;
-    Node_uit node_head = rag_node_head->get_node_id();
+    Node_t node_head = rag_node_head->get_node_id();
     
     best_node_queue.push(best_node_head);
     AffinityPair affinity_pair_head(node_head, node_head);
@@ -96,7 +96,7 @@ void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
   
         if (temp_affinity_pairs.find(affinity_pair_curr) == 
                 temp_affinity_pairs.end()) { 
-            for (RagNode_uit::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
+            for (RagNode_t::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
                     edge_iter != best_node_curr.rag_node_curr->edge_end(); ++edge_iter) {
                 // avoid simple cycles
                 if (*edge_iter == best_node_curr.rag_edge_curr) {
@@ -104,7 +104,7 @@ void GPR::ThreadCompute::findBestPath(RagNode_uit* rag_node_head)
                 }
 
                 // grab other node 
-                RagNode_uit* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
+                RagNode_t* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
 
                 // avoid duplicates
                 AffinityPair temp_pair(node_head, other_node->get_node_id());

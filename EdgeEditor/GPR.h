@@ -43,7 +43,7 @@ class GPR {
      * \param rag_ reference to RAG
      * \debug_ enables some debug output
     */
-    GPR(Rag_uit& rag_, bool debug_ = false); 
+    GPR(Rag_t& rag_, bool debug_ = false); 
     
     /*!
      * Calculate the GPR for the RAG.
@@ -61,7 +61,7 @@ class GPR {
      * \param node_list nodes to be examined
      * \return value of GPR
     */
-    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode_uit* >& node_list); 
+    double calculateGPR(int num_paths, int num_threads, std::vector<RagNode_t* >& node_list); 
 
     /*!
      * Calculates the maximum expected rand index using
@@ -78,7 +78,7 @@ class GPR {
     double calculateNormalizedGPR();
 
     //! Reference to rag analyzed for uncertainty 
-    Rag_uit& rag;
+    Rag_t& rag;
 
     //! The minimum rand correspondence independent of edge decisions 
     unsigned long long max_rand_base;
@@ -111,9 +111,9 @@ class GPR {
          * \param affinity_pair_ set of node pairs with affinities
          * \param node_list_ set of nodes that will be analyzed
         */ 
-        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag_uit& rag_, 
+        ThreadCompute(int id_, int num_threads_, int num_paths_, Rag_t& rag_, 
                 AffinityPair::Hash& affinity_pairs_, 
-                std::vector<RagNode_uit* >& node_list_, bool debug_) : 
+                std::vector<RagNode_t* >& node_list_, bool debug_) : 
             id(id_), num_threads(num_threads_), num_paths(num_paths_), 
             rag(rag_), affinity_pairs(affinity_pairs_), node_list(node_list_), 
             debug(debug_), EPSILON(0.000001), CONNECTION_THRESHOLD(0.01) {}
@@ -157,13 +157,13 @@ class GPR {
         int num_paths;
 
         //! Reference to RAG
-        Rag_uit& rag;
+        Rag_t& rag;
 
         //! Affinity between node pairs (not necessarily directly connected)
         AffinityPair::Hash& affinity_pairs;
 
         //! List of nodes to be considered for affinity
-        std::vector<RagNode_uit* >& node_list;
+        std::vector<RagNode_t* >& node_list;
 
         //! Enables debug mode
         bool debug;
@@ -185,10 +185,10 @@ class GPR {
         */
         struct BestNode {
             //! Current node in path being examined
-            RagNode_uit* rag_node_curr;
+            RagNode_t* rag_node_curr;
         
             //! Current edge traversed to get to node
-            RagEdge_uit* rag_edge_curr;
+            RagEdge_t* rag_edge_curr;
             
             //! Current connection of weight
             double weight;
@@ -222,7 +222,7 @@ class GPR {
          * is a set of affinity pairs with the starting head node.
          * \param rag_node_head Starting node for path search
         */
-        void findBestPath(RagNode_uit* rag_node_head);
+        void findBestPath(RagNode_t* rag_node_head);
     };
 };
 

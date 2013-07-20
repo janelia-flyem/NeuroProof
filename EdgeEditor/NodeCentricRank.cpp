@@ -43,12 +43,12 @@ void NodeRankList::pop()
     if (checkpoint) {
         history[history.size()-1].push_back(HistoryElement(first(), false));
     }
-    Node_uit head_id = first().id;
+    Node_t head_id = first().id;
     stored_ids.erase(head_id);
     node_list.erase(node_list.begin());
 }
 
-void NodeRankList::remove(Node_uit id)
+void NodeRankList::remove(Node_t id)
 {
     if (stored_ids.find(id) == stored_ids.end()) {
         return;
@@ -118,12 +118,12 @@ void NodeCentricRank::update_priority()
     // that is considered important -- this is discerned by calling
     // the 'find_most_uncertain_node'
     while (!node_list.empty()) {
-        Node_uit head_id = node_list.first().id; 
+        Node_t head_id = node_list.first().id; 
 
-        RagNode_uit* head_node = rag->find_rag_node(head_id);
+        RagNode_t* head_node = rag->find_rag_node(head_id);
 
         // going Hollywood
-        RagNode_uit* strongest_affinity_node =
+        RagNode_t* strongest_affinity_node =
             find_most_uncertain_node(head_node);        
 
         if (strongest_affinity_node) {
@@ -152,7 +152,7 @@ void NodeCentricRank::undo()
 void NodeCentricRank::examined_edge(NodePair node_pair, bool remove)
 {
     ++num_processed;
-    Node_uit keep_node = boost::get<0>(node_pair);
+    Node_t keep_node = boost::get<0>(node_pair);
     node_list.start_checkpoint();
     
     if (remove) {

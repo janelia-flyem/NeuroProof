@@ -34,7 +34,7 @@ class OrphanRank : public NodeCentricRank {
      * default threshold for examining a body.
      * \param rag_ pointer to RAG
     */
-    OrphanRank(Rag_uit* rag_) : NodeCentricRank(rag_),
+    OrphanRank(Rag_t* rag_) : NodeCentricRank(rag_),
         SynapseStr("synapse_weight"), ignore_size(BIGBODY10NM) {}
   
     /*!
@@ -62,7 +62,7 @@ class OrphanRank : public NodeCentricRank {
      * \param head_node pointer to rag node
      * \return pointer to node with an uncertaint connection to the head node
     */
-    RagNode_uit* find_most_uncertain_node(RagNode_uit* head_node);
+    RagNode_t* find_most_uncertain_node(RagNode_t* head_node);
     
     /*!
      * The function takes the given node and adds it into the node rank
@@ -70,7 +70,7 @@ class OrphanRank : public NodeCentricRank {
      * NodeCentricRank class.
      * \param node id of rag node
     */
-    void insert_node(Node_uit node);
+    void insert_node(Node_t node);
     
     /*!
      * The function tries to determine whether, given a change to a
@@ -80,7 +80,7 @@ class OrphanRank : public NodeCentricRank {
      * function is called by the NodeCentricRank class.
      * \param keep_node id of rag node that was just modified
     */
-    void update_neighboring_nodes(Node_uit keep_node);
+    void update_neighboring_nodes(Node_t keep_node);
   
   private:
     //! access string for synapse node property

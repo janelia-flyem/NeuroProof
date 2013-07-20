@@ -13,11 +13,11 @@ using std::pair;
 
 namespace NeuroProof {
 
-vector<Node_uit> EdgeEditor::getQAViolators(unsigned int threshold)
+vector<Node_t> EdgeEditor::getQAViolators(unsigned int threshold)
 {
-    vector<Node_uit> violators;
+    vector<Node_t> violators;
 
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag.nodes_begin();
             iter != rag.nodes_end(); ++iter) {
         unsigned long long synapse_weight = 0;
         try {   
@@ -86,12 +86,12 @@ void EdgeEditor::estimateWork()
     // estimator decides true or false by random assignment
     // weighted by the confidence for a certain edge    
     while (!(edge_mode->is_finished())) {
-        boost::tuple<Node_uit, Node_uit> pair;
+        boost::tuple<Node_t, Node_t> pair;
         edge_mode->get_top_edge(pair);
         
-        Node_uit node1 = boost::get<0>(pair);
-        Node_uit node2 = boost::get<1>(pair);
-        RagEdge_uit* temp_edge = rag.find_rag_edge(node1, node2);
+        Node_t node1 = boost::get<0>(pair);
+        Node_t node2 = boost::get<1>(pair);
+        RagEdge_t* temp_edge = rag.find_rag_edge(node1, node2);
         
         double weight = temp_edge->get_weight();
         int weightint = int(100 * weight);
@@ -119,7 +119,7 @@ void EdgeEditor::reinitialize_scheduler()
 }
 
 
-EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
+EdgeEditor::EdgeEditor(Rag_t& rag_, double min_val_,
         double max_val_, double start_val_, Json::Value& json_vals) : 
     rag(rag_), min_val(min_val_), max_val(max_val_),
     start_val(start_val_), SynapseStr("synapse_weight")
@@ -161,8 +161,8 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
     // load synapse info
     Json::Value json_synapse_weights = json_vals["synapse_bodies"];
     for (unsigned int i = 0; i < json_synapse_weights.size(); ++i) {
-        Node_uit node_syn = (json_synapse_weights[i])[(unsigned int)(0)].asUInt();
-        RagNode_uit* rag_node = rag.find_rag_node(node_syn);
+        Node_t node_syn = (json_synapse_weights[i])[(unsigned int)(0)].asUInt();
+        RagNode_t* rag_node = rag.find_rag_node(node_syn);
         rag_node->set_property(SynapseStr,
                 (unsigned long long)((json_synapse_weights[i])[(unsigned int)(1)].asUInt()));
     }
@@ -171,13 +171,13 @@ EdgeEditor::EdgeEditor(Rag_uit& rag_, double min_val_,
     // be in the rag structure.  Since this interface only assumes the given bodies
     // are orphaned, any body not on this list will be given a nominal boundary weight
     Json::Value json_orphan = json_vals["orphan_bodies"];
-    unordered_set<Node_uit> orphan_set;
+    unordered_set<Node_t> orphan_set;
     for (unsigned int i = 0; i < json_orphan.size(); ++i) {
-        RagNode_uit* rag_node = rag.find_rag_node(json_orphan[i].asUInt());
+        RagNode_t* rag_node = rag.find_rag_node(json_orphan[i].asUInt());
         rag_node->set_boundary_size(0);
         orphan_set.insert(rag_node->get_node_id());
     }
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag.nodes_begin();
             iter != rag.nodes_end(); ++iter) {
         if (orphan_set.find((*iter)->get_node_id()) == orphan_set.end()) {
             if ((*iter)->get_boundary_size() == 0) {
@@ -242,7 +242,7 @@ void EdgeEditor::export_json(Json::Value& json_writer)
     int orphan_count = 0;
     unsigned int synapse_count = 0;
 
-    for (Rag_uit::nodes_iterator iter = rag.nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag.nodes_begin();
             iter != rag.nodes_end(); ++iter) {
         bool is_orphan = !((*iter)->is_boundary());
         unsigned long long synapse_weight = 0;
@@ -291,7 +291,7 @@ void EdgeEditor::setEdge(NodePair node_pair, double weight)
     EdgeHistory history;
     history.node1 = boost::get<0>(node_pair);
     history.node2 = boost::get<1>(node_pair);
-    RagEdge_uit* edge = rag.find_rag_edge(history.node1, history.node2);
+    RagEdge_t* edge = rag.find_rag_edge(history.node1, history.node2);
     history.weight = edge->get_weight();
     history.preserve_edge = edge->is_preserve();
     history.false_edge = edge->is_false_edge();
@@ -300,7 +300,7 @@ void EdgeEditor::setEdge(NodePair node_pair, double weight)
     edge->set_weight(weight);
 }
 
-boost::tuple<Node_uit, Node_uit> EdgeEditor::getTopEdge(Location& location)
+boost::tuple<Node_t, Node_t> EdgeEditor::getTopEdge(Location& location)
 {
     // just grabs top edge or errors -- no real computation
     NodePair node_pair;
@@ -309,7 +309,7 @@ boost::tuple<Node_uit, Node_uit> EdgeEditor::getTopEdge(Location& location)
         if (!status) {
             throw ErrMsg("No edge can be found");
         }
-        RagEdge_uit* edge = rag.find_rag_edge(boost::get<0>(node_pair),
+        RagEdge_t* edge = rag.find_rag_edge(boost::get<0>(node_pair),
                 boost::get<1>(node_pair));
         location = edge->get_property<Location>("location");
     } catch(ErrMsg& msg) {
@@ -339,8 +339,8 @@ void EdgeEditor::removeEdge(NodePair node_pair, bool remove)
     }
 
     if (remove) {
-        RagNode_uit* node_keep = rag.find_rag_node(boost::get<0>(node_pair)); 
-        RagNode_uit* node_remove = rag.find_rag_node(boost::get<1>(node_pair));
+        RagNode_t* node_keep = rag.find_rag_node(boost::get<0>(node_pair)); 
+        RagNode_t* node_remove = rag.find_rag_node(boost::get<1>(node_pair));
        
         unsigned long long  synapse_weight1 = 0;
         unsigned long long  synapse_weight2 = 0;
@@ -376,7 +376,7 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
     EdgeHistory history;
     history.node1 = boost::get<0>(node_pair);
     history.node2 = boost::get<1>(node_pair);
-    RagEdge_uit* edge = rag.find_rag_edge(history.node1, history.node2);
+    RagEdge_t* edge = rag.find_rag_edge(history.node1, history.node2);
     history.weight = edge->get_weight();
     history.preserve_edge = edge->is_preserve();
     history.false_edge = edge->is_false_edge();
@@ -385,8 +385,8 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
 
     // node id that is kept
     history.remove = true;
-    RagNode_uit* node1 = rag.find_rag_node(history.node1);
-    RagNode_uit* node2 = rag.find_rag_node(history.node2);
+    RagNode_t* node1 = rag.find_rag_node(history.node1);
+    RagNode_t* node2 = rag.find_rag_node(history.node2);
     history.size1 = node1->get_size();
     history.size2 = node2->get_size();
     history.bound_size1 = node1->get_boundary_size();
@@ -408,9 +408,9 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
         }
     }
 
-    for (RagNode_uit::edge_iterator iter = node1->edge_begin();
+    for (RagNode_t::edge_iterator iter = node1->edge_begin();
             iter != node1->edge_end(); ++iter) {
-        RagNode_uit* other_node = (*iter)->get_other_node(node1);
+        RagNode_t* other_node = (*iter)->get_other_node(node1);
         if (other_node != node2) {
             history.node_list1.push_back(other_node->get_node_id());
             history.edge_weight1.push_back((*iter)->get_weight());
@@ -424,9 +424,9 @@ void EdgeEditor::removeEdge2(NodePair node_pair, bool remove,
         }
     } 
 
-    for (RagNode_uit::edge_iterator iter = node2->edge_begin();
+    for (RagNode_t::edge_iterator iter = node2->edge_begin();
             iter != node2->edge_end(); ++iter) {
-        RagNode_uit* other_node = (*iter)->get_other_node(node2);
+        RagNode_t* other_node = (*iter)->get_other_node(node2);
         if (other_node != node1) {
             history.node_list2.push_back(other_node->get_node_id());
             history.edge_weight2.push_back((*iter)->get_weight());
@@ -454,15 +454,15 @@ bool EdgeEditor::undo2()
     if (history.remove) {
         rag.remove_rag_node(rag.find_rag_node(history.node1));
 
-        RagNode_uit* temp_node1 = rag.insert_rag_node(history.node1);
-        RagNode_uit* temp_node2 = rag.insert_rag_node(history.node2);
+        RagNode_t* temp_node1 = rag.insert_rag_node(history.node1);
+        RagNode_t* temp_node2 = rag.insert_rag_node(history.node2);
         temp_node1->set_size(history.size1);
         temp_node2->set_size(history.size2);
         temp_node1->set_boundary_size(history.bound_size1);
         temp_node2->set_boundary_size(history.bound_size2);
 
         for (int i = 0; i < history.node_list1.size(); ++i) {
-            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node1,
+            RagEdge_t* temp_edge = rag.insert_rag_edge(temp_node1,
                     rag.find_rag_node(history.node_list1[i]));
             temp_edge->set_weight(history.edge_weight1[i]);
             temp_edge->set_preserve(history.preserve_edge1[i]);
@@ -472,7 +472,7 @@ bool EdgeEditor::undo2()
             temp_edge->set_property_ptr("edge_size", history.property_list1[i][1]);
         } 
         for (int i = 0; i < history.node_list2.size(); ++i) {
-            RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node2,
+            RagEdge_t* temp_edge = rag.insert_rag_edge(temp_node2,
                     rag.find_rag_node(history.node_list2[i]));
             temp_edge->set_weight(history.edge_weight2[i]);
             temp_edge->set_preserve(history.preserve_edge2[i]);
@@ -482,7 +482,7 @@ bool EdgeEditor::undo2()
             temp_edge->set_property_ptr("edge_size", history.property_list2[i][1]);
         }
 
-        RagEdge_uit* temp_edge = rag.insert_rag_edge(temp_node1, temp_node2);
+        RagEdge_t* temp_edge = rag.insert_rag_edge(temp_node1, temp_node2);
         temp_edge->set_weight(history.weight);
         temp_edge->set_preserve(history.preserve_edge); 
         temp_edge->set_false_edge(history.false_edge); 
@@ -501,10 +501,10 @@ bool EdgeEditor::undo2()
             temp_node2->set_property_ptr(iter->first, iter->second);
         }
     } else {
-        RagNode_uit* temp_node1 = rag.find_rag_node(history.node1);
-        RagNode_uit* temp_node2 = rag.find_rag_node(history.node2);
+        RagNode_t* temp_node1 = rag.find_rag_node(history.node1);
+        RagNode_t* temp_node2 = rag.find_rag_node(history.node2);
 
-        RagEdge_uit* temp_edge = rag.find_rag_edge(temp_node1, temp_node2);
+        RagEdge_t* temp_edge = rag.find_rag_edge(temp_node1, temp_node2);
         temp_edge->set_weight(history.weight);
         temp_edge->set_preserve(history.preserve_edge); 
         temp_edge->set_false_edge(history.false_edge); 

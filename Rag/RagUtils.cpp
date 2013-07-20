@@ -21,14 +21,14 @@ using std::tr1::unordered_set;
 namespace NeuroProof {
 
 //TODO: create strategy for automatically merging user-defined properties
-void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remove, 
+void rag_join_nodes(Rag_t& rag, RagNode_t* node_keep, RagNode_t* node_remove, 
         RagNodeCombineAlg* combine_alg)
 {
     // iterator through all edges to be removed and transfer them or combine
     // them to the new body
-    for(RagNode_uit::edge_iterator iter = node_remove->edge_begin();
+    for(RagNode_t::edge_iterator iter = node_remove->edge_begin();
             iter != node_remove->edge_end(); ++iter) {
-        RagNode_uit* other_node = (*iter)->get_other_node(node_remove);
+        RagNode_t* other_node = (*iter)->get_other_node(node_remove);
         if (other_node == node_keep) {
             continue;
         }
@@ -37,7 +37,7 @@ void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remo
         bool preserve = (*iter)->is_preserve();
         bool false_edge = (*iter)->is_false_edge();
 
-        RagEdge_uit* final_edge = rag.find_rag_edge(node_keep, other_node);
+        RagEdge_t* final_edge = rag.find_rag_edge(node_keep, other_node);
         
         if (final_edge) {
             // merge edges -- does not merge user-defined properties by default
@@ -84,8 +84,8 @@ void rag_join_nodes(Rag_uit& rag, RagNode_uit* node_keep, RagNode_uit* node_remo
  * Structure used in bi-connected computation
 */
 struct DFSNode {
-    Node_uit previous;
-    RagNode_uit* rag_node;  
+    Node_t previous;
+    RagNode_t* rag_node;  
     int count;
     int start_pos;
 };
@@ -108,16 +108,16 @@ struct BiconnectedParams {
     vector<DFSNode>& dfs_stack;
     
     //! internal variable to biconnected calculation
-    unordered_set<Node_uit> visited;
+    unordered_set<Node_t> visited;
 
     //! internal variable to biconnected calculation
-    unordered_map<Node_uit, int> node_depth;
+    unordered_map<Node_t, int> node_depth;
 
     //! internal variable to biconnected calculation
-    unordered_map<Node_uit, int> low_count;
+    unordered_map<Node_t, int> low_count;
 
     //! internal variable to biconnected calculation
-    unordered_map<Node_uit, Node_uit> prev_id;
+    unordered_map<Node_t, Node_t> prev_id;
     
     //! internal variable to biconnected calculation
     vector<OrderedPair> stack;
@@ -127,8 +127,8 @@ void biconnected_recurs(BiconnectedParams& params)
 {
     while (!params.dfs_stack.empty()) {
         DFSNode entry = params.dfs_stack.back();
-        RagNode_uit* rag_node = entry.rag_node;
-        Node_uit previous = entry.previous;
+        RagNode_t* rag_node = entry.rag_node;
+        Node_t previous = entry.previous;
         int count = entry.count;
         params.dfs_stack.pop_back();
 
@@ -141,9 +141,9 @@ void biconnected_recurs(BiconnectedParams& params)
 
         bool skip = false;
         int curr_pos = 0;
-        for (RagNode_uit::node_iterator iter = rag_node->node_begin();
+        for (RagNode_t::node_iterator iter = rag_node->node_begin();
                 iter != rag_node->node_end(); ++iter) {
-            RagEdge_uit* rag_edge = params.rag->find_rag_edge(rag_node, *iter);
+            RagEdge_t* rag_edge = params.rag->find_rag_edge(rag_node, *iter);
             if (rag_edge->is_false_edge()) {
                 continue;
             }
@@ -209,8 +209,8 @@ void biconnected_recurs(BiconnectedParams& params)
 
 void find_biconnected_components(RagPtr rag, vector<vector<OrderedPair> >& biconnected_components)
 {
-    RagNode_uit* rag_node = 0;
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+    RagNode_t* rag_node = 0;
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         if ((*iter)->is_boundary()) {
             rag_node = *iter;
             break;
@@ -237,7 +237,7 @@ BoostGraph* create_boost_graph(RagPtr rag)
 {
     BoostGraph* graph = new BoostGraph;
 
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         BoostEdgeBool edge = boost::add_edge((*iter)->get_node1()->get_node_id(),
                 (*iter)->get_node2()->get_node_id(), *graph);
@@ -247,7 +247,7 @@ BoostGraph* create_boost_graph(RagPtr rag)
         (*graph)[edge.first].weight = (*iter)->get_weight();
     }
 
-    for (Rag_uit::nodes_iterator iter = rag->nodes_begin();
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         // add vertex properties
         (*graph)[((*iter)->get_node_id())].size = (*iter)->get_size();
@@ -276,13 +276,13 @@ BoostGraph* create_boost_graph(RagPtr rag)
  * the shortest multiplicative path in the graph.
 */
 struct BestNode {
-    RagNode_uit* rag_node_curr;
-    RagEdge_uit* rag_edge_curr;
+    RagNode_t* rag_node_curr;
+    RagEdge_t* rag_edge_curr;
     //! weight of the current path (1 is short, 0 is infinite)
     double weight;
     //! length of the current path
     int path;
-    Node_uit second_node;
+    Node_t second_node;
 };
 struct BestNodeCmp {
     bool operator()(const BestNode& q1, const BestNode& q2) const
@@ -291,7 +291,7 @@ struct BestNodeCmp {
     }
 };
 
-void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_restriction,
+void grab_affinity_pairs(Rag_t& rag, RagNode_t* rag_node_head, int path_restriction,
         double connection_threshold, bool preserve, AffinityPair::Hash& affinity_pairs)
 {
     typedef std::priority_queue<BestNode, std::vector<BestNode>, BestNodeCmp> BestNodeQueue;
@@ -302,7 +302,7 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
     best_node_head.rag_edge_curr = 0;
     best_node_head.weight= 1.0;
     best_node_head.path = 0;
-    Node_uit node_head = rag_node_head->get_node_id();
+    Node_t node_head = rag_node_head->get_node_id();
 
     best_node_queue.push(best_node_head);
     AffinityPair affinity_pair_head(node_head, node_head);
@@ -318,7 +318,7 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
         AffinityPair affinity_pair_curr(node_head, best_node_curr.rag_node_curr->get_node_id());
 
         if (affinity_pairs.find(affinity_pair_curr) == affinity_pairs.end()) { 
-            for (RagNode_uit::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
+            for (RagNode_t::edge_iterator edge_iter = best_node_curr.rag_node_curr->edge_begin();
                     edge_iter != best_node_curr.rag_node_curr->edge_end(); ++edge_iter) {
                 // avoid simple cycles
                 if (*edge_iter == best_node_curr.rag_edge_curr) {
@@ -326,7 +326,7 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
                 }
 
                 // grab other node 
-                RagNode_uit* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
+                RagNode_t* other_node = (*edge_iter)->get_other_node(best_node_curr.rag_node_curr);
 
                 // avoid duplicates
                 AffinityPair temp_pair(node_head, other_node->get_node_id());
@@ -338,7 +338,7 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
                     continue;
                 }
 
-                RagEdge_uit* rag_edge_temp = rag.find_rag_edge(rag_node_head, other_node); 
+                RagEdge_t* rag_edge_temp = rag.find_rag_edge(rag_node_head, other_node); 
                 if (rag_edge_temp && rag_edge_temp->get_weight() > 1.00001) {
                     continue;
                 }
@@ -393,7 +393,7 @@ void grab_affinity_pairs(Rag_uit& rag, RagNode_uit* rag_node_head, int path_rest
     affinity_pairs.erase(affinity_pair_head);
 }
 
-double find_affinity_path(Rag_uit& rag, RagNode_uit* rag_node_head, RagNode_uit* rag_node_dest)
+double find_affinity_path(Rag_t& rag, RagNode_t* rag_node_head, RagNode_t* rag_node_dest)
 {
     // TODO restrict path search algorithm so that it terminates after
     // finding the destination node

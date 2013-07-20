@@ -29,7 +29,7 @@ class SynapseRank : public NodeCentricRank {
      * is a fraction of a synapse).
      * \param rag_ pointer to RAG
     */
-    SynapseRank(Rag_uit* rag_) : NodeCentricRank(rag_), ignore_size(0.1),
+    SynapseRank(Rag_t* rag_) : NodeCentricRank(rag_), ignore_size(0.1),
             voi_change_thres(0.0), volume_size(0),
             SynapseStr("synapse_weight") {}
   
@@ -58,14 +58,14 @@ class SynapseRank : public NodeCentricRank {
      * \param head_node pointer to rag node
      * \return pointer to node with an uncertaint connection to the head node
     */ 
-    RagNode_uit* find_most_uncertain_node(RagNode_uit* head_node);
+    RagNode_t* find_most_uncertain_node(RagNode_t* head_node);
     
     /*!
      * The function takes the given node and adds it into the node rank
      * list.  This function is called by the NodeCentricRank class.
      * \param node id of rag node
     */
-    void insert_node(Node_uit node);
+    void insert_node(Node_t node);
     
     /*!
      * The function tries to determine whether, given a change to a
@@ -74,7 +74,7 @@ class SynapseRank : public NodeCentricRank {
      * function is called by the NodeCentricRank class.
      * \param keep_node id of rag node that was just modified
     */
-    void update_neighboring_nodes(Node_uit keep_node);
+    void update_neighboring_nodes(Node_t keep_node);
   
   private:
     //! threshold used to determine whether a node is important

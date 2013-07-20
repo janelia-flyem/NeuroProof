@@ -2,7 +2,7 @@
  * \file
  * Provides different utilities for manipulating and analyzing the Rag.
  * The utilities provided currently assumme that the unique internal
- * node identifer is of type unsigned int
+ * node identifer is of type Index_t (unsigned int)
 */
 
 #ifndef RAGUTILS_H
@@ -11,6 +11,7 @@
 #include "../Utilities/AffinityPair.h"
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
+#include "../Utilities/Glb.h"
 
 namespace boost {
 
@@ -44,15 +45,15 @@ class RagEdge;
  * \param node_remove pointer to rag node that will be removed
  * \param combine_alg algorithm type for performing actions during the join operation
 */
-void rag_join_nodes(Rag<unsigned int>& rag, RagNode<unsigned int>* node_keep,
-        RagNode<unsigned int>* node_remove, RagNodeCombineAlg* combine_alg);
+void rag_join_nodes(Rag<Index_t>& rag, RagNode<Index_t>* node_keep,
+        RagNode<Index_t>* node_remove, RagNodeCombineAlg* combine_alg);
 
 /*!
  * Computes all of the biconnected components for the given graph
  * \param rag Rag used to compute bi-connected components
  * \param biconnected_components results from algorithm
 */
-void find_biconnected_components(boost::shared_ptr<Rag<unsigned int> > rag,
+void find_biconnected_components(boost::shared_ptr<Rag<Index_t> > rag,
     std::vector<std::vector<OrderedPair> >& biconnected_components);
 
 
@@ -97,7 +98,7 @@ typedef std::pair<BoostEdge, bool> BoostEdgeBool;
  * \param rag shared pointer to rag
  * \return boost graph corresponding to rag
 */
-BoostGraph* create_boost_graph(boost::shared_ptr<Rag<unsigned int> > rag);
+BoostGraph* create_boost_graph(boost::shared_ptr<Rag<Index_t> > rag);
 
 /*!
  * For a given node find all of the nodes connected to it and the cost
@@ -111,7 +112,7 @@ BoostGraph* create_boost_graph(boost::shared_ptr<Rag<unsigned int> > rag);
  * \param preserve if true do not consider paths through preserved edges
  * \param affinity_pairs contains nodes connected to the head
 */
-void grab_affinity_pairs(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
+void grab_affinity_pairs(Rag<Index_t>& rag, RagNode<Index_t>* rag_node_head,
         int path_restriction, double connection_threshold, bool preserve,
         AffinityPair::Hash& affinity_pairs);
 
@@ -122,8 +123,8 @@ void grab_affinity_pairs(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node
  * \param rag_node_dest final rag node
  * \return connection weight between nodes
 */
-double find_affinity_path(Rag<unsigned int>& rag, RagNode<unsigned int>* rag_node_head,
-        RagNode<unsigned int>* rag_node_dest);
+double find_affinity_path(Rag<Index_t>& rag, RagNode<Index_t>* rag_node_head,
+        RagNode<Index_t>* rag_node_dest);
 
 }
 

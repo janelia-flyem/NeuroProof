@@ -1,6 +1,7 @@
 /*!
  * \file
- * Interface for importing and exporting a Rag of type unsigned int to the JSON format
+ * Interface for importing and exporting a Rag of type
+ * Index_t (unsigned int) to the JSON format
  *
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */ 
@@ -9,6 +10,7 @@
 #define RAGIO_H
 
 #include <json/value.h>
+#include "../Utilities/Glb.h"
 
 namespace NeuroProof {
 
@@ -21,7 +23,7 @@ class Rag;
  * \param file_name json file name
  * \return heap created rag
 */
-Rag<unsigned int>* create_rag_from_jsonfile(const char * file_name);
+Rag<Index_t>* create_rag_from_jsonfile(const char * file_name);
 
 
 /*!
@@ -29,7 +31,7 @@ Rag<unsigned int>* create_rag_from_jsonfile(const char * file_name);
  * \param json_reader_vals json value
  * \return heap created rag
 */
-Rag<unsigned int>* create_rag_from_json(Json::Value& json_reader_vals);
+Rag<Index_t>* create_rag_from_json(Json::Value& json_reader_vals);
 
 /*!
  * Generates a json file that lists all the edges in the provided rag
@@ -37,7 +39,7 @@ Rag<unsigned int>* create_rag_from_json(Json::Value& json_reader_vals);
  * \param file_name name of json file to be written
  * \return true if successful, false otherwise
 */
-bool create_jsonfile_from_rag(Rag<unsigned int>* rag, const char * file_name);
+bool create_jsonfile_from_rag(Rag<Index_t>* rag, const char * file_name);
 
 /*!
  * Generates json lists all the edges in the provided rag.
@@ -46,7 +48,7 @@ bool create_jsonfile_from_rag(Rag<unsigned int>* rag, const char * file_name);
  * \param debug_mode determines whether certain edges are listed or not
  * \return true if successful, false otherwise
 */
-bool create_json_from_rag(Rag<unsigned int>* rag, Json::Value& json_writer);
+bool create_json_from_rag(Rag<Index_t>* rag, Json::Value& json_writer);
 
 }
 

@@ -6,7 +6,7 @@ void ProbEdgeRank::examined_edge(NodePair node_pair, bool remove)
 {
     ++num_processed;
     if (!remove) {
-        RagEdge_uit* edge = rag->find_rag_edge(boost::get<0>(node_pair),
+        RagEdge_t* edge = rag->find_rag_edge(boost::get<0>(node_pair),
                 boost::get<1>(node_pair));
 
         EdgeRanking::iterator iter;
@@ -28,7 +28,7 @@ void ProbEdgeRank::grab_edge_ranking()
     edge_ranking.clear();
 
     // iterate all edges and add those in a specified range
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         double val = (*iter)->get_weight();
         if ((val <= upper) && (val >= lower)) {
@@ -45,9 +45,9 @@ bool ProbEdgeRank::get_top_edge(NodePair& top_edge_ret)
     if (edge_ranking.empty()) {
         return false;
     }
-    RagEdge_uit* edge = edge_ranking.begin()->second;
-    RagNode_uit* node1 = edge->get_node1();
-    RagNode_uit* node2 = edge->get_node2();
+    RagEdge_t* edge = edge_ranking.begin()->second;
+    RagNode_t* node1 = edge->get_node1();
+    RagNode_t* node2 = edge->get_node2();
 
     if (node1->get_size() >= node2->get_size()) {
         top_edge_ret = NodePair(node1->get_node_id(), node2->get_node_id());

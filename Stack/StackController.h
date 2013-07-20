@@ -267,17 +267,17 @@ class StackController {
      * \param preds array of features
      * \param feature_mgr feature manager
     */
-    void rag_add_edge(Rag_uit* rag, unsigned int id1, unsigned int id2,
+    void rag_add_edge(Rag_t* rag, unsigned int id1, unsigned int id2,
             std::vector<double>& preds, FeatureMgrPtr feature_mgr);
 
     //! declaration of typedef for x,y,z location representation
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     
     //! declaration of typedef for mapping of rag edges to doubles
-    typedef std::tr1::unordered_map<RagEdge_uit*, double> EdgeCount;
+    typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
 
     //! declaration of typedef for mapping of rag edges to location 
-    typedef std::tr1::unordered_map<RagEdge_uit*, Location> EdgeLoc; 
+    typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
    
     /*!
      * Support function called by 'serialize_graph_info' to find the

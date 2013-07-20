@@ -12,11 +12,11 @@ typedef std::multimap<double, std::pair<unsigned int, unsigned int> > EdgeRank_t
 
 class MergePriority {
   public:
-    MergePriority(FeatureMgr* feature_mgr_, Rag_uit* rag_) : 
+    MergePriority(FeatureMgr* feature_mgr_, Rag_t* rag_) : 
                         feature_mgr(feature_mgr_), rag(rag_), synapse_mode(false),
                         kicked_out(0) {} 
 
-    MergePriority(FeatureMgr* feature_mgr_, Rag_uit* rag_, bool synapse_mode_) : 
+    MergePriority(FeatureMgr* feature_mgr_, Rag_t* rag_, bool synapse_mode_) : 
                         feature_mgr(feature_mgr_), rag(rag_), synapse_mode(synapse_mode_),
                         kicked_out(0) {} 
     
@@ -26,11 +26,11 @@ class MergePriority {
 
     virtual void initialize_random(double pthreshold) {}
     
-    virtual RagEdge_uit* get_top_edge() = 0;
+    virtual RagEdge_t* get_top_edge() = 0;
 
-    virtual void add_dirty_edge(RagEdge_uit* edge) = 0;
+    virtual void add_dirty_edge(RagEdge_t* edge) = 0;
 
-    bool valid_edge(RagEdge_uit* edge)
+    bool valid_edge(RagEdge_t* edge)
     {
         if (!synapse_mode) {
             if (edge->is_preserve() || edge->is_false_edge()) {
@@ -53,7 +53,7 @@ class MergePriority {
     virtual void set_fileid(FILE* pid) {};
 
   protected:
-    Rag_uit* rag;
+    Rag_t* rag;
     FeatureMgr* feature_mgr;
     int kicked_out;
 
@@ -64,18 +64,18 @@ class MergePriority {
 
 class ProbPriority : public MergePriority {
   public:
-    ProbPriority(FeatureMgr* feature_mgr_, Rag_uit* rag_) :
+    ProbPriority(FeatureMgr* feature_mgr_, Rag_t* rag_) :
                     MergePriority(feature_mgr_, rag_), Epsilon(0.00001), kicked_fid(NULL) {}
 
-    ProbPriority(FeatureMgr* feature_mgr_, Rag_uit* rag_, bool synapse_mode_) :
+    ProbPriority(FeatureMgr* feature_mgr_, Rag_t* rag_, bool synapse_mode_) :
                     MergePriority(feature_mgr_, rag_, synapse_mode_),
                     Epsilon(0.00001), kicked_fid(NULL) {}
     void initialize_priority(double threshold_, bool use_edge_weight=false);
     void initialize_random(double pthreshold);
     void clear_dirty();
     bool empty();
-    RagEdge_uit* get_top_edge();
-    void add_dirty_edge(RagEdge_uit* edge);
+    RagEdge_t* get_top_edge();
+    void add_dirty_edge(RagEdge_t* edge);
    
     int qlen(){ return ranking.size();}	
 
@@ -87,7 +87,7 @@ class ProbPriority : public MergePriority {
 
     double threshold;
     const double Epsilon;
-    typedef std::multimap<double, std::pair<Node_uit, Node_uit> > EdgeRank_t; 
+    typedef std::multimap<double, std::pair<Node_t, Node_t> > EdgeRank_t; 
     typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;
@@ -98,7 +98,7 @@ class ProbPriority : public MergePriority {
 
 class MitoPriority : public MergePriority {
   public:
-    MitoPriority(FeatureMgr* feature_mgr_, Rag_uit* rag_) :
+    MitoPriority(FeatureMgr* feature_mgr_, Rag_t* rag_) :
                     MergePriority(feature_mgr_, rag_), Epsilon(0.00001) {}
 
     void initialize_priority(double threshold_, bool use_edge_weight=false);
@@ -106,8 +106,8 @@ class MitoPriority : public MergePriority {
     //void initialize_random(double pthreshold);
     void clear_dirty();
     bool empty();
-    RagEdge_uit* get_top_edge();
-    void add_dirty_edge(RagEdge_uit* edge);
+    RagEdge_t* get_top_edge();
+    void add_dirty_edge(RagEdge_t* edge);
 
     int qlen(){ return ranking.size();}	
 
@@ -118,7 +118,7 @@ class MitoPriority : public MergePriority {
 
     double threshold;
     const double Epsilon;
-    typedef std::multimap<double, std::pair<Node_uit, Node_uit> > EdgeRank_t; 
+    typedef std::multimap<double, std::pair<Node_t, Node_t> > EdgeRank_t; 
     typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;

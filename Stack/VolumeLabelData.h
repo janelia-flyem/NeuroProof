@@ -12,14 +12,15 @@
 #include "VolumeData.h"
 #include <vector>
 #include <tr1/unordered_map>
+#include "../Utilities/Glb.h"
 
 namespace NeuroProof {
 
 class VolumeLabelData;
 
 // unsigned int is the default label data-type used -- this should
-// ideally be the same as the Node_uit type
-typedef unsigned int Label_t;
+// ideally be the same as the Node_t type
+typedef Index_t Label_t;
 typedef boost::shared_ptr<VolumeLabelData> VolumeLabelPtr; 
 
 /*!

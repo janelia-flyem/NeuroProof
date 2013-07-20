@@ -12,6 +12,7 @@
 #define RAGNODE_H
 
 #include "RagElement.h"
+#include "../Utilities/Glb.h"
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -353,10 +354,10 @@ class RagNode : public RagElement {
 };
 
 // default node type used for most of NeuroProof by default
-typedef unsigned int Node_uit;
+typedef Index_t Node_t;
 
 // default rag node type used for most of NeuroProof by default
-typedef RagNode<Node_uit> RagNode_uit; 
+typedef RagNode<Node_t> RagNode_t; 
 
 template<typename Region> unsigned long long RagNode<Region>::compute_border_length()  {
     unsigned long long count = 0;

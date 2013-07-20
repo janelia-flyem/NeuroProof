@@ -16,11 +16,11 @@ using std::vector;
 using std::tr1::unordered_map;
 using std::tr1::unordered_set;
 
-RagNode_uit* (Rag_uit::*find_rag_node_ptr)(Label_t) = &Rag_uit::find_rag_node;
-RagNode_uit* (Rag_uit::*insert_rag_node_ptr)(Label_t) = &Rag_uit::insert_rag_node;
-RagEdge_uit* (Rag_uit::*insert_rag_edge_ptr)(RagNode_uit*, RagNode_uit*) = &Rag_uit::insert_rag_edge;
-RagEdge_uit* (Rag_uit::*find_rag_edge_ptr1)(Label_t, Label_t) = &Rag_uit::find_rag_edge;
-RagEdge_uit* (Rag_uit::*find_rag_edge_ptr2)(RagNode_uit*, RagNode_uit*) = &Rag_uit::find_rag_edge;
+RagNode_t* (Rag_t::*find_rag_node_ptr)(Label_t) = &Rag_t::find_rag_node;
+RagNode_t* (Rag_t::*insert_rag_node_ptr)(Label_t) = &Rag_t::insert_rag_node;
+RagEdge_t* (Rag_t::*insert_rag_edge_ptr)(RagNode_t*, RagNode_t*) = &Rag_t::insert_rag_edge;
+RagEdge_t* (Rag_t::*find_rag_edge_ptr1)(Label_t, Label_t) = &Rag_t::find_rag_edge;
+RagEdge_t* (Rag_t::*find_rag_edge_ptr2)(RagNode_t*, RagNode_t*) = &Rag_t::find_rag_edge;
 
 // label volume should have a 1 pixel 0 padding surrounding it
 class StackControllerPython : public StackController {
@@ -42,7 +42,7 @@ class StackControllerPython : public StackController {
             throw ErrMsg("No label volume defined for stack");
         }
 
-        Rag_uit * rag = new Rag_uit;
+        Rag_t * rag = new Rag_t;
 
         vector<double> predictions(prob_list.size(), 0.0);
         unordered_set<Label_t> labels;
@@ -59,7 +59,7 @@ class StackControllerPython : public StackController {
                 continue;
             }
 
-            RagNode_uit * node = rag->find_rag_node(label);
+            RagNode_t * node = rag->find_rag_node(label);
 
             // create node
             if (!node) {
@@ -148,12 +148,12 @@ class StackControllerPython : public StackController {
                     }
                     assert(label0 != label1);
 
-                    RagNode_uit * node = rag->find_rag_node(label0);
+                    RagNode_t * node = rag->find_rag_node(label0);
                     if (!node) {
                         node = rag->insert_rag_node(label0);
                     }
 
-                    RagNode_uit * node2 = rag->find_rag_node(label1);
+                    RagNode_t * node2 = rag->find_rag_node(label1);
 
                     if (!node2) {
                         node2 = rag->insert_rag_node(label1);
@@ -226,11 +226,11 @@ class StackControllerPython : public StackController {
             return true;
         }
 
-        RagEdge_uit* edge = rag->find_rag_edge(body1, body2);
+        RagEdge_t* edge = rag->find_rag_edge(body1, body2);
 
         if (!edge) {
-            RagNode_uit* node1 = rag->find_rag_node(body1);
-            RagNode_uit* node2 = rag->find_rag_node(body2);
+            RagNode_t* node1 = rag->find_rag_node(body1);
+            RagNode_t* node2 = rag->find_rag_node(body2);
             edge = rag->insert_rag_edge(node1, node2);
             edge->set_weight(1.0);
             edge->set_false_edge(true);
@@ -246,7 +246,7 @@ class StackControllerPython : public StackController {
     }
 
     // adjust assuming the input has a 1 pixel padding
-    boost::python::tuple get_edge_loc(RagEdge_uit* edge)
+    boost::python::tuple get_edge_loc(RagEdge_t* edge)
     {
         if (best_edge_loc.find(edge) == best_edge_loc.end()) {
             throw ErrMsg("Edge location was not loaded!");
@@ -272,12 +272,12 @@ class StackControllerPython : public StackController {
         return get_stack()->get_feature_manager().get();
     }
 
-    Rag_uit* get_rag()
+    Rag_t* get_rag()
     {
         return get_stack()->get_rag().get();
     }
 
-    double get_edge_weight(RagEdge_uit* edge)
+    double get_edge_weight(RagEdge_t* edge)
     {
         return get_stack()->get_feature_manager()->get_prob(edge);
     }
@@ -287,7 +287,7 @@ class StackControllerPython : public StackController {
         get_stack()->get_feature_manager()->add_channel();
     }
 
-    bool is_orphan(RagNode_uit* node)
+    bool is_orphan(RagNode_t* node)
     {
         return !(node->is_boundary());
     }
@@ -314,60 +314,60 @@ class StackControllerPython : public StackController {
 
 class RagNode_edgeiterator_wrapper {
   public:
-    RagNode_edgeiterator_wrapper(RagNode_uit* rag_node_) : rag_node(rag_node_) {}
-    RagNode_uit::edge_iterator edge_begin()
+    RagNode_edgeiterator_wrapper(RagNode_t* rag_node_) : rag_node(rag_node_) {}
+    RagNode_t::edge_iterator edge_begin()
     {
         return rag_node->edge_begin();
     }
-    RagNode_uit::edge_iterator edge_end()
+    RagNode_t::edge_iterator edge_end()
     {
         return rag_node->edge_end();
     }
   private:
-    RagNode_uit* rag_node;
+    RagNode_t* rag_node;
 };
 
-RagNode_edgeiterator_wrapper ragnode_get_edges(RagNode_uit& rag_node) {
+RagNode_edgeiterator_wrapper ragnode_get_edges(RagNode_t& rag_node) {
     return RagNode_edgeiterator_wrapper(&rag_node);
 }
 
 
 class Rag_edgeiterator_wrapper {
   public:
-    Rag_edgeiterator_wrapper(Rag_uit* rag_) : rag(rag_) {}
-    Rag_uit::edges_iterator edges_begin()
+    Rag_edgeiterator_wrapper(Rag_t* rag_) : rag(rag_) {}
+    Rag_t::edges_iterator edges_begin()
     {
         return rag->edges_begin();
     }
-    Rag_uit::edges_iterator edges_end()
+    Rag_t::edges_iterator edges_end()
     {
         return rag->edges_end();
     }
   private:
-    Rag_uit* rag;
+    Rag_t* rag;
 };
 
-Rag_edgeiterator_wrapper rag_get_edges(Rag_uit& rag) {
+Rag_edgeiterator_wrapper rag_get_edges(Rag_t& rag) {
     return Rag_edgeiterator_wrapper(&rag);
 }
 
 
 class Rag_nodeiterator_wrapper {
   public:
-    Rag_nodeiterator_wrapper(Rag_uit* rag_) : rag(rag_) {}
-    Rag_uit::nodes_iterator nodes_begin()
+    Rag_nodeiterator_wrapper(Rag_t* rag_) : rag(rag_) {}
+    Rag_t::nodes_iterator nodes_begin()
     {
         return rag->nodes_begin();
     }
-    Rag_uit::nodes_iterator nodes_end()
+    Rag_t::nodes_iterator nodes_end()
     {
         return rag->nodes_end();
     }
   private:
-    Rag_uit* rag;
+    Rag_t* rag;
 };
 
-Rag_nodeiterator_wrapper rag_get_nodes(Rag_uit& rag)
+Rag_nodeiterator_wrapper rag_get_nodes(Rag_t& rag)
 {
     return Rag_nodeiterator_wrapper(&rag);
 }
@@ -405,7 +405,7 @@ StackControllerPython* init_stack()
     Stack* temp_stack = new Stack(emptypointer);
     temp_stack->set_feature_manager(FeatureMgrPtr(new FeatureMgr)); 
     StackControllerPython* controller = new StackControllerPython(temp_stack);
-    temp_stack->set_rag(RagPtr(new Rag_uit()));
+    temp_stack->set_rag(RagPtr(new Rag_t()));
     return controller;
 }
 
@@ -539,48 +539,48 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         ;
 
     // denormalized edge data structure (unique for a node pair)
-    class_<RagEdge_uit, boost::noncopyable>("RagEdge", no_init)
+    class_<RagEdge_t, boost::noncopyable>("RagEdge", no_init)
         // get first rag node connected to edge
-        .def("get_node1", &RagEdge_uit::get_node1, return_value_policy<reference_existing_object>()) 
+        .def("get_node1", &RagEdge_t::get_node1, return_value_policy<reference_existing_object>()) 
         // get second rag node connected to edge
-        .def("get_node2", &RagEdge_uit::get_node2, return_value_policy<reference_existing_object>()) 
+        .def("get_node2", &RagEdge_t::get_node2, return_value_policy<reference_existing_object>()) 
         // returns a double value for the weight
-        .def("get_weight", &RagEdge_uit::get_weight) 
+        .def("get_weight", &RagEdge_t::get_weight) 
         // set a double value for the weight
-        .def("set_weight", &RagEdge_uit::set_weight)
-        .def("is_preserve", &RagEdge_uit::is_preserve)
-        .def("is_false_edge", &RagEdge_uit::is_false_edge)
+        .def("set_weight", &RagEdge_t::set_weight)
+        .def("is_preserve", &RagEdge_t::is_preserve)
+        .def("is_false_edge", &RagEdge_t::is_false_edge)
         ;
     
     // denormalized node data structure (unique for a node id)
-    class_<RagNode_uit, boost::noncopyable>("RagNode", no_init)
+    class_<RagNode_t, boost::noncopyable>("RagNode", no_init)
         // number of nodes connected to node
-        .def("node_degree", &RagNode_uit::node_degree)
+        .def("node_degree", &RagNode_t::node_degree)
         // normalized, unique id for node (node_id, node_id is a normalized id for an edge)
-        .def("get_node_id", &RagNode_uit::get_node_id)
+        .def("get_node_id", &RagNode_t::get_node_id)
         // size as 64 bit unsigned
-        .def("get_size", &RagNode_uit::get_size)
+        .def("get_size", &RagNode_t::get_size)
         // size as 64 bit unsigned
-        .def("set_size", &RagNode_uit::set_size)
+        .def("set_size", &RagNode_t::set_size)
         // returns an iterator to the connected edges
         .def("get_edges", ragnode_get_edges)
         // returns an iterator to the connected nodes
-        .def("set_size", &RagNode_uit::set_size)
-        .def("__iter__", range<return_value_policy<reference_existing_object> >(&RagNode_uit::node_begin, &RagNode_uit::node_end))
+        .def("set_size", &RagNode_t::set_size)
+        .def("__iter__", range<return_value_policy<reference_existing_object> >(&RagNode_t::node_begin, &RagNode_t::node_end))
         ;
  
-    class_<Rag_uit>("Rag", init<>())
+    class_<Rag_t>("Rag", init<>())
         // copy constructor supported -- denormolized rag copied correctly, associated properties
         // added in python will just copy the object reference
-        .def(init<const Rag_uit&>())
+        .def(init<const Rag_t&>())
         // returns an interator to the nodes in the rag
         .def("get_edges", rag_get_edges)
         // returns an interator to the edges in the rag
         .def("get_nodes", rag_get_nodes)
         // returns the number of nodes 
-        .def("get_num_regions", &Rag_uit::get_num_regions)
+        .def("get_num_regions", &Rag_t::get_num_regions)
         // returns the number of edges 
-        .def("get_num_edges", &Rag_uit::get_num_edges)
+        .def("get_num_edges", &Rag_t::get_num_edges)
         // create a new node (return rag_node, params: unique unsigned int) 
         .def("insert_rag_node", insert_rag_node_ptr, return_value_policy<reference_existing_object>())
         // return rag node (return none or node, params: unique unsigned int)
@@ -592,9 +592,9 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         // insert a rag edge (return none or edge, params: rag node id 1, rag node id 2)
         .def("insert_rag_edge", insert_rag_edge_ptr, return_value_policy<reference_existing_object>())
         // delete rag edge and remove properties associated with edge (params: rag_edge)
-        .def("remove_rag_edge", &Rag_uit::remove_rag_edge)
+        .def("remove_rag_edge", &Rag_t::remove_rag_edge)
         // delete rag node and connecting edges and remove properties associated with them (params: rag_node)
-        .def("remove_rag_node", &Rag_uit::remove_rag_node)
+        .def("remove_rag_node", &Rag_t::remove_rag_node)
         ;
 
 

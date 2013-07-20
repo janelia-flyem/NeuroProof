@@ -31,7 +31,7 @@ namespace NeuroProof {
 */
 struct NodeRank {
     //! node id
-    Node_uit id;
+    Node_t id;
 
     //! the importance of the node encoded in a long value
     unsigned long long size;
@@ -66,7 +66,7 @@ class NodeRankList {
      * Checkpointing is initially disable.
      * \param rag_ pointer to RAG
     */
-    NodeRankList(Rag_uit* rag_) : rag(rag_), checkpoint(false) {}
+    NodeRankList(Rag_t* rag_) : rag(rag_), checkpoint(false) {}
 
     /*!
      * Insert node rank element into sorted list
@@ -102,7 +102,7 @@ class NodeRankList {
      * the given id.
      * \param id rag node id
     */
-    void remove(Node_uit id);
+    void remove(Node_t id);
    
     /*!
      * Remove element by using a rank element.
@@ -142,13 +142,13 @@ class NodeRankList {
     };
 
     //! pointer to RAG
-    Rag_uit* rag;
+    Rag_t* rag;
 
     //! ordered set of node rank elements (first element has largest 'size')
     std::set<NodeRank> node_list;
 
     //! mapping between id and rank element to allow flexible, quick deletion
-    std::tr1::unordered_map<Node_uit, NodeRank> stored_ids;
+    std::tr1::unordered_map<Node_t, NodeRank> stored_ids;
 
     //! enables checkpoint mechanisms when true
     bool checkpoint;
@@ -176,7 +176,7 @@ class NodeCentricRank : public EdgeRank {
      * Constructor that initializes the rag object and the node list.
      * \param rag_ pointer to RAG
     */
-    NodeCentricRank(Rag_uit* rag_) : EdgeRank(rag_), node_list(rag_) {}
+    NodeCentricRank(Rag_t* rag_) : EdgeRank(rag_), node_list(rag_) {}
    
     /*!
      * Handle whether the given edge (node pair) being examined
@@ -233,7 +233,7 @@ class NodeCentricRank : public EdgeRank {
      * \param head_node pointer to rag node
      * \return pointer to node with an uncertaint connection to the head node
     */
-    virtual RagNode_uit* find_most_uncertain_node(RagNode_uit* head_node) = 0;
+    virtual RagNode_t* find_most_uncertain_node(RagNode_t* head_node) = 0;
 
     /*!
      * Virtual function to be implemented by derived class.  The
@@ -241,7 +241,7 @@ class NodeCentricRank : public EdgeRank {
      * added into the node rank list.
      * \param node id of rag node
     */
-    virtual void insert_node(Node_uit node) = 0;
+    virtual void insert_node(Node_t node) = 0;
 
     /*!
      * Virtual function to be implemented by derived class. The
@@ -250,7 +250,7 @@ class NodeCentricRank : public EdgeRank {
      * nodes should be added and updated in the body rank list.
      * \param keep_node id of rag node that was just modified
     */
-    virtual void update_neighboring_nodes(Node_uit keep_node) = 0;
+    virtual void update_neighboring_nodes(Node_t keep_node) = 0;
 
     /*!
      * Determine the change in information in the rag between

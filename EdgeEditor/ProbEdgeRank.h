@@ -27,7 +27,7 @@ class ProbEdgeRank : public EdgeRank {
      * restrict the edges that are examined.
      * \param rag pointer to RAG
     */
-    ProbEdgeRank(Rag_uit* rag_) : EdgeRank(rag_), lower(0.1), upper(0.1),
+    ProbEdgeRank(Rag_t* rag_) : EdgeRank(rag_), lower(0.1), upper(0.1),
         start(0.1), ignore_size(1)  {}
   
     /*!
@@ -99,7 +99,7 @@ class ProbEdgeRank : public EdgeRank {
     void grab_edge_ranking();
    
     //! defines structure for ranking edges by weight
-    typedef std::multimap<double, RagEdge_uit* > EdgeRanking;
+    typedef std::multimap<double, RagEdge_t* > EdgeRanking;
 
     //! edge ranking used to prioritize uncertain/important edges
     EdgeRanking edge_ranking;

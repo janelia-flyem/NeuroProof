@@ -91,7 +91,7 @@ class EdgeEditor {
      * \param json_vals Parameters for running editor (lists which bodies
      * are orphans and which focused mode to use)
     */
-    EdgeEditor(Rag_uit& rag_, double min_val_, double max_val_,
+    EdgeEditor(Rag_t& rag_, double min_val_, double max_val_,
             double start_val_, Json::Value& json_vals); 
     
     /*!
@@ -154,7 +154,7 @@ class EdgeEditor {
      * \param threshold threshold below which violators are ignored
      * \return array of node ids
     */
-    std::vector<Node_uit> getQAViolators(unsigned int threshold);
+    std::vector<Node_t> getQAViolators(unsigned int threshold);
     void estimateWork();
 
     /*!
@@ -222,7 +222,7 @@ class EdgeEditor {
     bool undo2();
 
     //! Rag that will be examined with a focused strategy
-    Rag_uit& rag;
+    Rag_t& rag;
 
     /*!
      * Internal struct for maintaining node/edge information of
@@ -230,9 +230,9 @@ class EdgeEditor {
     */
     struct EdgeHistory {
         //! node1 id
-        Node_uit node1;
+        Node_t node1;
         //! node1 id
-        Node_uit node2;
+        Node_t node2;
         
         //! node1 size
         unsigned long long size1;
@@ -245,9 +245,9 @@ class EdgeEditor {
         unsigned long long bound_size2;
         
         //! nodes associated with node1
-        std::vector<Node_uit> node_list1;
+        std::vector<Node_t> node_list1;
         //! nodes associated with node2
-        std::vector<Node_uit> node_list2;
+        std::vector<Node_t> node_list2;
 
         //! property list for node1
         NodePropertyMap node_properties1;

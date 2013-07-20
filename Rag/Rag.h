@@ -228,8 +228,8 @@ class Rag {
 };
 
 // unsigned int Rag type used in primarily in downstream NeuroProof
-typedef Rag<Node_uit> Rag_uit;
-typedef boost::shared_ptr<Rag_uit> RagPtr;
+typedef Rag<Node_t> Rag_t;
+typedef boost::shared_ptr<Rag_t> RagPtr;
 
 
 template <typename Region> Rag<Region>::Rag()

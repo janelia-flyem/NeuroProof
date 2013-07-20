@@ -10,7 +10,7 @@ namespace NeuroProof {
 
 class FeatureCombine : public RagNodeCombineAlg {
   public:
-    FeatureCombine(FeatureMgr* feature_mgr_, Rag_uit* rag_) :
+    FeatureCombine(FeatureMgr* feature_mgr_, Rag_t* rag_) :
         feature_mgr(feature_mgr_), rag(rag_) {}
     
     virtual void post_edge_move(RagEdge<unsigned int>* edge_new,
@@ -39,7 +39,7 @@ class FeatureCombine : public RagNodeCombineAlg {
             RagNode<unsigned int>* node_remove)
     {
         if (feature_mgr) {
-            RagEdge_uit* edge = rag->find_rag_edge(node_keep, node_remove);
+            RagEdge_t* edge = rag->find_rag_edge(node_keep, node_remove);
             assert(edge);
             feature_mgr->merge_features(node_keep, node_remove);
             feature_mgr->remove_edge(edge);
@@ -48,14 +48,14 @@ class FeatureCombine : public RagNodeCombineAlg {
 
   protected:
     FeatureMgr* feature_mgr;
-    Rag_uit* rag;
+    Rag_t* rag;
 };
 
 
 
 class DelayedPriorityCombine : public FeatureCombine {
   public:
-    DelayedPriorityCombine(FeatureMgr* feature_mgr_, Rag_uit* rag_, MergePriority* priority_) :
+    DelayedPriorityCombine(FeatureMgr* feature_mgr_, Rag_t* rag_, MergePriority* priority_) :
         FeatureCombine(feature_mgr_, rag_), priority(priority_) {}
 
     void post_node_join(RagNode<unsigned int>* node_keep,
@@ -63,12 +63,12 @@ class DelayedPriorityCombine : public FeatureCombine {
     {
         FeatureCombine::post_node_join(node_keep, node_remove);
         
-        for(RagNode_uit::edge_iterator iter = node_keep->edge_begin();
+        for(RagNode_t::edge_iterator iter = node_keep->edge_begin();
                 iter != node_keep->edge_end(); ++iter) {
             priority->add_dirty_edge(*iter);
 
-            RagNode_uit* node = (*iter)->get_other_node(node_keep);
-            for(RagNode_uit::edge_iterator iter2 = node->edge_begin();
+            RagNode_t* node = (*iter)->get_other_node(node_keep);
+            for(RagNode_t::edge_iterator iter2 = node->edge_begin();
                     iter2 != node->edge_end(); ++iter2) {
                 priority->add_dirty_edge(*iter2);
             }
@@ -81,7 +81,7 @@ class DelayedPriorityCombine : public FeatureCombine {
 
 class PriorityQCombine : public FeatureCombine {
   public:
-    PriorityQCombine(FeatureMgr* feature_mgr_, Rag_uit* rag_,
+    PriorityQCombine(FeatureMgr* feature_mgr_, Rag_t* rag_,
             MergePriorityQueue<QE>* priority_) :
         FeatureCombine(feature_mgr_, rag_), priority(priority_) {}
 
@@ -122,13 +122,13 @@ class PriorityQCombine : public FeatureCombine {
     {
         FeatureCombine::post_node_join(node_keep, node_remove);
 
-        for(RagNode_uit::edge_iterator iter = node_keep->edge_begin();
+        for(RagNode_t::edge_iterator iter = node_keep->edge_begin();
                 iter != node_keep->edge_end(); ++iter) {
             double val = feature_mgr->get_prob(*iter);
             double prev_val = (*iter)->get_weight(); 
             (*iter)->set_weight(val);
-            Node_uit node1 = (*iter)->get_node1()->get_node_id();
-            Node_uit node2 = (*iter)->get_node2()->get_node_id();
+            Node_t node1 = (*iter)->get_node1()->get_node_id();
+            Node_t node2 = (*iter)->get_node2()->get_node_id();
 
             QE tmpelem(val, std::make_pair(node1,node2));	
 
@@ -157,7 +157,7 @@ class PriorityQCombine : public FeatureCombine {
 
 class FlatCombine : public FeatureCombine {
   public:
-    FlatCombine(FeatureMgr* feature_mgr_, Rag_uit* rag_,
+    FlatCombine(FeatureMgr* feature_mgr_, Rag_t* rag_,
             std::vector<QE>* priority_) :
         FeatureCombine(feature_mgr_, rag_), priority(priority_) {}
 

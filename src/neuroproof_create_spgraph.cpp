@@ -115,7 +115,7 @@ void generate_sp_graph(SpOptions& options)
     //RagPtr rag_base = stack.get_rag();
       
     /*    
-    for (Rag_uit::edges_iterator iter = rag_base->edges_begin();
+    for (Rag_t::edges_iterator iter = rag_base->edges_begin();
             iter != rag_base->edges_end(); ++iter) {
         //double weight = feature_manager->get_prob(*iter);
         double weight = 1.0;
@@ -128,24 +128,24 @@ void generate_sp_graph(SpOptions& options)
     cout << "Examined mitos" << endl;
     */
 
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         double val = feature_manager2->get_prob((*iter));
         (*iter)->set_weight(val);
 
-        Node_uit node1 = (*iter)->get_node1()->get_node_id();
-        Node_uit node2 = (*iter)->get_node2()->get_node_id();
+        Node_t node1 = (*iter)->get_node1()->get_node_id();
+        Node_t node2 = (*iter)->get_node2()->get_node_id();
 
         node1 = node1 % 200000; 
         node2 = node2 % 200000;
         if (node1 == node2) {
             (*iter)->set_weight(-1.0);
         /*} else { 
-            RagNode_uit* rn1 = rag_base->find_rag_node(node1);
-            RagNode_uit* rn2 = rag_base->find_rag_node(node2);
+            RagNode_t* rn1 = rag_base->find_rag_node(node1);
+            RagNode_t* rn2 = rag_base->find_rag_node(node2);
 
             assert(rn1 && rn2);
-            RagEdge_uit* rag_edge = rag_base->find_rag_edge(rn1, rn2);
+            RagEdge_t* rag_edge = rag_base->find_rag_edge(rn1, rn2);
             assert(rag_edge);
             if (rag_edge->get_weight() < 0) {
                 //val += (1 - val) / 2;
@@ -159,7 +159,7 @@ void generate_sp_graph(SpOptions& options)
     // write out graph json
     ofstream fout("graph.txt");
     
-    for (Rag_uit::edges_iterator iter = rag->edges_begin();
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         fout << (*iter)->get_node1()->get_node_id() << " "; 
         fout << (*iter)->get_node2()->get_node_id() << " ";

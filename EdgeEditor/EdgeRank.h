@@ -15,7 +15,7 @@
 namespace NeuroProof {
 
 //! define an edge as a pair of node ids
-typedef boost::tuple<Node_uit, Node_uit> NodePair;
+typedef boost::tuple<Node_t, Node_t> NodePair;
 
 /*!
  * EdgeRank is an abstract base class that defines the interface
@@ -30,7 +30,7 @@ class EdgeRank {
      * Constructor that initializes the rag object.
      * \param rag_ pointer to RAG
     */
-    EdgeRank(Rag_uit* rag_) : rag(rag_), num_processed(0) {}
+    EdgeRank(Rag_t* rag_) : rag(rag_), num_processed(0) {}
    
     /*!
      * Handle whether the given edge (node pair) being examined
@@ -96,7 +96,7 @@ class EdgeRank {
     virtual void update_priority() = 0;
 
     //! pointer to RAG generally assumed to have edges with weights
-    Rag_uit* rag;
+    Rag_t* rag;
 
     //! number of edge decisions (minus undos) performed
     int num_processed;
