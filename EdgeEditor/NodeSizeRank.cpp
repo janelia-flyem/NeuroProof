@@ -1,6 +1,6 @@
 #include "NodeSizeRank.h"
 #include "../Rag/RagUtils.h"
-#include "../DataStructures/AffinityPair.h"
+#include "../Utilities/AffinityPair.h"
 
 using namespace NeuroProof;
 

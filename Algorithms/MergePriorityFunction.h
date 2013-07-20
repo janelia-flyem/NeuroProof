@@ -4,7 +4,7 @@
 #include "../FeatureManager/FeatureManager.h"
 #include "../Rag/Rag.h"
 #include <tr1/unordered_set>
-#include "../DataStructures/AffinityPair.h"
+#include "../Utilities/AffinityPair.h"
 
 namespace NeuroProof {
 

@@ -15,7 +15,7 @@
 #define GPR_H
 
 #include "../Rag/Rag.h"
-#include "../DataStructures/AffinityPair.h"
+#include "../Utilities/AffinityPair.h"
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <queue>

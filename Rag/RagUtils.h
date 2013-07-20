@@ -8,7 +8,7 @@
 #ifndef RAGUTILS_H
 #define RAGUTILS_H
 
-#include "../DataStructures/AffinityPair.h"
+#include "../Utilities/AffinityPair.h"
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
 
