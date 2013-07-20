@@ -1,5 +1,5 @@
-#ifndef FEATUREMANAGER_H
-#define FEATUREMANAGER_H
+#ifndef FEATUREMGR_H
+#define FEATUREMGR_H
 
 #include <boost/python.hpp>
 
@@ -31,8 +31,16 @@ typedef std::tr1::unordered_map<RagNode_uit*, std::vector<void *>, RagNodePtrHas
 
 class FeatureMgr {
   public:
-    FeatureMgr() : num_channels(0), specified_features(false), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true), eclfr(0) {}
-    FeatureMgr(int num_channels_) : num_channels(num_channels_), specified_features(false), channels_features(num_channels_), channels_features_modes(num_channels_), channels_features_equal(num_channels_), has_pyfunc(false), overlap(false), num_features(0), overlap_threshold(11), overlap_max(true), eclfr(0) {}
+    FeatureMgr() : num_channels(0), specified_features(false),
+        has_pyfunc(false), overlap(false), num_features(0),
+        overlap_threshold(11), overlap_max(true), eclfr(0) {}
+    
+    FeatureMgr(int num_channels_) : num_channels(num_channels_), 
+        specified_features(false), channels_features(num_channels_),
+        channels_features_modes(num_channels_),
+        channels_features_equal(num_channels_), has_pyfunc(false),
+        overlap(false), num_features(0), overlap_threshold(11),
+        overlap_max(true), eclfr(0) {}
     
     void add_channel();
     unsigned int get_num_features()
@@ -58,23 +66,12 @@ class FeatureMgr {
         overlap_max = false;
     }
 
-    unsigned int get_num_channels()
+    unsigned int get_num_channels() const
     {
         return num_channels;
     }
 
-#ifndef SETPYTHON
-    void set_basic_features()
-    {
-        double hist_percentiles[]={0.1, 0.3, 0.5, 0.7, 0.9};
-        std::vector<double> percentiles(hist_percentiles,
-            hist_percentiles+sizeof(hist_percentiles)/sizeof(double));		
-
-        // ** for Toufiq's version ** feature_mgr->add_inclusiveness_feature(true);  	
-        add_moment_feature(4,true);	
-        add_hist_feature(25,percentiles,false); 	
-    }
-#endif
+    void set_basic_features();
 
     void add_val(double val, RagNode_uit* node)
     {
@@ -134,31 +131,9 @@ class FeatureMgr {
         } 
     }
 
-    void mv_features(RagEdge_uit* edge2, RagEdge_uit* edge1)
-    {
-        edge1->set_size(edge2->get_size());
-        if (edge_caches.find(edge2) != edge_caches.end()) {
-            edge_caches[edge1] = edge_caches[edge2];
-            edge_caches.erase(edge2);        
-        }
-    } 
+    void mv_features(RagEdge_uit* edge2, RagEdge_uit* edge1);
 
-    void remove_edge(RagEdge_uit* edge)
-    {
-        if (edge_caches.find(edge) != edge_caches.end()) {
-            std::vector<void*>& edge_vec = edge_caches[edge];
-            assert(edge_vec.size() > 0);
-            unsigned int pos = 0;
-            for (int i = 0; i < num_channels; ++i) {
-                vector<FeatureCompute*>& features = channels_features[i];
-                for (int j = 0; j < features.size(); ++j) {
-                    features[j]->delete_cache(edge_vec[pos]);
-                    ++pos;
-                } 
-            }
-            edge_caches.erase(edge);
-        }
-    }
+    void remove_edge(RagEdge_uit* edge);
 
     void remove_node(RagNode_uit* node)
     {

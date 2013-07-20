@@ -1,7 +1,7 @@
 #ifndef MERGEPRIORITYFUNCTION_H
 #define MERGEPRIORITYFUNCTION_H
 
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "../Rag/Rag.h"
 #include <tr1/unordered_set>
 #include "../Utilities/AffinityPair.h"

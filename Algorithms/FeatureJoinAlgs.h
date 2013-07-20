@@ -1,7 +1,7 @@
 #ifndef FEATUREJOINALGS_H
 #define FEATUREJOINALGS_H
 
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "MergePriorityFunction.h"
 #include "MergePriorityQueue.h"
 #include "../Rag/RagNodeCombineAlg.h"

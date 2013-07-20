@@ -19,6 +19,11 @@ void FeatureHist::copy_cache(void * src, void* dest) {
 
 }
 
+void FeatureHist::print_name()
+{
+    cout << endl << "Histogram Feature" << endl;
+}
+
 void FeatureHist::print_cache(void* pcache ){
 
     HistCache* hc = (HistCache*) pcache	;
@@ -199,103 +204,147 @@ void FeatureMoment::get_data(MomentCache * moment_cache, std::vector<double>& fe
         } 
 }
 
+void FeatureMoment::print_name()
+{
+    cout << endl << "Moment Feature" << endl;
+}
 
 // ********************************************************************************************************
 
 
-void FeatureInclusiveness::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num){
-        RagNode_uit* node1 = edge->get_node1();
-        RagNode_uit* node2 = edge->get_node2();
+void FeatureInclusiveness::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num)
+{
+    RagNode_uit* node1 = edge->get_node1();
+    RagNode_uit* node2 = edge->get_node2();
 
-        if (node2->get_size() < node1->get_size()) {
-            RagNode_uit* temp_node = node2;
-            node2 = node1;
-            node1 = temp_node;
-        }            
-       
-        if (node_num == 1) {//for node1
-            get_node_features(node1, feature_array);
-            return;
-        } else if (node_num == 2) {//for node2
-            get_node_features(node2, feature_array);
-            return;
-        }
-   	//for edge
-        std::set<unsigned long long> lengths1;
-        std::set<unsigned long long> lengths2;
-        
-        unsigned long long tot1 = get_lengths(node1, lengths1); 
-        unsigned long long tot2 = get_lengths(node2, lengths2); 
-        unsigned long long edge_tot = edge->get_size();
+    if (node2->get_size() < node1->get_size()) {
+        RagNode_uit* temp_node = node2;
+        node2 = node1;
+        node1 = temp_node;
+    }            
 
-        double f1 = double(edge_tot)/tot1;
-        double f2 = double(edge_tot)/tot2;
+    if (node_num == 1) {//for node1
+        get_node_features(node1, feature_array);
+        return;
+    } else if (node_num == 2) {//for node2
+        get_node_features(node2, feature_array);
+        return;
+    }
+    //for edge
+    std::set<unsigned long long> lengths1;
+    std::set<unsigned long long> lengths2;
 
-        if (f1 < f2) {
-            feature_array.push_back(f1);
-            feature_array.push_back(f2);
-        } else {
-            feature_array.push_back(f2);
-            feature_array.push_back(f1);
-        }
+    unsigned long long tot1 = get_lengths(node1, lengths1); 
+    unsigned long long tot2 = get_lengths(node2, lengths2); 
+    unsigned long long edge_tot = edge->get_size();
 
-        double fm1 = double(edge_tot)/(*(lengths1.rbegin()));
-        double fm2 = double(edge_tot)/(*(lengths2.rbegin()));
+    double f1 = double(edge_tot)/tot1;
+    double f2 = double(edge_tot)/tot2;
 
-        if (fm1 < fm2) {
-            feature_array.push_back(fm1);
-            feature_array.push_back(fm2);
-        } else {
-            feature_array.push_back(fm2);
-            feature_array.push_back(fm1);
-        }
-    } 
-
-void  FeatureInclusiveness::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge){
-        RagNode_uit* node1 = edge->get_node1();
-        RagNode_uit* node2 = edge->get_node2();
-
-        if (node2->get_size() < node1->get_size()) {
-            RagNode_uit* temp_node = node2;
-            node2 = node1;
-            node1 = temp_node;
-        }            
-        std::vector<double> temp_features1;
-        std::vector<double> temp_features2;
-
-        get_node_features(node1, temp_features1);
-        get_node_features(node2, temp_features2);
-    
-        feature_array.push_back(temp_features1[0]-temp_features2[0]);
-        feature_array.push_back(temp_features1[1]-temp_features2[1]);
-    } 
-
-unsigned long long FeatureInclusiveness::get_lengths(RagNode_uit* node, std::set<unsigned long long>& lengths) {
-        unsigned long long count = 0;
-        for (RagNode_uit::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
-            if ((*iter)->is_false_edge()) {
-                continue;
-            }
-            count += (*iter)->get_size();
-            lengths.insert((*iter)->get_size()); 
-        }
-        count += (node->get_boundary_size());
-        lengths.insert(node->get_boundary_size());
-        return count;
+    if (f1 < f2) {
+        feature_array.push_back(f1);
+        feature_array.push_back(f2);
+    } else {
+        feature_array.push_back(f2);
+        feature_array.push_back(f1);
     }
 
-void FeatureInclusiveness::get_node_features(RagNode_uit* node, std::vector<double>& features){
-        std::set<unsigned long long> lengths;
-        unsigned long long tot = get_lengths(node, lengths);
-        
-        std::set<unsigned long long>::reverse_iterator iter = lengths.rbegin();
-        unsigned long long max_val = *iter;
-        ++iter;
-        unsigned long long second_max_val = *iter;
+    double fm1 = double(edge_tot)/(*(lengths1.rbegin()));
+    double fm2 = double(edge_tot)/(*(lengths2.rbegin()));
 
-        features.push_back(double(max_val)/tot);
-        features.push_back(double(second_max_val)/max_val);
+    if (fm1 < fm2) {
+        feature_array.push_back(fm1);
+        feature_array.push_back(fm2);
+    } else {
+        feature_array.push_back(fm2);
+        feature_array.push_back(fm1);
     }
+} 
 
+void  FeatureInclusiveness::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge)
+{
+    RagNode_uit* node1 = edge->get_node1();
+    RagNode_uit* node2 = edge->get_node2();
 
+    if (node2->get_size() < node1->get_size()) {
+        RagNode_uit* temp_node = node2;
+        node2 = node1;
+        node1 = temp_node;
+    }            
+    std::vector<double> temp_features1;
+    std::vector<double> temp_features2;
 
+    get_node_features(node1, temp_features1);
+    get_node_features(node2, temp_features2);
+
+    feature_array.push_back(temp_features1[0]-temp_features2[0]);
+    feature_array.push_back(temp_features1[1]-temp_features2[1]);
+} 
+
+unsigned long long FeatureInclusiveness::get_lengths(RagNode_uit* node, std::set<unsigned long long>& lengths) 
+{
+    unsigned long long count = 0;
+    for (RagNode_uit::edge_iterator iter = node->edge_begin(); iter != node->edge_end(); ++iter) {
+        if ((*iter)->is_false_edge()) {
+            continue;
+        }
+        count += (*iter)->get_size();
+        lengths.insert((*iter)->get_size()); 
+    }
+    count += (node->get_boundary_size());
+    lengths.insert(node->get_boundary_size());
+    return count;
+}
+
+void FeatureInclusiveness::get_node_features(RagNode_uit* node, std::vector<double>& features)
+{
+    std::set<unsigned long long> lengths;
+    unsigned long long tot = get_lengths(node, lengths);
+
+    std::set<unsigned long long>::reverse_iterator iter = lengths.rbegin();
+    unsigned long long max_val = *iter;
+    ++iter;
+    unsigned long long second_max_val = *iter;
+
+    features.push_back(double(max_val)/tot);
+    features.push_back(double(second_max_val)/max_val);
+}
+
+void FeatureInclusiveness::print_name()
+{
+    cout << endl << "Inclusiveness Feature" << endl;
+}
+
+void FeatureCount::add_point(double val, void * cache, unsigned int x, unsigned int y, unsigned int z)
+{
+    CountCache * count_cache = (CountCache*) cache;
+    count_cache->count += 1;
+}
+
+void FeatureCount::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num)
+{
+    CountCache * count_cache = (CountCache*) cache;
+    feature_array.push_back(count_cache->count);
+} 
+
+void FeatureCount::get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge)
+{
+    CountCache * count_cache1 = (CountCache*) cache1;
+    CountCache * count_cache2 = (CountCache*) cache2;
+
+    feature_array.push_back(std::abs(count_cache1->count - count_cache2->count));
+} 
+
+void FeatureCount::merge_cache(void * cache1, void * cache2)
+{
+    CountCache * count_cache1 = (CountCache*) cache1;
+    CountCache * count_cache2 = (CountCache*) cache2;
+
+    count_cache1->count += count_cache2->count;
+    delete count_cache2;
+}
+
+void FeatureCount::print_name()
+{
+    cout << endl << "Count Feature" << endl;
+}

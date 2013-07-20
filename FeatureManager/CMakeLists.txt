@@ -10,7 +10,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET(CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-set (SOURCES FeatureManager.cpp Features.cpp)
+set (SOURCES FeatureMgr.cpp Features.cpp)
 
 include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
 

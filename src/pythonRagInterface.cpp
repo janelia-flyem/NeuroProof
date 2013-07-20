@@ -1,4 +1,4 @@
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "../Rag/Rag.h"
 #include "../Rag/RagIO.h"
 #include "../Utilities/ErrMsg.h"

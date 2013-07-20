@@ -19,7 +19,7 @@
 */
 
 // feature manager
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 
 // controller for stack containing label volume and rag
 #include "../BioPriors/BioStackController.h"

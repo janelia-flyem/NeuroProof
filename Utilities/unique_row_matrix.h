@@ -12,87 +12,98 @@ using namespace std;
 struct vectorcomp {
     bool operator() (const vector<double>& lhs, const vector<double>& rhs) const
     {
+        for(size_t i = 0 ; i < lhs.size()-1 ; i++){
+            if ( fabs(lhs[i] - rhs[i]) > DBL_EPSILON){
+                if (lhs[i] > rhs[i])
+                    return false; 
+                else
+                    return true; 	
+            }
+        }		
 
-	for(size_t i = 0 ; i < lhs.size()-1 ; i++){
-	    if ( fabs(lhs[i] - rhs[i]) > DBL_EPSILON){
-	        if (lhs[i] > rhs[i])
-		    return false; 
-		else
-		   return true; 	
-	    }
-	}		
-	
     }
 };
 
 
-class UniqueRowMatrix{
-
-    set< vector<double>, vectorcomp >& get_set(){return _rows;};	
-
-protected:
-    set< vector<double>, vectorcomp > _rows ;
-    size_t _nrows;
-    size_t _ncols;	
-public:	
-    UniqueRowMatrix(): _nrows(0), _ncols(0) { _rows.clear();}	
+class UniqueRowMatrix {
+  public:	
+    UniqueRowMatrix(): _nrows(0), _ncols(0)
+    {
+        _rows.clear();
+    }	
 
     int insert(const vector<double>& newrow)
     {
-	size_t prev_nrows = _nrows;
-	if (_ncols>0 && _ncols != newrow.size()){
-	    printf("vector size mismatch\n");
-	    return 0;
-	}
-	_rows.insert(newrow);
-	_nrows = _rows.size();
-	_ncols = (_rows.begin())->size();
-	if (_nrows > prev_nrows)
-	    return 1;
-	else return 0;
+        size_t prev_nrows = _nrows;
+        if (_ncols>0 && _ncols != newrow.size()){
+            printf("vector size mismatch\n");
+            return 0;
+        }
+        _rows.insert(newrow);
+        _nrows = _rows.size();
+        _ncols = (_rows.begin())->size();
+        if (_nrows > prev_nrows)
+            return 1;
+        else return 0;
     }	
-    void get_matrix(vector< vector<double> >& rmatrix){
-	rmatrix.clear(); 
-	rmatrix.resize(_nrows); 
+   
+    void get_matrix(vector< vector<double> >& rmatrix)
+    {
+        rmatrix.clear(); 
+        rmatrix.resize(_nrows); 
 
-	set< vector<double>, vectorcomp >::iterator sit;
-	int rr=0;
-	for(sit = _rows.begin(); sit != _rows.end(); sit++, rr++){
-	    rmatrix[rr].resize(_ncols);	
-	    for(size_t j = 0; j< sit->size(); j++ )
-		rmatrix[rr][j] = sit->at(j);
-	}
-    }	
-
-    void get_vector( vector<double>& rvector){
-	rvector.clear(); 
-	rvector.resize(_nrows*_ncols);
-
-	set< vector<double>, vectorcomp >::iterator sit;
-	size_t rr=0;
-	for(sit = _rows.begin(); sit != _rows.end(); sit++){
-	    for(size_t j = 0; j< sit->size(); j++, rr++ )
-		rvector[rr] = sit->at(j);
-	}
+        set< vector<double>, vectorcomp >::iterator sit;
+        int rr=0;
+        for(sit = _rows.begin(); sit != _rows.end(); sit++, rr++){
+            rmatrix[rr].resize(_ncols);	
+            for(size_t j = 0; j< sit->size(); j++ )
+                rmatrix[rr][j] = sit->at(j);
+        }
     }	
 
+    void get_vector( vector<double>& rvector)
+    {
+        rvector.clear(); 
+        rvector.resize(_nrows*_ncols);
 
-    virtual void print_matrix(){
-	set< vector<double>, vectorcomp >::iterator sit;
-	for(sit = _rows.begin(); sit != _rows.end(); sit++){
-	    for(size_t j=0; j< sit->size(); j++)
-		printf("%lf ", sit->at(j));
-	    printf("\n");
-	}	
+        set< vector<double>, vectorcomp >::iterator sit;
+        size_t rr=0;
+        for(sit = _rows.begin(); sit != _rows.end(); sit++){
+            for(size_t j = 0; j< sit->size(); j++, rr++ )
+                rvector[rr] = sit->at(j);
+        }
+    }	
+
+    virtual void print_matrix()
+    {
+        set< vector<double>, vectorcomp >::iterator sit;
+        for(sit = _rows.begin(); sit != _rows.end(); sit++){
+            for(size_t j=0; j< sit->size(); j++)
+                printf("%lf ", sit->at(j));
+            printf("\n");
+        }	
     }
 
-    size_t nrows(){return _nrows;};	
-
-    void clear(){
-	_rows.clear();
-	_nrows = 0;
- 	_ncols = 0;
+    size_t nrows()
+    {
+        return _nrows;
     }
+
+    void clear()
+    {
+        _rows.clear();
+        _nrows = 0;
+        _ncols = 0;
+    }
+
+  protected:
+    set< vector<double>, vectorcomp > _rows ;
+    size_t _nrows;
+    size_t _ncols;	
+
+  
+  private:
+    set< vector<double>, vectorcomp >& get_set(){return _rows;};	
 };
 
 class UniqueRowFeature_Label: public UniqueRowMatrix{
@@ -117,15 +128,8 @@ public:
 
 }; 
 
-class UniqueRowMatrix_Chull: public UniqueRowMatrix{
-
-    set<double> ux;
-    set<double> uy;
-    set<double> uz;
-
-public:
-	
-
+class UniqueRowMatrix_Chull: public UniqueRowMatrix {
+  public:
     int insert(const vector<double>& newrow){
 
 	if (ux.size()<2)
@@ -157,5 +161,12 @@ public:
 	for(sit = another_set.begin(); sit != another_set.end(); sit++)
 	    insert(*sit);		
     }
+
+  private:
+    set<double> ux;
+    set<double> uy;
+    set<double> uz;
+
+
 };
 #endif

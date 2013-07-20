@@ -1,4 +1,4 @@
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "BioStackController.h"
 #include "MitoTypeProperty.h"
 

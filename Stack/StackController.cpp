@@ -1,4 +1,4 @@
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "StackController.h"
 #include "../Rag/RagUtils.h"
 #include "../Algorithms/FeatureJoinAlgs.h"

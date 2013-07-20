@@ -1,4 +1,4 @@
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "../BioPriors/BioStackController.h"
 
 #include "../Utilities/ScopeTime.h"

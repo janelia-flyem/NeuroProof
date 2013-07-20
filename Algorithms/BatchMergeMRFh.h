@@ -1,7 +1,13 @@
+/*!
+ * Agglomeration ordering algorithm.
+ *
+ * \author Toufiq Parag (paragt@janelia.hhmi.org)
+*/
+
 #ifndef _BATCH_MERGE_MRFh
 #define _BATCH_MERGE_MRFh
 
-#include "../FeatureManager/FeatureManager.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include <vector>
 #include "../Rag/Rag.h"
 
@@ -11,10 +17,27 @@
 using namespace std;
 using namespace NeuroProof;
 
-
-
 class BatchMergeMRFh{
+  public:
+    BatchMergeMRFh(Rag_uit* prag, FeatureMgr* pfmgr,
+            multimap<Node_uit, Node_uit>* assignment,
+            double pthd=0.5, size_t psz=4);
 
+    double compute_merge_prob( int iterCount, std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string wts_path, string analysis_path);	
+    void generate_subsets(RagNode_uit* pnode);
+    void compute_subset_cost(RagNode_uit* pnode, set<Node_uit>& subset);
+    double merge_by_config(vector<int>& config, vector<Node_uit>& subset);
+    double merge_by_order(vector<int>& config, vector<Node_uit>& subset, vector<int>& morder);
+    void build_srag(RagNode_uit* pnode, set<Node_uit>& subset);
+    int oneDaddress(int rr, int cc, int nCols);
+    void ComputeTempIndex(vector< vector<int> > &tupleLabelMat,int nClass,int tupleSz);
+    void read_and_set_tree_weights(string sol_fname, vector<double>& tree_wts);
+    double refine_edge_weights(std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string tmp_filename);
+
+    void write_in_file(const char *filename);
+    int get_gt(RagEdge_uit* pedge);
+  
+  private:
     Rag_uit* _rag;
 
     Rag_uit* _srag;
@@ -40,42 +63,6 @@ class BatchMergeMRFh{
     double _update_belief, _bthd;	 	
 
     multimap<int, vector< vector<int> > > _configList;
-public:
-    BatchMergeMRFh(Rag_uit* prag, FeatureMgr* pfmgr, multimap<Node_uit, Node_uit>* assignment, double pthd=0.5, size_t psz=4): _rag(prag), _feature_mgr(pfmgr), _subsetSz(psz), _thd(pthd) {
-
-        _assignment = assignment;
-	if (_subsetSz==2){
-	    _labelConfig.resize(2*_subsetSz);
-	    _labelConfig[0].resize(_subsetSz); _labelConfig[0][0]=MERGE; _labelConfig[0][1] = MERGE;	
-	    _labelConfig[1].resize(_subsetSz); _labelConfig[1][0]=KEEP; _labelConfig[1][1] = MERGE;	
-	    _labelConfig[2].resize(_subsetSz); _labelConfig[2][0]=MERGE; _labelConfig[2][1] = KEEP;	
-	    _labelConfig[3].resize(_subsetSz); _labelConfig[3][0]=KEEP; _labelConfig[3][1] = KEEP;	
-	}
-
-	_srag = new Rag_uit();
-	_sfeature_mgr = new FeatureMgr();
-	_sfeature_mgr->copy_channel_features(_feature_mgr);
-	_sfeature_mgr->set_classifier(_feature_mgr->get_classifier());
-	for(int i=2; i<= _subsetSz; i++){
-    	    vector< vector<int> > allConfig;
-            ComputeTempIndex(allConfig, 2, i);	
-	    _configList.insert(make_pair(i, allConfig));	
-	}
-    };
-
-    double compute_merge_prob( int iterCount, std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string wts_path, string analysis_path);	
-    void generate_subsets(RagNode_uit* pnode);
-    void compute_subset_cost(RagNode_uit* pnode, set<Node_uit>& subset);
-    double merge_by_config(vector<int>& config, vector<Node_uit>& subset);
-    double merge_by_order(vector<int>& config, vector<Node_uit>& subset, vector<int>& morder);
-    void build_srag(RagNode_uit* pnode, set<Node_uit>& subset);
-    int oneDaddress(int rr, int cc, int nCols);
-    void ComputeTempIndex(vector< vector<int> > &tupleLabelMat,int nClass,int tupleSz);
-    void read_and_set_tree_weights(string sol_fname, vector<double>& tree_wts);
-    double refine_edge_weights(std::vector< std::pair<Node_uit, Node_uit> >& allEdges, string tmp_filename);
-
-    void write_in_file(const char *filename);
-    int get_gt(RagEdge_uit* pedge);
 };
 
 #endif

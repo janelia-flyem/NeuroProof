@@ -1,7 +1,6 @@
 #ifndef FEATURES_H
 #define FEATURES_H
 
-#include <iostream>
 #include "FeatureCache.h"
 #include "../Utilities/ErrMsg.h"
 #include "../Rag/RagEdge.h"
@@ -37,7 +36,7 @@ class FeatureHist : public FeatureCompute {
     void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num);
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge);
     void merge_cache(void * cache1, void * cache2);
-    void print_name() {std::cout << std::endl << "Histogram Feature" << std::endl;}	
+    void print_name();	
     void print_cache(void* pcache);
 
   private:
@@ -62,7 +61,7 @@ class FeatureMoment : public FeatureCompute {
     void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num);
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge);
     void merge_cache(void * cache1, void * cache2);
-    void print_name(){std::cout << std::endl << "Moment Feature" << std::endl;}
+    void print_name();
     void print_cache(void* pcache);
 
   private:
@@ -79,17 +78,15 @@ class FeatureInclusiveness : public FeatureCompute {
     {
         return 0;
     }
-    
     void delete_cache(void * cache)
     {
         return;
     }
-
     void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
     {
         return;
     }
-    void copy_cache(void* src, void* dest){};  	
+    void copy_cache(void* src, void* dest) {};  	
    
     void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num);
     void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge);
@@ -99,8 +96,8 @@ class FeatureInclusiveness : public FeatureCompute {
         return;
     }
     
-    void print_name(){std::cout << std::endl << "Inclusiveness Feature" << std::endl;}
-    void print_cache(void* pcache){}		
+    void print_name();
+    void print_cache(void* pcache) {}
 
   private:
     void get_node_features(RagNode_uit* node, std::vector<double>& features);
@@ -116,43 +113,25 @@ class FeatureCount : public FeatureCompute {
     {
         return (void*)(new CountCache());
     }
-    void copy_cache(void* src, void* dest){((CountCache*)dest)->count = ((CountCache*)src)->count;};  	
-    
+    void copy_cache(void* src, void* dest)
+    {
+        ((CountCache*)dest)->count = ((CountCache*)src)->count;
+    } 	
     void delete_cache(void * cache)
     {
         delete (CountCache*)(cache);
     }
 
-    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0)
-    {
-        CountCache * count_cache = (CountCache*) cache;
-        count_cache->count += 1;
-    }
+    void add_point(double val, void * cache, unsigned int x = 0, unsigned int y = 0, unsigned int z = 0);
     
-    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num)
-    {
-        CountCache * count_cache = (CountCache*) cache;
-        feature_array.push_back(count_cache->count);
-    } 
+    void get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_uit* edge, unsigned int node_num);
 
-    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge)
-    {
-        CountCache * count_cache1 = (CountCache*) cache1;
-        CountCache * count_cache2 = (CountCache*) cache2;
+    void  get_diff_feature_array(void* cache2, void * cache1, std::vector<double>& feature_array, RagEdge_uit* edge);
 
-        feature_array.push_back(std::abs(count_cache1->count - count_cache2->count));
-    } 
-
-    void merge_cache(void * cache1, void * cache2)
-    {
-        CountCache * count_cache1 = (CountCache*) cache1;
-        CountCache * count_cache2 = (CountCache*) cache2;
-
-        count_cache1->count += count_cache2->count;
-        delete count_cache2;
-    }
-    void print_name(){std::cout << std::endl << "Count Feature" << std::endl;}
-    void print_cache(void *pcache){}	
+    void merge_cache(void * cache1, void * cache2);
+    
+    void print_name();
+    void print_cache(void *pcache) {}	
 };
 
 
