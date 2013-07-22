@@ -1,4 +1,5 @@
-# NeuroProof 1.1 -- Toolkit for Graph-based Image Segmentation and Analysis
+# NeuroProof 1.1
+##Toolkit for Graph-based Image Segmentation and Analysis
 
 The NeuroProof software is an image segmentation tool currently being used
 in [the FlyEM project at Janelia Farm Research Campus](http://janelia.org/team-project/fly-em)
@@ -9,8 +10,7 @@ of EM reconstruction, we believe it to be widely applicable to other
 application domains.  In addition, to graph agglomeration tools, this
 package also provides routines for estimating the uncertainty of a segmentation
 [Plaza, et al '12](http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448)
-and mechanisms to comparing with ground truth.  This package shares many
-ideas from [Gala](https://github.com/janelia-flyem/gala).
+and mechanisms to comparing with ground truth.
 
 ###Features
 
@@ -21,17 +21,22 @@ ideas from [Gala](https://github.com/janelia-flyem/gala).
 * Tools to assess the amount of work required to edit/revise a segmentation
 * Simple and access-efficient graph-library implementation and straightforward conversion
 to powerful boost graph library
-* Data stack implementation that allows one leverage image processing
+* Data stack implementation that allows one to leverage image processing
 algorithms in [Vigra](http://hci.iwr.uni-heidelberg.de/vigra)
 * Python bindings to enable accessing the Rag, segmentation routines, and
-editing operations in various tool environments like in Gala and [Raveler](https://openwiki.janelia.org/wiki/display/flyem/Raveler)
+editing operations in various tool environments like in [Gala](https://github.com/janelia-flyem/gala) and [Raveler](https://openwiki.janelia.org/wiki/display/flyem/Raveler)
 
 
 ## Installation Instructions
 
 NeuroProof is currently only supported on linux operating systems.  It probably
-would be relatively straightforward to build on a MacOS.  NeuroProof
-supports two mechanisms for installation.
+would be relatively straightforward to build on a MacOS.  Documentation
+in NeuroProof follow Doxygen comment conventions; an html view can be created
+by running the following command:
+
+    % doxygen doxygenconfig.file
+
+NeuroProof supports two mechanisms for installation:
 
 ### Buildem
 
@@ -77,13 +82,13 @@ consult buildem.
 
 To run <i>make test</i>, the installed libraries will need to be in the default
 library search path or set in LD_LIBRARY_PATH.  The PYTHONPATH environment
-variable will need to be set to the lib directory create within NeuroProof.  The
-binaries produced will be placed in the NeuroProof bin directory.
+variable will need to be set to the lib directory created within NeuroProof.  The
+binaries produced will be placed in the NeuroProof <i>bin</i> directory.
 
 ## NeuroProof Examples
 
 The top-level programs that are built in NeuroProof are defined
-in the src/ directory.  NeuroProof's capabilities are mainly 
+in the <i>src/</i> directory.  NeuroProof's capabilities are mainly 
 accessed via command-line executables.  A subset of these capabilities
 are exposed in a python interface.  For some examples on how
 to run the tool, please consult the 'examples' directory.  If you
