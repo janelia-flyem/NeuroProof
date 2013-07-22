@@ -12,7 +12,8 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES opencvABclassifier.cpp opencvRFclassifier.cpp opencvSVMclassifier.cpp vigraRFclassifier.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include)
-
 add_library (Classifier SHARED ${SOURCES})
-add_dependencies (Classifier ${vigra_NAME} ${opencv_NAME})
+
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (Classifier ${vigra_NAME} ${opencv_NAME})
+endif()

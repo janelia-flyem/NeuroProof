@@ -12,11 +12,11 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES BioStackController.cpp StackAgglomAlgs.cpp StackLearnAlgs.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
-
 add_library (BioPriors SHARED ${SOURCES})
-add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES})
 
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME})
+endif()
 
 #add_executable (stack_test stack_test.cpp)
 #add_dependencies (stack_test ${vigra_NAME} ${boost_NAME} ${hdf5_LIBRARIES})

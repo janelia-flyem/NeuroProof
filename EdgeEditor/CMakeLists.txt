@@ -7,9 +7,9 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 set (SOURCES EdgeEditor.cpp NodeCentricRank.cpp NodeSizeRank.cpp OrphanRank.cpp SynapseRank.cpp ProbEdgeRank.cpp GPR.cpp)
 
-# TODO: remove explicit dependency on buildem 
-include_directories (BEFORE ${BUILDEM_DIR}/include ${PYTHON_INCLUDE_PATH})
-
 add_library (EdgeEditor SHARED ${SOURCES})
-add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME})
+
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME})
+endif()
 

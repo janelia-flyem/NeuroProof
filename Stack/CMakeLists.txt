@@ -12,25 +12,32 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES VolumeLabelData.cpp StackController.cpp)
 
-include_directories (BEFORE ${FLYEM_BUILD_DIR}/include ${PYTHON_INCLUDE_PATH})
-
-
 add_library (Stack SHARED ${SOURCES})
 add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES})
 
-# TODO: prevent default unit test build
-# build unit test in main build by default
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)
-add_dependencies (basic_stack_test ${boost_NAME} ${vigra_NAME} ${hdf5_NAMES})
-target_link_libraries (basic_stack_test ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so ${hdf5_LIBRARIES} ${boost_LIBS} ${vigra_LIB} ${PYTHON_LIBRARY_FILE})
+
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (basic_stack_test ${boost_NAME} ${vigra_NAME} ${hdf5_NAMES})
+endif()
+
+target_link_libraries (basic_stack_test ${hdf5_LIBRARIES} ${boost_LIBS} ${vigra_LIB} ${PYTHON_LIBRARY_FILE})
+
+get_target_property (basic_stack_test_exe basic_stack_test LOCATION)
+
+if (NOT ${CMAKE_SOURCE_DIR} STREQUAL ${BUILDLOC})  
+    add_custom_command (
+        TARGET basic_stack_test 
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy ${basic_stack_test_exe} ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E remove ${basic_stack_test_exe})
+endif()
 
 add_test ("simple_stack_unit_tests"
-        ${BUILDEM_DIR}/bin/basic_stack_test
+        ${CMAKE_SOURCE_DIR}/bin/basic_stack_test
         ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_labels.h5
         ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_prediction.h5
         )
 
-#add_executable (stack_test stack_test.cpp)
-#add_dependencies (stack_test ${vigra_NAME} ${boost_NAME} ${hdf5_LIBRARIES})
-#target_link_libraries (stack_test ${vigra_LIB} ${boost_LIBS} ${hdf5_LIBRARIES}  ${PYTHON_LIBRARY_FILE} Stack)
 

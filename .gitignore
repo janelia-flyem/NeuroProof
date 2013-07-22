@@ -1,6 +1,7 @@
 build
 build-*
 bin
+lib
 *.pyc
 *.swp
 integration_tests/temp_data
