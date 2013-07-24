@@ -1,6 +1,5 @@
 #include "../FeatureManager/FeatureMgr.h"
 
-#include "../BioPriors/BioStackController.h"
 #include "../Stack/Stack.h"
 
 #include "../Utilities/ScopeTime.h"
@@ -104,12 +103,9 @@ void generate_sp_graph(SpOptions& options)
     stack2.set_feature_manager(feature_manager2);
     stack2.set_prob_list(prob_list);
 
-    // Controller with mito and synapse capability
-    StackController stack_controller2(&stack2);
-
     cout<<"Building RAG ..."; 	
-    stack_controller2.build_rag();
-    cout<<"done with "<< stack_controller2.get_num_labels()<< " nodes\n";	
+    stack2.build_rag();
+    cout<<"done with "<< stack2.get_num_labels()<< " nodes\n";	
   
     RagPtr rag = stack2.get_rag();
     //RagPtr rag_base = stack.get_rag();

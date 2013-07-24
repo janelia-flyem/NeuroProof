@@ -120,7 +120,7 @@ add_executable (neuroproof_graph_predict src/neuroproof_graph_predict.cpp)
 add_executable (neuroproof_create_spgraph src/neuroproof_create_spgraph.cpp)
 
 add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
-add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/StackController.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
+add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/Stack.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})

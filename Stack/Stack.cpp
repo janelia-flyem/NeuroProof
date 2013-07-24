@@ -1,5 +1,5 @@
 #include "../FeatureManager/FeatureMgr.h"
-#include "StackController.h"
+#include "Stack.h"
 #include "../Rag/RagUtils.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 #include "../Rag/RagIO.h"
@@ -22,17 +22,13 @@ namespace NeuroProof {
 // assume all label volumes are written to "stack" for now
 static const char * SEG_DATASET_NAME = "stack";
 
-void StackController::build_rag()
+void Stack::build_rag()
 {
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
-    vector<VolumeProbPtr> prob_list = stack->get_prob_list();
-    VolumeLabelPtr labelvol = stack->get_labelvol();
-
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
 
-    Rag_t * rag = new Rag_t;
+    rag = RagPtr(new Rag_t);
 
     vector<double> predictions(prob_list.size(), 0.0);
     unordered_set<Label_t> labels;
@@ -62,8 +58,8 @@ void StackController::build_rag()
         }
 
         // add array of features/predictions for a given node
-        if (feature_mgr) {
-            feature_mgr->add_val(predictions, node);
+        if (feature_manager) {
+            feature_manager->add_val(predictions, node);
         }
 
         Label_t label2 = 0, label3 = 0, label4 = 0, label5 = 0, label6 = 0, label7 = 0;
@@ -76,27 +72,27 @@ void StackController::build_rag()
 
         // if it is not a 0 label and is different from the current label, add edge
         if (label2 && (label != label2)) {
-            rag_add_edge(rag, label, label2, predictions, feature_mgr);
+            rag_add_edge(label, label2, predictions);
             labels.insert(label2);
         }
         if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
-            rag_add_edge(rag, label, label3, predictions, feature_mgr);
+            rag_add_edge(label, label3, predictions);
             labels.insert(label3);
         }
         if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
-            rag_add_edge(rag, label, label4, predictions, feature_mgr);
+            rag_add_edge(label, label4, predictions);
             labels.insert(label4);
         }
         if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
-            rag_add_edge(rag, label, label5, predictions, feature_mgr);
+            rag_add_edge(label, label5, predictions);
             labels.insert(label5);
         }
         if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
-            rag_add_edge(rag, label, label6, predictions, feature_mgr);
+            rag_add_edge(label, label6, predictions);
             labels.insert(label6);
         }
         if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
-            rag_add_edge(rag, label, label7, predictions, feature_mgr);
+            rag_add_edge(label, label7, predictions);
         }
 
         // if it is on the border of the image, increase the boundary size
@@ -106,12 +102,9 @@ void StackController::build_rag()
         labels.clear();
     }
    
-    // load the new rag 
-    stack->set_rag(RagPtr(rag));
 }
 
-void StackController::rag_add_edge(Rag_t* rag, unsigned int id1,
-        unsigned int id2, vector<double>& preds, FeatureMgrPtr feature_mgr)
+void Stack::rag_add_edge(unsigned int id1, unsigned int id2, vector<double>& preds)
 {
     RagNode_t * node1 = rag->find_rag_node(id1);
     if (!node1) {
@@ -130,25 +123,22 @@ void StackController::rag_add_edge(Rag_t* rag, unsigned int id1,
         edge = rag->insert_rag_edge(node1, node2);
     }
 
-    if (feature_mgr) {
-        feature_mgr->add_val(preds, edge);
+    if (feature_manager) {
+        feature_manager->add_val(preds, edge);
     }
     edge->incr_size();
 }
 
 
-int StackController::remove_inclusions()
+int Stack::remove_inclusions()
 {
     int num_removed = 0;
 
-    RagPtr rag = stack->get_rag();
     vector<vector<OrderedPair> > biconnected_components; 
 
     find_biconnected_components(rag, biconnected_components); 
     
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
-    
-    FeatureCombine node_combine_alg(feature_mgr.get(), rag.get()); 
+    FeatureCombine node_combine_alg(feature_manager.get(), rag.get()); 
 
     // merge nodes in biconnected_components (ignore components with '0' node)
     for (int i = 0; i < biconnected_components.size(); ++i) {
@@ -212,32 +202,26 @@ int StackController::remove_inclusions()
     return num_removed;
 }
 
-void StackController::dilate_gt_labelvol(int disc_size)
+void Stack::dilate_gt_labelvol(int disc_size)
 {
-    VolumeLabelPtr gtvol = stack->get_gt_labelvol(); 
-    gtvol = dilate_label_edges(gtvol, disc_size);
-    stack->set_gt_labelvol(gtvol);
+    gt_labelvol = dilate_label_edges(gt_labelvol, disc_size);
 }
 
-void StackController::dilate_labelvol(int disc_size)
+void Stack::dilate_labelvol(int disc_size)
 {
-    VolumeLabelPtr labelvol = stack->get_labelvol(); 
     labelvol = dilate_label_edges(labelvol, disc_size);
-    stack->set_labelvol(labelvol);
 }
 
-int StackController::remove_small_regions(int threshold,
+int Stack::remove_small_regions(int threshold,
         unordered_set<Label_t>& exclusions)
 {
     VolumeProbPtr empty_pred;
     return absorb_small_regions(empty_pred, threshold, exclusions);
 }
 
-int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
+int Stack::absorb_small_regions(VolumeProbPtr boundary_pred,
             int threshold, unordered_set<Label_t>& exclusions)
 {
-    VolumeLabelPtr labelvol = stack->get_labelvol(); 
-    
     std::tr1::unordered_map<Label_t, unsigned long long> regions_sz;
     labelvol->rebase_labels();
 
@@ -272,18 +256,17 @@ int StackController::absorb_small_regions(VolumeProbPtr boundary_pred,
         vigra::seededRegionGrowing3D(srcMultiArrayRange(*boundary_pred), destMultiArray(*labelvol),
                 destMultiArray(*labelvol), stats);
 
-        stack->set_rag(RagPtr());
+        rag = RagPtr();
     }
 
     return num_removed;
 }
 
 // TODO: keep gt rag with gt_labelvol 
-int StackController::match_regions_overlap(Label_t label,
+int Stack::match_regions_overlap(Label_t label,
         unordered_set<Label_t>& candidate_regions, RagPtr gt_rag,
         unordered_set<Label_t>& labels_matched, unordered_set<Label_t>& gtlabels_matched)
 {
-    RagPtr rag = stack->get_rag();
     unsigned long long seg_size = rag->find_rag_node(label)->get_size();
     int matched = 0; 
     
@@ -313,13 +296,8 @@ int StackController::match_regions_overlap(Label_t label,
     return matched;
 }
 
-
-
-
-void StackController::compute_groundtruth_assignment()
+void Stack::compute_groundtruth_assignment()
 {
-    VolumeLabelPtr gtvol = stack->get_gt_labelvol(); 
-
     // recompute contigency table
     compute_contingency_table();
     assignment.clear();  	
@@ -341,7 +319,7 @@ void StackController::compute_groundtruth_assignment()
     }	
 }
 
-int StackController::find_edge_label(Label_t label1, Label_t label2)
+int Stack::find_edge_label(Label_t label1, Label_t label2)
 {
     int edge_label = 0;
     Label_t label1gt = assignment[label1];
@@ -360,27 +338,24 @@ int StackController::find_edge_label(Label_t label1, Label_t label2)
     return edge_label;	
 }
 
-void StackController::serialize_stack(const char* h5_name, const char* graph_name, 
+void Stack::serialize_stack(const char* h5_name, const char* graph_name, 
         bool optimal_prob_edge_loc)
 {
     serialize_graph(graph_name, optimal_prob_edge_loc);
     serialize_labels(h5_name);
 }
 
-void StackController::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
+void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
 {
     EdgeCount best_edge_z;
     EdgeLoc best_edge_loc;
     determine_edge_locations(best_edge_z, best_edge_loc, optimal_prob_edge_loc);
     
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
-    
     // set edge properties for export 
     for (Rag_t::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_false_edge())) {
-            double val = feature_mgr->get_prob((*iter));
+            double val = feature_manager->get_prob((*iter));
             (*iter)->set_weight(val);
         }
         Label_t x = 0;
@@ -426,50 +401,47 @@ void StackController::serialize_graph(const char* graph_name, bool optimal_prob_
     fout.close();
 }
 
-void StackController::serialize_labels(const char* h5_name)
+void Stack::serialize_labels(const char* h5_name)
 {
-    VolumeLabelPtr final_labels = stack->get_labelvol(); 
-    final_labels->rebase_labels();
-    final_labels->serialize(h5_name, SEG_DATASET_NAME);
+    labelvol->rebase_labels();
+    labelvol->serialize(h5_name, SEG_DATASET_NAME);
 }
 
 
-VolumeLabelPtr StackController::dilate_label_edges(VolumeLabelPtr labelvol, int disc_size)
+VolumeLabelPtr Stack::dilate_label_edges(VolumeLabelPtr labelvolh, int disc_size)
 {
     if (disc_size <= 0) {
         throw ErrMsg("Incorrect disc size specified");
     }
 
-    if (!labelvol) {
+    if (!labelvolh) {
         throw ErrMsg("No label volume defined for stack");
     }
     // disc size of 1 creates initial boundaries
-    labelvol = generate_boundary(labelvol);
+    labelvolh = generate_boundary(labelvolh);
     
     if (disc_size > 1) {
         VolumeLabelPtr labelmask = VolumeLabelData::create_volume();
-        labelmask->reshape(labelvol->shape());
+        labelmask->reshape(labelvolh->shape());
         
-        vigra::multiBinaryErosion(srcMultiArrayRange(*labelvol),
+        vigra::multiBinaryErosion(srcMultiArrayRange(*labelvolh),
                 destMultiArray(*labelmask), disc_size-1); 
 
-        (*labelvol) *= (*labelmask);
+        (*labelvolh) *= (*labelmask);
     }
 
-    return labelvol;
+    return labelvolh;
 }
 
-void StackController::compute_vi(double& merge, double& split)
+void Stack::compute_vi(double& merge, double& split)
 {
     multimap<double, Label_t> label_ranked;
     multimap<double, Label_t> gt_ranked;
     compute_vi(merge, split, label_ranked, gt_ranked);
 }
 
-void StackController::compute_contingency_table()
+void Stack::compute_contingency_table()
 {
-    VolumeLabelPtr labelvol = stack->get_labelvol();
-    VolumeLabelPtr gt_labelvol = stack->get_gt_labelvol();
     if (!labelvol) {
         throw ErrMsg("No label volume available to compute VI");
     }
@@ -510,13 +482,9 @@ void StackController::compute_contingency_table()
 }
 
 
-void StackController::determine_edge_locations(EdgeCount& best_edge_z,
+void Stack::determine_edge_locations(EdgeCount& best_edge_z,
         EdgeLoc& best_edge_loc, bool use_probs)
 {
-    VolumeLabelPtr labelvol = stack->get_labelvol();
-    vector<VolumeProbPtr> prob_list = stack->get_prob_list();
-    RagPtr rag = stack->get_rag(); 
-    
     unsigned int maxx = get_xsize() - 1; 
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 
@@ -594,7 +562,7 @@ void StackController::determine_edge_locations(EdgeCount& best_edge_z,
 }
 
 
-void StackController::set_body_exclusions(string exclusions_json)
+void Stack::set_body_exclusions(string exclusions_json)
 {
     Json::Reader json_reader;
     Json::Value json_vals;
@@ -615,8 +583,6 @@ void StackController::set_body_exclusions(string exclusions_json)
         exclusion_set.insert(exclusions[i].asUInt());
     }
 
-    VolumeLabelPtr labelvol = stack->get_labelvol();
-
     // 0 out all bodies in the exclusion list    
     volume_forXYZ(*labelvol, x, y, z) {
         Label_t label = (*labelvol)(x,y,z);
@@ -626,12 +592,9 @@ void StackController::set_body_exclusions(string exclusions_json)
     }
 }
 
-void StackController::compute_vi(double& merge, double& split, 
+void Stack::compute_vi(double& merge, double& split, 
         multimap<double, Label_t>& label_ranked, multimap<double, Label_t>& gt_ranked)
 {
-    VolumeLabelPtr labelvol = stack->get_labelvol();
-    VolumeLabelPtr gt_labelvol = stack->get_gt_labelvol();
-
     if (!labelvol) {
         throw ErrMsg("No label volume available to compute VI");
     }
@@ -711,7 +674,7 @@ void StackController::compute_vi(double& merge, double& split,
 }
 
 // might not be necessary if the update agrees with ground truth
-void StackController::update_assignment(Label_t label_remove, Label_t label_keep)
+void Stack::update_assignment(Label_t label_remove, Label_t label_keep)
 {
     if (assignment.empty()) {
         return;
@@ -758,46 +721,44 @@ void StackController::update_assignment(Label_t label_remove, Label_t label_keep
     assignment[label_keep] = max_label;
 }
 
-void StackController::merge_labels(Label_t label_remove, Label_t label_keep,
+void Stack::merge_labels(Label_t label_remove, Label_t label_keep,
         RagNodeCombineAlg* combine_alg, bool ignore_rag)
 {
     // might be unnecessary, does nothing without ground truth
     update_assignment(label_remove, label_keep);
     
     // update rag by merging nodes
-    RagPtr rag = stack->get_rag();
     if (!ignore_rag && rag) {
         rag_join_nodes(*rag, rag->find_rag_node(label_keep),
             rag->find_rag_node(label_remove), combine_alg);  
     } 
     
-    VolumeLabelPtr labelvol = stack->get_labelvol(); 
     labelvol->reassign_label(label_remove, label_keep); 
 }
 
-VolumeLabelPtr StackController::generate_boundary(VolumeLabelPtr labelvol)
+VolumeLabelPtr Stack::generate_boundary(VolumeLabelPtr labelvolh)
 {
     VolumeLabelPtr labelvol_new = VolumeLabelData::create_volume();
-    *labelvol_new = *labelvol;
+    *labelvol_new = *labelvolh;
 
     unsigned int maxx = get_xsize() - 1; 
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 
     
-    volume_forXYZ(*labelvol, x, y, z) {
-        Label_t label = (*labelvol)(x,y,z); 
+    volume_forXYZ(*labelvolh, x, y, z) {
+        Label_t label = (*labelvolh)(x,y,z); 
         if (!label) {
             continue;
         }
 
         Label_t label2 = 0, label3 = 0, label4 = 0, label5 = 0, label6 = 0, label7 = 0;
         
-        if (x > 0) label2 = (*labelvol)(x-1,y,z);
-        if (x < maxx) label3 = (*labelvol)(x+1,y,z);
-        if (y > 0) label4 = (*labelvol)(x,y-1,z);
-        if (y < maxy) label5 = (*labelvol)(x,y+1,z);
-        if (z > 0) label6 = (*labelvol)(x,y,z-1);
-        if (z < maxz) label7 = (*labelvol)(x,y,z+1);
+        if (x > 0) label2 = (*labelvolh)(x-1,y,z);
+        if (x < maxx) label3 = (*labelvolh)(x+1,y,z);
+        if (y > 0) label4 = (*labelvolh)(x,y-1,z);
+        if (y < maxy) label5 = (*labelvolh)(x,y+1,z);
+        if (z > 0) label6 = (*labelvolh)(x,y,z-1);
+        if (z < maxz) label7 = (*labelvolh)(x,y,z+1);
 
         if (label2 && (label != label2)) {
             labelvol_new->set(x,y,z,0);

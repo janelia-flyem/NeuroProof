@@ -1,5 +1,5 @@
 #include "../FeatureManager/FeatureMgr.h"
-#include "../BioPriors/BioStackController.h"
+#include "../BioPriors/BioStack.h"
 #include "../BioPriors/StackLearnAlgs.h"
 
 #include "../Utilities/ScopeTime.h"
@@ -90,8 +90,6 @@ void run_learning(LearnOptions& options)
     stack.set_feature_manager(feature_manager);
     stack.set_gt_labelvol(groundtruth_data);	
 
-    BioStackController controller(&stack);
-
     UniqueRowFeature_Label all_features;
     vector<int> all_labels;	
     
@@ -101,25 +99,25 @@ void run_learning(LearnOptions& options)
 	
 	cout << "Learn edge classifier ..." << endl; 
 	if (itr == 0) {
-	    learn_edge_classifier_flat(controller, threshold, all_features,
+	    learn_edge_classifier_flat(stack, threshold, all_features,
                     all_labels, true); // # iteration, threshold, clfr_filename
 	} else{
 	    if (options.strategy_type == 1){ //accumulate only misclassified 
 		cout << "cumulative learning, only misclassified" << endl;
-	   	learn_edge_classifier_queue(controller, threshold, all_features,
+	   	learn_edge_classifier_queue(stack, threshold, all_features,
                         all_labels, false, true); // # iteration, threshold, clfr_filename	
 	    } else if (options.strategy_type == 2){ //accumulate all 
 		cout << "cumulative learning, all\n" << endl;
-	   	learn_edge_classifier_queue(controller, threshold, all_features,
+	   	learn_edge_classifier_queue(stack, threshold, all_features,
                         all_labels, true, true); // # iteration, threshold, clfr_filename	
             } else if (options.strategy_type == 3){ // lash	
 		cout << "learning by LASH" << endl;
-	   	learn_edge_classifier_lash(controller, threshold, all_features,
+	   	learn_edge_classifier_lash(stack, threshold, all_features,
                         all_labels, true); // # iteration, threshold, clfr_filename	
 	    }
 	}
 
-	cout << "done with "<< controller.get_num_labels()<< " nodes" << endl;	
+	cout << "done with "<< stack.get_num_labels()<< " nodes" << endl;	
     }
 
     eclfr->save_classifier(options.classifier_filename.c_str());  	

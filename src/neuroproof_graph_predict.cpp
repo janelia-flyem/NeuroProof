@@ -1,5 +1,5 @@
 #include "../FeatureManager/FeatureMgr.h"
-#include "../BioPriors/BioStackController.h"
+#include "../BioPriors/BioStack.h"
 
 #include "../Utilities/ScopeTime.h"
 #include "../Utilities/OptionParser.h"
@@ -23,11 +23,11 @@ using std::tr1::unordered_set;
 static const char * SEG_DATASET_NAME = "stack";
 static const char * PRED_DATASET_NAME = "volume/predictions";
 
-void remove_inclusions(BioStackController& stack_controller)
+void remove_inclusions(Stack& stack)
 {
     cout<<"Inclusion removal ..."; 
-    stack_controller.remove_inclusions();
-    cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
+    stack.remove_inclusions();
+    cout<<"done with "<< stack.get_num_labels()<< " nodes\n";	
 }
 
 struct PredictOptions
@@ -113,7 +113,7 @@ void run_prediction(PredictOptions& options)
     cout << "Read watershed" << endl;
 
     
-    // TODO: move feature handling to controller (load classifier if file provided)
+    // TODO: move feature handling to stack (load classifier if file provided)
     // create feature manager and load classifier
     FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
     feature_manager->set_basic_features(); 
@@ -131,70 +131,67 @@ void run_prediction(PredictOptions& options)
     stack.set_feature_manager(feature_manager);
     stack.set_prob_list(prob_list);
 
-    // Controller with mito and synapse capability
-    BioStackController stack_controller(&stack);
-
     cout<<"Building RAG ..."; 	
-    stack_controller.build_rag_mito();
-    cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
+    stack.build_rag_mito();
+    cout<<"done with "<< stack.get_num_labels()<< " nodes\n";	
    
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
-        stack_controller.set_synapse_exclusions(options.synapse_filename.c_str());
+        stack.set_synapse_exclusions(options.synapse_filename.c_str());
     }
     
-    remove_inclusions(stack_controller);
+    remove_inclusions(stack);
     
     switch (options.agglo_type) {
         case 0: 
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
-            agglomerate_stack_flat(stack_controller, options.threshold, options.merge_mito);
+            agglomerate_stack_flat(stack, options.threshold, options.merge_mito);
             break;
         case 1:
             cout<<"Agglomerating (agglo) upto threshold "<< options.threshold<< " ..."; 
-            agglomerate_stack(stack_controller, options.threshold, options.merge_mito);
+            agglomerate_stack(stack, options.threshold, options.merge_mito);
             break;        
         case 2:
             cout<<"Agglomerating (mrf) upto threshold "<< options.threshold<< " ..."; 
-            agglomerate_stack_mrf(stack_controller, options.threshold, options.merge_mito);
+            agglomerate_stack_mrf(stack, options.threshold, options.merge_mito);
             break;
         case 3:
             cout<<"Agglomerating (queue) upto threshold "<< options.threshold<< " ..."; 
-            agglomerate_stack_queue(stack_controller, options.threshold, options.merge_mito);
+            agglomerate_stack_queue(stack, options.threshold, options.merge_mito);
             break;
         case 4:
             cout<<"Agglomerating (flat) upto threshold "<< options.threshold<< " ..."; 
-            agglomerate_stack_flat(stack_controller, options.threshold, options.merge_mito);
+            agglomerate_stack_flat(stack, options.threshold, options.merge_mito);
             break;
         default: throw ErrMsg("Illegal agglomeration type specified");
     }
-    cout << "Done with "<< stack_controller.get_num_labels()<< " regions\n";
+    cout << "Done with "<< stack.get_num_labels()<< " regions\n";
    
     if (options.post_synapse_threshold > 0.00001) {
         cout << "Agglomerating (agglo) ignoring synapse constraints upto threshold "
             << options.post_synapse_threshold << endl;
         string dummy1, dummy2;
-        agglomerate_stack(stack_controller, options.post_synapse_threshold,
+        agglomerate_stack(stack, options.post_synapse_threshold,
                     options.merge_mito, false, true);
-        cout << "Done with "<< stack_controller.get_num_labels() << " regions\n";
+        cout << "Done with "<< stack.get_num_labels() << " regions\n";
     }
     
-    remove_inclusions(stack_controller);
+    remove_inclusions(stack);
 
     if (options.merge_mito){
 	cout<<"Merge Mitochondria (border-len) ..."; 
-        agglomerate_stack_mito(stack_controller);
-    	cout<<"done with "<< stack_controller.get_num_labels() << " regions\n";	
+        agglomerate_stack_mito(stack);
+    	cout<<"done with "<< stack.get_num_labels() << " regions\n";	
 
-        remove_inclusions(stack_controller);        
+        remove_inclusions(stack);        
     } 	
 
     if (options.watershed_threshold > 0) {
         cout << "Removing small bodies ... ";
 
         unordered_set<Label_t> synapse_labels;
-        stack_controller.load_synapse_labels(synapse_labels);
-        int num_removed = stack_controller.absorb_small_regions(boundary_channel,
+        stack.load_synapse_labels(synapse_labels);
+        int num_removed = stack.absorb_small_regions(boundary_channel,
                         options.watershed_threshold, synapse_labels);
         cout << num_removed << " removed" << endl;	
     }
@@ -211,15 +208,15 @@ void run_prediction(PredictOptions& options)
     
     feature_manager->clear_features();
     feature_manager->set_classifier(eclfr);   	 
-    stack_controller.build_rag();
+    stack.build_rag();
     
 
     // add synapse constraints (send json to stack function)
     if (options.synapse_filename != "") {   
-        stack_controller.set_synapse_exclusions(options.synapse_filename.c_str());
+        stack.set_synapse_exclusions(options.synapse_filename.c_str());
     }
 
-    stack_controller.serialize_stack(options.output_filename.c_str(),
+    stack.serialize_stack(options.output_filename.c_str(),
                 options.graph_filename.c_str(), options.location_prob);
 
     delete eclfr;

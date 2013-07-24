@@ -1,6 +1,6 @@
 #include "../Algorithms/MergePriorityFunction.h"
 #include "StackAgglomAlgs.h"
-#include "../Stack/StackController.h"
+#include "../Stack/Stack.h"
 #include "MitoTypeProperty.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
 
@@ -26,16 +26,15 @@ bool is_mito(RagNode_t* rag_node)
 
 
 
-void agglomerate_stack(StackController& controller, double threshold,
+void agglomerate_stack(Stack& stack, double threshold,
                         bool use_mito, bool use_edge_weight, bool synapse_mode)
 {
     if (threshold == 0.0) {
         return;
     }
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     MergePriority* priority = new ProbPriority(feature_mgr.get(), rag.get(), synapse_mode);
     priority->initialize_priority(threshold, use_edge_weight);
@@ -61,25 +60,24 @@ void agglomerate_stack(StackController& controller, double threshold,
         Node_t node2 = rag_node2->get_node_id();
         
         // retain node1 
-        controller.merge_labels(node2, node1, &node_combine_alg);
+        stack.merge_labels(node2, node1, &node_combine_alg);
     }
 
     delete priority;
 }
 
-void agglomerate_stack_mrf(StackController& controller, double threshold, bool use_mito)
+void agglomerate_stack_mrf(Stack& stack, double threshold, bool use_mito)
 {
     if (threshold == 0.0) {
         return;
     }
 
-    agglomerate_stack(controller, 0.06, use_mito); //0.01 for 250, 0.02 for 500
-    controller.remove_inclusions();	  	
-    cout <<  "Remaining regions: " << controller.get_num_labels();	
+    agglomerate_stack(stack, 0.06, use_mito); //0.01 for 250, 0.02 for 500
+    stack.remove_inclusions();	  	
+    cout <<  "Remaining regions: " << stack.get_num_labels();	
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     unsigned int edgeCount=0;	
 
@@ -98,19 +96,18 @@ void agglomerate_stack_mrf(StackController& controller, double threshold, bool u
 	}
     }
 
-    agglomerate_stack(controller, threshold, use_mito, true);
+    agglomerate_stack(stack, threshold, use_mito, true);
 }
 
-void agglomerate_stack_queue(StackController& controller, double threshold, 
+void agglomerate_stack_queue(Stack& stack, double threshold, 
                                 bool use_mito, bool use_edge_weight)
 {
     if (threshold == 0.0) {
         return;
     }
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     vector<QE> all_edges;	    	
     int count=0; 	
@@ -174,22 +171,21 @@ void agglomerate_stack_queue(StackController& controller, double threshold,
         }
 
         // retain node1 
-        controller.merge_labels(node2, node1, &node_combine_alg);
+        stack.merge_labels(node2, node1, &node_combine_alg);
     }		
 
 
 
 }
 
-void agglomerate_stack_flat(StackController& controller, double threshold, bool use_mito)
+void agglomerate_stack_flat(Stack& stack, double threshold, bool use_mito)
 {
     if (threshold == 0.0) {
         return;
     }
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     vector<QE> priority;	    	
     FlatCombine node_combine_alg(feature_mgr.get(), rag.get(), &priority); 
@@ -218,17 +214,16 @@ void agglomerate_stack_flat(StackController& controller, double threshold, bool 
         node1 = rag_node1->get_node_id(); 
         node2 = rag_node2->get_node_id(); 
         
-        controller.merge_labels(node2, node1, &node_combine_alg);
+        stack.merge_labels(node2, node1, &node_combine_alg);
     }
 }
 
-void agglomerate_stack_mito(StackController& controller, double threshold)
+void agglomerate_stack_mito(Stack& stack, double threshold)
 {
     double error=0;  	
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     MergePriority* priority = new MitoPriority(feature_mgr.get(), rag.get());
     priority->initialize_priority(threshold);
@@ -270,7 +265,7 @@ void agglomerate_stack_mito(StackController& controller, double threshold)
         Node_t node2 = rag_node2->get_node_id();
 
         // retain node1 
-        controller.merge_labels(node2, node1, &node_combine_alg);
+        stack.merge_labels(node2, node1, &node_combine_alg);
     }
 
     delete priority;

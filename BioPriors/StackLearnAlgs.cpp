@@ -1,40 +1,39 @@
 #include "../Algorithms/FeatureJoinAlgs.h"
 #include "../Algorithms/MergePriorityQueue.h"
-#include "BioStackController.h"
+#include "BioStack.h"
 #include "StackLearnAlgs.h"
 
 namespace NeuroProof {
 
-void preprocess_stack(BioStackController& controller, bool use_mito)
+void preprocess_stack(BioStack& stack, bool use_mito)
 {
     cout << "Building RAG ..."; 	
     if (use_mito) {
-        controller.build_rag_mito();
+        stack.build_rag_mito();
     } else {
-        controller.build_rag();
+        stack.build_rag();
     }
     
-    cout << "done with " << controller.get_num_labels() << " nodes" << endl;
+    cout << "done with " << stack.get_num_labels() << " nodes" << endl;
 
 
     cout << "Inclusion removal ..."; 
-    controller.remove_inclusions();
-    cout << "done with " << controller.get_num_labels() << " nodes" << endl;
+    stack.remove_inclusions();
+    cout << "done with " << stack.get_num_labels() << " nodes" << endl;
 
     cout << "gt label counting" << endl;
 
-    controller.compute_groundtruth_assignment(); 	
+    stack.compute_groundtruth_assignment(); 	
 }
 
 
-void learn_edge_classifier_flat(BioStackController& controller, double threshold,
+void learn_edge_classifier_flat(BioStack& stack, double threshold,
         UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito)
 {
-    preprocess_stack(controller, use_mito);
+    preprocess_stack(stack, use_mito);
 
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
         if ( (!(*iter)->is_preserve()) && (!(*iter)->is_false_edge()) ) {
@@ -45,9 +44,9 @@ void learn_edge_classifier_flat(BioStackController& controller, double threshold
             Node_t label1 = rag_node1->get_node_id(); 
             Node_t label2 = rag_node2->get_node_id(); 
 
-	    int edge_label = controller.find_edge_label(label1, label2);
-            if (use_mito && (controller.is_mito(label1) || 
-                             controller.is_mito(label2))) {
+	    int edge_label = stack.find_edge_label(label1, label2);
+            if (use_mito && (stack.is_mito(label1) || 
+                             stack.is_mito(label2))) {
                 edge_label = 1; 
             }
 
@@ -78,15 +77,14 @@ void learn_edge_classifier_flat(BioStackController& controller, double threshold
     cout << "accuracy = " << 100*(1 - err/all_labels.size()) << endl;
 }
 
-void learn_edge_classifier_queue(BioStackController& controller, double threshold,
+void learn_edge_classifier_queue(BioStack& stack, double threshold,
         UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels,
         bool accumulate_all, bool use_mito)
 {
-    preprocess_stack(controller, use_mito);
+    preprocess_stack(stack, use_mito);
     
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
    
     vector<QE> all_edges;	    	
     int count = 0; 	
@@ -128,9 +126,9 @@ void learn_edge_classifier_queue(BioStackController& controller, double threshol
         Label_t label1 = rag_node1->get_node_id(); 
         Label_t label2 = rag_node2->get_node_id(); 
 
-        int edge_label = controller.find_edge_label(label1, label2);
-        if (use_mito && (controller.is_mito(label1) || 
-                    controller.is_mito(label2))) {
+        int edge_label = stack.find_edge_label(label1, label2);
+        if (use_mito && (stack.is_mito(label1) || 
+                    stack.is_mito(label2))) {
             edge_label = 1; 
         }
 
@@ -155,7 +153,7 @@ void learn_edge_classifier_queue(BioStackController& controller, double threshol
 	}	
 
 	if ( edge_label == -1 ){ //merge
-	    controller.merge_labels(label2, label1, &node_combine_alg);
+	    stack.merge_labels(label2, label1, &node_combine_alg);
 	}
     }
 
@@ -177,14 +175,13 @@ void learn_edge_classifier_queue(BioStackController& controller, double threshol
     cout << "accuracy = " << 100*(1 - err/all_labels.size()) << endl;	
 }
 
-void learn_edge_classifier_lash(BioStackController& controller, double threshold,
+void learn_edge_classifier_lash(BioStack& stack, double threshold,
         UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito)
 {
-    preprocess_stack(controller, use_mito);
+    preprocess_stack(stack, use_mito);
     
-    Stack* stack = controller.get_stack();
-    RagPtr rag = stack->get_rag();
-    FeatureMgrPtr feature_mgr = stack->get_feature_manager();
+    RagPtr rag = stack.get_rag();
+    FeatureMgrPtr feature_mgr = stack.get_feature_manager();
 
     all_featuresu.clear();
     all_labels.clear();	
@@ -231,27 +228,22 @@ void learn_edge_classifier_lash(BioStackController& controller, double threshold
         Label_t label1 = rag_node1->get_node_id(); 
         Label_t label2 = rag_node2->get_node_id(); 
 
-        int edge_label = controller.find_edge_label(label1, label2);
-        if (use_mito && (controller.is_mito(label1) || 
-                    controller.is_mito(label2))) {
+        int edge_label = stack.find_edge_label(label1, label2);
+        if (use_mito && (stack.is_mito(label1) || 
+                    stack.is_mito(label2))) {
             edge_label = 1; 
         }
-
-
-
-
 
 	if  (edge_label){  
 	    vector<double> feature;
 	    feature_mgr->compute_all_features(rag_edge,feature);
-
 
 	    feature.push_back(edge_label);	
             all_featuresu.insert(feature);
 	}	
 
 	if ( edge_label == -1 ){ //merge
-	    controller.merge_labels(label2, label1, &node_combine_alg);
+	    stack.merge_labels(label2, label1, &node_combine_alg);
         }
 
     }

@@ -1,5 +1,5 @@
 #include "../FeatureManager/FeatureMgr.h"
-#include "BioStackController.h"
+#include "BioStack.h"
 #include "MitoTypeProperty.h"
 
 #include <json/value.h>
@@ -12,10 +12,8 @@ using std::vector;
 
 namespace NeuroProof {
 
-VolumeLabelPtr BioStackController::create_syn_label_volume()
+VolumeLabelPtr BioStack::create_syn_label_volume()
 {
-    VolumeLabelPtr labelvol = biostack->get_labelvol();
-
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
@@ -23,10 +21,8 @@ VolumeLabelPtr BioStackController::create_syn_label_volume()
     return create_syn_volume(labelvol);
 }
 
-VolumeLabelPtr BioStackController::create_syn_gt_label_volume()
+VolumeLabelPtr BioStack::create_syn_gt_label_volume()
 {
-    VolumeLabelPtr gt_labelvol = biostack->get_gt_labelvol();
-
     if (!gt_labelvol) {
         throw ErrMsg("No GT label volume defined for stack");
     }
@@ -34,13 +30,12 @@ VolumeLabelPtr BioStackController::create_syn_gt_label_volume()
     return create_syn_volume(gt_labelvol);
 }
 
-VolumeLabelPtr BioStackController::create_syn_volume(VolumeLabelPtr labelvol)
+VolumeLabelPtr BioStack::create_syn_volume(VolumeLabelPtr labelvol2)
 {
     vector<Label_t> labels;
-    vector<vector<unsigned int> > synapse_locations = biostack->get_synapse_locations();
 
     for (int i = 0; i < synapse_locations.size(); ++i) {
-        Label_t label = (*labelvol)(synapse_locations[i][0],
+        Label_t label = (*labelvol2)(synapse_locations[i][0],
             synapse_locations[i][1], synapse_locations[i][2]); 
         labels.push_back(label);
     }
@@ -54,11 +49,8 @@ VolumeLabelPtr BioStackController::create_syn_volume(VolumeLabelPtr labelvol)
     return synvol;
 }
 
-void BioStackController::load_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
+void BioStack::load_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
 {
-    vector<vector<unsigned int> > synapse_locations = biostack->get_synapse_locations();
-    VolumeLabelPtr labelvol = biostack->get_labelvol();
-    
     for (int i = 0; i < synapse_locations.size(); ++i) {
         Label_t body_id = (*labelvol)(synapse_locations[i][0],
                 synapse_locations[i][1], synapse_locations[i][2]);
@@ -69,11 +61,8 @@ void BioStackController::load_synapse_counts(unordered_map<Label_t, int>& synaps
     }
 }
 
-void BioStackController::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
+void BioStack::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
 {
-    vector<vector<unsigned int> > synapse_locations = biostack->get_synapse_locations();
-    VolumeLabelPtr labelvol = biostack->get_labelvol();
-    
     for (int i = 0; i < synapse_locations.size(); ++i) {
         Label_t body_id = (*labelvol)(synapse_locations[i][0],
                 synapse_locations[i][1], synapse_locations[i][2]);
@@ -81,10 +70,8 @@ void BioStackController::load_synapse_labels(unordered_set<Label_t>& synapse_lab
     }
 }
 
-bool BioStackController::is_mito(Label_t label)
+bool BioStack::is_mito(Label_t label)
 {
-    RagPtr rag = biostack->get_rag();
-
     RagNode_t* rag_node = rag->find_rag_node(label);
 
     MitoTypeProperty mtype;
@@ -99,17 +86,13 @@ bool BioStackController::is_mito(Label_t label)
     return false;
 }
 
-void BioStackController::build_rag_mito()
+void BioStack::build_rag_mito()
 {
-    FeatureMgrPtr feature_mgr = biostack->get_feature_manager();
-    vector<VolumeProbPtr> prob_list = biostack->get_prob_list();
-    VolumeLabelPtr labelvol = biostack->get_labelvol();
-
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
 
-    Rag_t * rag = new Rag_t;
+    rag = RagPtr(new Rag_t);
 
     vector<double> predictions(prob_list.size(), 0.0);
     unordered_set<Label_t> labels;
@@ -136,8 +119,8 @@ void BioStackController::build_rag_mito()
         for (unsigned int i = 0; i < prob_list.size(); ++i) {
             predictions[i] = (*(prob_list[i]))(x,y,z);
         }
-        if (feature_mgr) {
-            feature_mgr->add_val(predictions, node);
+        if (feature_manager) {
+            feature_manager->add_val(predictions, node);
         }
         mito_probs[label].update(predictions); 
 
@@ -150,27 +133,27 @@ void BioStackController::build_rag_mito()
         if (z < maxz) label7 = (*labelvol)(x,y,z+1);
 
         if (label2 && (label != label2)) {
-            rag_add_edge(rag, label, label2, predictions, feature_mgr);
+            rag_add_edge(label, label2, predictions);
             labels.insert(label2);
         }
         if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
-            rag_add_edge(rag, label, label3, predictions, feature_mgr);
+            rag_add_edge(label, label3, predictions);
             labels.insert(label3);
         }
         if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
-            rag_add_edge(rag, label, label4, predictions, feature_mgr);
+            rag_add_edge(label, label4, predictions);
             labels.insert(label4);
         }
         if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
-            rag_add_edge(rag, label, label5, predictions, feature_mgr);
+            rag_add_edge(label, label5, predictions);
             labels.insert(label5);
         }
         if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
-            rag_add_edge(rag, label, label6, predictions, feature_mgr);
+            rag_add_edge(label, label6, predictions);
             labels.insert(label6);
         }
         if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
-            rag_add_edge(rag, label, label7, predictions, feature_mgr);
+            rag_add_edge(label, label7, predictions);
         }
 
         if (!label2 || !label3 || !label4 || !label5 || !label6 || !label7) {
@@ -185,24 +168,19 @@ void BioStackController::build_rag_mito()
         mtype.set_type(); 
         (*iter)->set_property("mito-type", mtype);
     }
-
-    biostack->set_rag(RagPtr(rag));
-
 }
 
 
-void BioStackController::set_synapse_exclusions(const char* synapse_json)
+void BioStack::set_synapse_exclusions(const char* synapse_json)
 {
-    RagPtr rag = biostack->get_rag();
-    VolumeLabelPtr labelvol = biostack->get_labelvol();
     unsigned int ysize = labelvol->shape(1);
 
     if (!rag) {
         throw ErrMsg("No RAG defined for stack");
     }
 
-    std::vector<std::vector<unsigned int> > synapse_locations; 
-    
+    synapse_locations.clear();
+
     Json::Reader json_reader;
     Json::Value json_reader_vals;
     
@@ -249,10 +227,9 @@ void BioStackController::set_synapse_exclusions(const char* synapse_json)
         }
     }
 
-    biostack->set_synapse_locations(synapse_locations);
 }
     
-void BioStackController::serialize_graph_info(Json::Value& json_writer)
+void BioStack::serialize_graph_info(Json::Value& json_writer)
 {
     unordered_map<Label_t, int> synapse_counts;
     load_synapse_counts(synapse_counts);
@@ -266,11 +243,11 @@ void BioStackController::serialize_graph_info(Json::Value& json_writer)
     }
 }
 
-void BioStackController::add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol, unsigned int x1,
+void BioStack::add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol2, unsigned int x1,
         unsigned int y1, unsigned int z1, unsigned int x2, unsigned int y2, unsigned int z2)
 {
-    Label_t label1 = (*labelvol)(x1,y1,z1);
-    Label_t label2 = (*labelvol)(x2,y2,z2);
+    Label_t label1 = (*labelvol2)(x1,y1,z1);
+    Label_t label2 = (*labelvol2)(x2,y2,z2);
 
     if (label1 && label2 && (label1 != label2)) {
         RagEdge_t* edge = rag->find_rag_edge(label1, label2);
