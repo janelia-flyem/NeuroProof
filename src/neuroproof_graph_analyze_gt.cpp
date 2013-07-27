@@ -196,6 +196,16 @@ struct AnalyzeGTOptions
     int random_seed;
 };
 
+/*!
+ * Helper function for determining the number of segmentation
+ * violations with respect the the annotated synapses.  Notably,
+ * if a region/node with a synapse is orphan (i.e., does not have a
+ * process that leaves the volume), that region/node is considered
+ * an error.
+ * \param stack segmentation stack with synapse information
+ * \param threshold number of synapse annotations below which errors are ignored
+ * \return number of errors
+*/
 int num_synapse_errors(BioStack& stack, int threshold)
 {
     RagPtr rag = stack.get_rag();
@@ -214,6 +224,15 @@ int num_synapse_errors(BioStack& stack, int threshold)
     return synapse_errors;
 }
 
+/*!
+ * Helper function for determining the number of segmentation
+ * violations with respect to the node/region size or morphology.
+ * If a body above a certain threshold size of importance does not
+ * leave the volume, it is considered an error.
+ * \param stack segmentation stack
+ * \param threshold node size below which errors are ignored
+ * \return number of errors
+*/
 int num_body_errors(Stack& stack, int threshold)
 {
     RagPtr rag = stack.get_rag();
@@ -227,7 +246,15 @@ int num_body_errors(Stack& stack, int threshold)
     return body_errors;
 }
 
-
+/*!
+ * Determine the set of labels (above the given thresholds for number
+ * of member synapse annotations and node size) that do not leave the
+ * image volume (i.e., orphans).
+ * \param stack segmentation stack with synapse information
+ * \param orphans set of orphans labels to be computed
+ * \param threshold node size threshold
+ * \param synapse_threshold number of synapse annotation threshold
+*/ 
 void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
         int threshold, int synapse_threshold)
 {
@@ -235,6 +262,7 @@ void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
     stack.load_synapse_counts(synapse_counts);
     RagPtr rag = stack.get_rag();
 
+    // find synapse orphans
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= synapse_threshold) {
@@ -245,6 +273,7 @@ void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
         }
     }
 
+    // find big node orphans
     for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         if ((!((*iter)->is_boundary())) && ((*iter)->get_size() >= threshold)) {
@@ -253,6 +282,13 @@ void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
     }
 }
 
+/*!
+ * Computes the variation of information (VI) metric between the segmentation
+ * and ground truth and prints the body labels that contribute most to
+ * errors in the segmentation.
+ * \param stack segmentation stack
+ * \param threshold VI threshold below which labels are not printed
+*/
 void dump_vi_differences(Stack& stack, double threshold)
 {
     double merge, split;
@@ -265,6 +301,7 @@ void dump_vi_differences(Stack& stack, double threshold)
 
     double totalS = 0.0;
     double totalG = 0.0;
+    // print undersegmented regions in the segmentation graph
     cout << endl << "******Seg Merged Bodies*****" << endl;
     for (multimap<double, Label_t>::reverse_iterator iter = label_ranked.rbegin();
             iter != label_ranked.rend(); ++iter) {
@@ -276,6 +313,8 @@ void dump_vi_differences(Stack& stack, double threshold)
     }
     cout << endl; 
 
+    // print undersegmented region in the groundtruth graph
+    // (oversegmentation in the segmentation compared to the groundtruth)
     cout << endl << "******GT Merged Bodies*****" << endl;
     for (multimap<double, Label_t>::reverse_iterator iter = gt_ranked.rbegin();
             iter != gt_ranked.rend(); ++iter) {
@@ -286,9 +325,21 @@ void dump_vi_differences(Stack& stack, double threshold)
         split -= iter->first;
     }
     cout << endl; 
-
 } 
 
+/*!
+ * Main function for computing the number of edits required to
+ * improve the segmentation given a certain quality measure.  This
+ * function uses the ground truth segmentation to simulate the actions
+ * that a human annotator would do.
+ * \param priority_scheduler algorithm for managing priority of edges
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param opt_rag rag with the ground truth edge value
+ * \param num_modified number of segmentation changes made
+ * \param num_examined number of edges examined
+ * \param use_exclusions not currently used
+*/
 void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
         Stack& synapse_stack, RagPtr opt_rag, int& num_modified,
         int& num_examined, bool use_exclusions)
@@ -330,6 +381,17 @@ void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
     }
 }
 
+/*!
+ * Report the differences between both the segmentation stack and its
+ * groundtruth and the segmentation  stack that only considers synapse
+ * annotations compared and its groundtruth.  A series of different
+ * comparisons are made (VI, number of violations, etc).
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param gt_stack ground truth segmentation stack (TODO: wrap within stack) 
+ * \param opt_rag rag with the ground truth edge value
+ * \param options program options
+*/
 void dump_differences(BioStack& stack, Stack& synapse_stack,
         BioStack& gt_stack, RagPtr opt_rag, AnalyzeGTOptions& options)
 {
@@ -341,6 +403,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     cout << "Graph edges: " << seg_rag->get_num_edges() << endl;
     cout << "Graph nodes: " << seg_rag->get_num_regions() << endl;
 
+    // vi computation
     cout << "Body VI: ";    
     double merge, split;
     stack.compute_vi(merge, split);
@@ -364,7 +427,8 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     
     unordered_set<Label_t> seg_orphans; 
     unordered_set<Label_t> gt_orphans; 
-    
+   
+    // find percentage of orphans matched between segmentation and gt 
     load_orphans(stack, seg_orphans, options.body_error_size,
             options.synapse_error_size);
     load_orphans(gt_stack, gt_orphans, options.body_error_size,
@@ -391,7 +455,8 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     }
     cout << "Percent orphans matched for GT: " <<
         double(gt_matched.size())/gt_orphans.size()*100 << endl;
-    
+   
+    // print orphans that are not found in gt 
     if (options.dump_orphans) {
         for (std::tr1::unordered_set<Label_t>::iterator iter = gt_orphans.begin();
                 iter != gt_orphans.end(); ++iter) {
@@ -414,6 +479,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
         }
     }
 
+    // find pairs of large bodies that are not merged together but should be
     int num_unmerged = 0;
     Json::Value json_vals;
     //EdgeEditor<Label_t> temp_scheduler(*seg_rag, 0.1, 0.9, 0.1, json_vals);
@@ -445,6 +511,8 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
 
     bool change = true;
     LowWeightCombine join_alg;
+
+    // optimally merge rag and keep track of biggest change
     while (change) {
         change = false;
         for (Rag_t::edges_iterator iter = opt_rag_copy.edges_begin();
@@ -484,6 +552,9 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
             }
         }
     }
+
+    // determine bodies whose total body size is much greater than its
+    // largest original component
     int num_undermerged_bodies = 0;
     for (std::tr1::unordered_map<Label_t, unsigned long long>::iterator iter = body_changes.begin();
             iter != body_changes.end(); ++iter) {
@@ -507,13 +578,26 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     cout << "************Finished Printing Statistics**************" << endl; 
 }
 
-
+/*!
+ * Run automatic editing algorithm using the size of nodes/bodies to
+ * determine the editing that needs to performed to reach the desired threshold.
+ * \param priority_scheduler algorithm for managing priority of edges
+ * \param json_vals json values corresponding to a recipe for edting edges 
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param opt_rag rag with the ground truth edge value
+ * \param num_modified number of segmentation changes made
+ * \param num_examined number of edges examined
+*/
 void run_body(EdgeEditor& priority_scheduler, Json::Value json_vals,
         Stack& stack, Stack& synapse_stack,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
-    unsigned int path_length = json_vals.get("path-length", 0).asUInt(); 
+    // path length 0 means no path limit
+    unsigned int path_length = json_vals.get("path-length", 0).asUInt();
+    // body size threshold for examining
     unsigned int threshold = json_vals.get("threshold", 25000).asUInt();
+    // not being used currently
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
     num_examined = 0;
@@ -533,11 +617,24 @@ void run_body(EdgeEditor& priority_scheduler, Json::Value json_vals,
     cout << "Body mode finished ... "; 
 }
 
+/*!
+ * Run automatic editing algorithm using the number of synapse annotations to
+ * determine the editing that needs to performed to reach the desired threshold.
+ * \param priority_scheduler algorithm for managing priority of edges
+ * \param json_vals json values corresponding to a recipe for edting edges 
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param opt_rag rag with the ground truth edge value
+ * \param num_modified number of segmentation changes made
+ * \param num_examined number of edges examined
+*/
 void run_synapse(EdgeEditor& priority_scheduler, Json::Value json_vals,
         Stack& stack, Stack& synapse_stack,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
+    // synapse connectivity threshold
     double threshold = json_vals.get("threshold", 0.1).asDouble();
+    // not being used currently
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
     num_examined = 0;
@@ -556,11 +653,24 @@ void run_synapse(EdgeEditor& priority_scheduler, Json::Value json_vals,
     cout << "Synapse mode finished ... "; 
 }
 
+/*!
+ * Run automatic editing algorithm using the orphan status of a node to
+ * determine the editing that needs to performed to reach the desired threshold.
+ * \param priority_scheduler algorithm for managing priority of edges
+ * \param json_vals json values corresponding to a recipe for edting edges 
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param opt_rag rag with the ground truth edge value
+ * \param num_modified number of segmentation changes made
+ * \param num_examined number of edges examined
+*/
 void run_orphan(EdgeEditor& priority_scheduler, Json::Value json_vals,
         Stack& stack, Stack& synapse_stack,
         RagPtr opt_rag, int& num_modified, int& num_examined)
 {
+    // orphan size threshold
     unsigned int threshold = json_vals.get("threshold", 25000).asUInt();
+    // exclusions not being used currently
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
     num_examined = 0;
@@ -578,6 +688,17 @@ void run_orphan(EdgeEditor& priority_scheduler, Json::Value json_vals,
     cout << "Orphan mode finished ... "; 
 }
 
+/*!
+ * Run automatic editing algorithm using the uncertainty between edges to 
+ * determine the editing that needs to performed to reach the desired threshold.
+ * \param priority_scheduler algorithm for managing priority of edges
+ * \param json_vals json values corresponding to a recipe for edting edges 
+ * \param stack segmentation stack
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param opt_rag rag with the ground truth edge value
+ * \param num_modified number of segmentation changes made
+ * \param num_examined number of edges examined
+*/
 void run_edge(EdgeEditor& priority_scheduler, Json::Value json_vals,
         Stack& stack, Stack& synapse_stack,
         RagPtr opt_rag, int& num_modified, int& num_examined)
@@ -603,6 +724,12 @@ void run_edge(EdgeEditor& priority_scheduler, Json::Value json_vals,
     cout << "Edge mode finished ... "; 
 }
 
+/*!
+ * Determine the edge weight values of a RAG by examining
+ * the decision label derived in a stack containing groundtruth.
+ * \param segmentation segmentation stack
+ * \param rag point to RAG
+*/
 void set_rag_probs(Stack& stack, RagPtr rag) {
     for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
@@ -616,6 +743,23 @@ void set_rag_probs(Stack& stack, RagPtr rag) {
     }
 }
 
+/*!
+ * Runs a recipe created in a json file that specifies which types
+ * of simulated manual editing should be performed.  The JSON file format
+ * is '{"recipe" : []}' with a list of different editing actions
+ * that should be performed to some threshold.  For instance,
+ * '{ "type" : "body", "path-length" : 0, "threshold" : 10000}' could
+ * be added to the list and would specify that the algorithm should
+ * consider all edges that are on a path (with no path length limit)
+ * where the uncertainty of that path suggests an information change
+ * more significant than 10,000 voxels.
+ * \param recipe_filename json file with editing operations to be performed
+ * \param stack segmentation stack with synapse information
+ * \param synapse_stack segmentation stack of the synaptic annotations
+ * \param gt_stack ground truth stack with synapse information
+ * \param opt_rag rag with the ground truth edge value
+ * \param options program options
+*/
 void run_recipe(string recipe_filename, BioStack& stack,
         Stack& synapse_stack, BioStack& gt_stack,
         RagPtr opt_rag, AnalyzeGTOptions& options)
@@ -669,11 +813,15 @@ void run_recipe(string recipe_filename, BioStack& stack,
     }
     json_vals_priority["synapse_bodies"] = synapses;
 
+    // create priority algorithm using json data computed
+    // TODO: enable initialization without json
     EdgeEditor priority_scheduler(*rag, 0.1, 0.9, 0.1, json_vals_priority);
     
     int num_examined = 0;
     int num_modified = 0;
 
+    // try all the editing operations in the recipe list
+    // the same type can be called multiple times
     for (int i = 0; i < json_vals["recipe"].size(); ++i) {
         Json::Value operation = json_vals["recipe"][i]; 
         string type = operation["type"].asString();
@@ -708,6 +856,11 @@ void run_recipe(string recipe_filename, BioStack& stack,
 
 }
 
+/*!
+ * Main function that calls into the various functions that
+ * analyze the segmentation with respect to the ground truth.
+ * \param options program options
+*/
 void run_analyze_gt(AnalyzeGTOptions& options)
 {
     //seg_filename, groundtruth_filename 

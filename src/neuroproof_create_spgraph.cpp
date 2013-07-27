@@ -1,3 +1,13 @@
+/*!
+ * \file
+ * Deprecated:  This file contains functionality for creating and exporting
+ * a graph file to be use in a particular, non-generic workflow.  This
+ * code will not be maintained further but is kept in for legacy applications
+ * requiring it.
+ * 
+ * \author Stephen Plaza (plaza.stephen@gmail.com)
+*/
+
 #include "../FeatureManager/FeatureMgr.h"
 
 #include "../Stack/Stack.h"
@@ -20,6 +30,9 @@ using std::tr1::unordered_set;
 static const char * SEG_DATASET_NAME = "stack";
 static const char * PRED_DATASET_NAME = "volume/predictions";
 
+/*!
+ * Options for creating a graph for use in the Raveler tool
+*/
 struct SpOptions
 {
     SpOptions(int argc, char** argv) : start_plane(0)
@@ -33,19 +46,28 @@ struct SpOptions
                 "ilastik h5 file (x,y,z,ch) that has pixel predictions"); 
         parser.add_option(start_plane, "starting-zplane",
                 "First z plane in Raveler space");
-        //parser.add_positional(classifier_filename, "classifier-file",
-        //        "opencv or vigra agglomeration classifier"); 
         
         parser.parse_options(argc, argv);
     }
 
     // manadatory positionals
+    
+    //! h5 file for segmentation (z,y,x)
     string segmentation_filename;
+
+    //! h5 file with prediction (x,y,z,ch)
     string prediction_filename;
-    //string classifier_filename;
+
+    //! starting z image plane 
     int start_plane;
 };
 
+/*!
+ * Using the program options, create a graph and export in
+ * json format that computes an edge weight between nodes based
+ * on the median feature of the first prediction channel
+ * and splits supervoxel into sets of superpixel planes.
+*/
 void generate_sp_graph(SpOptions& options)
 {
     // create prediction array
@@ -61,36 +83,14 @@ void generate_sp_graph(SpOptions& options)
     cout << "Read watershed" << endl;
 
  
-    /* 
-    FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
-    feature_manager->set_basic_features(); 
-
-    EdgeClassifier* eclfr;
-    if (ends_with(options.classifier_filename, ".h5"))
-    	eclfr = new VigraRFclassifier(options.classifier_filename.c_str());	
-    else if (ends_with(options.classifier_filename, ".xml")) 	
-	eclfr = new OpencvRFclassifier(options.classifier_filename.c_str());	
-    feature_manager->set_classifier(eclfr);   	 
-
-    BioStack stack(raveler_labels); 
-    stack.set_feature_manager(feature_manager);
-    stack.set_prob_list(prob_list);
-    BioStackController stack_controller(&stack);
-    cout<<"Building RAG ..."; 	
-    stack_controller.build_rag_mito();
-    cout<<"done with "<< stack_controller.get_num_labels()<< " nodes\n";	
-    */
-
-
-
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     prob_list.clear();
+    // only use boundary channel
     prob_list.push_back(boundary_channel);
     FeatureMgrPtr feature_manager2(new FeatureMgr(prob_list.size()));
     feature_manager2->add_median_feature(); 
 
-    // ?! do a max z and a max label check for encoding 
+    // map supervoxel ids to superpixel ids
+    // maximum allowable plane ID 200,000; maxium number of planes, 10,000!!
     volume_forXYZ((*raveler_labels), x, y, z) {
         if ((*raveler_labels)(x,y,z) != 0) {
             unsigned int zpos = z + options.start_plane;
@@ -108,22 +108,8 @@ void generate_sp_graph(SpOptions& options)
     cout<<"done with "<< stack2.get_num_labels()<< " nodes\n";	
   
     RagPtr rag = stack2.get_rag();
-    //RagPtr rag_base = stack.get_rag();
-      
-    /*    
-    for (Rag_t::edges_iterator iter = rag_base->edges_begin();
-            iter != rag_base->edges_end(); ++iter) {
-        //double weight = feature_manager->get_prob(*iter);
-        double weight = 1.0;
-        if ((stack_controller.is_mito((*iter)->get_node1()->get_node_id())) !=
-                (stack_controller.is_mito((*iter)->get_node2()->get_node_id()))) {
-            weight = -1.0;
-        }
-        (*iter)->set_weight(weight);
-    }
-    cout << "Examined mitos" << endl;
-    */
-
+    
+    // set the weight to edges within the superpixel set to -1 
     for (Rag_t::edges_iterator iter = rag->edges_begin();
             iter != rag->edges_end(); ++iter) {
         double val = feature_manager2->get_prob((*iter));
@@ -136,22 +122,9 @@ void generate_sp_graph(SpOptions& options)
         node2 = node2 % 200000;
         if (node1 == node2) {
             (*iter)->set_weight(-1.0);
-        /*} else { 
-            RagNode_t* rn1 = rag_base->find_rag_node(node1);
-            RagNode_t* rn2 = rag_base->find_rag_node(node2);
-
-            assert(rn1 && rn2);
-            RagEdge_t* rag_edge = rag_base->find_rag_edge(rn1, rn2);
-            assert(rag_edge);
-            if (rag_edge->get_weight() < 0) {
-                //val += (1 - val) / 2;
-            }
-            (*iter)->set_weight(val); */
         } 
     }
  
-    //Json::Value json_writer;
-    //create_json_from_rag(rag.get(), json_writer, false);
     // write out graph json
     ofstream fout("graph.txt");
     
@@ -165,10 +138,13 @@ void generate_sp_graph(SpOptions& options)
         fout << (*iter)->get_size() << endl;
     }
 
-    //fout << json_writer;
     fout.close();
 }
 
+/*!
+ * Entry point for program, determines the program options
+ * and calls the graph generation algorithm.
+*/
 int main(int argc, char** argv) 
 {
     SpOptions options(argc, argv);
