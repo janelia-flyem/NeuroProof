@@ -54,12 +54,13 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         message ("\nAfter running make, you must re-run the cmake command once")
         message ("buildem has been downloaded!\n")
         message ("\n***********************************************************\n")
-    else ()
-        ###############################################################################
+        return()
+    endif() 
+    ###############################################################################
 
-        # Use modules from the downloaded buildem
-        set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
-        message("Using cmake modules from ${BUILDEM_REPO_DIR}")
+    # Use modules from the downloaded buildem
+    set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
+    message("Using cmake modules from ${BUILDEM_REPO_DIR}")
 
     # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
     include (python)
@@ -72,7 +73,6 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     set (NEUROPROOF_DEPS ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
     
-    endif ()
 else ()
     FIND_PACKAGE(PythonLibs)
     # ensure the libjsoncpp.so is symbolically linked somewhere your lib path
