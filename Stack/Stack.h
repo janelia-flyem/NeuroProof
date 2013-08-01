@@ -244,6 +244,7 @@ class Stack : public StackBase {
     */
     void compute_groundtruth_assignment();
 
+     
   protected:
     /*!
      * Add edge to rag and update feature manager.
@@ -348,6 +349,7 @@ class Stack : public StackBase {
      * moved to the Stack.
     */
     std::tr1::unordered_map<Label_t, Label_t> assignment;
+
 };
 
 }

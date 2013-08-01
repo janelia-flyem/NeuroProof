@@ -54,37 +54,73 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         message ("\nAfter running make, you must re-run the cmake command once")
         message ("buildem has been downloaded!\n")
         message ("\n***********************************************************\n")
-    else ()
-        ###############################################################################
+        return()
+    endif ()
+    ###############################################################################
 
-        # Use modules from the downloaded buildem
-        set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
-        message("Using cmake modules from ${BUILDEM_REPO_DIR}")
+    # Use modules from the downloaded buildem
+    set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
+    message("Using cmake modules from ${BUILDEM_REPO_DIR}")
 
     # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
+    include (vtk)
     include (python)
     include (jsoncpp)
     include (boost)
     include (vigra)
     include (hdf5)
     include (opencv)
-    
-    set (NEUROPROOF_DEPS ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+    include (qt4)
+
+    set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
     
-    endif ()
+    # ?! set to buildem path
+    INCLUDE_DIRECTORIES(
+            ${BUILDEM_DIR}/include/Qt
+            ${BUILDEM_DIR}/include/QtGui
+            ${BUILDEM_DIR}/include/QtCore
+    )
+    set (vtk_LIBS 
+        ${vtk_LIBPATH}/libQVTK.so
+        ${vtk_LIBPATH}/libvtkHybrid.so
+        ${vtk_LIBPATH}/libvtkCommon.so
+        ${vtk_LIBPATH}/libvtkRendering.so
+        ${vtk_LIBPATH}/libvtkVolumeRendering.so
+        ${vtk_LIBPATH}/libvtkWidgets.so)
+   
+    set (qt_LIBS
+        ${BUILDEM_DIR}/lib/libQtCore.so
+        ${BUILDEM_DIR}/lib/libQtGui.so
+    )
 else ()
     FIND_PACKAGE(PythonLibs)
+    FIND_PACKAGE(VTK REQUIRED)
+    FIND_PACKAGE(Qt4 REQUIRED)
+    
+    INCLUDE(${VTK_USE_FILE})
+    IF(NOT VTK_USE_RENDERING)
+        MESSAGE(FATAL_ERROR
+            "Example requires VTK_USE_RENDERING.")
+    ENDIF(NOT VTK_USE_RENDERING)
+    INCLUDE(${QT_USE_FILE})
+    INCLUDE_DIRECTORIES(
+        ${QT_INCLUDE_DIR}
+        ${QT_QTGUI_INCLUDE_DIR}
+        ${QT_QTCORE_INCLUDE_DIR}
+    ) 
+
     # ensure the libjsoncpp.so is symbolically linked somewhere your lib path
     set (json_LIB jsoncpp)
     set (hdf5_LIBRARIES hdf5 hdf5_hl)
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
     set (boost_LIBS boost_thread-mt boost_system boost_program_options boost_python boost_unit_test_framework)
+    set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon)
+    set (qt_LIBS  ${QT_LIBRARIES})
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
     set (PYTHON_EXE "python") 
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
-
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
 if (NOT EXISTS ${BUILDLOC}/bin)
@@ -110,7 +146,7 @@ add_subdirectory (Algorithms)
 add_subdirectory (Classifier)
 
 set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors FeatureManager Algorithms Classifier)
-set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
+set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
 
 # Handle all of NeuroProof sources and dependent code
 add_executable (neuroproof_graph_analyze src/neuroproof_graph_analyze.cpp)
@@ -118,6 +154,7 @@ add_executable (neuroproof_graph_analyze_gt src/neuroproof_graph_analyze_gt.cpp)
 add_executable (neuroproof_graph_learn src/neuroproof_graph_learn.cpp)
 add_executable (neuroproof_graph_predict src/neuroproof_graph_predict.cpp)
 add_executable (neuroproof_create_spgraph src/neuroproof_create_spgraph.cpp)
+add_executable (test_gui src/test_gui.cpp)
 
 add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
 add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/Stack.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
@@ -127,6 +164,7 @@ target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUR
 target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_create_spgraph ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+target_link_libraries (test_gui ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
 
@@ -136,6 +174,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (neuroproof_graph_learn ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_predict ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_create_spgraph ${NEUROPROOF_DEPS})
+    add_dependencies (test_gui ${NEUROPROOF_DEPS})
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
 endif()

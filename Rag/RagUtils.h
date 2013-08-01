@@ -56,6 +56,14 @@ void rag_join_nodes(Rag<Index_t>& rag, RagNode<Index_t>* node_keep,
 void find_biconnected_components(boost::shared_ptr<Rag<Index_t> > rag,
     std::vector<std::vector<OrderedPair> >& biconnected_components);
 
+/*!
+ * Using a greedy algorithm for using the minimal number of colors
+ * to color all the nodes in the graph.  The results will be stored
+ * in a node property called 'color'.
+ * \param rag pointer to RAG
+*/
+void compute_graph_coloring(boost::shared_ptr<Rag<Index_t> > rag);
+
 
 /*!
  * Holds properties for boost vertex

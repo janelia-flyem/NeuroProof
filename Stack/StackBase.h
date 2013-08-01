@@ -15,8 +15,7 @@
 // TODO: add forward declaration rather than including
 // the entire RAG.
 #include "../Rag/Rag.h"
-
-#include <vector>
+#include "Dispatcher.h"
 
 namespace NeuroProof {
 
@@ -30,7 +29,7 @@ typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;
  * objects in the Stack are stored as shared pointers.  Core functionality
  * should can extended through inheritence.
 */
-class StackBase {
+class StackBase : public Dispatcher {
   public:
     /*!
      * Constructor for stack expects, for now, that all
@@ -177,10 +176,6 @@ class StackBase {
 
     // TODO: keep track of whether stack has been modified
 };
-
-
-
-
 
 }
 
