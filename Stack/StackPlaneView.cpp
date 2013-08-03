@@ -110,7 +110,7 @@ void StackPlaneView::initialize()
     labelvtk->SetDimensions(labelvol->shape(0), labelvol->shape(1),
             labelvol->shape(2));
     labelvtk->SetScalarType(VTK_UNSIGNED_INT);
-    labelvtk->SetSpacing(10, 10, 10);
+    labelvtk->SetSpacing(1, 1, 1);
     labelvtk->SetOrigin(0.0, 0.0, 0.0);
 
     // set lookup table
@@ -133,7 +133,7 @@ void StackPlaneView::initialize()
             iter != rag->nodes_end(); ++iter) {
         int color_id = (*iter)->get_property<int>("color");
         unsigned char r, g, b;
-        get_rgb(color_id, r, g, b);
+        stack_session->get_rgb(color_id, r, g, b);
         label_lookup->SetTableValue((*iter)->get_node_id(), r/255.0,
                g/255.0, b/255.0, 1);
     }
@@ -185,50 +185,6 @@ void StackPlaneView::initialize()
 void StackPlaneView::start()
 {
     qt_widget->show();
-}
-
-void StackPlaneView::get_rgb(int color_id, unsigned char& r,
-        unsigned char& g, unsigned char& b)
-{
-    unsigned int val = color_id % 18; 
-    switch (val) {
-        case 0:
-            r = 0xff; g = b = 0; break;
-        case 1:
-            g = 0xff; r = b = 0; break;
-        case 2:
-            b = 0xff; r = g = 0; break;
-        case 3:
-            r = g = 0xff; b = 0; break;
-        case 14:
-            r = b = 0xff; g = 0; break;
-        case 8:
-            g = b = 0xff; r = 0; break;
-        case 6:
-            r = 0x7f; g = b = 0; break;
-        case 16:
-            g = 0x7f; r = b = 0; break;
-        case 9:
-            b = 0x7f; r = g = 0; break;
-        case 5:
-            r = g = 0x7f; b = 0; break;
-        case 13:
-            r = b = 0x7f; g = 0; break;
-        case 11:
-            g = b = 0x7f; r = 0; break;
-        case 12:
-            r = 0xff; g = b = 0x7f; break;
-        case 10:
-            g = 0xff; r = b = 0x7f; break;
-        case 17:
-            b = 0xff; r = g = 0x7f; break;
-        case 15:
-            r = g = 0xff; b = 0x7f; break;
-        case 7:
-            r = b = 0xff; g = 0x7f; break;
-        case 4:
-            g = b = 0xff; r = 0x7f; break;
-    }
 }
 
 void StackPlaneView::update()

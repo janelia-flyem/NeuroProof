@@ -51,12 +51,6 @@ class StackPlaneView : public StackObserver {
     StackPlaneController* controller;
 
   private:
-    void get_rgb(int color_id, unsigned char& r,
-        unsigned char& g, unsigned char& b);
-
-    bool showall;
-    double opacity;
-
     QVTKWidget * qt_widget;
     QVTKInteractor * renderWindowInteractor;
     vtkSmartPointer<vtkImageViewer2> viewer;

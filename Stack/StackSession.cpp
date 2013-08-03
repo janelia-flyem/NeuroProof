@@ -59,6 +59,52 @@ bool StackSession::get_select_label(Label_t& select_curr, Label_t& select_old)
     return selected_id_changed;
 }
 
+void StackSession::get_rgb(int color_id, unsigned char& r,
+        unsigned char& g, unsigned char& b)
+{
+    unsigned int val = color_id % 18; 
+    switch (val) {
+        case 0:
+            r = 0xff; g = b = 0; break;
+        case 1:
+            g = 0xff; r = b = 0; break;
+        case 2:
+            b = 0xff; r = g = 0; break;
+        case 3:
+            r = g = 0xff; b = 0; break;
+        case 14:
+            r = b = 0xff; g = 0; break;
+        case 8:
+            g = b = 0xff; r = 0; break;
+        case 6:
+            r = 0x7f; g = b = 0; break;
+        case 16:
+            g = 0x7f; r = b = 0; break;
+        case 9:
+            b = 0x7f; r = g = 0; break;
+        case 5:
+            r = g = 0x7f; b = 0; break;
+        case 13:
+            r = b = 0x7f; g = 0; break;
+        case 11:
+            g = b = 0x7f; r = 0; break;
+        case 12:
+            r = 0xff; g = b = 0x7f; break;
+        case 10:
+            g = 0xff; r = b = 0x7f; break;
+        case 17:
+            b = 0xff; r = g = 0x7f; break;
+        case 15:
+            r = g = 0xff; b = 0x7f; break;
+        case 7:
+            r = b = 0xff; g = 0x7f; break;
+        case 4:
+            g = b = 0xff; r = 0x7f; break;
+    }
+}
+
+
+
 void StackSession::active_label(unsigned int x, unsigned int y, unsigned int z)
 {
     VolumeLabelPtr labelvol = stack->get_labelvol();

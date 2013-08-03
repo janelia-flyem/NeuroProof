@@ -49,6 +49,9 @@ class StackSession : public Dispatcher {
         return stack;
     }
 
+    void get_rgb(int color_id, unsigned char& r,
+        unsigned char& g, unsigned char& b);
+
     bool get_active_labels(std::tr1::unordered_set<Label_t>& active_labels_);
     bool get_select_label(Label_t& select_curr, Label_t& select_old);
     bool get_show_all(bool& show_all_);

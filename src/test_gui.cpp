@@ -1,4 +1,5 @@
 #include "../Stack/StackPlaneController.h"
+#include "../Stack/StackBodyController.h"
 #include "../Stack/VolumeData.h"
 #include "../Stack/VolumeLabelData.h"
 #include "../Stack/Stack.h"
@@ -42,9 +43,15 @@ int main(int argc, char** argv)
     StackSession session(&stack);
     StackPlaneController controller(&session); 
     controller.initialize(); 
+
+    StackBodyController controller2(&session); 
+
+    controller2.initialize(); 
+
     cout << "Initialized controller" << endl;
     controller.start(); 
-    
+    controller2.start(); 
+
     qapp.exec();
 
     return 0;
