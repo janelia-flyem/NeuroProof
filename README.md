@@ -61,7 +61,7 @@ run <i>make test</i> in the <i>build</i> directory.
 
 ### NeuroProof Only
 
-NeuroProof can be built without NeuroProof with the following:
+NeuroProof can be built without Buildem with the following:
 
     % mkdir build; cd build;
     % cmake ..
