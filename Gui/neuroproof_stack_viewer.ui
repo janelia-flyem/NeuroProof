@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1098</width>
+    <height>649</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>NeuroProof Stack Viewer</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout_3">
+    <item row="0" column="0">
+     <widget class="QSplitter" name="topLayout">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QWidget" name="planeView" native="true">
+       <property name="styleSheet">
+        <string notr="true">border-color: rgb(0, 0, 0);
+border-width: 2px;</string>
+       </property>
+       <zorder></zorder>
+      </widget>
+      <widget class="QSplitter" name="rightLayout">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <widget class="QSplitter" name="toolsLayout">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <widget class="QSlider" name="planeSlider">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>19</width>
+           <height>280</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>19</width>
+           <height>280</height>
+          </size>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+        <widget class="QSplitter" name="tools2Layout">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <widget class="QPushButton" name="toggleLables">
+          <property name="minimumSize">
+           <size>
+            <width>109</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>109</width>
+            <height>31</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Toggle Labels</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="enable3DCheck">
+          <property name="minimumSize">
+           <size>
+            <width>143</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>143</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Enable 3D viewer</string>
+          </property>
+         </widget>
+         <widget class="QSlider" name="opacitySlider">
+          <property name="minimumSize">
+           <size>
+            <width>261</width>
+            <height>19</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>261</width>
+            <height>19</height>
+           </size>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+         <widget class="QStackedWidget" name="modeWidget">
+          <property name="minimumSize">
+           <size>
+            <width>381</width>
+            <height>171</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>381</width>
+            <height>171</height>
+           </size>
+          </property>
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="trainMode">
+           <widget class="QWidget" name="">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>20</y>
+              <width>372</width>
+              <height>141</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="trainLayout">
+             <item>
+              <widget class="QLabel" name="trainlabel">
+               <property name="minimumSize">
+                <size>
+                 <width>277</width>
+                 <height>43</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>277</width>
+                 <height>43</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Training Mode</string>
+               </property>
+               <property name="margin">
+                <number>15</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="train2Layout">
+               <item row="1" column="0">
+                <widget class="QPushButton" name="nextButton">
+                 <property name="maximumSize">
+                  <size>
+                   <width>85</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Next</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="undoButton">
+                 <property name="maximumSize">
+                  <size>
+                   <width>85</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Undo</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="splitButton">
+                 <property name="maximumSize">
+                  <size>
+                   <width>85</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Split</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QPushButton" name="mergeButton">
+                 <property name="maximumSize">
+                  <size>
+                   <width>85</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Merge</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <zorder>trainlabel</zorder>
+           <zorder>mergeButton</zorder>
+           <zorder>splitButton</zorder>
+           <zorder>nextButton</zorder>
+           <zorder>undoButton</zorder>
+           <zorder>trainlabel</zorder>
+           <zorder>trainlabel</zorder>
+           <zorder>opacitySlider</zorder>
+           <zorder>enable3DCheck</zorder>
+           <zorder>trainlabel</zorder>
+          </widget>
+          <widget class="QWidget" name="viewMode">
+           <widget class="QWidget" name="">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>361</width>
+              <height>171</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="viewLayout">
+             <item>
+              <widget class="QLabel" name="viewLabel">
+               <property name="text">
+                <string>View Only Mode</string>
+               </property>
+               <property name="margin">
+                <number>15</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="clearSelection">
+               <property name="maximumSize">
+                <size>
+                 <width>131</width>
+                 <height>31</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Clear Selection</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="toggleGT">
+               <property name="maximumSize">
+                <size>
+                 <width>131</width>
+                 <height>31</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Show GT Labels</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="bodyView" native="true"/>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+   <zorder>bodyView</zorder>
+   <zorder>opacitySlider</zorder>
+   <zorder>toggleLables</zorder>
+   <zorder>planeSlider</zorder>
+   <zorder>enable3DCheck</zorder>
+   <zorder>planeView</zorder>
+   <zorder>modeWidget</zorder>
+   <zorder>splitter_2</zorder>
+   <zorder>toggleLables</zorder>
+   <zorder>splitter</zorder>
+   <zorder></zorder>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1098</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNewProject"/>
+    <addaction name="actionOpenProject"/>
+    <addaction name="actionModifyProject"/>
+    <addaction name="actionSaveProject"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <widget class="QMenu" name="menuMode">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Mode</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionViewOnly"/>
+     <addaction name="actionTraining"/>
+    </widget>
+    <addaction name="menuMode"/>
+    <addaction name="actionShortcuts"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionHelp"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuOptions"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNewProject">
+   <property name="text">
+    <string>New Project</string>
+   </property>
+  </action>
+  <action name="actionOpenProject">
+   <property name="text">
+    <string>Open Project</string>
+   </property>
+  </action>
+  <action name="actionModifyProject">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Modify Project</string>
+   </property>
+  </action>
+  <action name="actionSaveProject">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Project</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionViewOnly">
+   <property name="text">
+    <string>View Only</string>
+   </property>
+  </action>
+  <action name="actionTraining">
+   <property name="text">
+    <string>Training</string>
+   </property>
+  </action>
+  <action name="actionShortcuts">
+   <property name="text">
+    <string>Shortcuts</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About NeuroProof Stack Viewer</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

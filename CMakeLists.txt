@@ -74,6 +74,8 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
+  
+    FIND_PACKAGE(Qt4 REQUIRED) 
     
     # ?! set to buildem path
     INCLUDE_DIRECTORIES(
@@ -93,6 +95,8 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         ${BUILDEM_DIR}/lib/libQtCore.so
         ${BUILDEM_DIR}/lib/libQtGui.so
     )
+
+    include(${QT_USE_FILE}) 
 else ()
     FIND_PACKAGE(PythonLibs)
     FIND_PACKAGE(VTK REQUIRED)
@@ -140,12 +144,13 @@ enable_testing()
 add_subdirectory (Rag)
 add_subdirectory (Stack)
 add_subdirectory (EdgeEditor)
+add_subdirectory (Gui)
 add_subdirectory (BioPriors)
 add_subdirectory (FeatureManager)
 add_subdirectory (Algorithms)
 add_subdirectory (Classifier)
 
-set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors FeatureManager Algorithms Classifier)
+set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor Gui BioPriors FeatureManager Algorithms Classifier)
 set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
 
 # Handle all of NeuroProof sources and dependent code
@@ -154,7 +159,7 @@ add_executable (neuroproof_graph_analyze_gt src/neuroproof_graph_analyze_gt.cpp)
 add_executable (neuroproof_graph_learn src/neuroproof_graph_learn.cpp)
 add_executable (neuroproof_graph_predict src/neuroproof_graph_predict.cpp)
 add_executable (neuroproof_create_spgraph src/neuroproof_create_spgraph.cpp)
-add_executable (test_gui src/test_gui.cpp)
+add_executable (neuroproof_stack_viewer src/neuroproof_stack_viewer.cpp)
 
 add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
 add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/Stack.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
@@ -164,7 +169,7 @@ target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUR
 target_link_libraries (neuroproof_graph_learn ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_predict ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_create_spgraph ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
-target_link_libraries (test_gui ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+target_link_libraries (neuroproof_stack_viewer ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
 
@@ -174,7 +179,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (neuroproof_graph_learn ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_predict ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_create_spgraph ${NEUROPROOF_DEPS})
-    add_dependencies (test_gui ${NEUROPROOF_DEPS})
+    add_dependencies (neuroproof_stack_viewer ${NEUROPROOF_DEPS})
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
 endif()

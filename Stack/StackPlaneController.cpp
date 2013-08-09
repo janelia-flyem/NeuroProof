@@ -157,9 +157,6 @@ void StackPlaneController::update()
 
 void StackPlaneController::initialize()
 {
-    // (re)set all the session info
-    stack_session->initialize();
-    
     view->initialize();
 
     vtkSmartPointer<vtkImageViewer2> image_viewer = view->get_viewer();

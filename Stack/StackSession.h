@@ -4,18 +4,21 @@
 #include "Dispatcher.h"
 #include "Stack.h"
 #include <tr1/unordered_map>
+#include <string>
 
 namespace NeuroProof {
 
 class StackSession : public Dispatcher {
   public:
-    StackSession(Stack* stack_) : stack(stack_), active_labels_changed(false),
-            selected_id(0), old_selected_id(0), selected_id_changed(false),
-            show_all(true), show_all_changed(false), active_plane(0),
-            active_plane_changed(false) {}
-   
-    void initialize() {}
-   
+    // handles session and h5 stacks
+    StackSession(std::string session_name);
+    StackSession(Stack* stack_);
+    StackSession(std::vector<std::string>& gray_images,
+        std::string labelvolume);
+    
+    // will overwrite existing session
+    void export_session(std::string session_name); 
+
     /*!
      * Keep track of certain labels by adding to an active list.
      * \param label volume label
@@ -69,6 +72,7 @@ class StackSession : public Dispatcher {
 
   private:
     void select_label(Label_t current_label);
+    void initialize();
     
     Stack* stack;
     

@@ -1,8 +1,68 @@
 #include "StackSession.h"
 #include "../Rag/RagUtils.h"
+#include "Stack.h"
+#include "../Rag/RagIO.h"
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace NeuroProof;
 using std::tr1::unordered_set;
+using namespace boost::algorithm;
+using namespace boost::filesystem;
+using std::string;
+using std::vector;
+
+// to be called from command line
+StackSession::StackSession(string session_name)
+{
+    initialize();
+  
+    if (ends_with(session_name, ".h5")) {
+        stack = new Stack(session_name);
+        stack->build_rag();
+    } else {
+        stack = new Stack(session_name + "/stack.h5");
+        
+        string rag_name = session_name + "/rag.json";
+        Rag_t* rag = create_rag_from_jsonfile(rag_name.c_str());
+        stack->set_rag(RagPtr(rag));
+    }
+
+    if (!(stack->get_labelvol())) {
+        throw ErrMsg("Label volume not defined for stack");
+    }
+    if (!(stack->get_grayvol())) {
+        throw ErrMsg("Gray volume not defined for stack");
+    }
+}
+
+// to be called from gui controller
+StackSession::StackSession(vector<string>& gray_images, string labelvolume)
+{
+    initialize();
+    VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
+            labelvolume.c_str(), "stack");
+    stack = new Stack(initial_labels);
+    
+    VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
+    stack->set_grayvol(gray_data);
+
+    stack->build_rag();
+}
+
+void StackSession::export_session(string session_name)
+{
+    if (stack) {
+        path dir(session_name.c_str()); 
+        create_directories(dir);
+
+        string stack_name = session_name + "/stack.h5"; 
+        string graph_name = session_name + "/graph.json"; 
+        stack->serialize_stack(stack_name.c_str(), graph_name.c_str(), false); 
+    }
+}
+
 
 void StackSession::compute_label_colors()
 {
@@ -15,6 +75,19 @@ void StackSession::increment_plane()
     if (active_plane < (stack->get_grayvol()->shape(2)-1)) {
         set_plane(active_plane+1);
     }
+}
+
+void StackSession::initialize()
+{
+    stack = 0;
+    active_labels_changed = false;
+    selected_id = 0;
+    old_selected_id = 0;
+    selected_id_changed = false;
+    show_all = true;
+    show_all_changed = false;
+    active_plane = 0;
+    active_plane_changed = false;
 }
 
 void StackSession::decrement_plane()

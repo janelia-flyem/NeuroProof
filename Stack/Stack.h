@@ -47,6 +47,13 @@ class Stack : public StackBase {
     */
     Stack(VolumeLabelPtr labels_) : StackBase(labels_) {}
 
+
+    /*!
+     * Constructor that initializes from a stack h5 file
+     * \param stack_name name of stack h5 file
+    */
+    Stack(std::string stack_name);
+
     /*!
      * Constructs a RAG by interating through the 3D label volume and looking
      * at voxels 6 neighbors.  While building a RAG, features are constructed

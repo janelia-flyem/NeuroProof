@@ -19,7 +19,6 @@ StackBodyController::StackBodyController(StackSession* stack_session_) :
 
 void StackBodyController::initialize()
 {
-    stack_session->initialize();
     view->initialize();
 }
 
