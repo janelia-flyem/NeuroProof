@@ -13,7 +13,7 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 set (SOURCES VolumeLabelData.cpp Stack.cpp)
 
 add_library (Stack SHARED ${SOURCES})
-add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES})
+add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME})
 
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)
 
