@@ -410,8 +410,14 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
         } else if (!overlap_max && (prob2 < prob)) {
             prob = prob2;
         }
+
+        // not really used since gala sets threshold to 0
         if (edge_size < overlap_threshold) {
             prob = 0.0;
+        }
+
+        if ((edge_size > 500) && prob < 0.4) {
+            prob = 0.4;
         }
 
         if ((node1->get_node_id() == 0) || (node2->get_node_id() == 0)) {
