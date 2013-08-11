@@ -24,7 +24,7 @@ StackSession::StackSession(string session_name)
     } else {
         stack = new Stack(session_name + "/stack.h5");
         
-        string rag_name = session_name + "/rag.json";
+        string rag_name = session_name + "/graph.json";
         Rag_t* rag = create_rag_from_jsonfile(rag_name.c_str());
         stack->set_rag(RagPtr(rag));
     }

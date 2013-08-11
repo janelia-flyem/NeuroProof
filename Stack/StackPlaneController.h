@@ -10,6 +10,7 @@
 #include <vtkPropPicker.h>
 
 class vtkPointData;
+class QWidget;
 
 namespace NeuroProof {
 
@@ -61,7 +62,7 @@ class vtkSimpInteractor : public vtkInteractorStyleImage
 
 class StackPlaneController : public StackObserver {
   public:
-    StackPlaneController(StackSession* stack_session);
+    StackPlaneController(StackSession* stack_session, QWidget* widget_parent = 0);
 
     virtual void initialize();
     virtual void update();

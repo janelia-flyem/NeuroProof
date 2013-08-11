@@ -8,13 +8,15 @@
 #include <vtkInteractorStyle.h>
 #include <vtkPointData.h>
 #include "QVTKWidget.h"
+#include <QtGui/QWidget>
 
 using namespace NeuroProof;
 using std::tr1::unordered_set;
 
 StackPlaneView::StackPlaneView(StackSession* stack_session_, 
-        StackPlaneController* controller_) : stack_session(stack_session_),
-        controller(controller_), qt_widget(0), renderWindowInteractor(0)
+        StackPlaneController* controller_, QWidget* widget_parent_) : 
+        stack_session(stack_session_), controller(controller_),
+        widget_parent(widget_parent_), renderWindowInteractor(0)
 {
     stack_session->attach_observer(this);
 } 
@@ -167,14 +169,17 @@ void StackPlaneView::initialize()
     viewer->SetInputConnection(vtkblend_flipped->GetOutputPort());
 
     //qt widgets
-    qt_widget = new QVTKWidget;
-    //viewer->GetRenderWindow()->SetFullScreen(true);
-    //int *size = viewer->GetRenderWindow()->GetSize();
+   
+    if (widget_parent) {
+        qt_widget = new QVTKWidget(widget_parent);
+        //planeView->setGeometry(QRect(0, 0, 671, 571));
+    } else {
+        qt_widget = new QVTKWidget;
+    }
+    //qt_widget->setObjectName(QString::fromUtf8("planeView"));
     qt_widget->showMaximized();
-    //viewer->GetRenderWindow()->SetFullScreen(false);
     qt_widget->SetRenderWindow(viewer->GetRenderWindow());
     renderWindowInteractor = qt_widget->GetInteractor();
-
 
     viewer->SetupInteractor(renderWindowInteractor);
     //viewer->SetSlice(0);

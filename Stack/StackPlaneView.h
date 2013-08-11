@@ -14,6 +14,7 @@
 #include <vtkImageFlip.h>
 
 class QVTKWidget;
+class QWidget;
 class QVTKInteractor;
 
 namespace NeuroProof {
@@ -23,7 +24,8 @@ class StackPlaneController;
 
 class StackPlaneView : public StackObserver {
   public:
-    StackPlaneView(StackSession* stack_session, StackPlaneController* controller);
+    StackPlaneView(StackSession* stack_session,
+            StackPlaneController* controller, QWidget* widget_parent_ = 0);
 
     // call update and create controller
     virtual void initialize();
@@ -52,6 +54,7 @@ class StackPlaneView : public StackObserver {
 
   private:
     QVTKWidget * qt_widget;
+    QWidget * widget_parent;
     QVTKInteractor * renderWindowInteractor;
     vtkSmartPointer<vtkImageViewer2> viewer;
     vtkSmartPointer<vtkImageBlend> vtkblend;

@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                 options.stack_volume << endl;
         }
     }
-   
+    
     StackQTController controller(stack_session);
 
     qapp.exec();

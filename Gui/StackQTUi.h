@@ -14,7 +14,6 @@ class StackQTUi : public QMainWindow {
         ui.setupUi(this);
     }
 
-  private:
     Ui::MainWindow ui;
 };
 

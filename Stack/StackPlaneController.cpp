@@ -6,6 +6,7 @@
 #include <vtkAssemblyPath.h>
 #include <vtkImageActor.h>
 #include "QVTKWidget.h"
+#include <QtGui/QWidget>
 
 using namespace NeuroProof;
 using std::string;
@@ -137,8 +138,8 @@ void vtkSimpInteractor::set_view(StackPlaneView* view_)
     view = view_;
 }
 
-StackPlaneController::StackPlaneController(StackSession* stack_session_) :
-        stack_session(stack_session_), view(0)
+StackPlaneController::StackPlaneController(StackSession* stack_session_,
+            QWidget* widget_parent) : stack_session(stack_session_), view(0)
 {
     stack_session->attach_observer(this);
     Stack* stack = stack_session->get_stack();
@@ -147,7 +148,7 @@ StackPlaneController::StackPlaneController(StackSession* stack_session_) :
     }
     stack->attach_observer(this);
 
-    view = new StackPlaneView(stack_session, this);
+    view = new StackPlaneView(stack_session, this, widget_parent);
 }
 
 void StackPlaneController::update()
