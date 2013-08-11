@@ -401,6 +401,7 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
                 total_edge_size2 += (*eiter)->get_size();
             }
         }
+        
         double prob1 = edge_size / double(total_edge_size1);
         double prob2 = edge_size / double(total_edge_size2);
         prob = prob1;
@@ -410,6 +411,10 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
             prob = prob2;
         }
         if (edge_size < overlap_threshold) {
+            prob = 0.0;
+        }
+
+        if ((node1->get_node_id() == 0) || (node2->get_node_id() == 0)) {
             prob = 0.0;
         }
 

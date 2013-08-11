@@ -132,7 +132,7 @@ class StackPython : public Stack {
                     if (!label0 || !label1) {
                         continue;
                     }
-                    assert(label0 != label1);
+                    //assert(label0 != label1);
 
                     RagNode_t * node = rag->find_rag_node(label0);
                     if (!node) {
@@ -158,8 +158,19 @@ class StackPython : public Stack {
                     node->incr_size();
                     node2->incr_size();
 
-                    rag_add_edge(label0, label1, predictions);
-                    rag_add_edge(label0, label1, predictions2);
+                    if (label0 == label1) {
+                        // create dummy node and init features
+                        RagNode_t * node0 = rag->find_rag_node(Label_t(0));
+                        if (!node0) {
+                            node0 = rag->insert_rag_node(Label_t(0));
+                            feature_manager->add_val(predictions, node0);
+                            node->incr_size();
+                        }
+                        rag_add_edge(label0, Label_t(0), predictions);
+                    } else {
+                        rag_add_edge(label0, label1, predictions);
+                        rag_add_edge(label0, label1, predictions2);
+                    }
 
                     node->incr_boundary_size();
                     node2->incr_boundary_size();
