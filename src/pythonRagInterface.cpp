@@ -177,6 +177,28 @@ class StackPython : public Stack {
                 }
             }
         }
+   
+        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+            if ((*iter)->get_size() > 0) {
+                double prob = 1.1;
+                if (((*iter)->get_node1()->get_node_id() == 0) ||
+                    ((*iter)->get_node2()->get_node_id() == 0)) {
+                    prob = 1.0;
+                } else {
+                    if ((*iter)->has_property("orig-prob")) {
+                        prob = (*iter)->get_property<double>("orig-prob");
+                        (*iter)->rm_property("orig-prob"); 
+                    }
+                }
+                double prob2 = feature_manager->get_prob(*iter);
+                
+                (*iter)->set_property("orig-prob", std::min(prob, prob2));
+            }
+        }
+
+        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+            (*iter)->set_size(0);
+        }
     }
 
     boost::python::list get_transformations()
