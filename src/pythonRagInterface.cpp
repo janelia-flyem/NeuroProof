@@ -113,7 +113,7 @@ class StackPython : public Stack {
         }
     }
 
-    void build_rag_border()
+    void build_rag_border(bool ignore0s)
     {
         vector<VolumeProbPtr> prob_list2 = stack2->get_prob_list();
 
@@ -128,6 +128,20 @@ class StackPython : public Stack {
 
                     Label_t label0 = (*labelvol)(x,y,z);
                     Label_t label1 = (*labelvol2)(x,y,z);
+                    
+                    bool ignore = false; 
+                   
+                    if (mask1 && mask2) { 
+                        Label_t mask_val0 = (*mask1)(x,y,z);
+                        Label_t mask_val1 = (*mask2)(x,y,z);
+
+                        if (!mask_val0 || !mask_val1) {
+                            ignore = true;
+                        }
+                    }
+                    if (ignore0s && ignore) {
+                        continue;
+                    }
 
                     if (!label0 || !label1) {
                         continue;
@@ -158,7 +172,7 @@ class StackPython : public Stack {
                     node->incr_size();
                     node2->incr_size();
 
-                    if (label0 == label1) {
+                    if (label0 == label1 || ignore) {
                         // create dummy node and init features
                         RagNode_t * node0 = rag->find_rag_node(Label_t(0));
                         if (!node0) {
@@ -167,6 +181,9 @@ class StackPython : public Stack {
                             node->incr_size();
                         }
                         rag_add_edge(label0, Label_t(0), predictions);
+                        if (ignore) {
+                            rag_add_edge(label1, Label_t(0), predictions);
+                        }
                     } else {
                         rag_add_edge(label0, label1, predictions);
                         rag_add_edge(label0, label1, predictions2);
@@ -314,6 +331,12 @@ class StackPython : public Stack {
         return stack2;
     }
 
+    void set_mask(VolumeLabelPtr mask1_, VolumeLabelPtr mask2_)
+    {
+        mask1 = mask1_;
+        mask2 = mask2_;
+    }
+
     ~StackPython()
     {
         delete stack2;
@@ -322,6 +345,8 @@ class StackPython : public Stack {
     Stack* stack2;
     EdgeCount best_edge_z;
     EdgeLoc best_edge_loc;
+    VolumeLabelPtr mask1;
+    VolumeLabelPtr mask2;
 };
 
 
@@ -386,7 +411,6 @@ Rag_nodeiterator_wrapper rag_get_nodes(Rag_t& rag)
     return Rag_nodeiterator_wrapper(&rag);
 }
 
-
 void write_volume_to_buffer(StackPython* stack, object np_buffer)
 {
     unsigned width, height, depth; 
@@ -439,6 +463,21 @@ VolumeLabelPtr init_watershed(object watershed)
     return labels;
 }
 
+void dilate_supervoxels(object supervoxels)
+{
+    VolumeLabelPtr labelvol = init_watershed(supervoxels);
+    Stack stack(labelvol);
+    stack.dilate_labelvol(1);
+    labelvol = stack.get_labelvol();
+
+    for (int z = 0; z < (labelvol->shape(2)); ++z) { 
+        for (int y = 0; y < (labelvol->shape(1)); ++y) {
+            for (int x = 0; x < (labelvol->shape(0)); ++x) {
+                supervoxels[boost::python::make_tuple(z,y,x)] = (*labelvol)(x,y,z);
+            }
+        }
+    } 
+}
 
 // how to add features to RAG?
 void reinit_stack(StackPython* stack, object watershed)
@@ -451,6 +490,14 @@ void reinit_stack(StackPython* stack, object watershed)
     vector<VolumeProbPtr> prob_list;
     stack->set_prob_list(prob_list);
 }
+
+void init_masks(StackPython* stack, object mask1, object mask2)
+{
+    VolumeLabelPtr mask1_labels = init_watershed(mask1);
+    VolumeLabelPtr mask2_labels = init_watershed(mask2);
+    stack->set_mask(mask1_labels, mask2_labels); 
+}
+
 
 void reinit_stack2(StackPython* stack, object watershed)
 {
@@ -506,10 +553,12 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
 
     def("reinit_stack", reinit_stack);
     def("reinit_stack2", reinit_stack2);
+    def("init_masks", init_masks);
     def("init_stack", init_stack, return_value_policy<manage_new_object>());
     def("add_prediction_channel", add_prediction_channel);
     def("add_prediction_channel2", add_prediction_channel2);
     def("write_volume_to_buffer", write_volume_to_buffer);
+    def("dilate_supervoxels", dilate_supervoxels);
 
     // initialization actually occurs within custom build
     class_<FeatureMgr>("FeatureMgr", no_init)
