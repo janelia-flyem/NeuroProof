@@ -3,6 +3,7 @@
 
 #include "StackObserver.h"
 
+class QWidget;
 
 namespace NeuroProof {
 
@@ -11,7 +12,7 @@ class StackBodyView;
 
 class StackBodyController : public StackObserver {
   public:
-    StackBodyController(StackSession* stack_session);
+    StackBodyController(StackSession* stack_session, QWidget* widget_parent = 0);
 
     virtual void initialize();
     virtual void update() {}

@@ -1,6 +1,7 @@
 #include "StackBodyView.h"
 #include "StackSession.h"
 #include "QVTKWidget.h"
+#include <QtGui/QWidget>
 
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
@@ -15,12 +16,13 @@ using std::tr1::unordered_set;
 using std::tr1::unordered_map;
 
 #include "../Utilities/ScopeTime.h"
+#include <QVBoxLayout>
 
 static boost::mutex mutex_create;
 static boost::mutex mutex_meta;
 
-StackBodyView::StackBodyView(StackSession* stack_session_) :
-        stack_session(stack_session_), qt_widget(0)
+StackBodyView::StackBodyView(StackSession* stack_session_, QWidget* widget_parent_) :
+        stack_session(stack_session_), qt_widget(0), widget_parent(widget_parent_)
 {
     stack_session->attach_observer(this);
 } 
@@ -30,6 +32,9 @@ StackBodyView::~StackBodyView()
     stack_session->detach_observer(this);
     if (qt_widget) {
         delete qt_widget;
+    }
+    if (layout) {
+        delete layout;
     }
 }
 
@@ -170,6 +175,12 @@ void StackBodyView::initialize()
 void StackBodyView::start()
 {
     qt_widget = new QVTKWidget;
+    if (widget_parent) {
+        layout = new QVBoxLayout;
+        layout->addWidget(qt_widget);
+        widget_parent->setLayout(layout);
+    }
+    
     qt_widget->SetRenderWindow(rw);
     renderWindowInteractor = qt_widget->GetInteractor();
     rw->Render();

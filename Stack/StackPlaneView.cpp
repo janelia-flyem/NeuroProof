@@ -9,6 +9,7 @@
 #include <vtkPointData.h>
 #include "QVTKWidget.h"
 #include <QtGui/QWidget>
+#include <QVBoxLayout>
 
 using namespace NeuroProof;
 using std::tr1::unordered_set;
@@ -26,6 +27,9 @@ StackPlaneView::~StackPlaneView()
     stack_session->detach_observer(this);
     if (qt_widget) {
         delete qt_widget;
+    }
+    if (layout) {
+        delete layout;
     }
 }
     
@@ -171,13 +175,18 @@ void StackPlaneView::initialize()
     //qt widgets
    
     if (widget_parent) {
-        qt_widget = new QVTKWidget(widget_parent);
+        layout = new QVBoxLayout;
+        qt_widget = new QVTKWidget;
+        layout->addWidget(qt_widget);
+        widget_parent->setLayout(layout);
+        //qt_widget = new QVTKWidget(widget_parent);
         //planeView->setGeometry(QRect(0, 0, 671, 571));
     } else {
         qt_widget = new QVTKWidget;
     }
+
     //qt_widget->setObjectName(QString::fromUtf8("planeView"));
-    qt_widget->showMaximized();
+    //qt_widget->showMaximized();
     qt_widget->SetRenderWindow(viewer->GetRenderWindow());
     renderWindowInteractor = qt_widget->GetInteractor();
 

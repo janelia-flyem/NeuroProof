@@ -16,6 +16,7 @@
 class QVTKWidget;
 class QWidget;
 class QVTKInteractor;
+class QVBoxLayout;
 
 namespace NeuroProof {
 
@@ -55,6 +56,8 @@ class StackPlaneView : public StackObserver {
   private:
     QVTKWidget * qt_widget;
     QWidget * widget_parent;
+  
+    QVBoxLayout * layout;
     QVTKInteractor * renderWindowInteractor;
     vtkSmartPointer<vtkImageViewer2> viewer;
     vtkSmartPointer<vtkImageBlend> vtkblend;

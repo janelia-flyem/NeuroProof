@@ -11,6 +11,7 @@
 
 class vtkPointData;
 class QWidget;
+class QVTKWidget;
 
 namespace NeuroProof {
 

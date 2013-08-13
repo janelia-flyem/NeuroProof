@@ -9,6 +9,7 @@ namespace NeuroProof {
 class StackSession;
 class StackQTUi;
 class StackPlaneController;
+class StackBodyController;
 
 class StackQTController : public StackObserver {
   public:
@@ -20,6 +21,7 @@ class StackQTController : public StackObserver {
     StackSession* stack_session;
     StackQTUi* main_ui;
     StackPlaneController* plane_controller;
+    StackBodyController* body_controller;
 
     void load_views();
 };

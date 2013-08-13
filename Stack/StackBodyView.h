@@ -27,6 +27,8 @@
 
 class QVTKWidget;
 class QVTKInteractor;
+class QWidget;
+class QVBoxLayout;
 
 namespace NeuroProof {
 
@@ -34,7 +36,7 @@ class StackSession;
 
 class StackBodyView : public StackObserver {
   public:
-    StackBodyView(StackSession* stack_session);
+    StackBodyView(StackSession* stack_session, QWidget* widget_parent_ = 0);
 
     // call update and create controller
     virtual void initialize();
@@ -75,6 +77,8 @@ class StackBodyView : public StackObserver {
     vtkSmartPointer<vtkPlaneSource> plane_source;
     vtkSmartPointer<vtkPolyDataMapper> plane_mapper;
     vtkSmartPointer<vtkActor> actor;
+    QWidget * widget_parent;
+    QVBoxLayout * layout;
 };
 
 }

@@ -1,11 +1,12 @@
 #include "StackBodyController.h"
 #include "StackSession.h"
 #include "StackBodyView.h"
+#include <QtGui/QWidget>
 
 using namespace NeuroProof;
 
-StackBodyController::StackBodyController(StackSession* stack_session_) :
-    stack_session(stack_session_), view(0)
+StackBodyController::StackBodyController(StackSession* stack_session_,
+        QWidget* widget_parent) : stack_session(stack_session_), view(0)
 {
     stack_session->attach_observer(this);
     Stack* stack = stack_session->get_stack();
@@ -14,7 +15,7 @@ StackBodyController::StackBodyController(StackSession* stack_session_) :
     }
     stack->attach_observer(this);
 
-    view = new StackBodyView(stack_session);
+    view = new StackBodyView(stack_session, widget_parent);
 }
 
 void StackBodyController::initialize()
