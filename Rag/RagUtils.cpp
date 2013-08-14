@@ -48,10 +48,15 @@ void rag_join_nodes(Rag_t& rag, RagNode_t* node_keep, RagNode_t* node_remove,
                 combine_alg->post_edge_join(final_edge, *iter);
             }
 
+            // specific flag updates for a particular algorithm, will be ignored
+            // if these flags do not exist
             try {
                 double prob1 = (*iter)->get_property<double>("orig-prob");
                 double prob2 = final_edge->get_property<double>("orig-prob");
                 final_edge->set_property("orig-prob", double(std::min(prob1, prob2)));
+                prob1 = (*iter)->get_property<double>("save-prob");
+                prob2 = final_edge->get_property<double>("save-prob");
+                final_edge->set_property("save-prob", double(std::min(prob1, prob2)));
             } catch (ErrMsg& msg) {
             }
 

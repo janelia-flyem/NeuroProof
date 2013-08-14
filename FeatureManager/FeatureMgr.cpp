@@ -391,6 +391,15 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
         unsigned long long total_edge_size1 = 0;
         unsigned long long total_edge_size2 = 0;
 
+        unsigned long long total_edge_zero = 0;
+
+        if (edge->has_property("num-zeros")) {
+            total_edge_zero += 
+                (edge->get_property<unsigned long long>("num-zeros"));
+        }
+        edge_size -= total_edge_zero; 
+    
+
         for (RagNode_t::edge_iterator eiter = node1->edge_begin(); eiter != node1->edge_end(); ++eiter) {
             if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                 total_edge_size1 += (*eiter)->get_size();
@@ -400,6 +409,26 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
             if (!((*eiter)->is_preserve() || (*eiter)->is_false_edge())) {
                 total_edge_size2 += (*eiter)->get_size();
             }
+        }
+       
+        // save conservative probabilities for each edge 
+        double save_prob = (edge_size + total_edge_zero) / double(total_edge_size1);
+        double save_prob2 = (edge_size + total_edge_zero) / double(total_edge_size2);
+        // grab highest overlap amount
+        if (save_prob2 > save_prob) {
+            save_prob = save_prob2;
+        }
+        // artificially set lower probability for large overlap regions
+        if (((edge_size + total_edge_zero) > 500 && save_prob < 0.4)) {
+            save_prob = 0.4;
+        }
+        // ignore edges to null bodies
+        if ((node1->get_node_id() == 0) || (node2->get_node_id() == 0)) {
+            save_prob = 0.0;
+        }
+        save_prob = 1 - save_prob;
+        if (!(edge->has_property("save-prob"))) {
+            edge->set_property("save-prob", save_prob);
         }
         
         double prob1 = edge_size / double(total_edge_size1);
@@ -411,7 +440,7 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
             prob = prob2;
         }
 
-        // not really used since gala sets threshold to 0
+        // should be greater than 0 to avoid errors on small overlap regions
         if (edge_size < overlap_threshold) {
             prob = 0.0;
         }

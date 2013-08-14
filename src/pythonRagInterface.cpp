@@ -113,7 +113,7 @@ class StackPython : public Stack {
         }
     }
 
-    void build_rag_border(bool ignore0s)
+    void build_rag_border()
     {
         vector<VolumeProbPtr> prob_list2 = stack2->get_prob_list();
 
@@ -138,9 +138,6 @@ class StackPython : public Stack {
                         if (!mask_val0 || !mask_val1) {
                             ignore = true;
                         }
-                    }
-                    if (ignore0s && ignore) {
-                        continue;
                     }
 
                     if (!label0 || !label1) {
@@ -172,7 +169,7 @@ class StackPython : public Stack {
                     node->incr_size();
                     node2->incr_size();
 
-                    if (label0 == label1 || ignore) {
+                    if (label0 == label1) {
                         // create dummy node and init features
                         RagNode_t * node0 = rag->find_rag_node(Label_t(0));
                         if (!node0) {
@@ -181,12 +178,19 @@ class StackPython : public Stack {
                             node->incr_size();
                         }
                         rag_add_edge(label0, Label_t(0), predictions);
-                        if (ignore) {
-                            rag_add_edge(label1, Label_t(0), predictions);
-                        }
                     } else {
                         rag_add_edge(label0, label1, predictions);
                         rag_add_edge(label0, label1, predictions2);
+                    
+                        if (ignore) {
+                            RagEdge_t* edge = rag->find_rag_edge(label0, label1);
+                            unsigned long long current0s = 0;
+                            if (edge->has_property("num-zeros")) {
+                                current0s = edge->get_property<unsigned long long>("num-zeros");
+                            }
+                            current0s += 2;
+                            edge->set_property("num-zeros", current0s);
+                        } 
                     }
 
                     node->incr_boundary_size();
@@ -198,23 +202,36 @@ class StackPython : public Stack {
         for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
             if ((*iter)->get_size() > 0) {
                 double prob = 1.1;
+                double save_prob = 1.1;
                 if (((*iter)->get_node1()->get_node_id() == 0) ||
                     ((*iter)->get_node2()->get_node_id() == 0)) {
                     prob = 1.0;
+                    save_prob = 1.0;
                 } else {
                     if ((*iter)->has_property("orig-prob")) {
                         prob = (*iter)->get_property<double>("orig-prob");
+                        save_prob = (*iter)->get_property<double>("save-prob");
                         (*iter)->rm_property("orig-prob"); 
+                        (*iter)->rm_property("save-prob"); 
                     }
                 }
                 double prob2 = feature_manager->get_prob(*iter);
+                double save_prob2 = (*iter)->get_property<double>("save-prob");
                 
                 (*iter)->set_property("orig-prob", std::min(prob, prob2));
+                (*iter)->set_property("save-prob", std::min(save_prob, save_prob2));
             }
         }
 
         for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
             (*iter)->set_size(0);
+        }
+    }
+
+    void set_saved_probs()
+    {
+        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+            (*iter)->set_property("orig-prob", (*iter)->get_property<double>("save-prob")); 
         }
     }
 
@@ -580,6 +597,7 @@ BOOST_PYTHON_MODULE(libNeuroProofRag)
         .def("agglomerate_rag", &StackPython::agglomerate)
         // build rag based on loaded features and prediction images 
         .def("build_rag", &StackPython::build_rag_padded)
+        .def("set_saved_probs", &StackPython::set_saved_probs)
         .def("build_rag_border", &StackPython::build_rag_border)
         .def("add_empty_channel", &StackPython::add_empty_channel)
         .def("get_transformations", &StackPython::get_transformations)
