@@ -33,14 +33,14 @@ class FeatureMgr {
   public:
     FeatureMgr() : num_channels(0), specified_features(false),
         has_pyfunc(false), overlap(false), num_features(0),
-        overlap_threshold(11), overlap_max(true), eclfr(0) {}
+        overlap_threshold(11), overlap_max(true), eclfr(0), border_weight(1.0) {}
     
     FeatureMgr(int num_channels_) : num_channels(num_channels_), 
         specified_features(false), channels_features(num_channels_),
         channels_features_modes(num_channels_),
         channels_features_equal(num_channels_), has_pyfunc(false),
         overlap(false), num_features(0), overlap_threshold(11),
-        overlap_max(true), eclfr(0) {}
+        overlap_max(true), eclfr(0), border_weight(1.0) {}
     
     void add_channel();
     unsigned int get_num_features()
@@ -51,9 +51,15 @@ class FeatureMgr {
     void set_python_rf_function(boost::python::object pyfunc_);
 #endif
     void set_overlap_function();
+    
     void set_overlap_cutoff(int threshold)
     {
         overlap_threshold = threshold;
+    }
+
+    void set_border_weight(double weight)
+    {
+        border_weight = weight;
     }
     
     void set_overlap_max()
@@ -264,6 +270,7 @@ class FeatureMgr {
     bool overlap_max;
     int overlap_threshold;
     EdgeClassifier* eclfr;	 
+    double border_weight;
 };
 
 typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;

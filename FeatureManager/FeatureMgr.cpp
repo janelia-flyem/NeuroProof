@@ -397,7 +397,7 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
             total_edge_zero += 
                 (edge->get_property<unsigned long long>("num-zeros"));
         }
-        edge_size -= total_edge_zero; 
+        edge_size -= (unsigned long long)((total_edge_zero * border_weight)); 
     
 
         for (RagNode_t::edge_iterator eiter = node1->edge_begin(); eiter != node1->edge_end(); ++eiter) {
