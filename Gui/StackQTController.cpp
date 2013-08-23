@@ -2,6 +2,7 @@
 #include "StackQTUi.h"
 #include "../Stack/StackPlaneController.h"
 #include "../Stack/StackBodyController.h"
+#include <QTimer>
 
 using namespace NeuroProof;
 using std::cout; using std::endl;
@@ -11,16 +12,20 @@ StackQTController::StackQTController(StackSession* stack_session_) :
 {
     main_ui = new StackQTUi;
 
-    if (stack_session) {
+    /*if (stack_session) {
         load_views();
-    }
-    
+    }*/
+
+    QTimer::singleShot(1000, this, SLOT(load_views()));
     main_ui->showMaximized();
     main_ui->show();
 }
 
 void StackQTController::load_views()
 {
+    if (!stack_session) {
+        return;
+    }
     // ?! load views when main widget loads
     plane_controller = new StackPlaneController(stack_session, main_ui->ui.planeView);
     plane_controller->initialize();

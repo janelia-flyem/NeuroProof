@@ -2,6 +2,7 @@
 #define STACKQTCONTROLLER_H
 
 #include "../Stack/StackObserver.h"
+#include <QWidget>
 
 namespace NeuroProof {
 
@@ -11,10 +12,12 @@ class StackQTUi;
 class StackPlaneController;
 class StackBodyController;
 
-class StackQTController : public StackObserver {
+class StackQTController : public QObject, public StackObserver {
+    Q_OBJECT
+  
   public:
     StackQTController(StackSession* stack_session_);
-    
+
     void update() {}
 
   private:
@@ -23,6 +26,7 @@ class StackQTController : public StackObserver {
     StackPlaneController* plane_controller;
     StackBodyController* body_controller;
 
+  private slots: 
     void load_views();
 };
 
