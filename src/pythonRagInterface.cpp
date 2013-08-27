@@ -113,7 +113,7 @@ class StackPython : public Stack {
         }
     }
 
-    void build_rag_border()
+    void build_rag_border(bool reset_edges)
     {
         vector<VolumeProbPtr> prob_list2 = stack2->get_prob_list();
 
@@ -198,33 +198,35 @@ class StackPython : public Stack {
                 }
             }
         }
-   
-        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-            if ((*iter)->get_size() > 0) {
-                double prob = 1.1;
-                double save_prob = 1.1;
-                if (((*iter)->get_node1()->get_node_id() == 0) ||
-                    ((*iter)->get_node2()->get_node_id() == 0)) {
-                    prob = 1.0;
-                    save_prob = 1.0;
-                } else {
-                    if ((*iter)->has_property("orig-prob")) {
-                        prob = (*iter)->get_property<double>("orig-prob");
-                        save_prob = (*iter)->get_property<double>("save-prob");
-                        (*iter)->rm_property("orig-prob"); 
-                        (*iter)->rm_property("save-prob"); 
+  
+        if (reset_edges) { 
+            for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+                if ((*iter)->get_size() > 0) {
+                    double prob = 1.1;
+                    double save_prob = 1.1;
+                    if (((*iter)->get_node1()->get_node_id() == 0) ||
+                            ((*iter)->get_node2()->get_node_id() == 0)) {
+                        prob = 1.0;
+                        save_prob = 1.0;
+                    } else {
+                        if ((*iter)->has_property("orig-prob")) {
+                            prob = (*iter)->get_property<double>("orig-prob");
+                            save_prob = (*iter)->get_property<double>("save-prob");
+                            (*iter)->rm_property("orig-prob"); 
+                            (*iter)->rm_property("save-prob"); 
+                        }
                     }
-                }
-                double prob2 = feature_manager->get_prob(*iter);
-                double save_prob2 = (*iter)->get_property<double>("save-prob");
-                
-                (*iter)->set_property("orig-prob", std::min(prob, prob2));
-                (*iter)->set_property("save-prob", std::min(save_prob, save_prob2));
-            }
-        }
+                    double prob2 = feature_manager->get_prob(*iter);
+                    double save_prob2 = (*iter)->get_property<double>("save-prob");
 
-        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-            (*iter)->set_size(0);
+                    (*iter)->set_property("orig-prob", std::min(prob, prob2));
+                    (*iter)->set_property("save-prob", std::min(save_prob, save_prob2));
+                }
+            }
+
+            for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+                (*iter)->set_size(0);
+            }
         }
     }
 
