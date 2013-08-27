@@ -412,14 +412,14 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
         }
        
         // save conservative probabilities for each edge 
-        double save_prob = (edge_size + total_edge_zero) / double(total_edge_size1);
-        double save_prob2 = (edge_size + total_edge_zero) / double(total_edge_size2);
+        double save_prob = (edge_size + ((unsigned long long)((total_edge_zero * border_weight)))) / double(total_edge_size1);
+        double save_prob2 = (edge_size + ((unsigned long long)((total_edge_zero * border_weight)))) / double(total_edge_size2);
         // grab highest overlap amount
         if (save_prob2 > save_prob) {
             save_prob = save_prob2;
         }
         // artificially set lower probability for large overlap regions
-        if (((edge_size + total_edge_zero) > 500 && save_prob < 0.4)) {
+        if (((edge_size + ((unsigned long long)((total_edge_zero * border_weight)))) > 500 && save_prob < 0.4)) {
             save_prob = 0.4;
         }
         // ignore edges to null bodies
