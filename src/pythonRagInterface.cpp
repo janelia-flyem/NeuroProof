@@ -226,6 +226,7 @@ class StackPython : public Stack {
 
             for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
                 (*iter)->set_size(0);
+                (*iter)->set_property("num-zeros", ((unsigned long long)(0)));
             }
         }
     }
