@@ -12,6 +12,7 @@
 #include <vtkLookupTable.h>
 #include <vtkImageBlend.h>
 #include <vtkImageFlip.h>
+#include "StackBase.h"
 
 class QVTKWidget;
 class QWidget;
@@ -54,6 +55,8 @@ class StackPlaneView : public StackObserver {
     StackPlaneController* controller;
 
   private:
+    void load_rag_colors(RagPtr rag);
+    
     QVTKWidget * qt_widget;
     QWidget * widget_parent;
   

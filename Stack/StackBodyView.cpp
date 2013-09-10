@@ -31,10 +31,15 @@ StackBodyView::~StackBodyView()
 {
     stack_session->detach_observer(this);
     if (qt_widget) {
+        if (layout) {
+            QLayoutItem * item;
+            if ((item = layout->takeAt(0)) != 0) {
+                layout->removeItem(item);
+            }
+            layout->removeWidget(qt_widget);
+            delete layout;
+        }
         delete qt_widget;
-    }
-    if (layout) {
-        delete layout;
     }
 }
 
@@ -118,8 +123,8 @@ void StackBodyView::initialize()
     volumeScalarOpacity = vtkSmartPointer<vtkPiecewiseFunction>::New();
 
     // set lookup table
-    stack_session->compute_label_colors();
     RagPtr rag = stack->get_rag();
+    stack_session->compute_label_colors(rag);
     
     volumeColor->AddRGBPoint(0, 0, 0, 0);
     for (int i = 0; i <= 17; ++i) {
@@ -167,6 +172,7 @@ void StackBodyView::initialize()
     ren1->GetActiveCamera()->OrthogonalizeViewUp();
     ren1->GetActiveCamera()->Elevation(65);
     ren1->GetActiveCamera()->OrthogonalizeViewUp();
+    ren1->GetActiveCamera()->Zoom(0.85);
 
     rw = vtkSmartPointer<vtkRenderWindow>::New();
     rw->AddRenderer(ren1);
@@ -185,24 +191,16 @@ void StackBodyView::start()
     renderWindowInteractor = qt_widget->GetInteractor();
     rw->Render();
     qt_widget->show();
+    _update(true);
 }
 
-void StackBodyView::update()
+void StackBodyView::_update(bool initialize)
 {
-    ScopeTime timer;
     double rgba[4];
     unordered_set<Label_t> active_labels;
 
     unsigned int plane_id;
-    if (stack_session->get_plane(plane_id)) {
-        double blah[3];
-        ren1->GetActiveCamera()->GetPosition(blah);
-        std::cout << "pos: " << blah[0] << " " << blah[1] << " " << blah[2] << std::endl;
-        
-        ren1->GetActiveCamera()->GetFocalPoint(blah);
-        std::cout << "foc: " << blah[0] << " " << blah[1] << " " << blah[2] << std::endl;
-
-
+    if (stack_session->get_plane(plane_id) || initialize) {
         double pt[3];
         plane_source->GetPoint1(pt);
         plane_source->SetPoint1(pt[0], pt[1], plane_id);
@@ -213,9 +211,14 @@ void StackBodyView::update()
         renderWindowInteractor->Render();
     }
 
-    if (stack_session->get_active_labels(active_labels)) {
+    if (stack_session->get_active_labels(active_labels) || initialize) {
         create_label_volume(active_labels);
         labelvtk->Modified();
         renderWindowInteractor->Render();
     }
+}
+
+void StackBodyView::update()
+{
+    _update(false);
 }

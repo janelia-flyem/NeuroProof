@@ -60,7 +60,7 @@ class Stack : public StackBase {
      * from the probability volumes in the stack.
     */
     void build_rag();
-    
+   
     /*!
      * Finds bi-connected components in the RAG (that are not connected to the
      * boundary of the volume) and removes them.  This function modifies the

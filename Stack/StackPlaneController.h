@@ -8,6 +8,7 @@
 //#include <vtkRenderWindowInteractor.h>
 #include <vtkImageViewer2.h>
 #include <vtkPropPicker.h>
+#include <QWidget>
 
 class vtkPointData;
 class QWidget;
@@ -26,6 +27,7 @@ class vtkClickCallback : public vtkCommand {
     void set_image_viewer(vtkSmartPointer<vtkImageViewer2> image_viewer_);
     void set_picker(vtkSmartPointer<vtkPropPicker> prop_picker_);
     ~vtkClickCallback();
+
 
   private:
     vtkClickCallback();
@@ -61,14 +63,20 @@ class vtkSimpInteractor : public vtkInteractorStyleImage
     StackPlaneView * view;
 };
 
-class StackPlaneController : public StackObserver {
+class StackPlaneController : public QObject, public StackObserver {
+    Q_OBJECT
   public:
     StackPlaneController(StackSession* stack_session, QWidget* widget_parent = 0);
+    ~StackPlaneController();
 
     virtual void initialize();
     virtual void update();
     virtual void start();
 
+  public slots:
+      void toggle_show_all();
+      void clear_selection();
+  
   private:
     StackSession* stack_session;
     StackPlaneView* view;

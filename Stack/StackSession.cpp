@@ -22,11 +22,23 @@ StackSession::StackSession(string session_name)
         stack = new Stack(session_name);
         stack->build_rag();
     } else {
-        stack = new Stack(session_name + "/stack.h5");
-        
+        // load label volume to examine
+        stack = new Stack(session_name + "/stack.h5"); 
         string rag_name = session_name + "/graph.json";
         Rag_t* rag = create_rag_from_jsonfile(rag_name.c_str());
         stack->set_rag(RagPtr(rag));
+        
+        // load gt volume to examine
+        string gt_name = session_name + "/gtstack.h5";
+        if (exists(gt_name.c_str())) {
+            load_gt(gt_name, false); 
+            string gtrag_name = session_name + "/gtgraph.json";
+            Rag_t* gtrag = create_rag_from_jsonfile(gtrag_name.c_str());
+            gt_stack->set_rag(RagPtr(gtrag));
+        }
+      
+        // record session name for saving  
+        saved_session_name = session_name;
     }
 
     if (!(stack->get_labelvol())) {
@@ -37,36 +49,108 @@ StackSession::StackSession(string session_name)
     }
 }
 
+// ?! check same dimensions
+void StackSession::load_gt(string gt_name, bool build_rag)
+{
+    Stack* new_gt_stack;
+    try {
+        new_gt_stack = new Stack(gt_name);
+        
+        if (new_gt_stack->get_xsize() != stack->get_xsize() ||
+            new_gt_stack->get_ysize() != stack->get_ysize() ||
+            new_gt_stack->get_zsize() != stack->get_zsize()) {
+            throw ErrMsg("Dimensions of ground truth do not match label volume");
+        }
+        if (build_rag) {
+            new_gt_stack->build_rag();
+        }
+        new_gt_stack->set_grayvol(stack->get_grayvol());
+    } catch (std::runtime_error &error) {
+        throw ErrMsg(gt_name + string(" not loaded"));
+    }
+
+    if (gt_stack) {
+        delete gt_stack;
+    }
+    gt_stack = new_gt_stack;
+}
+
 // to be called from gui controller
 StackSession::StackSession(vector<string>& gray_images, string labelvolume)
 {
     initialize();
-    VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
-            labelvolume.c_str(), "stack");
-    stack = new Stack(initial_labels);
-    
-    VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
-    stack->set_grayvol(gray_data);
+    try {
+        VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
+                labelvolume.c_str(), "stack");
+        stack = new Stack(initial_labels);
 
-    stack->build_rag();
+        VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
+        stack->set_grayvol(gray_data);
+        stack->build_rag();
+    } catch (std::runtime_error &error) {
+        throw ErrMsg("Unspecified load error");
+    }
+}
+
+void StackSession::save()
+{
+    if (saved_session_name == "") {
+        throw ErrMsg("Session has not been created");
+    }
+    export_session(saved_session_name);
 }
 
 void StackSession::export_session(string session_name)
 {
-    if (stack) {
-        path dir(session_name.c_str()); 
-        create_directories(dir);
+    // flip stacks just for export if gt toggled
+    Stack* stack_exp = stack;
+    Stack* gtstack_exp = gt_stack;
+    if (gt_mode) {
+        stack_exp = gt_stack;
+        gtstack_exp = stack; 
+    }    
 
-        string stack_name = session_name + "/stack.h5"; 
-        string graph_name = session_name + "/graph.json"; 
-        stack->serialize_stack(stack_name.c_str(), graph_name.c_str(), false); 
+    if (stack_exp) {
+        try {
+            path dir(session_name.c_str()); 
+            create_directories(dir);
+
+            string stack_name = session_name + "/stack.h5"; 
+            string graph_name = session_name + "/graph.json"; 
+            stack_exp->serialize_stack(stack_name.c_str(), graph_name.c_str(), false);
+            
+            if (gtstack_exp) {
+                // do not export grayscale from ground truth -- already exported
+                gtstack_exp->set_grayvol(VolumeGrayPtr());
+                string gtstack_name = session_name + "/gtstack.h5"; 
+                string gtgraph_name = session_name + "/gtgraph.json"; 
+                gtstack_exp->serialize_stack(gtstack_name.c_str(), gtgraph_name.c_str(), false);
+                gtstack_exp->set_grayvol(stack->get_grayvol());
+            }
+        } catch (...) {
+            throw ErrMsg(session_name.c_str());
+        }
+        saved_session_name = session_name;
     }
 }
 
-
-void StackSession::compute_label_colors()
+bool StackSession::has_gt_stack()
 {
-    RagPtr rag = stack->get_rag();
+    return gt_stack != 0;
+} 
+
+bool StackSession::has_session_name()
+{
+    return saved_session_name != "";
+}
+
+string StackSession::get_session_name()
+{
+    return saved_session_name;
+}
+
+void StackSession::compute_label_colors(RagPtr rag)
+{
     compute_graph_coloring(rag);
 }
 
@@ -80,6 +164,7 @@ void StackSession::increment_plane()
 void StackSession::initialize()
 {
     stack = 0;
+    gt_stack = 0;
     active_labels_changed = false;
     selected_id = 0;
     old_selected_id = 0;
@@ -88,6 +173,11 @@ void StackSession::initialize()
     show_all_changed = false;
     active_plane = 0;
     active_plane_changed = false;
+    opacity = 3;
+    opacity_changed = false;
+    saved_session_name = string("");
+    gt_mode = false;
+    toggle_gt_changed = false;
 }
 
 void StackSession::decrement_plane()
@@ -95,6 +185,44 @@ void StackSession::decrement_plane()
     if (active_plane > 0) {
         set_plane(active_plane-1);
     }
+}
+
+void StackSession::toggle_gt()
+{
+    if (!gt_stack) {
+        throw ErrMsg("GT stack not defined");
+    }
+
+    reset_active_labels();
+    gt_mode = !gt_mode;
+    Stack* temp_stack;
+    temp_stack = stack;
+    stack = gt_stack;
+    gt_stack = temp_stack;
+    toggle_gt_changed = true;
+    update_all();
+    toggle_gt_changed = false;
+}
+
+bool StackSession::get_curr_labels(VolumeLabelPtr& labelvol, RagPtr& rag)
+{
+    labelvol = stack->get_labelvol();
+    rag = stack->get_rag();
+
+    return toggle_gt_changed;
+}
+
+bool StackSession::is_gt_mode()
+{
+    return gt_mode;
+}
+
+void StackSession::set_opacity(unsigned int opacity_)
+{   
+    opacity = opacity_; 
+    opacity_changed = true;
+    update_all();
+    opacity_changed = false;
 }
 
 void StackSession::set_plane(unsigned int plane)
@@ -119,6 +247,11 @@ bool StackSession::get_plane(unsigned int& plane_id)
     return active_plane_changed;
 }
 
+bool StackSession::get_opacity(unsigned int& opacity_)
+{
+    opacity_ = opacity;
+    return opacity_changed;
+}
 bool StackSession::get_show_all(bool& show_all_)
 {
     show_all_ = show_all;

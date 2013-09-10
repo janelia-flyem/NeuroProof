@@ -138,6 +138,16 @@ void vtkSimpInteractor::set_view(StackPlaneView* view_)
     view = view_;
 }
 
+void StackPlaneController::toggle_show_all()
+{
+    stack_session->toggle_show_all();
+}
+
+void StackPlaneController::clear_selection()
+{
+    stack_session->reset_active_labels();    
+}
+
 StackPlaneController::StackPlaneController(StackSession* stack_session_,
             QWidget* widget_parent) : stack_session(stack_session_), view(0)
 {
@@ -154,6 +164,11 @@ StackPlaneController::StackPlaneController(StackSession* stack_session_,
 void StackPlaneController::update()
 {
 
+}
+
+StackPlaneController::~StackPlaneController()
+{
+    delete view;
 }
 
 void StackPlaneController::initialize()

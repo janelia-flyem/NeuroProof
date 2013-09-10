@@ -28,3 +28,11 @@ void StackBodyController::start()
     view->start();
 }
 
+StackBodyController::~StackBodyController()
+{
+    stack_session->detach_observer(this);
+    Stack* stack = stack_session->get_stack();
+    stack->detach_observer(this);
+    delete view;
+}
+

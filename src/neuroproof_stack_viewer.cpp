@@ -55,10 +55,9 @@ int main(int argc, char** argv)
         }
     }
     
-    StackQTController controller(stack_session);
+    StackQTController controller(stack_session, &qapp);
 
     qapp.exec();
-    delete stack_session;
 
     return 0;
 

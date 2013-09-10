@@ -12,7 +12,9 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
 
-add_library (Stack SHARED ${SOURCES})
+QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
+
+add_library (Stack SHARED ${SOURCES} ${QTHEADERS})
 add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES})
 
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)

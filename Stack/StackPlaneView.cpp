@@ -26,10 +26,15 @@ StackPlaneView::~StackPlaneView()
 {
     stack_session->detach_observer(this);
     if (qt_widget) {
+        if (layout) {
+            QLayoutItem * item;
+            if ((item = layout->takeAt(0)) != 0) {
+                layout->removeItem(item);
+            }
+            layout->removeWidget(qt_widget);
+            delete layout;
+        }
         delete qt_widget;
-    }
-    if (layout) {
-        delete layout;
     }
 }
     
@@ -130,19 +135,10 @@ void StackPlaneView::initialize()
     label_lookup->SetValueRange( 0.0, 1.0 );
     label_lookup->Build();
 
-    // compute different colors for each RAG node
-    // using greedy graph coloring algorithm
-    stack_session->compute_label_colors();
 
     RagPtr rag = stack->get_rag();
-    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
-            iter != rag->nodes_end(); ++iter) {
-        int color_id = (*iter)->get_property<int>("color");
-        unsigned char r, g, b;
-        stack_session->get_rgb(color_id, r, g, b);
-        label_lookup->SetTableValue((*iter)->get_node_id(), r/255.0,
-               g/255.0, b/255.0, 1);
-    }
+    load_rag_colors(rag);
+    
     
     // map colors for each label
     labelvtk_mapped = vtkSmartPointer<vtkImageMapToColors>::New();
@@ -196,6 +192,22 @@ void StackPlaneView::initialize()
     viewer->Render();
 }
 
+void StackPlaneView::load_rag_colors(RagPtr rag)
+{
+    // compute different colors for each RAG node
+    // using greedy graph coloring algorithm
+    stack_session->compute_label_colors(rag);
+    
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
+        int color_id = (*iter)->get_property<int>("color");
+        unsigned char r, g, b;
+        stack_session->get_rgb(color_id, r, g, b);
+        label_lookup->SetTableValue((*iter)->get_node_id(), r/255.0,
+                g/255.0, b/255.0, 1);
+    }
+}
+
 void StackPlaneView::start()
 {
     qt_widget->show();
@@ -215,6 +227,31 @@ void StackPlaneView::update()
     double opacity_val = 1.0;
     if (!show_all) {
         opacity_val = 0.0;
+    }
+
+    VolumeLabelPtr labelvol;
+    RagPtr rag;
+    if (stack_session->get_curr_labels(labelvol, rag)) {
+        // rebase label volume and enable show all labels in a different color
+        unsigned int * labels_rebase = new unsigned int [labelvol->shape(0) * labelvol->shape(1) * labelvol->shape(2)];
+        unsigned int * iter = labels_rebase;
+        Label_t max_label = 0;
+        volume_forXYZ(*labelvol, x, y, z) {
+            Label_t label = (*labelvol)(x,y,z);
+            if (label > max_label) {
+                max_label = label;
+            }
+            *iter++ = label;
+        }
+        label_lookup->SetNumberOfTableValues(max_label+1);
+        label_lookup->SetRange( 0.0, max_label); 
+
+        labelarray = vtkSmartPointer<vtkUnsignedIntArray>::New();
+        labelarray->SetArray(labels_rebase, labelvol->shape(0) * labelvol->shape(1) *
+                labelvol->shape(2), 0);
+        labelvtk->GetPointData()->SetScalars(labelarray);
+
+        load_rag_colors(rag); 
     }
 
     if (stack_session->get_active_labels(active_labels)) {
@@ -279,6 +316,11 @@ void StackPlaneView::update()
 
     if (stack_session->get_plane(plane_id)) {
         viewer->SetSlice(plane_id);
+    }
+
+    unsigned int curr_opacity = 0;
+    if (stack_session->get_opacity(curr_opacity)) {
+        vtkblend->SetOpacity(1, curr_opacity / 10.0);
     }
 
     viewer->Render();

@@ -28,8 +28,12 @@ static const char * GRAY_DATASET_NAME = "gray";
 
 Stack::Stack(string stack_name) : StackBase(VolumeLabelPtr())
 {     
-    labelvol = VolumeLabelData::create_volume(stack_name.c_str(), SEG_DATASET_NAME);
-    
+    try {
+        labelvol = VolumeLabelData::create_volume(stack_name.c_str(), SEG_DATASET_NAME);
+    } catch (std::runtime_error &error) {
+        throw ErrMsg(stack_name + string(" not loaded"));
+    }
+ 
     try {
         grayvol = VolumeGray::create_volume(stack_name.c_str(), GRAY_DATASET_NAME);
     } catch (std::runtime_error &error) {

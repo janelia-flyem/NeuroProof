@@ -13,6 +13,7 @@ class StackBodyView;
 class StackBodyController : public StackObserver {
   public:
     StackBodyController(StackSession* stack_session, QWidget* widget_parent = 0);
+    ~StackBodyController();
 
     virtual void initialize();
     virtual void update() {}
