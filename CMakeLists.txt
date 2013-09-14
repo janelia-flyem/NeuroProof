@@ -74,7 +74,8 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
-  
+ 
+    set (QT_QMAKE_EXECUTABLE ${BUILDEM_DIR}/bin/qmake) 
     FIND_PACKAGE(Qt4 REQUIRED) 
     
     # set to buildem path
