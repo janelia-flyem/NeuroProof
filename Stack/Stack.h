@@ -47,13 +47,20 @@ class Stack : public StackBase {
     */
     Stack(VolumeLabelPtr labels_) : StackBase(labels_) {}
 
+
+    /*!
+     * Constructor that initializes from a stack h5 file
+     * \param stack_name name of stack h5 file
+    */
+    Stack(std::string stack_name);
+
     /*!
      * Constructs a RAG by interating through the 3D label volume and looking
      * at voxels 6 neighbors.  While building a RAG, features are constructed
      * from the probability volumes in the stack.
     */
     void build_rag();
-    
+   
     /*!
      * Finds bi-connected components in the RAG (that are not connected to the
      * boundary of the volume) and removes them.  This function modifies the
@@ -244,6 +251,7 @@ class Stack : public StackBase {
     */
     void compute_groundtruth_assignment();
 
+     
   protected:
     /*!
      * Add edge to rag and update feature manager.
@@ -348,6 +356,7 @@ class Stack : public StackBase {
      * moved to the Stack.
     */
     std::tr1::unordered_map<Label_t, Label_t> assignment;
+
 };
 
 }

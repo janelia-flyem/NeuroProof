@@ -237,6 +237,29 @@ void find_biconnected_components(RagPtr rag, vector<vector<OrderedPair> >& bicon
     biconnected_recurs(params);
 }
 
+void compute_graph_coloring(boost::shared_ptr<Rag<Index_t> > rag)
+{
+    unordered_set<int> used_ids;
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
+        if (!((*iter)->has_property("color"))) {
+            used_ids.clear();
+            for (RagNode_t::node_iterator iter2 = (*iter)->node_begin();
+                    iter2 != (*iter)->node_end(); ++iter2) {
+                int color_id = -1;
+                try {
+                    color_id = (*iter2)->get_property<int>("color");
+                    used_ids.insert(color_id);
+                } catch (ErrMsg& msg) {
+                    //
+                }            
+            }
+            int color_id = 0;
+            while (used_ids.find(color_id) != used_ids.end()) ++color_id;
+            (*iter)->set_property("color", color_id);
+        }
+    }
+}
 
 BoostGraph* create_boost_graph(RagPtr rag)
 {

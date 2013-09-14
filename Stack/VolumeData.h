@@ -17,8 +17,11 @@
 
 // used for importing h5 files
 #include <vigra/hdf5impex.hxx>
+#include <vigra/impex.hxx>
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include <string>
+#include "../Utilities/ErrMsg.h"
 
 namespace NeuroProof {
 
@@ -28,7 +31,7 @@ class VolumeData;
 
 // defines some of the common volume types used in NeuroProof
 typedef VolumeData<double> VolumeProb;
-typedef VolumeData<char> VolumeGray;
+typedef VolumeData<unsigned char> VolumeGray;
 typedef boost::shared_ptr<VolumeProb> VolumeProbPtr;
 typedef boost::shared_ptr<VolumeGray> VolumeGrayPtr;
 
@@ -70,6 +73,18 @@ class VolumeData : public vigra::MultiArray<3, T> {
     */
     static std::vector<boost::shared_ptr<VolumeData<T> > >
         create_volume_array(const char * h5_name, const char * dset);
+
+
+    /*!
+     * Static function to create a 3D image volume from a list of
+     * 2D image files.  While many 2D image formats are supported
+     * (see vigra documentation), this function will only work with
+     * 8-bit, grayscale values for now.
+     * \param file_names array of images in correct order
+     * \return shared pointer to volume data
+    */
+    static boost::shared_ptr<VolumeData<T> > create_volume_from_images(
+        std::vector<std::string>& file_names);
 
     /*!
      * Write volume data to disk assuming Z x Y x X in h5 output.
@@ -151,6 +166,37 @@ std::vector<boost::shared_ptr<VolumeData<T> > >
 
     return vol_array; 
 }
+
+template <typename T>
+boost::shared_ptr<VolumeData<T> > VolumeData<T>::create_volume_from_images(
+        std::vector<std::string>& file_names)
+{
+    assert(!file_names.empty());
+    vigra::ImageImportInfo info_init(file_names[0].c_str());
+    
+    if (!info_init.isGrayscale()) {
+        throw ErrMsg("Cannot read non-grayscale image stack");
+    }
+
+    VolumeData<unsigned char>* volumedata = new VolumeData<T>;
+    volumedata->reshape(vigra::MultiArrayShape<3>::type(info_init.width(),
+                info_init.height(), file_names.size()));
+
+    for (int i = 0; i < file_names.size(); ++i) {
+        vigra::ImageImportInfo info(file_names[i].c_str());
+        vigra::BImage image(info.width(), info.height());
+        vigra::importImage(info,destImage(image));
+        for (int y = 0; y < int(info.height()); ++y) {
+            for (int x = 0; x < int(info.width()); ++x) {
+                (*volumedata)(x,y,i) = image(x,y); 
+            }
+        }  
+    }
+
+    return boost::shared_ptr<VolumeData<T> >(volumedata);
+}
+
+
 
 template <typename T>
 void VolumeData<T>::serialize(const char* h5_name, const char * h5_path)

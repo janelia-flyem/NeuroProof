@@ -16,11 +16,30 @@
 using std::vector;
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
+using std::string;
 
 namespace NeuroProof {
 
 // assume all label volumes are written to "stack" for now
 static const char * SEG_DATASET_NAME = "stack";
+
+// assume all grayscale volumes are written to "gray" for now
+static const char * GRAY_DATASET_NAME = "gray";
+
+Stack::Stack(string stack_name) : StackBase(VolumeLabelPtr())
+{     
+    try {
+        labelvol = VolumeLabelData::create_volume(stack_name.c_str(), SEG_DATASET_NAME);
+    } catch (std::runtime_error &error) {
+        throw ErrMsg(stack_name + string(" not loaded"));
+    }
+ 
+    try {
+        grayvol = VolumeGray::create_volume(stack_name.c_str(), GRAY_DATASET_NAME);
+    } catch (std::runtime_error &error) {
+        // allow stacks without grayscale volumes
+    }
+}
 
 void Stack::build_rag()
 {
@@ -343,6 +362,10 @@ void Stack::serialize_stack(const char* h5_name, const char* graph_name,
 {
     serialize_graph(graph_name, optimal_prob_edge_loc);
     serialize_labels(h5_name);
+   
+    if (grayvol) {
+        grayvol->serialize(h5_name, GRAY_DATASET_NAME);
+    } 
 }
 
 void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
@@ -355,8 +378,10 @@ void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
     for (Rag_t::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
         if (!((*iter)->is_false_edge())) {
-            double val = feature_manager->get_prob((*iter));
-            (*iter)->set_weight(val);
+            if (feature_manager) {
+                double val = feature_manager->get_prob((*iter));
+                (*iter)->set_weight(val);
+            } 
         }
         Label_t x = 0;
         Label_t y = 0;

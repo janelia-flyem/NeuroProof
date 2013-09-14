@@ -139,7 +139,13 @@ class EdgeEditor {
      * \return number of edges remaining
     */
     unsigned int getNumRemaining();
-    
+   
+    /*!
+     * Get the number of edges currently in the queue.
+     * \return number of edges in the queue
+    */
+    unsigned int getNumRemainingQueue();
+ 
     /*!
      * Mark an edge true or false.
      * \param node_pair pair of nodes connected by an edge
