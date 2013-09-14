@@ -64,25 +64,26 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
     include (vtk)
+    include (qt4)
     include (python)
     include (jsoncpp)
     include (boost)
     include (vigra)
     include (hdf5)
     include (opencv)
-    include (qt4)
 
     set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
   
     FIND_PACKAGE(Qt4 REQUIRED) 
     
-    # ?! set to buildem path
+    # set to buildem path
     INCLUDE_DIRECTORIES(
             ${BUILDEM_DIR}/include/Qt
             ${BUILDEM_DIR}/include/QtGui
             ${BUILDEM_DIR}/include/QtCore
     )
+    
     set (vtk_LIBS 
         ${vtk_LIBPATH}/libQVTK.so
         ${vtk_LIBPATH}/libvtkHybrid.so
@@ -119,8 +120,8 @@ else ()
     set (hdf5_LIBRARIES hdf5 hdf5_hl)
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
-    set (boost_LIBS boost_thread-mt boost_system boost_program_options boost_python boost_unit_test_framework)
-    set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon)
+    set (boost_LIBS boost_thread-mt boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
+    set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon QVTK)
     set (qt_LIBS  ${QT_LIBRARIES})
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
     set (PYTHON_EXE "python") 
