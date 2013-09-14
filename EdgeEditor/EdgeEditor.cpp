@@ -267,6 +267,14 @@ void EdgeEditor::export_json(Json::Value& json_writer)
     }
 }
 
+unsigned int EdgeEditor::getNumRemainingQueue()
+{
+    if (edge_mode->is_finished()) {
+        return 0;
+    }
+    return edge_mode->get_num_remaining();
+}
+
 unsigned int EdgeEditor::getNumRemaining() 
 {
     if (edge_mode->is_finished()) {

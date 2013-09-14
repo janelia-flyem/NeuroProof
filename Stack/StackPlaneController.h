@@ -26,6 +26,8 @@ class vtkClickCallback : public vtkCommand {
     void set_stack_session(StackSession* stack_session_);
     void set_image_viewer(vtkSmartPointer<vtkImageViewer2> image_viewer_);
     void set_picker(vtkSmartPointer<vtkPropPicker> prop_picker_);
+    void enable_selections() { enable_selection = true; }
+    void disable_selections() { enable_selection = false; }
     ~vtkClickCallback();
 
 
@@ -36,6 +38,7 @@ class vtkClickCallback : public vtkCommand {
     StackSession *stack_session;
     vtkSmartPointer<vtkImageViewer2> image_viewer;
     vtkSmartPointer<vtkPropPicker> prop_picker;
+    bool enable_selection;
 };
 
 class vtkSimpInteractor : public vtkInteractorStyleImage
@@ -47,6 +50,8 @@ class vtkSimpInteractor : public vtkInteractorStyleImage
     }
     void set_stack_session(StackSession* stack_session_);
     void set_view(StackPlaneView* view_);
+    void enable_selections() { enable_selection = true; }
+    void disable_selections() { enable_selection = false; }
     virtual void OnChar() {}
     virtual void OnKeyPress(); 
     virtual void OnKeyRelease(); 
@@ -57,10 +62,11 @@ class vtkSimpInteractor : public vtkInteractorStyleImage
         //}
     }
   private:
-    vtkSimpInteractor() : stack_session(0) {}
+    vtkSimpInteractor() : stack_session(0), enable_selection(true) {}
     
     StackSession *stack_session;
     StackPlaneView * view;
+    bool enable_selection;
 };
 
 class StackPlaneController : public QObject, public StackObserver {
@@ -72,6 +78,8 @@ class StackPlaneController : public QObject, public StackObserver {
     virtual void initialize();
     virtual void update();
     virtual void start();
+    void enable_selections();
+    void disable_selections();
 
   public slots:
       void toggle_show_all();

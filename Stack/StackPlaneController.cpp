@@ -62,7 +62,7 @@ void vtkClickCallback::Execute(vtkObject *caller, unsigned long, void*)
     prop_picker->GetPickPosition( pos );
 
     VolumeLabelPtr labelvol = stack_session->get_stack()->get_labelvol();
-    if (iren->GetShiftKey()) {
+    if (iren->GetShiftKey() && enable_selection) {
         stack_session->active_label(int(pos[0]),
                 labelvol->shape(1) - int(pos[1]) - 1, int(pos[2]));
     } else {
@@ -71,7 +71,7 @@ void vtkClickCallback::Execute(vtkObject *caller, unsigned long, void*)
     }
 }
 
-vtkClickCallback::vtkClickCallback() : stack_session(0) 
+vtkClickCallback::vtkClickCallback() : stack_session(0), enable_selection(true) 
 {
     PointData = vtkPointData::New();
 }
@@ -110,7 +110,7 @@ void vtkSimpInteractor::OnKeyPress()
         stack_session->decrement_plane();
     } else if (key_val == "f") {
         stack_session->toggle_show_all();    
-    } else if (key_val == "r") {
+    } else if ((key_val == "r") && enable_selection) {
         stack_session->reset_active_labels();    
     } else if (key_val == "Up") {
         view->pan(0,10);
@@ -161,9 +161,20 @@ StackPlaneController::StackPlaneController(StackSession* stack_session_,
     view = new StackPlaneView(stack_session, this, widget_parent);
 }
 
+void StackPlaneController::enable_selections()
+{
+    click_callback->enable_selections();
+    interactor_style->enable_selections();
+}
+
+void StackPlaneController::disable_selections()
+{
+    click_callback->disable_selections();
+    interactor_style->disable_selections();
+}
+
 void StackPlaneController::update()
 {
-
 }
 
 StackPlaneController::~StackPlaneController()

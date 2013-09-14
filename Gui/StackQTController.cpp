@@ -4,20 +4,26 @@
 #include "../Stack/StackBodyController.h"
 #include <QTimer>
 #include "../Stack/StackSession.h"
+#include "../EdgeEditor/EdgeEditor.h"
 #include "MessageBox.h"
 #include <QFileDialog>
 #include <QApplication>
 #include <algorithm>
+#include <json/json.h>
+#include <json/value.h>
+#include <sstream>
 
+using std::stringstream;
 using namespace NeuroProof;
 using std::cout; using std::endl; using std::string;
 using std::vector; using std::sort;
 
 StackQTController::StackQTController(StackSession* stack_session_, QApplication* qapp_) : 
-    stack_session(stack_session_), qapp(qapp_), body_controller(0), plane_controller(0)
+    stack_session(stack_session_), qapp(qapp_), body_controller(0), 
+    plane_controller(0), priority_scheduler(0)
 {
     main_ui = new StackQTUi(stack_session);
-
+        
     /*if (stack_session) {
         load_views();
     }*/
@@ -58,7 +64,13 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 
     QObject::connect(main_ui->ui.actionQuit, 
             SIGNAL(triggered()), this, SLOT(quit_program()));
- 
+
+    QObject::connect(main_ui->ui.actionViewOnly, 
+            SIGNAL(triggered()), this, SLOT(start_viewonly()));
+
+    QObject::connect(main_ui->ui.actionTraining, 
+            SIGNAL(triggered()), this, SLOT(start_training()));
+
     QObject::connect(main_ui->ui.viewToolPanel, 
             SIGNAL(triggered()), this, SLOT(view_tool_panel()));
 
@@ -71,7 +83,142 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 
     QObject::connect(main_ui->ui.toggleGT, 
             SIGNAL(clicked()), this, SLOT(toggle_gt()));
+    
+    QObject::connect(main_ui->ui.currentButton, 
+            SIGNAL(clicked()), this, SLOT(grab_current_edge()));
+    
+    QObject::connect(main_ui->ui.nextButton, 
+            SIGNAL(clicked()), this, SLOT(grab_next_edge()));
+    
+    QObject::connect(main_ui->ui.undoButton, 
+            SIGNAL(clicked()), this, SLOT(undo_edge()));
+
+    QObject::connect(main_ui->ui.mergeButton, 
+            SIGNAL(clicked()), this, SLOT(merge_edge()));
 }
+
+void StackQTController::start_viewonly()
+{
+    if (body_controller) {
+        delete body_controller;
+        body_controller = 0;
+        main_ui->ui.enable3DCheck->setChecked(false);
+    }
+
+    stack_session->set_reset_stack();
+    plane_controller->enable_selections();
+    main_ui->ui.modeWidget->setCurrentIndex(1);
+}
+
+void StackQTController::start_training()
+{
+    if (body_controller) {
+        delete body_controller;
+        body_controller = 0;
+        main_ui->ui.enable3DCheck->setChecked(false);
+    }
+
+    if (stack_session->is_gt_mode()) {
+        main_ui->ui.statusbar->showMessage("Restoring labels...");
+        main_ui->ui.statusbar->showMessage("Restoring labels...");
+        toggle_gt();
+        main_ui->ui.statusbar->clearMessage(); 
+    } else {
+        main_ui->ui.statusbar->showMessage("Resetting stack...");
+        main_ui->ui.statusbar->showMessage("Resetting stack...");
+        stack_session->set_reset_stack();
+        main_ui->ui.statusbar->clearMessage(); 
+    }
+
+    main_ui->ui.modeWidget->setCurrentIndex(0);
+    plane_controller->disable_selections();
+
+    if (!priority_scheduler) {
+        // edge location already computed in session
+        Json::Value json_vals_priority;
+        Json::Value empty_list;
+        json_vals_priority["synapse_bodies"] = empty_list;
+        json_vals_priority["orphan_bodies"] = empty_list;
+        RagPtr rag = stack_session->get_stack()->get_rag();
+        priority_scheduler = new EdgeEditor(*rag, 0.0,0.99,0.0,json_vals_priority);
+        priority_scheduler->set_edge_mode(0.0, 0.99, 0.0, 0);
+    }
+    
+    update_progress();
+    grab_current_edge();
+}
+
+void StackQTController::grab_next_edge()
+{
+    if ((priority_scheduler->isFinished())) {
+        MessageBox msgbox("No more edges");
+    } else {
+        Node_t node1, node2;
+        bool remove = stack_session->is_remove_edge(node1, node2);
+        boost::tuple<Node_t, Node_t> body_pair(node1, node2);
+        priority_scheduler->removeEdge(body_pair, remove);
+        stack_session->set_commit_edge(node2, node1, true);
+        grab_current_edge(); 
+    }
+    
+    update_progress();
+}
+
+void StackQTController::undo_edge()
+{
+    Node_t node1, node2;
+    if (stack_session->is_remove_edge(node1, node2)) {
+        stack_session->unmerge_edge(); 
+    } else if (stack_session->undo_queue_empty()) {
+        MessageBox msgbox("Cannot undo anymore");
+    } else {
+        priority_scheduler->undo();
+        Location location;
+        boost::tuple<Node_t, Node_t> pair = priority_scheduler->getTopEdge(location);
+        Label_t node1 = boost::get<0>(pair);
+        Label_t node2 = boost::get<1>(pair);
+        // always assume that node2 is the one that could be getting restored
+        stack_session->set_undo_edge(node1, node2);
+        stack_session->set_body_pair(node1, node2, location);
+    }
+
+    update_progress();
+}
+
+void StackQTController::update_progress()
+{
+    int num_processed = stack_session->get_num_examined_edges();
+    int num_total = num_processed + priority_scheduler->getNumRemainingQueue();
+    stringstream str;
+    str << num_processed << "/" << num_total << " edges examined";
+
+    main_ui->ui.progressLabel->setText(str.str().c_str());
+}
+
+
+void StackQTController::merge_edge()
+{
+    if ((priority_scheduler->isFinished())) {
+        MessageBox msgbox("No more edges");
+    } else {
+        stack_session->merge_edge();
+    }
+}
+
+void StackQTController::grab_current_edge()
+{
+    if (!(priority_scheduler->isFinished())) {
+        Location location;
+        boost::tuple<Node_t, Node_t> pair = priority_scheduler->getTopEdge(location);
+        Label_t node1 = boost::get<0>(pair);
+        Label_t node2 = boost::get<1>(pair);
+        stack_session->set_body_pair(node1, node2, location);
+    } else {
+        MessageBox msgbox("No more edges");
+    }
+}
+
+
 
 void StackQTController::toggle_gt()
 {
@@ -145,6 +292,8 @@ void StackQTController::save_as_session()
         return;
     }
     
+    // ?! move to view -- have event triggered by session
+    main_ui->ui.menuMode->setEnabled(true);
     string msg = string("Saving session as ") + session_name + string("...");
     main_ui->ui.statusbar->showMessage(msg.c_str());
     main_ui->ui.statusbar->showMessage(msg.c_str());
@@ -154,6 +303,7 @@ void StackQTController::save_as_session()
         string msg = string("Session could not be created: ") + err_msg.str;
         MessageBox msgbox(msg.c_str());
     }
+    main_ui->ui.menuMode->setEnabled(true);
     main_ui->ui.statusbar->clearMessage();
 }
 
@@ -265,6 +415,10 @@ void StackQTController::clear_session()
         delete plane_controller;
         plane_controller = 0;
     }
+    if (priority_scheduler) {
+        delete priority_scheduler;
+        priority_scheduler = 0;
+    }
     if (stack_session) {
         main_ui->clear_session();
         delete stack_session;
@@ -277,8 +431,6 @@ StackQTController::~StackQTController()
     clear_session();
     delete main_ui;
 }
-
-
 
 // ?! maybe move to the main view
 void StackQTController::view_body_panel()

@@ -2,16 +2,21 @@
 #include "../Rag/RagUtils.h"
 #include "Stack.h"
 #include "../Rag/RagIO.h"
+#include "../EdgeEditor/EdgeEditor.h"
+#include <json/json.h>
+#include <json/value.h>
+#include <fstream>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
 using namespace NeuroProof;
-using std::tr1::unordered_set;
+using std::tr1::unordered_map;
 using namespace boost::algorithm;
 using namespace boost::filesystem;
 using std::string;
 using std::vector;
+using std::ifstream; using std::ofstream;
 
 // to be called from command line
 StackSession::StackSession(string session_name)
@@ -47,6 +52,20 @@ StackSession::StackSession(string session_name)
     if (!(stack->get_grayvol())) {
         throw ErrMsg("Gray volume not defined for stack");
     }
+
+    // load session specific values
+    Json::Reader json_reader;
+    Json::Value json_reader_vals;
+    string session_file = session_name + "/session.json";
+    ifstream fin(session_file.c_str());
+    if (!fin) {
+        throw ErrMsg("Could not open session json file");
+    }
+    if (!json_reader.parse(fin, json_reader_vals)) {
+        throw ErrMsg("Error: Session json incorrectly formatted");
+    }
+    edges_examined = json_reader_vals.get("edges-examined", 0).asUInt();
+    fin.close();
 }
 
 // ?! check same dimensions
@@ -118,7 +137,14 @@ void StackSession::export_session(string session_name)
             string stack_name = session_name + "/stack.h5"; 
             string graph_name = session_name + "/graph.json"; 
             stack_exp->serialize_stack(stack_name.c_str(), graph_name.c_str(), false);
-            
+
+            Json::Value json_writer;
+            string session_file = session_name + "/session.json";
+            ofstream fout(session_file.c_str());
+            json_writer["edges-examined"] = edges_examined; 
+            fout << json_writer;
+            fout.close();
+
             if (gtstack_exp) {
                 // do not export grayscale from ground truth -- already exported
                 gtstack_exp->set_grayvol(VolumeGrayPtr());
@@ -177,7 +203,11 @@ void StackSession::initialize()
     opacity_changed = false;
     saved_session_name = string("");
     gt_mode = false;
-    toggle_gt_changed = false;
+    reset_stack = false;
+    zoom_loc = false;
+    remove_edge = false;
+    undo_queue = 0;
+    edges_examined = 0;
 }
 
 void StackSession::decrement_plane()
@@ -192,24 +222,42 @@ void StackSession::toggle_gt()
     if (!gt_stack) {
         throw ErrMsg("GT stack not defined");
     }
-
-    reset_active_labels();
     gt_mode = !gt_mode;
     Stack* temp_stack;
     temp_stack = stack;
     stack = gt_stack;
     gt_stack = temp_stack;
-    toggle_gt_changed = true;
-    update_all();
-    toggle_gt_changed = false;
+
+    set_reset_stack();
 }
 
-bool StackSession::get_curr_labels(VolumeLabelPtr& labelvol, RagPtr& rag)
+void StackSession::set_reset_stack()
+{
+    RagPtr rag = stack->get_rag();
+    
+    for (Rag_t::nodes_iterator iter = rag->nodes_begin();
+            iter != rag->nodes_end(); ++iter) {
+        (*iter)->rm_property("color");
+    }
+
+    undo_queue = 0;
+    reset_active_labels();
+    reset_stack = true;
+    update_all();
+    reset_stack = false;
+
+    unsigned int x = stack->get_xsize() / 2;
+    unsigned int y = stack->get_ysize() / 2;
+    Location location(x, y, 0);
+    set_zoom_loc(location, 1.0);
+}
+
+bool StackSession::get_reset_stack(VolumeLabelPtr& labelvol, RagPtr& rag)
 {
     labelvol = stack->get_labelvol();
     rag = stack->get_rag();
 
-    return toggle_gt_changed;
+    return reset_stack;
 }
 
 bool StackSession::is_gt_mode()
@@ -324,7 +372,7 @@ void StackSession::active_label(unsigned int x, unsigned int y, unsigned int z)
     if (active_labels.find(current_label) != active_labels.end()) {
         active_labels.erase(current_label);        
     } else {
-        active_labels.insert(current_label);
+        add_active_label(current_label); 
     }
     
     select_label(selected_id);
@@ -366,10 +414,145 @@ void StackSession::select_label(Label_t current_label)
     selected_id_changed = false;
 }
 
-bool StackSession::get_active_labels(unordered_set<Label_t>& active_labels_)
+bool StackSession::get_active_labels(unordered_map<Label_t, int>& active_labels_)
 {
     active_labels_ = active_labels;
     return active_labels_changed;
+}
+
+void StackSession::set_zoom_loc(Location location, double zoom_factor_)
+{
+    set_plane(boost::get<2>(location));
+    x_zoom = boost::get<0>(location); 
+    y_zoom = boost::get<1>(location); 
+    zoom_factor = zoom_factor_;
+
+    zoom_loc = true;
+    update_all();
+    zoom_loc = false;
+}
+
+bool StackSession::get_zoom_loc(unsigned int& x, unsigned int& y, double& zoom_factor_)
+{
+    x = x_zoom; 
+    y = y_zoom;
+    zoom_factor_ = zoom_factor;
+    
+    return zoom_loc; 
+}
+
+void StackSession::set_children_labels(Label_t label_id, int color_id)
+{
+    VolumeLabelPtr labelvol = stack->get_labelvol();
+    vector<Label_t> member_labels;
+    labelvol->get_label_history(label_id, member_labels);
+
+    for (int i = 0; i < member_labels.size(); ++i) {
+        active_labels[(member_labels[i])] = color_id;
+    }
+}
+
+void StackSession::set_body_pair(Label_t node1, Label_t node2, Location location)
+{
+    old_selected_id = 0;
+    selected_id = 0;
+    remove_edge = false;
+
+    node1_focused = node1;
+    node2_focused = node2;
+
+    active_labels.clear();
+    active_labels[node1] = 1;
+    active_labels[node2] = 2;
+
+    set_children_labels(node1, 1);
+    set_children_labels(node2, 2);
+ 
+
+    active_labels_changed = true;
+    update_all();
+    active_labels_changed = false;
+
+    set_zoom_loc(location, 4.0);
+}
+
+void StackSession::set_commit_edge(Label_t node_remove, Label_t node_keep, bool ignore_rag)
+{
+    if (remove_edge) {
+        LowWeightCombine join_alg; 
+        stack->merge_labels(node_remove, node_keep, &join_alg, ignore_rag);
+    }
+    ++undo_queue;
+    ++edges_examined;
+}
+
+void StackSession::merge_edge()
+{
+    active_labels[node2_focused] = 1;    
+    set_children_labels(node2_focused, 1);
+    remove_edge = true;   
+ 
+    active_labels_changed = true;
+    update_all();
+    active_labels_changed = false;
+}
+
+int StackSession::get_num_examined_edges()
+{
+    return edges_examined;
+}
+
+void StackSession::set_undo_edge(Label_t node_base, Label_t node_absorb)
+{
+    --undo_queue;
+    --edges_examined;
+    VolumeLabelPtr labelvol = stack->get_labelvol();
+
+    if (labelvol->is_mapped(node_absorb)) {
+        // undo merge
+        vector<Label_t> member_labels;
+        labelvol->get_label_history(node_base, member_labels);
+       
+        vector<Label_t> split_labels;
+        bool grab_labels = false;
+        // since undos are in order, the labels to be split off are in order
+        for (int i = 0; i < member_labels.size(); ++i) {
+            if (member_labels[i] == node_absorb) {
+                grab_labels = true;
+            }
+            if (grab_labels) {
+                split_labels.push_back(member_labels[i]);
+            }
+        }
+ 
+        labelvol->split_labels(node_base, split_labels);  
+    }
+}
+
+bool StackSession::undo_queue_empty()
+{
+    if (undo_queue == 0) {
+        return true;
+    }
+    return false;
+}
+
+void StackSession::unmerge_edge()
+{
+    active_labels[node2_focused] = 2;    
+    set_children_labels(node2_focused, 2);
+    remove_edge = false;   
+ 
+    active_labels_changed = true;
+    update_all();
+    active_labels_changed = false;
+}
+
+bool StackSession::is_remove_edge(Label_t& node1, Label_t& node2)
+{
+    node1 = node1_focused;
+    node2 = node2_focused;
+    return remove_edge;   
 }
 
 void StackSession::reset_active_labels()

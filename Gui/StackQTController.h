@@ -13,6 +13,7 @@ class StackSession;
 class StackQTUi;
 class StackPlaneController;
 class StackBodyController;
+class EdgeEditor;
 
 class StackQTController : public QObject, public StackObserver {
     Q_OBJECT
@@ -31,6 +32,7 @@ class StackQTController : public QObject, public StackObserver {
     StackQTUi* main_ui;
     StackPlaneController* plane_controller;
     StackBodyController* body_controller;
+    EdgeEditor * priority_scheduler;
 
   private slots: 
     void open_session();
@@ -38,6 +40,8 @@ class StackQTController : public QObject, public StackObserver {
     void save_session();
     void new_session();
     void save_as_session();
+    void start_training();
+    void start_viewonly();
     void add_gt();
     void load_views();
     void show_shortcuts();
@@ -47,6 +51,11 @@ class StackQTController : public QObject, public StackObserver {
     void toggle3D();
     void view_body_panel();
     void view_tool_panel();
+    void grab_current_edge();
+    void grab_next_edge();
+    void merge_edge();
+    void undo_edge();
+    void update_progress();
 };
 
 }

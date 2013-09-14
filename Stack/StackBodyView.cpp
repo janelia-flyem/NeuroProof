@@ -43,18 +43,16 @@ StackBodyView::~StackBodyView()
     }
 }
 
-void StackBodyView::create_label_volume(std::tr1::unordered_set<unsigned int>& labels)
+void StackBodyView::create_label_volume(std::tr1::unordered_map<unsigned int, int>& labels)
 {
     unordered_map<Label_t, unsigned char> color_mapping;
     Stack* stack = stack_session->get_stack();
     RagPtr rag = stack->get_rag();
 
-    for (unordered_set<Label_t>::iterator iter = labels.begin(); 
+    for (unordered_map<Label_t, int>::iterator iter = labels.begin(); 
             iter != labels.end(); ++iter) {
-        RagNode_t* node = rag->find_rag_node(*iter);
-        int color_id = node->get_property<int>("color");
-        unsigned char cmap = color_id % 18 + 1;
-        color_mapping[*iter] = cmap;
+        unsigned char cmap = (iter->second) % 18 + 1;
+        color_mapping[iter->first] = cmap;
     }
 
     unsigned char * mapped_iter = labels_rebase;
@@ -93,7 +91,7 @@ void StackBodyView::initialize()
 
     labels_rebase = new unsigned char [labelvol->shape(0) * labelvol->shape(1) * labelvol->shape(2)];
    
-    unordered_set<Label_t> labels;
+    unordered_map<Label_t, int> labels;
     create_label_volume(labels);
 
     labelarray = vtkSmartPointer<vtkUnsignedCharArray>::New();
@@ -197,7 +195,7 @@ void StackBodyView::start()
 void StackBodyView::_update(bool initialize)
 {
     double rgba[4];
-    unordered_set<Label_t> active_labels;
+    unordered_map<Label_t, int> active_labels;
 
     unsigned int plane_id;
     if (stack_session->get_plane(plane_id) || initialize) {

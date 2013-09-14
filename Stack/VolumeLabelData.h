@@ -59,7 +59,34 @@ class VolumeLabelData : public VolumeData<Label_t> {
      * \param new_label new label id to replace old label
     */
     void reassign_label(Label_t old_label, Label_t new_label); 
-    
+  
+    /*!
+     * Checks if the given label is mapped to another value.
+     * \param label volume label
+     * \return true if it has a mapping
+    */
+    bool is_mapped(Label_t label)
+    {
+        return label_mapping.find(label) != label_mapping.end();        
+    }
+ 
+    /*!
+     * Split a given label into two partitons.  This command will not work
+     * if the volume was recently rebased.  The specified labels being split
+     * off must exist in the mappings.  The first label id in the split labels
+     * defines the new label id created.
+     * \param curr_label the label being split
+     * \param split_labels vector of labels being split off of curr_label
+    */
+    void split_labels(Label_t curr_label, std::vector<Label_t>& split_labels);
+
+    /*!
+     * Retrieve labels that have been reassigned to a given label id.
+     * \param label parent label id that other labels have been reassigned to
+     * \param member_labels labels that were assigned to the parent label
+    */ 
+    void get_label_history(Label_t label, std::vector<Label_t>& member_labels);
+ 
     /*!
      * Actually relabels each value in the data volume from the relabeling
      * hash table and clears the hash table.  This requires a linear-time

@@ -51,7 +51,7 @@ class StackBodyView : public StackObserver {
     StackSession* stack_session;
 
   private:
-    void create_label_volume(std::tr1::unordered_set<unsigned int>& labels);
+    void create_label_volume(std::tr1::unordered_map<unsigned int, int>& labels);
     virtual void _update(bool initialize);
 
     vtkSmartPointer<vtkRenderer> ren1;

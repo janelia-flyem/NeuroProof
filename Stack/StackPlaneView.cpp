@@ -12,7 +12,7 @@
 #include <QVBoxLayout>
 
 using namespace NeuroProof;
-using std::tr1::unordered_set;
+using std::tr1::unordered_map;
 
 StackPlaneView::StackPlaneView(StackSession* stack_session_, 
         StackPlaneController* controller_, QWidget* widget_parent_) : 
@@ -190,6 +190,9 @@ void StackPlaneView::initialize()
     //viewer->SetSlice(0);
     //viewer->GetRenderer()->ResetCamera();
     viewer->Render();
+    vtkRenderer * renderer = viewer->GetRenderer();  
+    vtkCamera *camera = renderer->GetActiveCamera();
+    initial_zoom = camera->GetParallelScale();
 }
 
 void StackPlaneView::load_rag_colors(RagPtr rag)
@@ -221,7 +224,7 @@ void StackPlaneView::update()
     Label_t select_id_old = 0;
     Label_t ignore_label = 0;
     double rgba[4];
-    unordered_set<Label_t> active_labels;
+    unordered_map<Label_t, int> active_labels;
 
     bool show_all_change = stack_session->get_show_all(show_all);
     double opacity_val = 1.0;
@@ -231,7 +234,7 @@ void StackPlaneView::update()
 
     VolumeLabelPtr labelvol;
     RagPtr rag;
-    if (stack_session->get_curr_labels(labelvol, rag)) {
+    if (stack_session->get_reset_stack(labelvol, rag)) {
         // rebase label volume and enable show all labels in a different color
         unsigned int * labels_rebase = new unsigned int [labelvol->shape(0) * labelvol->shape(1) * labelvol->shape(2)];
         unsigned int * iter = labels_rebase;
@@ -244,7 +247,7 @@ void StackPlaneView::update()
             *iter++ = label;
         }
         label_lookup->SetNumberOfTableValues(max_label+1);
-        label_lookup->SetRange( 0.0, max_label); 
+        label_lookup->SetRange(0.0, max_label); 
 
         labelarray = vtkSmartPointer<vtkUnsignedIntArray>::New();
         labelarray->SetArray(labels_rebase, labelvol->shape(0) * labelvol->shape(1) *
@@ -254,17 +257,38 @@ void StackPlaneView::update()
         load_rag_colors(rag); 
     }
 
+    unsigned int xloc, yloc;
+    double zoom_factor;
+    // ?! grab zoom and set absolute -- zoom should be called on reset along with plane set
+    if (stack_session->get_zoom_loc(xloc, yloc, zoom_factor)) {
+        vtkRenderer * renderer = viewer->GetRenderer();  
+        vtkCamera *camera = renderer->GetActiveCamera();
+
+        double viewFocus[4], viewPoint[3];
+        camera->GetFocalPoint(viewFocus);
+        camera->GetPosition(viewPoint);
+
+        unsigned ysize = stack_session->get_stack()->get_ysize();
+        camera->SetFocalPoint(xloc, ysize - yloc - 1, viewFocus[2]);
+        camera->SetPosition(xloc, ysize - yloc - 1, viewPoint[2]);
+        
+        //camera->Zoom(2.0);
+        camera->SetParallelScale(initial_zoom / zoom_factor);
+    }
+
+    rag = stack_session->get_stack()->get_rag();
     if (stack_session->get_active_labels(active_labels)) {
         for (int i = 0; i < label_lookup->GetNumberOfTableValues(); ++i) {
             label_lookup->GetTableValue(i, rgba);
             rgba[3] = 0;
             label_lookup->SetTableValue(i, rgba);
         }    
-        for (unordered_set<Label_t>::iterator iter = active_labels.begin();
+        for (unordered_map<Label_t, int>::iterator iter = active_labels.begin();
                 iter != active_labels.end(); ++iter) {
-            label_lookup->GetTableValue(*iter, rgba);
-            rgba[3] = opacity_val;
-            label_lookup->SetTableValue(*iter, rgba);
+            unsigned char r, g, b;
+            stack_session->get_rgb(iter->second, r, g, b);
+            label_lookup->SetTableValue(iter->first, r/255.0,
+                    g/255.0, b/255.0, 1);
         }
     }
 
@@ -291,11 +315,11 @@ void StackPlaneView::update()
         double rgba[4];
 
         if (!active_labels.empty()) {
-            for (unordered_set<Label_t>::iterator iter = active_labels.begin();
+            for (unordered_map<Label_t, int>::iterator iter = active_labels.begin();
                     iter != active_labels.end(); ++iter) {
-                label_lookup->GetTableValue(*iter, rgba);
+                label_lookup->GetTableValue(iter->first, rgba);
                 rgba[3] = opacity_val;
-                label_lookup->SetTableValue(*iter, rgba);
+                label_lookup->SetTableValue(iter->first, rgba);
             }
         } else { 
             for (int i = 0; i < label_lookup->GetNumberOfTableValues(); ++i) {

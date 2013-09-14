@@ -35,17 +35,21 @@ class StackQTUi : public QMainWindow, public StackObserver {
    
     void load_session(StackSession* stack_session_)
     {
-        ui.menuMode->setEnabled(true);
-        ui.actionAddGT->setEnabled(true);
-        ui.actionSaveProject->setEnabled(true);
-        ui.actionSaveAsProject->setEnabled(true);
-        ui.dockWidget2->setEnabled(true);
-        
         if (stack_session) {
             stack_session->detach_observer(this);
         }
         stack_session = stack_session_;
         stack_session->attach_observer(this);
+
+
+        if (stack_session->has_session_name()) {
+            ui.menuMode->setEnabled(true);
+        }
+        ui.actionAddGT->setEnabled(true);
+        ui.actionSaveProject->setEnabled(true);
+        ui.actionSaveAsProject->setEnabled(true);
+        ui.dockWidget2->setEnabled(true);
+        ui.modeWidget->setCurrentIndex(1);
 
         unsigned int plane_id = 0;    
         stack_session->get_plane(plane_id);
@@ -82,7 +86,7 @@ class StackQTUi : public QMainWindow, public StackObserver {
         
         VolumeLabelPtr labelvol;
         RagPtr rag; 
-        if (stack_session->get_curr_labels(labelvol, rag)) {
+        if (stack_session->get_reset_stack(labelvol, rag)) {
             if (stack_session->is_gt_mode()) {
                 ui.toggleGT->setText("Show Orig Labels");
             } else {

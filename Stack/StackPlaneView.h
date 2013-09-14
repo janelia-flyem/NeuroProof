@@ -73,6 +73,8 @@ class StackPlaneView : public StackObserver {
     vtkSmartPointer<vtkLookupTable> graylookup;
     vtkSmartPointer<vtkImageData> grayvtk;
     vtkSmartPointer<vtkUnsignedCharArray> grayarray;
+
+    double initial_zoom;
 };
 
 }
