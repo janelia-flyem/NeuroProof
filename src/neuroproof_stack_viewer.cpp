@@ -17,8 +17,8 @@ struct ViewerOptions
     {
         OptionParser parser("Tool for visualization segmentation and training agglomeration");
 
-        parser.add_option(stack_volume, "stack-volume",
-                "h5 file of 8bit grayscale (z,y,z) (dataset=gray) and label volume (z,y,z) (dataset=stack)"); 
+        //parser.add_option(stack_volume, "stack-volume",
+        //        "h5 file of 8bit grayscale (z,y,z) (dataset=gray) and label volume (z,y,z) (dataset=stack)"); 
         parser.add_option(session_name, "session-name",
                 "Name of previously created NeuroProofStackView session directory");
 
@@ -46,14 +46,14 @@ int main(int argc, char** argv)
                 options.session_name << endl;
         }
 
-    } else if ((options.stack_volume != "")) { 
+    } /*else if ((options.stack_volume != "")) { 
         try {
             stack_session = new StackSession(options.stack_volume);
         } catch (ErrMsg& msg) {
             cerr << "Session could not be created from: " <<
                 options.stack_volume << endl;
         }
-    }
+    }*/
     
     StackQTController controller(stack_session, &qapp);
 
