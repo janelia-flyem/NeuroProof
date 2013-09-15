@@ -30,36 +30,8 @@ class StackSession : public Dispatcher {
      * Keep track of certain labels by adding to an active list.
      * \param label volume label
     */
-    void add_active_label(Label_t label)
-    {
-        RagPtr rag = stack->get_rag();
-        RagNode_t *node = rag->find_rag_node(label);
-        int color_id = 1;
-        if (node->has_property("color")) {
-            color_id = node->get_property<int>("color");
-        }
-        active_labels[label] = color_id;
-    }
-
-    /*!
-     * Check to see if label in an active label.
-     * \param label volume label
-     * \return true if in list, false otherwise
-    */
-    bool is_active_label(Label_t label) const
-    {
-        return (active_labels.find(label) != active_labels.end());
-    }
-
-    /*!
-     * Remove label from list if it exists.
-     * \param label volume label
-    */
-    void rm_active_label(Label_t label)
-    {
-        active_labels.erase(label);
-    }
-
+    void add_active_label(Label_t label);
+    
     Stack* get_stack()
     {
         return stack;

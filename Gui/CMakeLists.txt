@@ -9,7 +9,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 message("${CMAKE_CURRENT_BINARY_DIR}")
 
 
-set (SOURCES StackQTController.cpp)
+set (SOURCES StackQTController.cpp StackQTUi.cpp)
 
 QT4_WRAP_CPP(QTHEADERS StackQTUi.h StackQTController.h)
 QT4_WRAP_UI(QTFORMS neuroproof_stack_viewer.ui)

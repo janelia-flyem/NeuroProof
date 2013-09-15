@@ -357,7 +357,16 @@ void StackSession::get_rgb(int color_id, unsigned char& r,
     }
 }
 
-
+void StackSession::add_active_label(Label_t label)
+{
+    RagPtr rag = stack->get_rag();
+    RagNode_t *node = rag->find_rag_node(label);
+    int color_id = 1;
+    if (node->has_property("color")) {
+        color_id = node->get_property<int>("color");
+    }
+    active_labels[label] = color_id;
+}
 
 void StackSession::active_label(unsigned int x, unsigned int y, unsigned int z)
 {
