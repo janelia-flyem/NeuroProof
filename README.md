@@ -19,6 +19,7 @@ and mechanisms to comparing with ground truth.
 * Implementation of variation of information metric for comparing two labeled volumes
 * Algorithm to estimate uncertainty of graph and is predicted edge confidences
 * Tools to assess the amount of work required to edit/revise a segmentation
+* GUI front-end for visualizing segmentation results; interface for merging segments together
 * Simple and access-efficient graph-library implementation and straightforward conversion
 to powerful boost graph library
 * Data stack implementation that allows one to leverage image processing
@@ -76,6 +77,8 @@ the common linux search paths:
 * vigra
 * hdf5
 * opencv
+* vtk
+* qt4
 
 For more information on the supported versions of these dependencies, please
 consult buildem.
@@ -102,9 +105,8 @@ due to the size of the directory.)
 
 ## To Be Implemented
 
-* A simple visualization client for analyzing segmentation
+* Focused agglomeration training in stack viewer
 * Add capability to call NeuroProof as a service in clustered environments
 * Direct support for 2D datasets (2D data is generally allowable in the current implementation)
 * Improved algorithms for handling EM reconstruction specific goals
-
 
