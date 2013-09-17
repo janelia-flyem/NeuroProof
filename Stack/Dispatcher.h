@@ -1,3 +1,11 @@
+/*!
+ * Implements mechanism for sending updates to objects
+ * that are observers.  Objects that need to send updates
+ * to observing objects should inherit from this class.
+ * 
+ * \author Stephen Plaza (plaza.stephen@gmail.com)
+*/
+
 #ifndef DISPATCHER_H
 #define DISPATCHER_H
 
@@ -6,6 +14,9 @@
 
 namespace NeuroProof {
 
+/*!
+ * Class for sending udpates to observing objects.
+*/
 class Dispatcher {
   public:
     /*!

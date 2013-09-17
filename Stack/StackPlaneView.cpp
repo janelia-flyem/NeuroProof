@@ -45,6 +45,7 @@ void StackPlaneView::pan(int xdiff, int ydiff)
     vtkRenderer * renderer = viewer->GetRenderer();  
     vtkCamera *camera = renderer->GetActiveCamera();
 
+    // use old focus and position points
     camera->GetFocalPoint(viewFocus);
     camera->GetPosition(viewPoint);
     
@@ -101,7 +102,8 @@ void StackPlaneView::initialize()
     gray_mapped->Update();
 
     // rebase label volume and enable show all labels in a different color
-    unsigned int * labels_rebase = new unsigned int [labelvol->shape(0) * labelvol->shape(1) * labelvol->shape(2)];
+    unsigned int * labels_rebase = new unsigned int [labelvol->shape(0) * 
+        labelvol->shape(1) * labelvol->shape(2)];
     unsigned int * iter = labels_rebase;
     Label_t max_label = 0;
     volume_forXYZ(*labelvol, x, y, z) {
@@ -111,6 +113,8 @@ void StackPlaneView::initialize()
         }
         *iter++ = label;
     }
+    // 32 bit array takes some time to load -- could convert the 32 bit
+    // image to a 8 bit uchar for color
     labelarray = vtkSmartPointer<vtkUnsignedIntArray>::New();
     labelarray->SetArray(labels_rebase, labelvol->shape(0) * labelvol->shape(1) *
             labelvol->shape(2), 0);
@@ -127,18 +131,13 @@ void StackPlaneView::initialize()
     // set lookup table
     label_lookup = vtkSmartPointer<vtkLookupTable>::New();
     label_lookup->SetNumberOfTableValues(max_label+1);
- //           stack_session->get_stack()->get_num_labels());
-//    std::cout << stack_session->get_stack()->get_num_labels()  << std::endl;
-//    std::cout << max_label << std::endl;
     label_lookup->SetRange( 0.0, max_label); 
     label_lookup->SetHueRange( 0.0, 1.0 );
     label_lookup->SetValueRange( 0.0, 1.0 );
     label_lookup->Build();
 
-
     RagPtr rag = stack->get_rag();
     load_rag_colors(rag);
-    
     
     // map colors for each label
     labelvtk_mapped = vtkSmartPointer<vtkImageMapToColors>::New();
@@ -187,8 +186,6 @@ void StackPlaneView::initialize()
     renderWindowInteractor = qt_widget->GetInteractor();
 
     viewer->SetupInteractor(renderWindowInteractor);
-    //viewer->SetSlice(0);
-    //viewer->GetRenderer()->ResetCamera();
     viewer->Render();
     vtkRenderer * renderer = viewer->GetRenderer();  
     vtkCamera *camera = renderer->GetActiveCamera();
@@ -259,7 +256,7 @@ void StackPlaneView::update()
 
     unsigned int xloc, yloc;
     double zoom_factor;
-    // ?! grab zoom and set absolute -- zoom should be called on reset along with plane set
+    // grab zoom and set absolute -- zoom should be called on reset along with plane set
     if (stack_session->get_zoom_loc(xloc, yloc, zoom_factor)) {
         vtkRenderer * renderer = viewer->GetRenderer();  
         vtkCamera *camera = renderer->GetActiveCamera();
@@ -276,6 +273,7 @@ void StackPlaneView::update()
         camera->SetParallelScale(initial_zoom / zoom_factor);
     }
 
+    // color selected labels, if nothing selected, color everything
     rag = stack_session->get_stack()->get_rag();
     if (stack_session->get_active_labels(active_labels)) {
         for (int i = 0; i < label_lookup->GetNumberOfTableValues(); ++i) {
@@ -292,6 +290,7 @@ void StackPlaneView::update()
         }
     }
 
+    // toggle color for clicked body label
     if (stack_session->get_select_label(select_id, select_id_old)) {
         if (select_id_old && (active_labels.empty() ||
                 (active_labels.find(select_id_old) != active_labels.end())) ) {
@@ -307,6 +306,7 @@ void StackPlaneView::update()
         ignore_label = select_id;
     }
 
+    // toggle color for all bodies
     if (show_all_change) {
         double opacity_val = 1.0;
         if (!show_all) {
@@ -338,10 +338,12 @@ void StackPlaneView::update()
         label_lookup->Modified();
     }
 
+    // set the current plane
     if (stack_session->get_plane(plane_id)) {
         viewer->SetSlice(plane_id);
     }
 
+    // set the current color opacity
     unsigned int curr_opacity = 0;
     if (stack_session->get_opacity(curr_opacity)) {
         vtkblend->SetOpacity(1, curr_opacity / 10.0);

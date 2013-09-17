@@ -30,6 +30,7 @@ StackBodyView::StackBodyView(StackSession* stack_session_, QWidget* widget_paren
 StackBodyView::~StackBodyView()
 {
     stack_session->detach_observer(this);
+    // remove the widget from the main window if a main window exists
     if (qt_widget) {
         if (layout) {
             QLayoutItem * item;
@@ -49,6 +50,7 @@ void StackBodyView::create_label_volume(std::tr1::unordered_map<unsigned int, in
     Stack* stack = stack_session->get_stack();
     RagPtr rag = stack->get_rag();
 
+    // load mappings of a label id to a color
     for (unordered_map<Label_t, int>::iterator iter = labels.begin(); 
             iter != labels.end(); ++iter) {
         unsigned char cmap = (iter->second) % 18 + 1;
@@ -61,6 +63,7 @@ void StackBodyView::create_label_volume(std::tr1::unordered_map<unsigned int, in
     unsigned long long vol_size = current_volume_labels->shape(0) * 
         current_volume_labels->shape(1) * current_volume_labels->shape(2);
 
+    // quickly create a volume with 8-bit colors
     for (unsigned long long iter = 0; iter < vol_size; ++iter) {
         Label_t label = *label_iter++;
         unsigned char mapping = 0;
@@ -89,6 +92,7 @@ void StackBodyView::initialize()
     current_volume_labels = VolumeLabelPtr(new VolumeLabelData(*labelvol));
     current_volume_labels->rebase_labels();
 
+    // create initial volume to be rendered
     labels_rebase = new unsigned char [labelvol->shape(0) * labelvol->shape(1) * labelvol->shape(2)];
    
     unordered_map<Label_t, int> labels;
@@ -106,6 +110,7 @@ void StackBodyView::initialize()
     labelvtk->SetSpacing(1, 1, 1);
     labelvtk->SetOrigin(0.0, 0.0, 0.0);
 
+    // downsample data to render faster
     label_resample = vtkSmartPointer<vtkImageResample>::New();
     label_resample->SetInput(labelvtk);
     label_resample->SetAxisMagnificationFactor(0, 0.50);
@@ -114,6 +119,8 @@ void StackBodyView::initialize()
 
     volumeMapper = vtkSmartPointer<vtkFixedPointVolumeRayCastMapper>::New();
     volumeMapper->SetInputConnection(label_resample->GetOutputPort());
+    
+    // to improve rendering performance
     volumeMapper->SetMinimumImageSampleDistance(4.0); 
 
     volumeColor = vtkSmartPointer<vtkColorTransferFunction>::New();
@@ -143,6 +150,7 @@ void StackBodyView::initialize()
     volume->SetMapper(volumeMapper);
     volume->SetProperty(volumeProperty);
 
+    // show a plane object on the body to show the current plane
     plane_source = vtkSmartPointer<vtkPlaneSource>::New();
     plane_source->SetOrigin(0,0,0);
     plane_source->SetNormal(0,0,1);
@@ -165,7 +173,8 @@ void StackBodyView::initialize()
     ren1->AddActor(actor);
     ren1->SetBackground(1,1,1);
     ren1->ResetCamera();
-    
+   
+    // angle the body view slightly to make it more visually pleasing 
     ren1->GetActiveCamera()->Elevation(45);
     ren1->GetActiveCamera()->OrthogonalizeViewUp();
     ren1->GetActiveCamera()->Elevation(65);
@@ -198,6 +207,8 @@ void StackBodyView::_update(bool initialize)
     unordered_map<Label_t, int> active_labels;
 
     unsigned int plane_id;
+
+    // plane object position updated
     if (stack_session->get_plane(plane_id) || initialize) {
         double pt[3];
         plane_source->GetPoint1(pt);
@@ -209,6 +220,7 @@ void StackBodyView::_update(bool initialize)
         renderWindowInteractor->Render();
     }
 
+    // only show bodies in the active label list
     if (stack_session->get_active_labels(active_labels) || initialize) {
         create_label_volume(active_labels);
         labelvtk->Modified();

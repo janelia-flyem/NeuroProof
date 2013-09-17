@@ -62,10 +62,13 @@ void vtkClickCallback::Execute(vtkObject *caller, unsigned long, void*)
     prop_picker->GetPickPosition( pos );
 
     VolumeLabelPtr labelvol = stack_session->get_stack()->get_labelvol();
+
     if (iren->GetShiftKey() && enable_selection) {
+        // select label and add to active list
         stack_session->active_label(int(pos[0]),
                 labelvol->shape(1) - int(pos[1]) - 1, int(pos[2]));
     } else {
+        // toggle color for a given label
         stack_session->select_label(int(pos[0]),
                 labelvol->shape(1) - int(pos[1]) - 1, int(pos[2]));
     }
@@ -109,8 +112,10 @@ void vtkSimpInteractor::OnKeyPress()
         // decrease plane by going down stack
         stack_session->decrement_plane();
     } else if (key_val == "f") {
+        // toggle between grayscale and color
         stack_session->toggle_show_all();    
     } else if ((key_val == "r") && enable_selection) {
+        // remove all of the selected labels
         stack_session->reset_active_labels();    
     } else if (key_val == "Up") {
         view->pan(0,10);
@@ -163,12 +168,14 @@ StackPlaneController::StackPlaneController(StackSession* stack_session_,
 
 void StackPlaneController::enable_selections()
 {
+    // in some modes, enable the ability to select bodies
     click_callback->enable_selections();
     interactor_style->enable_selections();
 }
 
 void StackPlaneController::disable_selections()
 {
+    // in some modes, disable the ability to select bodies
     click_callback->disable_selections();
     interactor_style->disable_selections();
 }

@@ -21,6 +21,7 @@ using std::ifstream; using std::ofstream;
 // to be called from command line
 StackSession::StackSession(string session_name)
 {
+    // set all initial variables
     initialize();
   
     if (ends_with(session_name, ".h5")) {
@@ -68,13 +69,13 @@ StackSession::StackSession(string session_name)
     fin.close();
 }
 
-// ?! check same dimensions
 void StackSession::load_gt(string gt_name, bool build_rag)
 {
     Stack* new_gt_stack;
     try {
         new_gt_stack = new Stack(gt_name);
         
+        // verify that dimensions are the same between GT and label volume        
         if (new_gt_stack->get_xsize() != stack->get_xsize() ||
             new_gt_stack->get_ysize() != stack->get_ysize() ||
             new_gt_stack->get_zsize() != stack->get_zsize()) {
@@ -105,6 +106,8 @@ StackSession::StackSession(vector<string>& gray_images, string labelvolume)
 
         VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
         stack->set_grayvol(gray_data);
+        
+        // create a new rag
         stack->build_rag();
     } catch (std::runtime_error &error) {
         throw ErrMsg("Unspecified load error");
@@ -113,6 +116,7 @@ StackSession::StackSession(vector<string>& gray_images, string labelvolume)
 
 void StackSession::save()
 {
+    // cannot save unless a session name has already been saved
     if (saved_session_name == "") {
         throw ErrMsg("Session has not been created");
     }
@@ -177,6 +181,7 @@ string StackSession::get_session_name()
 
 void StackSession::compute_label_colors(RagPtr rag)
 {
+    // call from RagUtils
     compute_graph_coloring(rag);
 }
 
@@ -234,7 +239,8 @@ void StackSession::toggle_gt()
 void StackSession::set_reset_stack()
 {
     RagPtr rag = stack->get_rag();
-    
+   
+    // colors are not recomputed unless the old colors are deleted 
     for (Rag_t::nodes_iterator iter = rag->nodes_begin();
             iter != rag->nodes_end(); ++iter) {
         (*iter)->rm_property("color");
@@ -246,6 +252,7 @@ void StackSession::set_reset_stack()
     update_all();
     reset_stack = false;
 
+    // center the zoom to the middle of the image on plane 0
     unsigned int x = stack->get_xsize() / 2;
     unsigned int y = stack->get_ysize() / 2;
     Location location(x, y, 0);
@@ -470,14 +477,15 @@ void StackSession::set_body_pair(Label_t node1, Label_t node2, Location location
     node1_focused = node1;
     node2_focused = node2;
 
+    // add node1, node2 to selected labels
     active_labels.clear();
     active_labels[node1] = 1;
     active_labels[node2] = 2;
 
+    // add any nodes that were previously merged onto node1 and node2
     set_children_labels(node1, 1);
     set_children_labels(node2, 2);
  
-
     active_labels_changed = true;
     update_all();
     active_labels_changed = false;
@@ -487,6 +495,7 @@ void StackSession::set_body_pair(Label_t node1, Label_t node2, Location location
 
 void StackSession::set_commit_edge(Label_t node_remove, Label_t node_keep, bool ignore_rag)
 {
+    // merge the labels if the edge was removed
     if (remove_edge) {
         LowWeightCombine join_alg; 
         stack->merge_labels(node_remove, node_keep, &join_alg, ignore_rag);
@@ -497,6 +506,7 @@ void StackSession::set_commit_edge(Label_t node_remove, Label_t node_keep, bool 
 
 void StackSession::merge_edge()
 {
+    // does not commit result but changes the color maps
     active_labels[node2_focused] = 1;    
     set_children_labels(node2_focused, 1);
     remove_edge = true;   
