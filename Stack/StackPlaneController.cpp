@@ -180,10 +180,6 @@ void StackPlaneController::disable_selections()
     interactor_style->disable_selections();
 }
 
-void StackPlaneController::update()
-{
-}
-
 StackPlaneController::~StackPlaneController()
 {
     delete view;
