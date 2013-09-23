@@ -24,10 +24,7 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 {
     main_ui = new StackQTUi(stack_session);
         
-    /*if (stack_session) {
-        load_views();
-    }*/
-
+    // delays loading the views so that the main window is displayed first
     QTimer::singleShot(1000, this, SLOT(load_views()));
     main_ui->showMaximized();
     main_ui->show();
@@ -74,7 +71,6 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
     QObject::connect(main_ui->ui.viewToolPanel, 
             SIGNAL(triggered()), this, SLOT(view_tool_panel()));
 
-
     QObject::connect(main_ui->ui.planeSlider,
             SIGNAL(valueChanged(int)), main_ui, SLOT(slider_change(int)) );
     
@@ -99,6 +95,7 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 
 void StackQTController::start_viewonly()
 {
+    // changing view modes resets the stack and deleted the current body viewer
     if (body_controller) {
         delete body_controller;
         body_controller = 0;
@@ -119,6 +116,7 @@ void StackQTController::start_training()
     }
 
     if (stack_session->is_gt_mode()) {
+        // for some reason the message has to be called twice to display
         main_ui->ui.statusbar->showMessage("Restoring labels...");
         main_ui->ui.statusbar->showMessage("Restoring labels...");
         toggle_gt();
@@ -130,9 +128,11 @@ void StackQTController::start_training()
         main_ui->ui.statusbar->clearMessage(); 
     }
 
+    // shows the training control widgets
     main_ui->ui.modeWidget->setCurrentIndex(0);
     plane_controller->disable_selections();
 
+    // check if scheduler is already loaded
     if (!priority_scheduler) {
         // edge location already computed in session
         Json::Value json_vals_priority;
@@ -140,6 +140,9 @@ void StackQTController::start_training()
         json_vals_priority["synapse_bodies"] = empty_list;
         json_vals_priority["orphan_bodies"] = empty_list;
         RagPtr rag = stack_session->get_stack()->get_rag();
+        
+        // TODO: allow user to change priority mode (training, body, etc)
+        // TODO: compute real probabilities for the edge, looking at everything
         priority_scheduler = new EdgeEditor(*rag, 0.0,0.99,0.0,json_vals_priority);
         priority_scheduler->set_edge_mode(0.0, 0.99, 0.0, 0);
     }
@@ -157,6 +160,7 @@ void StackQTController::grab_next_edge()
         bool remove = stack_session->is_remove_edge(node1, node2);
         boost::tuple<Node_t, Node_t> body_pair(node1, node2);
         priority_scheduler->removeEdge(body_pair, remove);
+        // this actually does the merging of labels if necessary
         stack_session->set_commit_edge(node2, node1, true);
         grab_current_edge(); 
     }
@@ -218,10 +222,9 @@ void StackQTController::grab_current_edge()
     }
 }
 
-
-
 void StackQTController::toggle_gt()
 {
+    // toggling gt will reset the stack and will destroy the current 3D viewer
     if (body_controller) {
         delete body_controller;
         body_controller = 0;
@@ -239,6 +242,7 @@ void StackQTController::add_gt()
         return;
     }
 
+    // this will overwrite any GT currently associated with the stack
     string msg = string("Adding groundtruth labels ") + gt_name + string("...");
     main_ui->ui.statusbar->showMessage(msg.c_str());
     main_ui->ui.statusbar->showMessage(msg.c_str());
@@ -292,7 +296,7 @@ void StackQTController::save_as_session()
         return;
     }
     
-    // ?! move to view -- have event triggered by session
+    // TODO: move to view -- have event triggered by session
     main_ui->ui.menuMode->setEnabled(true);
     string msg = string("Saving session as ") + session_name + string("...");
     main_ui->ui.statusbar->showMessage(msg.c_str());
@@ -321,9 +325,9 @@ void StackQTController::save_session()
     }
 }
 
-
 void StackQTController::quit_program()
 {
+    // exits the application
     qapp->exit(0);
 }
 
@@ -432,15 +436,17 @@ StackQTController::~StackQTController()
     delete main_ui;
 }
 
-// ?! maybe move to the main view
+// TODO: move functionality to Qt view
 void StackQTController::view_body_panel()
 {
+    // widget3 is the body panel dock widget
     main_ui->ui.dockWidget3->show();
 }
 
-// ?! maybe move to the main view
+// TODO: move functionality to Qt view
 void StackQTController::view_tool_panel()
 {
+    // widget2 is the tool panel dock widget
     main_ui->ui.dockWidget2->show();
 }
 
@@ -461,6 +467,8 @@ void StackQTController::load_views()
     main_ui->ui.toggleLabels->disconnect();
     main_ui->ui.clearSelection->disconnect();
 
+    // connect plane controller functionality to the show all labels and clear
+    // active label signals
     QObject::connect(main_ui->ui.toggleLabels, 
             SIGNAL(clicked()), plane_controller, SLOT(toggle_show_all()));
 
