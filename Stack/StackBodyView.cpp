@@ -58,7 +58,7 @@ void StackBodyView::create_label_volume(std::tr1::unordered_map<unsigned int, in
     }
 
     unsigned char * mapped_iter = labels_rebase;
-    Label_t* label_iter = current_volume_labels->begin();
+    Label_t* label_iter = current_volume_labels->data();
 
     unsigned long long vol_size = current_volume_labels->shape(0) * 
         current_volume_labels->shape(1) * current_volume_labels->shape(2);

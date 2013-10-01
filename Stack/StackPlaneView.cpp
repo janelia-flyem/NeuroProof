@@ -73,7 +73,7 @@ void StackPlaneView::initialize()
     
     // load gray volume into vtk array
     grayarray = vtkSmartPointer<vtkUnsignedCharArray>::New();
-    grayarray->SetArray((unsigned char *)(grayvol->begin()), grayvol->shape(0) * 
+    grayarray->SetArray((unsigned char *)(grayvol->data()), grayvol->shape(0) * 
             grayvol->shape(1) * grayvol->shape(2), 1);
     
     // load array into gray vtk image volume
