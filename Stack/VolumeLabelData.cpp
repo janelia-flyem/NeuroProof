@@ -27,10 +27,11 @@ VolumeLabelPtr VolumeLabelData::create_volume(
         try {
             vigra::HDF5ImportInfo info(h5_name, "transforms");
             vigra::TinyVector<long long unsigned int,2> tshape(info.shape().begin()); 
-            vigra::MultiArray<2,Label_t> transforms(tshape);
+            vigra::MultiArray<2,long long unsigned int> transforms(tshape);
+            vigra::readHDF5(info, transforms);
 
-            for (int row = 0; row < transforms.shape(0); ++row) {
-                volumedata->label_mapping[transforms(row, 0)] = transforms(row,1);
+            for (int row = 0; row < transforms.shape(1); ++row) {
+                volumedata->label_mapping[transforms(0,row)] = transforms(1,row);
             }
             // rebase all of the labels so the initial label hash is empty
             volumedata->rebase_labels();
