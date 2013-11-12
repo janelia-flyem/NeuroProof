@@ -12,15 +12,19 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 
 set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
 
-QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
+if (QT_BUILT)
+    QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
+    add_library (Stack SHARED ${SOURCES} ${QTHEADERS})
+else()
+    add_library (Stack SHARED ${SOURCES})
+endif()
 
-add_library (Stack SHARED ${SOURCES} ${QTHEADERS})
-add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME})
+add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} RescanQt4)
 
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (basic_stack_test ${boost_NAME} ${vigra_NAME} ${hdf5_NAMES})
+    add_dependencies (basic_stack_test ${boost_NAME} ${vigra_NAME} ${hdf5_NAMES} RescanQt4)
 endif()
 
 target_link_libraries (basic_stack_test ${hdf5_LIBRARIES} ${boost_LIBS} ${vigra_LIB} ${PYTHON_LIBRARY_FILE})
@@ -41,5 +45,3 @@ add_test ("simple_stack_unit_tests"
         ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_labels.h5
         ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_prediction.h5
         )
-
-

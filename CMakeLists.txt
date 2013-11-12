@@ -62,22 +62,37 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
     message("Using cmake modules from ${BUILDEM_REPO_DIR}")
 
+    set (QT_QMAKE_EXECUTABLE ${BUILDEM_DIR}/bin/qmake) 
+    set (QT_BUILT FALSE)
+    if (EXISTS ${QT_QMAKE_EXECUTABLE})
+        SET (QT_BUILT TRUE)
+    endif()
+
+    if (NOT QT_BUILT)
+        include (qt4)
+        add_custom_target(RescanQt4 ALL ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR} DEPENDS ${qt4_NAME})
+    else()
+        add_custom_target(RescanQt4)
+        FIND_PACKAGE(Qt4 REQUIRED) 
+        include(${QT_USE_FILE}) 
+    endif()
+
+    # disable vigra numpy build
+    SET(DISABLE_VIGRANUMPY "TRUE")
+
     # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
-    include (vtk)
     include (qt4)
+    include (hdf5)
+    include (vtk)
     include (python)
     include (jsoncpp)
     include (boost)
     include (vigra)
-    include (hdf5)
     include (opencv)
 
-    set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME})
+    set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} RescanQt4)
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
- 
-    set (QT_QMAKE_EXECUTABLE ${BUILDEM_DIR}/bin/qmake) 
-    FIND_PACKAGE(Qt4 REQUIRED) 
-    
+
     # set to buildem path
     INCLUDE_DIRECTORIES(
             ${BUILDEM_DIR}/include/Qt
@@ -97,9 +112,9 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         ${BUILDEM_DIR}/lib/libQtCore.so
         ${BUILDEM_DIR}/lib/libQtGui.so
     )
-
-    include(${QT_USE_FILE}) 
 else ()
+    SET (QT_BUILT TRUE)
+    add_custom_target(RescanQt4)
     FIND_PACKAGE(PythonLibs)
     FIND_PACKAGE(VTK REQUIRED)
     FIND_PACKAGE(Qt4 REQUIRED)

@@ -11,12 +11,15 @@ message("${CMAKE_CURRENT_BINARY_DIR}")
 
 set (SOURCES StackQTController.cpp StackQTUi.cpp)
 
-QT4_WRAP_CPP(QTHEADERS StackQTUi.h StackQTController.h)
-QT4_WRAP_UI(QTFORMS neuroproof_stack_viewer.ui)
-
-add_library (Gui SHARED ${SOURCES} ${QTFORMS} ${QTHEADERS})
-
-if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (Gui ${boost_NAME})
+if (QT_BUILT)
+    QT4_WRAP_CPP(QTHEADERS StackQTUi.h StackQTController.h)
+    QT4_WRAP_UI(QTFORMS neuroproof_stack_viewer.ui)
+    add_library (Gui SHARED ${SOURCES} ${QTFORMS} ${QTHEADERS})
+else()
+    add_library (Gui SHARED ${SOURCES})
 endif()
 
+
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (Gui ${boost_NAME} RescanQt4)
+endif()
