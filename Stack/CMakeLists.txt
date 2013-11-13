@@ -10,7 +10,12 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET(CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
+
+if (NOT DISABLE_GUI)
+    set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
+else()
+    set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp)
+endif()
 
 if (QT_BUILT)
     QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
@@ -19,7 +24,11 @@ else()
     add_library (Stack SHARED ${SOURCES})
 endif()
 
-add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} RescanQt4)
+if (NOT DISABLE_GUI)
+    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} RescanQt4)
+else()
+    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME})
+endif()
 
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)
 
