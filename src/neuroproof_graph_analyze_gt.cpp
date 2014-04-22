@@ -204,24 +204,27 @@ struct AnalyzeGTOptions
  * an error.
  * \param stack segmentation stack with synapse information
  * \param threshold number of synapse annotations below which errors are ignored
+ * \param total_synapse_errors gives the number of synapse annotations that were orphan
  * \return number of errors
 */
-int num_synapse_errors(BioStack& stack, int threshold)
+int num_synapse_errors(BioStack& stack, int threshold, int total_synapse_errors)
 {
     RagPtr rag = stack.get_rag();
     unordered_map<Label_t, int> synapse_counts;
     stack.load_synapse_counts(synapse_counts);
-    int synapse_errors = 0;
+    int synapse_body_errors = 0;
+    total_synapse_errors = 0;
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         if (iter->second >= threshold) {
             RagNode_t* node = rag->find_rag_node(iter->first);
             if (!(node->is_boundary())) {
-                ++synapse_errors;
+                ++synapse_body_errors;
+                total_synapse_errors += iter->second;
             }
         }
     }
-    return synapse_errors;
+    return synapse_body_errors;
 }
 
 /*!
@@ -419,10 +422,12 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
         synapse_stack.compute_vi(merge, split);
         cout << "MergeSplit: (" << merge << ", " << split << ")" << endl; 
 
-        // find synapse errors 
-        int synapse_errors = num_synapse_errors(stack, options.synapse_error_size); 
-        cout << "Number of orphan bodies with more than " << options.synapse_error_size << 
-            " synapse annotations : " << synapse_errors << endl;   
+        // find synapse errors
+        int total_orphan_synapse = 0; 
+        int synapse_errors = num_synapse_errors(stack, options.synapse_error_size, total_orphan_synapse); 
+        cout << "Number of orphan bodies with at least " << options.synapse_error_size << 
+            " synapse annotations : " << synapse_errors << "; total number of orphan synapses (Tbar or PSD): "
+            << total_orphan_synapse << endl;   
     }
     
     unordered_set<Label_t> seg_orphans; 
@@ -973,9 +978,11 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     // find gt synapse errors
     if (options.synapse_filename != "") {
-        int synapse_errors = num_synapse_errors(gt_stack, options.synapse_error_size); 
-        cout << "Number of GT orphan bodies with more than " << options.synapse_error_size << 
-            " synapse annotations : " << synapse_errors << endl;   
+        int total_orphan_synapse = 0; 
+        int synapse_errors = num_synapse_errors(gt_stack, options.synapse_error_size, total_orphan_synapse); 
+        cout << "Number of GT orphan bodies with at least " << options.synapse_error_size << 
+            " synapse annotations : " << synapse_errors << "; total number of orphan synapses (Tbar or PSD): "
+            << total_orphan_synapse << endl;   
     }
 
     // try different strategies to refine the graph
