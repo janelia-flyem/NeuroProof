@@ -207,7 +207,7 @@ struct AnalyzeGTOptions
  * \param total_synapse_errors gives the number of synapse annotations that were orphan
  * \return number of errors
 */
-int num_synapse_errors(BioStack& stack, int threshold, int total_synapse_errors)
+int num_synapse_errors(BioStack& stack, int threshold, int& total_synapse_errors)
 {
     RagPtr rag = stack.get_rag();
     unordered_map<Label_t, int> synapse_counts;
