@@ -132,6 +132,23 @@ void StackQTController::start_training()
     main_ui->ui.modeWidget->setCurrentIndex(0);
     plane_controller->disable_selections();
 
+    
+    //     ask for the predictions
+    QString prob_name_t = QFileDialog::getOpenFileName(main_ui, tr("Add probability volumes"), 
+            ".", tr("H5 Files(*.h5)"));
+    string prob_name = prob_name_t.toStdString();
+    if (prob_name == "") {
+        return;
+    }
+    //load probability
+    stack_session->get_stack()->read_prob_list(prob_name,string("volume/predictions"));
+    // call BioStack rag() again
+    stack_session->get_stack()->build_rag();    
+    stack_session->get_stack()->set_classifier();    
+    stack_session->get_stack()->set_edge_locations();
+    // reset rag pointers in StackSession
+    stack_session->set_reset_stack();
+    
     // check if scheduler is already loaded
     if (!priority_scheduler) {
         // edge location already computed in session
@@ -144,6 +161,7 @@ void StackQTController::start_training()
         // TODO: allow user to change priority mode (training, body, etc)
         // TODO: compute real probabilities for the edge, looking at everything
         priority_scheduler = new EdgeEditor(*rag, 0.0,0.99,0.0,json_vals_priority);
+	priority_scheduler->set_stack(stack_session->get_stack());
         priority_scheduler->set_edge_mode(0.0, 0.99, 0.0, 0);
     }
     
@@ -155,13 +173,22 @@ void StackQTController::grab_next_edge()
 {
     if ((priority_scheduler->isFinished())) {
         MessageBox msgbox("No more edges");
+	printf("fininshed, need to save\n");
+	QString dir_name = QFileDialog::getExistingDirectory(main_ui, tr("Choose classifier directory"), ".");
+	string session_name = dir_name.toStdString();
+	if (session_name == "") {
+	    return;
+	}
+	stack_session->get_stack()->save_classifier(session_name+"/iterative_classifier.xml");
     } else {
         Node_t node1, node2;
         bool remove = stack_session->is_remove_edge(node1, node2);
-        boost::tuple<Node_t, Node_t> body_pair(node1, node2);
-        priority_scheduler->removeEdge(body_pair, remove);
-        // this actually does the merging of labels if necessary
-        stack_session->set_commit_edge(node2, node1, true);
+	int edge_label = remove? -1: 1;
+	priority_scheduler->set_edge_label(edge_label);
+//         boost::tuple<Node_t, Node_t> body_pair(node1, node2);
+//         priority_scheduler->removeEdge(body_pair, remove);
+//         // this actually does the merging of labels if necessary
+//         stack_session->set_commit_edge(node2, node1, true);
         grab_current_edge(); 
     }
     
@@ -216,6 +243,7 @@ void StackQTController::grab_current_edge()
         boost::tuple<Node_t, Node_t> pair = priority_scheduler->getTopEdge(location);
         Label_t node1 = boost::get<0>(pair);
         Label_t node2 = boost::get<1>(pair);
+	printf("received firstedge: (%d, %d)\n", node1, node2);
         stack_session->set_body_pair(node1, node2, location);
     } else {
         MessageBox msgbox("No more edges");
@@ -253,8 +281,11 @@ void StackQTController::add_gt()
 
 void StackQTController::new_session()
 {
+  //  printf("start new session\n");
     QStringList file_name_list = QFileDialog::getOpenFileNames(main_ui, tr("Add label volume"),
         ".", tr("PNG(*.png *.PNG);;JPEG(*.jpg *.jpeg)"));
+    
+    printf("file names %d\n",file_name_list.size());
 
     if (file_name_list.size() == 0) {
         return;

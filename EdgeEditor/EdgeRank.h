@@ -48,6 +48,7 @@ class EdgeRank {
     */
     virtual bool get_top_edge(NodePair& top_edge_) = 0;
 
+    virtual void set_label(int label_){};
     /*!
      * Reverse a previous decision made by examiend edge.
     */
@@ -101,6 +102,7 @@ class EdgeRank {
     //! number of edge decisions (minus undos) performed
     int num_processed;
 };
+
 
 }
 

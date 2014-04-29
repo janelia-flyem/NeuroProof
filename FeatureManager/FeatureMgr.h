@@ -273,7 +273,7 @@ class FeatureMgr {
     double border_weight;
 };
 
-typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;
+//typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;
 
 }
 

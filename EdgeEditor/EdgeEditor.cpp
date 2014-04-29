@@ -76,7 +76,7 @@ void EdgeEditor::set_edge_mode(double lower, double upper, double start,
     
     ignore_size = ignore_size_;
     prob_edge_mode->initialize(lower, upper, start, ignore_size);
-    edge_mode = prob_edge_mode;
+    // /*Toufiq*/ edge_mode = prob_edge_mode;
 }
 
 void EdgeEditor::estimateWork()
@@ -118,14 +118,25 @@ void EdgeEditor::reinitialize_scheduler()
     num_est_remaining = 0;
 }
 
+void EdgeEditor::set_stack(BioStack* pstack){
+    stack = pstack;
+    
+    edge_mode = new EdgeRankToufiq(stack, rag);
+}
 
 EdgeEditor::EdgeEditor(Rag_t& rag_, double min_val_,
         double max_val_, double start_val_, Json::Value& json_vals) : 
     rag(rag_), min_val(min_val_), max_val(max_val_),
     start_val(start_val_), SynapseStr("synapse_weight")
+// EdgeEditor::EdgeEditor(Rag_t& rag_, double min_val_,
+//         double max_val_, double start_val_, Json::Value& json_vals) : 
+//     rag(rag_), min_val(min_val_), max_val(max_val_),
+//     start_val(start_val_), SynapseStr("synapse_weight")
 {
     reinitialize_scheduler();
 
+//    rag = *(stack->get_rag());
+    
     prob_edge_mode = new ProbEdgeRank(&rag);
     orphan_edge_mode = new OrphanRank(&rag);
     synapse_edge_mode = new SynapseRank(&rag);
@@ -207,6 +218,8 @@ EdgeEditor::~EdgeEditor()
     delete orphan_edge_mode;
     delete synapse_edge_mode;
     delete body_edge_mode;
+    
+    delete edge_mode;
 }
 
 void EdgeEditor::export_json(Json::Value& json_writer)
@@ -308,6 +321,11 @@ void EdgeEditor::setEdge(NodePair node_pair, double weight)
     edge->set_weight(weight);
 }
 
+void EdgeEditor::set_edge_label(int plabel)
+{
+    edge_mode->set_label(plabel);
+}
+
 boost::tuple<Node_t, Node_t> EdgeEditor::getTopEdge(Location& location)
 {
     // just grabs top edge or errors -- no real computation
@@ -317,8 +335,14 @@ boost::tuple<Node_t, Node_t> EdgeEditor::getTopEdge(Location& location)
         if (!status) {
             throw ErrMsg("No edge can be found");
         }
-        RagEdge_t* edge = rag.find_rag_edge(boost::get<0>(node_pair),
-                boost::get<1>(node_pair));
+        Label_t node1 = boost::get<0>(node_pair);
+        Label_t node2 = boost::get<1>(node_pair);
+	
+	printf("received firstedge: (%d, %d)\n", node1, node2);
+        RagEdge_t* edge = rag.find_rag_edge(node1, node2);
+	if (!edge){
+	  printf("selected edge not found\n");
+	}
         location = edge->get_property<Location>("location");
     } catch(ErrMsg& msg) {
         cerr << msg.str << endl;

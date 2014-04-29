@@ -14,7 +14,7 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 if (NOT DISABLE_GUI)
     set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
 else()
-    set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp)
+    set (SOURCES VolumeLabelData.cpp Stack.cpp StackSession.cpp )
 endif()
 
 if (QT_BUILT)

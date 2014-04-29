@@ -159,8 +159,8 @@ PriorityInfo get_next_edge()
     boost::tuple<unsigned int, unsigned int, unsigned int> location;
     boost::tuple<Label, Label> body_pair = priority_scheduler->getTopEdge(location);
    
-    priority_info.body_pair = make_tuple(boost::get<0>(body_pair), boost::get<1>(body_pair));
-    priority_info.location = make_tuple(boost::get<0>(location), boost::get<1>(location), boost::get<2>(location));
+    priority_info.body_pair = boost::python::make_tuple(boost::get<0>(body_pair), boost::get<1>(body_pair));
+    priority_info.location = boost::python::make_tuple(boost::get<0>(location), boost::get<1>(location), boost::get<2>(location));
     return priority_info;
 }
 
@@ -203,7 +203,7 @@ boost::python::list get_qa_violators(unsigned int threshold)
 
 
 // exception throw if edge does not exist or connection probability specified is illegal
-void set_edge_result(tuple body_pair, bool remove)
+void set_edge_result(boost::python::tuple body_pair, bool remove)
 {
     if (!priority_scheduler) {
         throw ErrMsg("Scheduler not initialized");

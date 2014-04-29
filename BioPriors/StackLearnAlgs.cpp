@@ -9,7 +9,7 @@ void preprocess_stack(BioStack& stack, bool use_mito)
 {
     cout << "Building RAG ..."; 	
     if (use_mito) {
-        stack.build_rag_mito();
+        stack.build_rag();
     } else {
         stack.build_rag();
     }

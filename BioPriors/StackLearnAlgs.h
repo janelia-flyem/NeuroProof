@@ -8,6 +8,9 @@ namespace NeuroProof {
 
 class StackController;
 
+void preprocess_stack(BioStack& stack, bool use_mito);
+
+
 void learn_edge_classifier_flat(BioStack& stack, double threshold,
         UniqueRowFeature_Label& all_featuresu, std::vector<int>& all_labels, bool use_mito);
 

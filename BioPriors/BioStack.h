@@ -2,7 +2,7 @@
 #define BIOSTACK_H
 
 #include "../Stack/Stack.h"
-
+#include <string>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 
@@ -11,6 +11,9 @@ namespace NeuroProof {
 class BioStack : public Stack {
   public:
     BioStack(VolumeLabelPtr labels_) : Stack(labels_) {}
+    BioStack(std::string stack_name) : Stack(stack_name) {}
+    
+    void read_prob_list(std::string prob_filename, std::string dataset_name);
 
     VolumeLabelPtr create_syn_label_volume();
     VolumeLabelPtr create_syn_gt_label_volume();
@@ -20,8 +23,13 @@ class BioStack : public Stack {
 
     bool is_mito(Label_t label);
     void serialize_graph_info(Json::Value& json_writer);
+    
+    void set_classifier();
+    void save_classifier(std::string clfr_name);
+    
+    void set_edge_locations();
 
-    void build_rag_mito();
+    virtual void build_rag();
 
   private:
     void add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol, unsigned int x1,

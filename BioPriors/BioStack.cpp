@@ -70,6 +70,13 @@ void BioStack::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
     }
 }
 
+void BioStack::read_prob_list(std::string prob_filename, std::string dataset_name)
+{
+    prob_list = VolumeProb::create_volume_array(prob_filename.c_str(), dataset_name.c_str());
+    cout << "Read prediction array" << endl;  
+    
+}
+
 bool BioStack::is_mito(Label_t label)
 {
     RagNode_t* rag_node = rag->find_rag_node(label);
@@ -85,9 +92,40 @@ bool BioStack::is_mito(Label_t label)
     }
     return false;
 }
-
-void BioStack::build_rag_mito()
+void BioStack::set_classifier()
 {
+    if (!feature_manager){
+	printf("Classifier init: Feature manager not created yet\n");
+	return;
+    }
+    EdgeClassifier* eclfr = new OpencvRFclassifier();	
+    feature_manager->set_classifier(eclfr);
+}
+
+void BioStack::save_classifier(std::string clfr_name)
+{
+    if (!feature_manager){
+	printf("Classifier init: Feature manager not created yet\n");
+	return;
+    }
+    feature_manager->get_classifier()->save_classifier(clfr_name.c_str());
+}
+
+
+void BioStack::build_rag()
+{
+    if (get_prob_list().size()==0){
+	Stack::build_rag();
+	return;
+    }
+    if (!feature_manager){
+	printf("constructing new features manager\n");
+	FeatureMgrPtr feature_manager_(new FeatureMgr(prob_list.size()));
+	set_feature_manager(feature_manager_);
+	feature_manager->set_basic_features(); 
+    }
+    
+    printf("Building bioStack rag\n");
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
@@ -161,14 +199,54 @@ void BioStack::build_rag_mito()
         }
         labels.clear();
     }
-   
+    
+    Label_t largest_id = 0;
     for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
         Label_t id = (*iter)->get_node_id();
+	largest_id = (id>largest_id)? id : largest_id;
+	
         MitoTypeProperty mtype = mito_probs[id];
         mtype.set_type(); 
         (*iter)->set_property("mito-type", mtype);
     }
+    printf("Done Biostack rag, largest: %u\n", largest_id);
 }
+
+
+
+void BioStack::set_edge_locations()
+{
+  
+    EdgeCount best_edge_z;
+    EdgeLoc best_edge_loc;
+    determine_edge_locations(best_edge_z, best_edge_loc, false); //optimal_prob_edge_loc);
+    
+    // set edge properties for export 
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+//         if (!((*iter)->is_false_edge())) {
+//             if (feature_manager) {
+//                 double val = feature_manager->get_prob((*iter));
+//                 (*iter)->set_weight(val);
+//             } 
+//         }
+        Label_t x = 0;
+        Label_t y = 0;
+        Label_t z = 0;
+        
+        if (best_edge_loc.find(*iter) != best_edge_loc.end()) {
+            Location loc = best_edge_loc[*iter];
+            x = boost::get<0>(loc);
+            // assume y is bottom of image
+            // (technically ignored by raveler so okay)
+            y = boost::get<1>(loc); //height - boost::get<1>(loc) - 1;
+            z = boost::get<2>(loc);
+        }
+        
+        (*iter)->set_property("location", Location(x,y,z));
+    }
+  
+}
+
 
 
 void BioStack::set_synapse_exclusions(const char* synapse_json)

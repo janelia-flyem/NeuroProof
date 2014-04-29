@@ -1,6 +1,7 @@
 #include "vigraRFclassifier.h"
 #include "assert.h"
-#include <time.h>
+// #include <time.h>
+#include <ctime>
 
 VigraRFclassifier::VigraRFclassifier(const char* rf_filename){
 
@@ -56,7 +57,9 @@ void VigraRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, std
 	return;
      }
 
-     clock_t start = clock();
+//      clock_t start = clock();
+     std::time_t start, end;
+     std::time(&start);	
 
      MultiArray<2, float> features(Shape(rows,cols));
      MultiArray<2, int> labels(Shape(rows,1));
@@ -87,7 +90,9 @@ void VigraRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, std
      _nfeatures = _rf->column_count();
      _nclass = _rf->class_count();
 
-     printf("Time required to learn RF: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+     std::time(&end);
+     printf("Time required to learn RF: %.2f sec\n", (difftime(end,start))*1.0);
+//      printf("Time required to learn RF: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
      printf("with oob :%f\n", oob_v.oob_breiman);
 }
 
