@@ -1,6 +1,12 @@
 #include "../FeatureManager/FeatureMgr.h"
 #include "../BioPriors/BioStack.h"
 #include "../BioPriors/StackLearnAlgs.h"
+#include "../BioPriors/IterativeLearn_unc.h"
+#include "../BioPriors/IterativeLearn_semi.h"
+#include "../BioPriors/IterativeLearn_iwal.h"
+#include "../BioPriors/IterativeLearn_cotrain.h"
+#include "../BioPriors/IterativeLearn_simulate.h"
+#include "../BioPriors/IterativeLearn_random.h"
 
 #include "../Utilities/ScopeTime.h"
 #include "../Utilities/OptionParser.h"
@@ -67,10 +73,10 @@ void run_learning(LearnOptions& options)
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     
     VolumeLabelPtr watershed_data = VolumeLabelData::create_volume(
-            options.watershed_filename.c_str(), SEG_DATASET_NAME);
+            options.watershed_filename.c_str(), SEG_DATASET_NAME,false);
 
     VolumeLabelPtr groundtruth_data = VolumeLabelData::create_volume(
-            options.groundtruth_filename.c_str(), SEG_DATASET_NAME);
+            options.groundtruth_filename.c_str(), SEG_DATASET_NAME,false);
     
     const double threshold = 0.2;
 
@@ -93,14 +99,53 @@ void run_learning(LearnOptions& options)
     UniqueRowFeature_Label all_features;
     vector<int> all_labels;	
     
+    IterativeLearn* itlearn = 0;
+    
     for(int itr = 0; itr < options.num_iterations; ++itr){
         cout << endl << " ** Learning iteration " << itr+1 << "  **" << endl << endl;
         feature_manager->clear_features();
 	
 	cout << "Learn edge classifier ..." << endl; 
 	if (itr == 0) {
-	    learn_edge_classifier_flat(stack, threshold, all_features,
-                    all_labels, true); // # iteration, threshold, clfr_filename
+	    if (options.strategy_type == 4){ 
+		cout << "random learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_rnd(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 5){ 
+		cout << "uncertain learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_uncertain(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 6){ 
+		cout << "sem-supervised learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_semi(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 7){ 
+		cout << "IWAL learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_iwal(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 8){ 
+		cout << "Co-training" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_co(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 9){ 
+		cout << "Simluating" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_simulate(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else
+		learn_edge_classifier_flat(stack, threshold, all_features,
+		      all_labels, true); // # iteration, threshold, clfr_filename
 	} else{
 	    if (options.strategy_type == 1){ //accumulate only misclassified 
 		cout << "cumulative learning, only misclassified" << endl;
@@ -121,7 +166,10 @@ void run_learning(LearnOptions& options)
     }
 
     eclfr->save_classifier(options.classifier_filename.c_str());  	
-    delete eclfr;
+    //delete eclfr;
+    
+    if(itlearn)
+      delete itlearn;
 }
 
 

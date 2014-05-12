@@ -25,11 +25,11 @@ StackSession::StackSession(string session_name)
     initialize();
   
     if (ends_with(session_name, ".h5")) {
-        stack = new Stack(session_name);
+        stack = new BioStack(session_name);
         stack->build_rag();
     } else {
         // load label volume to examine
-        stack = new Stack(session_name + "/stack.h5"); 
+        stack = new BioStack(session_name + "/stack.h5"); 
         string rag_name = session_name + "/graph.json";
         Rag_t* rag = create_rag_from_jsonfile(rag_name.c_str());
         stack->set_rag(RagPtr(rag));
@@ -71,9 +71,9 @@ StackSession::StackSession(string session_name)
 
 void StackSession::load_gt(string gt_name, bool build_rag)
 {
-    Stack* new_gt_stack;
+    BioStack* new_gt_stack;
     try {
-        new_gt_stack = new Stack(gt_name);
+        new_gt_stack = new BioStack(gt_name);
         
         // verify that dimensions are the same between GT and label volume        
         if (new_gt_stack->get_xsize() != stack->get_xsize() ||
@@ -102,7 +102,7 @@ StackSession::StackSession(vector<string>& gray_images, string labelvolume)
     try {
         VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
                 labelvolume.c_str(), "stack");
-        stack = new Stack(initial_labels);
+        stack = new BioStack(initial_labels);
 
         VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
         stack->set_grayvol(gray_data);
@@ -228,7 +228,7 @@ void StackSession::toggle_gt()
         throw ErrMsg("GT stack not defined");
     }
     gt_mode = !gt_mode;
-    Stack* temp_stack;
+    BioStack* temp_stack;
     temp_stack = stack;
     stack = gt_stack;
     gt_stack = temp_stack;
@@ -238,6 +238,7 @@ void StackSession::toggle_gt()
 
 void StackSession::set_reset_stack()
 {
+    printf("reset stack\n");
     RagPtr rag = stack->get_rag();
    
     // colors are not recomputed unless the old colors are deleted 
@@ -257,6 +258,8 @@ void StackSession::set_reset_stack()
     unsigned int y = stack->get_ysize() / 2;
     Location location(x, y, 0);
     set_zoom_loc(location, 1.0);
+    
+    printf("done reset stack\n");
 }
 
 bool StackSession::get_reset_stack(VolumeLabelPtr& labelvol, RagPtr& rag)

@@ -5,7 +5,9 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET (CMAKE_BUILD_TYPE Release)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-set (SOURCES EdgeEditor.cpp NodeCentricRank.cpp NodeSizeRank.cpp OrphanRank.cpp SynapseRank.cpp ProbEdgeRank.cpp GPR.cpp)
+
+
+set (SOURCES EdgeRankToufiq.cpp EdgeEditor.cpp NodeCentricRank.cpp NodeSizeRank.cpp OrphanRank.cpp SynapseRank.cpp ProbEdgeRank.cpp GPR.cpp )
 
 add_library (EdgeEditor SHARED ${SOURCES})
 

@@ -109,7 +109,7 @@ void run_prediction(PredictOptions& options)
 
     // create watershed volume
     VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
-            options.watershed_filename.c_str(), SEG_DATASET_NAME);
+            options.watershed_filename.c_str(), SEG_DATASET_NAME, false);
     cout << "Read watershed" << endl;
 
     
@@ -132,7 +132,7 @@ void run_prediction(PredictOptions& options)
     stack.set_prob_list(prob_list);
 
     cout<<"Building RAG ..."; 	
-    stack.build_rag_mito();
+    stack.build_rag();
     cout<<"done with "<< stack.get_num_labels()<< " nodes\n";	
    
     // add synapse constraints (send json to stack function)
@@ -208,7 +208,7 @@ void run_prediction(PredictOptions& options)
     
     feature_manager->clear_features();
     feature_manager->set_classifier(eclfr);   	 
-    stack.build_rag();
+    stack.Stack::build_rag();
     
 
     // add synapse constraints (send json to stack function)

@@ -16,10 +16,12 @@
 
 #include "../Rag/RagNodeCombineAlg.h"
 #include "../Rag/Rag.h"
+#include "../Stack/Stack.h"
 #include "NodeSizeRank.h"
 #include "ProbEdgeRank.h"
 #include "OrphanRank.h"
 #include "SynapseRank.h"
+#include "EdgeRankToufiq.h"
 
 #include <vector>
 #include <json/value.h>
@@ -93,7 +95,8 @@ class EdgeEditor {
     */
     EdgeEditor(Rag_t& rag_, double min_val_, double max_val_,
             double start_val_, Json::Value& json_vals); 
-    
+
+    void set_splearn_mode(BioStack* pstack);
     /*!
      * Write focused proofreading statistics and other configurations
      * to json format.  Assumes that graph will be written (or has been)
@@ -169,6 +172,7 @@ class EdgeEditor {
      * \return pair of nodes connected by an edge
     */
     NodePair getTopEdge(Location& location);
+    void set_edge_label(int plabel);
     
     /*!
      * Undo the last decision made by calling removeEdge.
@@ -226,6 +230,8 @@ class EdgeEditor {
      * \return true if successful
     */
     bool undo2();
+    
+    BioStack* stack;
 
     //! Rag that will be examined with a focused strategy
     Rag_t& rag;
@@ -358,6 +364,8 @@ class EdgeEditor {
 
     //! current rank algorithm used by the editor
     EdgeRank* edge_mode;
+    
+    
 };
 
 }

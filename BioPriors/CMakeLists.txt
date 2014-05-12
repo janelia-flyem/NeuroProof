@@ -10,7 +10,9 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 SET(CMAKE_CXX_LINK_FLAGS "-O3")
 SET(CMAKE_DEBUG_POSTFIX "-g")
 
-set (SOURCES BioStack.cpp StackAgglomAlgs.cpp StackLearnAlgs.cpp)
+
+
+set (SOURCES BioStack.cpp StackAgglomAlgs.cpp StackLearnAlgs.cpp IterativeLearn.cpp Dataset.cpp IterativeLearn_semi.cpp IterativeLearn_unc.cpp IterativeLearn_iwal.cpp IterativeLearn_cotrain.cpp IterativeLearn_simulate.cpp)
 
 add_library (BioPriors SHARED ${SOURCES})
 

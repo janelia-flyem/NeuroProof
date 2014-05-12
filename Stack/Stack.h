@@ -59,7 +59,7 @@ class Stack : public StackBase {
      * at voxels 6 neighbors.  While building a RAG, features are constructed
      * from the probability volumes in the stack.
     */
-    void build_rag();
+    virtual void build_rag();
    
     /*!
      * Finds bi-connected components in the RAG (that are not connected to the

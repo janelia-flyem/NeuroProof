@@ -182,6 +182,7 @@ endif()
 
 # Compile NeuroProof components
 include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
+include_directories (${CMAKE_SOURCE_DIR}/SemiSupervised)
 
 enable_testing()
 add_subdirectory (Rag)
@@ -191,13 +192,14 @@ add_subdirectory (BioPriors)
 add_subdirectory (FeatureManager)
 add_subdirectory (Algorithms)
 add_subdirectory (Classifier)
+add_subdirectory (SemiSupervised)
 
 if (NOT DISABLE_GUI)
     add_subdirectory (Gui)
-    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor Gui BioPriors FeatureManager Algorithms Classifier)
+    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor Gui BioPriors FeatureManager Algorithms Classifier SemiSupervised)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
 else()
-    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors FeatureManager Algorithms Classifier)
+    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors FeatureManager Algorithms Classifier SemiSupervised)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 endif()
 

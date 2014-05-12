@@ -11,7 +11,7 @@
 
 // model dispatches events
 #include "Dispatcher.h"
-#include "Stack.h"
+#include "../BioPriors/BioStack.h"
 #include <tr1/unordered_map>
 #include <string>
 
@@ -98,7 +98,7 @@ class StackSession : public Dispatcher {
      * Retrieves the stack associated with the session.
      * \return segmentation stack
     */
-    Stack* get_stack()
+    BioStack* get_stack()
     {
         return stack;
     }
@@ -347,10 +347,10 @@ class StackSession : public Dispatcher {
     void set_zoom_loc(Location location, double zoom_factor_);
    
     //! active stack 
-    Stack* stack;
+    BioStack* stack;
 
     //! ground truth stack
-    Stack* gt_stack;  
+    BioStack* gt_stack;  
   
     //! contains a set of active labels for examination
     std::tr1::unordered_map<Label_t, int> active_labels;

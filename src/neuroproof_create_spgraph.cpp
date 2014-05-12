@@ -104,7 +104,7 @@ void generate_sp_graph(SpOptions& options)
     stack2.set_prob_list(prob_list);
 
     cout<<"Building RAG ..."; 	
-    stack2.build_rag();
+    stack2.Stack::build_rag();
     cout<<"done with "<< stack2.get_num_labels()<< " nodes\n";	
   
     RagPtr rag = stack2.get_rag();

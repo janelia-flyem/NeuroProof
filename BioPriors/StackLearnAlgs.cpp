@@ -9,9 +9,9 @@ void preprocess_stack(BioStack& stack, bool use_mito)
 {
     cout << "Building RAG ..."; 	
     if (use_mito) {
-        stack.build_rag_mito();
-    } else {
         stack.build_rag();
+    } else {
+        stack.Stack::build_rag();
     }
     
     cout << "done with " << stack.get_num_labels() << " nodes" << endl;

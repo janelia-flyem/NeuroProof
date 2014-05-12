@@ -1,6 +1,7 @@
 #include "opencvRFclassifier.h"
 #include "assert.h"
-#include <time.h>
+// #include <time.h>
+#include <ctime>
 #include <stdio.h>
 
 OpencvRFclassifier::OpencvRFclassifier(const char* rf_filename){
@@ -78,7 +79,10 @@ void OpencvRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, st
 	return;
      }
 
-     clock_t start = clock();
+//      clock_t start = clock();    
+     std::time_t start, end;
+     std::time(&start);	
+
 
      CvMat *features = cvCreateMat(rows, cols, CV_32F);	
      CvMat *labels = cvCreateMat(rows, 1 , CV_32F);	
@@ -141,7 +145,9 @@ void OpencvRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, st
       }
       	
 
-    printf("Time required to learn RF: %.2f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+    std::time(&end);
+    printf("Time required to learn RF: %.2f sec\n", (difftime(end,start))*1.0);
+//     printf("Time required to learn RF: %.2f sec\n", ((double)clock() - start) / CLOCKS_PER_SEC);
     printf("with training set accuracy :%.3f\n", correct/features->rows*100.);
 
     _tree_count = _rf->get_tree_count();	
