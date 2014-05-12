@@ -127,7 +127,20 @@ void WeightMatrix1::add2trnset(std::vector<unsigned int>& trnset, std::vector<in
     compute_Wul_Luu();
     
     amgsolver.set_size(_Wul.size());
-    amgsolver.set_matrix(_Luu_i.size(), _Luu_i, _Luu_j, _Luu_v);
+    
+    std::vector<double> Luu_v2(_Luu_v.size(),0);
+    for(size_t ii=0; ii < _Luu_i.size(); ii++){
+	if(_Luu_i[ii] == _Luu_j[ii])
+	  Luu_v2[ii] = _Luu_v[ii]+0.0001;
+	else
+	  Luu_v2[ii] = _Luu_v[ii];
+    }
+    
+    
+    amgsolver.set_matrix(_Luu_i.size(), _Luu_i, _Luu_j, Luu_v2);
+    
+    
+//     amgsolver.set_matrix(_Luu_i.size(), _Luu_i, _Luu_j, _Luu_v);
     amgsolver.build_preconditioner();
 }
 

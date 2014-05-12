@@ -76,7 +76,7 @@ void EdgeEditor::set_edge_mode(double lower, double upper, double start,
     
     ignore_size = ignore_size_;
     prob_edge_mode->initialize(lower, upper, start, ignore_size);
-    // /*Toufiq*/ edge_mode = prob_edge_mode;
+    edge_mode = prob_edge_mode;
 }
 
 void EdgeEditor::estimateWork()
@@ -118,7 +118,7 @@ void EdgeEditor::reinitialize_scheduler()
     num_est_remaining = 0;
 }
 
-void EdgeEditor::set_stack(BioStack* pstack){
+void EdgeEditor::set_splearn_mode(BioStack* pstack){
     stack = pstack;
     
     edge_mode = new EdgeRankToufiq(stack, rag);
