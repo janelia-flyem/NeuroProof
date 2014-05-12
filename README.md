@@ -20,6 +20,7 @@ and mechanisms to comparing with ground truth.
 * Algorithm to estimate uncertainty of graph and is predicted edge confidences
 * Tools to assess the amount of work required to edit/revise a segmentation
 * GUI front-end for visualizing segmentation results; interface for merging segments together
+* Algorithm for performing focused training using simple GUI
 * Simple and access-efficient graph-library implementation and straightforward conversion
 to powerful boost graph library
 * Data stack implementation that allows one to leverage image processing
@@ -103,9 +104,9 @@ due to the size of the directory.)
     % git submodule update
 
 
-## To Be Implemented
+## To Be Done
 
-* Focused agglomeration training in stack viewer
+* Finish comments; better integration of latest training algorithms (build_rag -- unnecessary feature comp?, iterative learning in BioPriors, etc)
 * Add capability to call NeuroProof as a service in clustered environments
 * Direct support for 2D datasets (2D data is generally allowable in the current implementation)
 * Improved algorithms for handling EM reconstruction specific goals

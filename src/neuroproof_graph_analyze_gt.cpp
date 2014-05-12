@@ -878,13 +878,13 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     // create GT stack to get GT rag
     BioStack gt_stack(gt_labels);
-    gt_stack.build_rag();
+    gt_stack.Stack::build_rag();
     cout << "Built GT RAG" << endl;
 
     // create seg stack
     BioStack stack(seg_labels);
     stack.set_gt_labelvol(gt_labels);
-    stack.build_rag();
+    stack.Stack::build_rag();
     cout << "Built seg RAG" << endl;
     stack.compute_groundtruth_assignment();
 

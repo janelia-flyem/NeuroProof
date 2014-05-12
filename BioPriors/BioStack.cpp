@@ -94,20 +94,14 @@ bool BioStack::is_mito(Label_t label)
 }
 void BioStack::set_classifier()
 {
-    if (!feature_manager){
-	printf("Classifier init: Feature manager not created yet\n");
-	return;
-    }
+    assert(feature_manager);
     EdgeClassifier* eclfr = new OpencvRFclassifier();	
     feature_manager->set_classifier(eclfr);
 }
 
 void BioStack::save_classifier(std::string clfr_name)
 {
-    if (!feature_manager){
-	printf("Classifier init: Feature manager not created yet\n");
-	return;
-    }
+    assert(feature_manager);
     feature_manager->get_classifier()->save_classifier(clfr_name.c_str());
 }
 
@@ -119,13 +113,12 @@ void BioStack::build_rag()
 	return;
     }
     if (!feature_manager){
-	printf("constructing new features manager\n");
 	FeatureMgrPtr feature_manager_(new FeatureMgr(prob_list.size()));
 	set_feature_manager(feature_manager_);
 	feature_manager->set_basic_features(); 
     }
     
-    printf("Building bioStack rag\n");
+    //printf("Building bioStack rag\n");
     if (!labelvol) {
         throw ErrMsg("No label volume defined for stack");
     }
@@ -209,7 +202,7 @@ void BioStack::build_rag()
         mtype.set_type(); 
         (*iter)->set_property("mito-type", mtype);
     }
-    printf("Done Biostack rag, largest: %u\n", largest_id);
+    //printf("Done Biostack rag, largest: %u\n", largest_id);
 }
 
 

@@ -99,7 +99,7 @@ void run_learning(LearnOptions& options)
     UniqueRowFeature_Label all_features;
     vector<int> all_labels;	
     
-    IterativeLearn* itlearn = NULL;
+    IterativeLearn* itlearn = 0;
     
     for(int itr = 0; itr < options.num_iterations; ++itr){
         cout << endl << " ** Learning iteration " << itr+1 << "  **" << endl << endl;

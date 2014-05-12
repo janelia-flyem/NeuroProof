@@ -218,8 +218,6 @@ EdgeEditor::~EdgeEditor()
     delete orphan_edge_mode;
     delete synapse_edge_mode;
     delete body_edge_mode;
-    
-    delete edge_mode;
 }
 
 void EdgeEditor::export_json(Json::Value& json_writer)
@@ -338,11 +336,12 @@ boost::tuple<Node_t, Node_t> EdgeEditor::getTopEdge(Location& location)
         Label_t node1 = boost::get<0>(node_pair);
         Label_t node2 = boost::get<1>(node_pair);
 	
-	printf("received firstedge: (%d, %d)\n", node1, node2);
+	//printf("received firstedge: (%d, %d)\n", node1, node2);
         RagEdge_t* edge = rag.find_rag_edge(node1, node2);
-	if (!edge){
+        assert(edge);
+        /*if (!edge){
 	  printf("selected edge not found\n");
-	}
+	}*/
         location = edge->get_property<Location>("location");
     } catch(ErrMsg& msg) {
         cerr << msg.str << endl;

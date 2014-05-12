@@ -16,7 +16,6 @@
 // the entire RAG.
 #include "../Rag/Rag.h"
 #include "Dispatcher.h"
-#include "../FeatureManager/FeatureMgr.h"
 
 namespace NeuroProof {
 

@@ -208,7 +208,7 @@ void run_prediction(PredictOptions& options)
     
     feature_manager->clear_features();
     feature_manager->set_classifier(eclfr);   	 
-    stack.build_rag();
+    stack.Stack::build_rag();
     
 
     // add synapse constraints (send json to stack function)
