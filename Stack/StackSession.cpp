@@ -27,12 +27,14 @@ StackSession::StackSession(string session_name)
     if (ends_with(session_name, ".h5")) {
         stack = new BioStack(session_name);
         stack->build_rag();
-    } else {
+    } else { //cirectory read
         // load label volume to examine
         stack = new BioStack(session_name + "/stack.h5"); 
         string rag_name = session_name + "/graph.json";
         Rag_t* rag = create_rag_from_jsonfile(rag_name.c_str());
         stack->set_rag(RagPtr(rag));
+	
+	//*Toufiq* read the classifier
         
         // load gt volume to examine
         string gt_name = session_name + "/gtstack.h5";
@@ -141,6 +143,9 @@ void StackSession::export_session(string session_name)
             string stack_name = session_name + "/stack.h5"; 
             string graph_name = session_name + "/graph.json"; 
             stack_exp->serialize_stack(stack_name.c_str(), graph_name.c_str(), false);
+	    //*Toufiq* save the classifier
+            string classifier_name = session_name + "/sp_classifier.xml"; 
+	    stack->get_feature_manager()->get_classifier()->save_classifier(classifier_name.c_str());
 
             Json::Value json_writer;
             string session_file = session_name + "/session.json";
