@@ -145,7 +145,8 @@ void StackSession::export_session(string session_name)
             stack_exp->serialize_stack(stack_name.c_str(), graph_name.c_str(), false);
 	    //*Toufiq* save the classifier
             string classifier_name = session_name + "/sp_classifier.xml"; 
-	    stack->get_feature_manager()->get_classifier()->save_classifier(classifier_name.c_str());
+	    if (stack->get_feature_manager()->get_classifier()!=NULL)
+		  stack->get_feature_manager()->get_classifier()->save_classifier(classifier_name.c_str());
 
             Json::Value json_writer;
             string session_file = session_name + "/session.json";
