@@ -94,7 +94,7 @@ void IterativeLearn::compute_all_edge_features(std::vector< std::vector<double> 
         }
     }
     
-    // *C* Debug
+    /*C* Debug
     all_features.erase(all_features.begin()+1000, all_features.end());
     all_labels.erase(all_labels.begin()+1000, all_labels.end());
     //**/
