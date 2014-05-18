@@ -39,6 +39,12 @@ public:
 	edgelist.clear();
 	initial_set_strategy = DEGREE;
 	
+	if (!(feature_mgr->get_classifier())){
+	    EdgeClassifier* eclfr = new OpencvRFclassifier();
+	  
+	    feature_mgr->set_classifier(eclfr);
+	}
+	
     }
     void get_initial_edges(std::vector<unsigned int>& new_idx);
     void learn_edge_classifier(double trnsz);

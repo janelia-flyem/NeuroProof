@@ -47,29 +47,41 @@ void EdgeRankToufiq::repopulate_buffer()
 }
 bool EdgeRankToufiq::is_finished(){
     
-    if(num_processed>=maxEdges)
+    if(num_processed>=maxEdges){
+	printf("Max number of edges reached, save ssession\n");
 	return true;
+    }
     if (edge_ptr >= edgebuffer.size()){
 	if (new_lbl.size() != new_idx.size()){
 	    printf("size different: new_idx, new_lbl\n");
 	    return false;
 	}
-// 	ils->update_new_labels(new_idx, new_lbl);
 	tmp_idx = new_idx;
 	tmp_lbl = new_lbl;
-	
-	if (threadp)
-	  threadp->join();
+	repopulate_buffer();
 	edgebuffer = backupbuffer;
+	if (edgebuffer.size()<1)
+	    return true;
 	new_idx = backup_idx;
 	new_lbl.resize(edgebuffer.size());
 	edge_ptr = 0;
-	if (edgebuffer.size()<1)
-	    return true;
-	if (threadp)
-	  delete threadp;  
-// 	repopulate_buffer();
-	threadp = new boost::thread(&EdgeRankToufiq::repopulate_buffer, this);
+	
+// // // // 	ils->update_new_labels(new_idx, new_lbl);
+// // // 	tmp_idx = new_idx;
+// // // 	tmp_lbl = new_lbl;
+// // // 	
+// // // 	if (threadp)
+// // // 	  threadp->join();
+// // // 	edgebuffer = backupbuffer;
+// // // 	new_idx = backup_idx;
+// // // 	new_lbl.resize(edgebuffer.size());
+// // // 	edge_ptr = 0;
+// // // 	if (edgebuffer.size()<1)
+// // // 	    return true;
+// // // 	if (threadp)
+// // // 	  delete threadp;  
+// // // // 	repopulate_buffer();
+// // // 	threadp = new boost::thread(&EdgeRankToufiq::repopulate_buffer, this);
 	
    }
    return false;
