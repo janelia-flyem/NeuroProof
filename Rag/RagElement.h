@@ -149,7 +149,7 @@ template <typename T> inline T& RagElement::get_property(std::string key)
     PropertyPtr property = properties[key];
 
     boost::shared_ptr<PropertyTemplate<T> > property_tem =
-        boost::shared_polymorphic_downcast<PropertyTemplate<T> >(property);
+        boost::dynamic_pointer_cast<PropertyTemplate<T> >(property);
 
     return property_tem->get_data();
 }
