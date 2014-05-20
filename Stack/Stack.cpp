@@ -41,6 +41,72 @@ Stack::Stack(string stack_name) : StackBase(VolumeLabelPtr())
     }
 }
 
+void Stack::build_rag_batch()
+{
+    if (!labelvol) {
+        throw ErrMsg("No label volume defined for stack");
+    }
+
+    rag = RagPtr(new Rag_t);
+
+    // 1 pixel border expected
+    unsigned int maxx = get_xsize() - 1; 
+    unsigned int maxy = get_ysize() - 1; 
+    unsigned int maxz = get_zsize() - 1; 
+    vector<double> predictions(prob_list.size(), 0.0);
+ 
+    volume_forXYZ(*labelvol, x, y, z) {
+    
+        Label_t label = (*labelvol)(x,y,z); 
+        
+        if (!label) {
+            continue;
+        }
+
+        if (x == 0 || y == 0 || z == 0) {
+            continue;
+        }
+        if (x == maxx || y == maxy || z == maxz) {
+            continue;
+        }
+
+        RagNode_t * node = rag->find_rag_node(label);
+
+        // create node
+        if (!node) {
+            node =  rag->insert_rag_node(label); 
+        }
+        node->incr_size();
+        
+        Label_t label2 = (*labelvol)(x-1,y,z);
+        Label_t label3 = (*labelvol)(x+1,y,z);
+        Label_t label4 = (*labelvol)(x,y-1,z);
+        Label_t label5 = (*labelvol)(x,y+1,z);
+        Label_t label6 = (*labelvol)(x,y,z-1);
+        Label_t label7 = (*labelvol)(x,y,z+1);
+
+        // if it is not a 0 label and is different from the current label, add edge
+        if (label2 && (label > label2)) {
+            rag_add_edge(label, label2, predictions);
+        }
+        if (label3 && (label > label3)) {
+            rag_add_edge(label, label3, predictions);
+        }
+        if (label4 && (label > label4)) {
+            rag_add_edge(label, label4, predictions);
+        }
+        if (label5 && (label > label5)) {
+            rag_add_edge(label, label5, predictions);
+        }
+        if (label6 && (label > label6)) {
+            rag_add_edge(label, label6, predictions);
+        }
+        if (label7 && (label > label7)) {
+            rag_add_edge(label, label7, predictions);
+        }
+    }
+}
+
 void Stack::build_rag()
 {
     if (!labelvol) {
@@ -58,7 +124,6 @@ void Stack::build_rag()
  
     volume_forXYZ(*labelvol, x, y, z) {
         Label_t label = (*labelvol)(x,y,z); 
-        
         if (!label) {
             continue;
         }
@@ -70,7 +135,7 @@ void Stack::build_rag()
             node =  rag->insert_rag_node(label); 
         }
         node->incr_size();
-        
+    
         // load all prediction values for a given x,y,z 
         for (unsigned int i = 0; i < prob_list.size(); ++i) {
             predictions[i] = (*(prob_list[i]))(x,y,z);
@@ -120,7 +185,10 @@ void Stack::build_rag()
         }
         labels.clear();
     }
-   
+ 
+
+
+
 }
 
 void Stack::rag_add_edge(unsigned int id1, unsigned int id2, vector<double>& preds)

@@ -60,7 +60,14 @@ class Stack : public StackBase {
      * from the probability volumes in the stack.
     */
     virtual void build_rag();
-   
+
+    /*!
+     * Constructs a RAG by interating through the 3D label volume and looking
+     * at voxels 6 neighbors.  This command is expected to operate on only a subset
+     * of a much larger 3D label volume.  Assumes 1 pixel border with larger volume. 
+    */
+    void build_rag_batch();
+
     /*!
      * Finds bi-connected components in the RAG (that are not connected to the
      * boundary of the volume) and removes them.  This function modifies the
