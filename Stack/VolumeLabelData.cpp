@@ -10,6 +10,16 @@ VolumeLabelPtr VolumeLabelData::create_volume()
     return VolumeLabelPtr(new VolumeLabelData); 
 }
 
+VolumeLabelPtr VolumeLabelData::create_volume(int xsize, int ysize, int zsize)
+{
+    VolumeLabelData* volumedata = new VolumeLabelData;
+    vigra::TinyVector<long long unsigned int,3> shape(xsize, ysize, zsize);
+    volumedata->reshape(shape);
+    
+    return VolumeLabelPtr(volumedata); 
+}
+
+
 VolumeLabelPtr VolumeLabelData::create_volume(
         const char * h5_name, const char * dset, bool use_transforms)
 {

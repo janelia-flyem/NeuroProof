@@ -21,5 +21,5 @@ endif()
 
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (Gui ${boost_NAME} RescanQt4)
+    add_dependencies (Gui ${boost_NAME} ${vtk_NAME} RescanQt4)
 endif()

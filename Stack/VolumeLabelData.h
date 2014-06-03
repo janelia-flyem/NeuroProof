@@ -52,6 +52,16 @@ class VolumeLabelData : public VolumeData<Label_t> {
             bool use_transforms = true);
 
     /*!
+     * Static function to create a volume label data object
+     * from the given dimensions. 
+     * \param xsize is x dimension
+     * \param ysize is y dimension
+     * \param zsize is z dimension
+     * \return shared pointer to volume label data
+    */
+    static VolumeLabelPtr create_volume(int xsize, int ysize, int zsize);
+
+    /*!
      * Enable the merging of two labels by assigning an old label to
      * another label.  This assignment is done through a hash
      * datastructure and generally takes amortized O(1) runtime.
