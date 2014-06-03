@@ -23,23 +23,29 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
     
     std::time_t start, end;
     std::time(&start);
+
+    /*C* Assuming feeture format: node 1 feat, node 2 feat, edges feat and diff feat
+     * The first feature for each of these three components is size which we ignore
+     * followed by 4 moments and 5 percentiles for each channel
+     /**/ 
     
-    unsigned int tmp_ignore[] = {0, 55, 110, 165}; 
+//     unsigned int tmp_ignore[] = {0, 55, 110, 165}; 
+    unsigned int tmp_ignore[4];
+    tmp_ignore[0] = 0;
+    for(size_t ff=1 ;ff<4; ff++)
+	tmp_ignore[ff] = tmp_ignore[ff-1]+ (1 + nfeat_channels*4 + nfeat_channels *5); 
+    
+    printf("ignore features:");
+    for(size_t ff=0 ;ff<4; ff++)
+	printf("%u ", tmp_ignore[ff]);
+    printf("\n");
+      
     std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
     
     double w_dist_thd = 7;
     wt1 = new WeightMatrix1(w_dist_thd, ignore_list);
     wt1->weight_matrix_parallel(all_features, false);
     
-//     while (wt1->nnz_pct()>0.035){
-// 	w_dist_thd--;
-// 	delete wt1;
-// 	wt1 = new WeightMatrix1(w_dist_thd, ignore_list);
-// 	wt1->weight_matrix_parallel(all_features, false);
-//     }
-    
-//     WeightMatrix1 wt1(7, ignore_list);
-//     wtp.weight_matrix(all_features, false);
     
     
     std::time(&end);	

@@ -27,6 +27,7 @@ class IterativeLearn_semi:public IterativeLearn{
     int initial_set_strategy;
     
     boost::thread* threadp;
+    unsigned int nfeat_channels;
 //     std::vector<unsigned int> nz_degree_idx;
 //     std::vector<unsigned int> all_idx;
 //     std::vector<unsigned int> tst_idx;
@@ -44,7 +45,8 @@ public:
 	  
 	    feature_mgr->set_classifier(eclfr);
 	}
-	
+	nfeat_channels = feature_mgr->get_num_channels();
+	printf("num feat channels: %u\n", nfeat_channels);
     }
     void get_initial_edges(std::vector<unsigned int>& new_idx);
     void learn_edge_classifier(double trnsz);
