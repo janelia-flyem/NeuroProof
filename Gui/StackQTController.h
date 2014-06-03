@@ -57,7 +57,7 @@ class StackQTController : public QObject, public StackObserver {
      * No actions are performed when the stack session dispatches
      * an event.
     */
-    void update() {}
+    void update();
 
   private:
     /*!
@@ -89,6 +89,8 @@ class StackQTController : public QObject, public StackObserver {
 
     //! handles interface to edge ordering algorithm
     EdgeEditor * priority_scheduler;
+
+    bool training_mode;
 
   private slots:
     /*!
@@ -226,6 +228,7 @@ class StackQTController : public QObject, public StackObserver {
      * and a message will pop-up if no undos are possible.
     */
     void undo_edge();
+
 };
 
 }

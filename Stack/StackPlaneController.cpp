@@ -125,6 +125,10 @@ void vtkSimpInteractor::OnKeyPress()
         view->pan(-10,0);
     } else if (key_val == "Right") {
         view->pan(10,0);
+    } else if (key_val == "t") {
+        stack_session->set_merge_bodies();
+    } else if (key_val == "u") {
+        stack_session->set_next_bodies();
     }
 }
 

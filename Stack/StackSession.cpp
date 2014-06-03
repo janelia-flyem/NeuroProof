@@ -211,6 +211,10 @@ void StackSession::initialize()
     old_selected_id = 0;
     selected_id_changed = false;
     show_all = true;
+    next_bodies = false;
+    next_bodies_changed = false;
+    merge_bodies = false;
+    merge_bodies_changed = false;
     show_all_changed = false;
     active_plane = 0;
     active_plane_changed = false;
@@ -293,6 +297,24 @@ void StackSession::set_opacity(unsigned int opacity_)
     opacity_changed = false;
 }
 
+void StackSession::set_next_bodies()
+{
+    next_bodies = true;
+    next_bodies_changed = true;
+    update_all();
+    next_bodies = false;
+    next_bodies_changed = false;
+}
+
+void StackSession::set_merge_bodies()
+{
+    merge_bodies = true;
+    merge_bodies_changed = true;
+    update_all();
+    merge_bodies = false;
+    merge_bodies_changed = false;
+}
+
 void StackSession::set_plane(unsigned int plane)
 {   
     active_plane = plane; 
@@ -325,6 +347,19 @@ bool StackSession::get_show_all(bool& show_all_)
     show_all_ = show_all;
     return show_all_changed;
 }
+
+bool StackSession::get_merge_bodies(bool& merge_bodies_)
+{
+    merge_bodies_ = merge_bodies;
+    return merge_bodies_changed;
+}
+
+bool StackSession::get_next_bodies(bool& next_bodies_)
+{
+    next_bodies_ = next_bodies;
+    return next_bodies_changed;
+}
+
 
 bool StackSession::get_select_label(Label_t& select_curr, Label_t& select_old)
 {

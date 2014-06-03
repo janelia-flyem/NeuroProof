@@ -20,9 +20,10 @@ using std::vector; using std::sort;
 
 StackQTController::StackQTController(StackSession* stack_session_, QApplication* qapp_) : 
     stack_session(stack_session_), qapp(qapp_), body_controller(0), 
-    plane_controller(0), priority_scheduler(0)
+    plane_controller(0), priority_scheduler(0), training_mode(false)
 {
     main_ui = new StackQTUi(stack_session);
+    stack_session->attach_observer(this);
         
     // delays loading the views so that the main window is displayed first
     QTimer::singleShot(1000, this, SLOT(load_views()));
@@ -95,6 +96,7 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 
 void StackQTController::start_viewonly()
 {
+    training_mode = false;
     // changing view modes resets the stack and deleted the current body viewer
     if (body_controller) {
         delete body_controller;
@@ -105,6 +107,23 @@ void StackQTController::start_viewonly()
     stack_session->set_reset_stack();
     plane_controller->enable_selections();
     main_ui->ui.modeWidget->setCurrentIndex(1);
+}
+
+void StackQTController::update()
+{
+    if (training_mode) {
+        bool merge_bodies;
+        stack_session->get_merge_bodies(merge_bodies);
+
+        bool next_bodies;
+        stack_session->get_next_bodies(next_bodies);
+        
+        if (merge_bodies) {
+            merge_edge();
+        } else if (next_bodies) {
+            grab_next_edge();
+        } 
+    } 
 }
 
 void StackQTController::start_training()
@@ -164,6 +183,7 @@ void StackQTController::start_training()
 	priority_scheduler->set_splearn_mode(stack_session->get_stack());
     }
     
+    training_mode = true;
     update_progress();
     grab_current_edge();
 }
@@ -462,6 +482,7 @@ void StackQTController::clear_session()
 
 StackQTController::~StackQTController()
 {
+    stack_session->detach_observer(this);
     clear_session();
     delete main_ui;
 }

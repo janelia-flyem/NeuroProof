@@ -244,13 +244,20 @@ class StackSession : public Dispatcher {
      * \param plane id for a given plane in the stack
     */
     void set_plane(unsigned int plane);
-    
+   
+
+    void set_merge_bodies();
+    void set_next_bodies();
+
     /*!
      * Set a certain opacity for color.  0 means no color
      * and 10 means opaque.
      * \param opacity integer value for opacity
     */
     void set_opacity(unsigned int opacity_);
+
+    bool get_merge_bodies(bool& merge_bodies_);
+    bool get_next_bodies(bool& next_bodies_);
 
     /*!
      * Selects a label (for toggling color typically) for the given
@@ -369,6 +376,11 @@ class StackSession : public Dispatcher {
 
     //! true if all labels should be colored
     bool show_all;
+
+    bool next_bodies;
+    bool next_bodies_changed;
+    bool merge_bodies;
+    bool merge_bodies_changed;
 
     //! true if show all value changed
     bool show_all_changed;
