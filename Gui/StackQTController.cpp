@@ -20,10 +20,10 @@ using std::vector; using std::sort;
 
 StackQTController::StackQTController(StackSession* stack_session_, QApplication* qapp_) : 
     stack_session(stack_session_), qapp(qapp_), body_controller(0), 
-    plane_controller(0), priority_scheduler(0)
+    plane_controller(0), priority_scheduler(0), training_mode(false)
 {
     main_ui = new StackQTUi(stack_session);
-        
+    
     // delays loading the views so that the main window is displayed first
     QTimer::singleShot(1000, this, SLOT(load_views()));
     main_ui->showMaximized();
@@ -95,6 +95,7 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
 
 void StackQTController::start_viewonly()
 {
+    training_mode = false;
     // changing view modes resets the stack and deleted the current body viewer
     if (body_controller) {
         delete body_controller;
@@ -105,6 +106,23 @@ void StackQTController::start_viewonly()
     stack_session->set_reset_stack();
     plane_controller->enable_selections();
     main_ui->ui.modeWidget->setCurrentIndex(1);
+}
+
+void StackQTController::update()
+{
+    if (training_mode) {
+        bool merge_bodies;
+        bool merge_change = stack_session->get_merge_bodies(merge_bodies);
+
+        bool next_bodies;
+        bool next_change = stack_session->get_next_bodies(next_bodies);
+
+        if (merge_change) {
+            merge_edge();
+        } else if (next_change) {
+            grab_next_edge();
+        } 
+    } 
 }
 
 void StackQTController::start_training()
@@ -164,12 +182,14 @@ void StackQTController::start_training()
 	priority_scheduler->set_splearn_mode(stack_session->get_stack());
     }
     
+    training_mode = true;
     update_progress();
     grab_current_edge();
 }
 
 void StackQTController::grab_next_edge()
 {
+
     if ((priority_scheduler->isFinished())) {
         MessageBox msgbox("No more edges");
 	printf("fininshed, need to save\n");
@@ -395,6 +415,10 @@ void StackQTController::show_shortcuts()
     msg += "Right: pan right\n";
     msg += "Left click: select body\n";
     msg += "Shift left click: adds body to active list\n";
+    msg += "Scroll: increment/decrement plane\n";
+    msg += "Shift+Scroll: zoom in/out\n";
+    msg += "t: merge bodies\n";
+    msg += "u: next bodies\n";
 
     MessageBox msgbox(msg.c_str());
 }
@@ -455,6 +479,7 @@ void StackQTController::clear_session()
     }
     if (stack_session) {
         main_ui->clear_session();
+        stack_session->detach_observer(this);
         delete stack_session;
         stack_session = 0;
     }
@@ -485,6 +510,7 @@ void StackQTController::load_views()
     if (!stack_session) {
         return;
     }
+    stack_session->attach_observer(this);
 
     // for some reason, I have to call this twice for it to display properly
     main_ui->ui.statusbar->showMessage("Loading Session...");
