@@ -123,7 +123,7 @@ void run_learning(LearnOptions& options)
 		cout << "sem-supervised learning" << endl;
 		preprocess_stack(stack, true);
 		itlearn = new IterativeLearn_semi(&stack);
-		itlearn->learn_edge_classifier(2000);
+		itlearn->learn_edge_classifier(5000);
 	    }
 	    else if (options.strategy_type == 7){ 
 		cout << "IWAL learning" << endl;

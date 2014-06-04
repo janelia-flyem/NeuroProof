@@ -42,7 +42,7 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
       
     std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
     
-    double w_dist_thd = 7;
+    double w_dist_thd = 3;
     wt1 = new WeightMatrix1(w_dist_thd, ignore_list);
     wt1->weight_matrix_parallel(all_features, false);
     
