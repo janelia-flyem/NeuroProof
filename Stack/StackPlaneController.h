@@ -166,7 +166,11 @@ class vtkSimpInteractor : public vtkInteractorStyleImage
     /*!
      * Prevent actions from occuring when mouse is moved.
     */
-    virtual void OnMouseMove() {} 
+    virtual void OnMouseMove() {}
+
+    virtual void OnMouseWheelBackward();
+    virtual void OnMouseWheelForward();
+
   private:
     /*!
      * Private constructor for class.  Shift+click is enabled by default.

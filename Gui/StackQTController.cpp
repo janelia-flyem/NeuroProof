@@ -23,8 +23,7 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
     plane_controller(0), priority_scheduler(0), training_mode(false)
 {
     main_ui = new StackQTUi(stack_session);
-    stack_session->attach_observer(this);
-        
+    
     // delays loading the views so that the main window is displayed first
     QTimer::singleShot(1000, this, SLOT(load_views()));
     main_ui->showMaximized();
@@ -113,14 +112,14 @@ void StackQTController::update()
 {
     if (training_mode) {
         bool merge_bodies;
-        stack_session->get_merge_bodies(merge_bodies);
+        bool merge_change = stack_session->get_merge_bodies(merge_bodies);
 
         bool next_bodies;
-        stack_session->get_next_bodies(next_bodies);
-        
-        if (merge_bodies) {
+        bool next_change = stack_session->get_next_bodies(next_bodies);
+
+        if (merge_change) {
             merge_edge();
-        } else if (next_bodies) {
+        } else if (next_change) {
             grab_next_edge();
         } 
     } 
@@ -190,6 +189,7 @@ void StackQTController::start_training()
 
 void StackQTController::grab_next_edge()
 {
+
     if ((priority_scheduler->isFinished())) {
         MessageBox msgbox("No more edges");
 	printf("fininshed, need to save\n");
@@ -415,6 +415,10 @@ void StackQTController::show_shortcuts()
     msg += "Right: pan right\n";
     msg += "Left click: select body\n";
     msg += "Shift left click: adds body to active list\n";
+    msg += "Scroll: increment/decrement plane\n";
+    msg += "Shift+Scroll: zoom in/out\n";
+    msg += "t: merge bodies\n";
+    msg += "u: next bodies\n";
 
     MessageBox msgbox(msg.c_str());
 }
@@ -475,6 +479,7 @@ void StackQTController::clear_session()
     }
     if (stack_session) {
         main_ui->clear_session();
+        stack_session->detach_observer(this);
         delete stack_session;
         stack_session = 0;
     }
@@ -482,7 +487,6 @@ void StackQTController::clear_session()
 
 StackQTController::~StackQTController()
 {
-    stack_session->detach_observer(this);
     clear_session();
     delete main_ui;
 }
@@ -506,6 +510,7 @@ void StackQTController::load_views()
     if (!stack_session) {
         return;
     }
+    stack_session->attach_observer(this);
 
     // for some reason, I have to call this twice for it to display properly
     main_ui->ui.statusbar->showMessage("Loading Session...");

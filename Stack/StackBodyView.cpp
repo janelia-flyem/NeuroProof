@@ -121,7 +121,7 @@ void StackBodyView::initialize()
     volumeMapper->SetInputConnection(label_resample->GetOutputPort());
     
     // to improve rendering performance
-    volumeMapper->SetMinimumImageSampleDistance(4.0); 
+    volumeMapper->SetMinimumImageSampleDistance(2.0); 
 
     volumeColor = vtkSmartPointer<vtkColorTransferFunction>::New();
 
@@ -165,7 +165,7 @@ void StackBodyView::initialize()
     actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(plane_mapper);
     actor->GetProperty()->SetColor(0.75, 0.75, 0.75);
-    actor->GetProperty()->SetOpacity(1.0);
+    actor->GetProperty()->SetOpacity(0.0);
     actor->GetProperty()->SetLineWidth(2);
 
     ren1 = vtkSmartPointer<vtkRenderer>::New();

@@ -132,6 +132,38 @@ void vtkSimpInteractor::OnKeyPress()
     }
 }
 
+void vtkSimpInteractor::OnMouseWheelBackward()
+{
+    vtkRenderWindowInteractor *iren = this->Interactor;
+    char * sym_key = iren->GetKeySym();
+    string key_val = "";
+    if (sym_key) {
+        key_val = string(sym_key);
+    }
+
+    if (key_val == "Shift_L" || key_val == "Shift_R") {
+        vtkInteractorStyleImage::OnMouseWheelBackward(); 
+    } else {
+        stack_session->decrement_plane();
+    }
+}
+
+void vtkSimpInteractor::OnMouseWheelForward()
+{
+    vtkRenderWindowInteractor *iren = this->Interactor;
+    char * sym_key = iren->GetKeySym();
+    string key_val = "";
+    if (sym_key) {
+        key_val = string(sym_key);
+    }
+    
+    if (key_val == "Shift_L" || key_val == "Shift_R") {
+        vtkInteractorStyleImage::OnMouseWheelForward(); 
+    } else {
+        stack_session->increment_plane();
+    }
+}
+
 void vtkSimpInteractor::OnKeyRelease()
 {
     vtkRenderWindowInteractor *iren = this->Interactor;

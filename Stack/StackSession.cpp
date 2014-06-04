@@ -351,13 +351,17 @@ bool StackSession::get_show_all(bool& show_all_)
 bool StackSession::get_merge_bodies(bool& merge_bodies_)
 {
     merge_bodies_ = merge_bodies;
-    return merge_bodies_changed;
+    bool changed = merge_bodies_changed;
+    merge_bodies_changed = false;
+    return changed;
 }
 
 bool StackSession::get_next_bodies(bool& next_bodies_)
 {
     next_bodies_ = next_bodies;
-    return next_bodies_changed;
+    bool changed = next_bodies_changed;
+    next_bodies_changed = false;
+    return changed;
 }
 
 
