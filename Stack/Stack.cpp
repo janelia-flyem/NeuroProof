@@ -428,7 +428,9 @@ int Stack::find_edge_label(Label_t label1, Label_t label2)
 void Stack::serialize_stack(const char* h5_name, const char* graph_name, 
         bool optimal_prob_edge_loc)
 {
-    serialize_graph(graph_name, optimal_prob_edge_loc);
+    if (graph_name != 0) {
+        serialize_graph(graph_name, optimal_prob_edge_loc);
+    }
     serialize_labels(h5_name);
    
     if (grayvol) {

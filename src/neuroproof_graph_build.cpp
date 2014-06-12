@@ -23,7 +23,7 @@ using std::tr1::unordered_set;
 
 struct BuildOptions
 {
-    BuildOptions(int argc, char** argv) : x(0), y(0), z(0), xsize(0), ysize(0), zsize(0)
+    BuildOptions(int argc, char** argv) : x(0), y(0), z(0), xsize(0), ysize(0), zsize(0), dumpfile(false)
     {
         OptionParser parser("Program that builds graph over defined region");
 
@@ -45,7 +45,10 @@ struct BuildOptions
         parser.add_option(xsize, "xsize", "x size", false, true); 
         parser.add_option(ysize, "ysize", "y size", false, true); 
         parser.add_option(zsize, "zsize", "z size", false, true); 
-        
+      
+        // for debugging purposes 
+        parser.add_option(dumpfile, "dumpfile", "Dump segmentation file");
+
         parser.parse_options(argc, argv);
     }
 
@@ -56,6 +59,7 @@ struct BuildOptions
     string labels_name; 
 
     int x, y, z, xsize, ysize, zsize;
+    bool dumpfile;
 };
 
 
@@ -112,6 +116,11 @@ void run_graph_build(BuildOptions& options)
                         (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
         } 
         dvid_node.update_edges(options.graph_name, edges); 
+
+        if (options.dumpfile) {
+            stack.serialize_stack("debugsegstack.h5", 0, false);
+        }
+
     } catch (std::exception& e) {
         cout << e.what() << endl;
     }
