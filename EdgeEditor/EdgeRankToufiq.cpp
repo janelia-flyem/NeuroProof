@@ -6,7 +6,7 @@ using namespace NeuroProof;
 EdgeRankToufiq::EdgeRankToufiq(BioStack* pstack, Rag_t& prag): EdgeRank(&prag)
 {
     ils = new IterativeLearn_semi(pstack);
-    maxEdges = 5000;
+    maxEdges = 50000;
     subset_sz= 10;
 
     num_processed = 0;
