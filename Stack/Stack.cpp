@@ -77,7 +77,17 @@ void Stack::build_rag_batch()
             node =  rag->insert_rag_node(label); 
         }
         node->incr_size();
-        
+    
+        // load all prediction values for a given x,y,z 
+        for (unsigned int i = 0; i < prob_list.size(); ++i) {
+            predictions[i] = (*(prob_list[i]))(x,y,z);
+        }
+
+        // add array of features/predictions for a given node
+        if (feature_manager) {
+            feature_manager->add_val(predictions, node);
+        }
+
         Label_t label2 = (*labelvol)(x-1,y,z);
         Label_t label3 = (*labelvol)(x+1,y,z);
         Label_t label4 = (*labelvol)(x,y-1,z);
@@ -88,21 +98,38 @@ void Stack::build_rag_batch()
         // if it is not a 0 label and is different from the current label, add edge
         if (label2 && (label > label2)) {
             rag_add_edge(label, label2, predictions);
+        } else if (label2 && (label != label2)) {
+            rag_add_edge(label, label2, predictions, false);
         }
+
         if (label3 && (label > label3)) {
             rag_add_edge(label, label3, predictions);
+        } else if (label3 && (label != label3)) {
+            rag_add_edge(label, label3, predictions, false);
         }
+
         if (label4 && (label > label4)) {
             rag_add_edge(label, label4, predictions);
+        } else if (label4 && (label != label4)) {
+            rag_add_edge(label, label4, predictions, false);
         }
+        
         if (label5 && (label > label5)) {
             rag_add_edge(label, label5, predictions);
+        } else if (label5 && (label != label5)) {
+            rag_add_edge(label, label5, predictions, false);
         }
+       
         if (label6 && (label > label6)) {
             rag_add_edge(label, label6, predictions);
+        } else if (label6 && (label != label6)) {
+            rag_add_edge(label, label6, predictions, false);
         }
+        
         if (label7 && (label > label7)) {
             rag_add_edge(label, label7, predictions);
+        } else if (label7 && (label != label7)) {
+            rag_add_edge(label, label7, predictions, false);
         }
     }
 }
@@ -191,7 +218,7 @@ void Stack::build_rag()
 
 }
 
-void Stack::rag_add_edge(unsigned int id1, unsigned int id2, vector<double>& preds)
+void Stack::rag_add_edge(unsigned int id1, unsigned int id2, vector<double>& preds, bool increment)
 {
     RagNode_t * node1 = rag->find_rag_node(id1);
     if (!node1) {
@@ -213,7 +240,10 @@ void Stack::rag_add_edge(unsigned int id1, unsigned int id2, vector<double>& pre
     if (feature_manager) {
         feature_manager->add_val(preds, edge);
     }
-    edge->incr_size();
+
+    if (increment) {
+        edge->incr_size();
+    }
 }
 
 

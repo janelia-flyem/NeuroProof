@@ -265,8 +265,10 @@ class Stack : public StackBase {
      * \param id1 region1 label id
      * \param id2 region2 label id
      * \param preds array of features
+     * \param increment increment edge count
     */
-    void rag_add_edge(unsigned int id1, unsigned int id2, std::vector<double>& preds);
+    void rag_add_edge(unsigned int id1, unsigned int id2, std::vector<double>& preds,
+            bool increment=true);
 
     //! declaration of typedef for x,y,z location representation
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
