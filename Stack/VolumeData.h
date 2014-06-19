@@ -76,6 +76,21 @@ class VolumeData : public vigra::MultiArray<3, T> {
 
 
     /*!
+     * Static function to create an array of volume data from an h5
+     * assumed to have format X x Y x Z x num channels.  Each channel,
+     * will define a new volume data in the array. The dim1size field indicates
+     * that a subset of the data will be used.  TODO: allow user-defined
+     * axis specification.
+     * \param h5_name name of h5 file
+     * \param dset name of dset
+     * \param dim1size size of the first dimension of a companion volume
+     * \return vector of shared pointers to volume data
+    */
+    static std::vector<boost::shared_ptr<VolumeData<T> > >
+        create_volume_array(const char * h5_name, const char * dset, unsigned int dim1size);
+
+
+    /*!
      * Static function to create a 3D image volume from a list of
      * 2D image files.  While many 2D image formats are supported
      * (see vigra documentation), this function will only work with
@@ -166,6 +181,46 @@ std::vector<boost::shared_ptr<VolumeData<T> > >
 
     return vol_array; 
 }
+
+template <typename T>
+std::vector<boost::shared_ptr<VolumeData<T> > > 
+    VolumeData<T>::create_volume_array(const char * h5_name, const char * dset, unsigned int dim1size)
+{
+    vigra::HDF5ImportInfo info(h5_name, dset);
+    vigra_precondition(info.numDimensions() == 4, "Dataset must be 4-dimensional.");
+
+    vigra::TinyVector<long long unsigned int,4> shape(info.shape().begin());
+    vigra::MultiArray<4, T> volumedata_temp(shape);
+    vigra::readHDF5(info, volumedata_temp);
+    
+    // since the X,Y,Z,ch is read in as ch,Z,Y,X transpose
+    volumedata_temp = volumedata_temp.transpose();
+
+    std::vector<VolumeProbPtr> vol_array;
+    vigra::TinyVector<long long unsigned int,3> shape2;
+
+    // tranpose the shape dimensions as well
+    shape2[0] = shape[3];
+    shape2[1] = shape[2];
+    shape2[2] = shape[1];
+
+    // extract border from shape and size of label volume
+    unsigned int border = (shape2[0] - dim1size) / 2;
+
+    // for each channel, create volume data and push in array
+    for (int i = 0; i < shape[0]; ++i) {
+        VolumeData<T>* volumedata = new VolumeData<T>;
+        vigra::TinyVector<vigra::MultiArrayIndex, 1> channel(i);
+        (*volumedata) = (volumedata_temp.bindOuter(channel)).subarray(
+                vigra::Shape3(border, border, border), vigra::Shape3(shape2[0]-border,
+                    shape2[1]-border, shape2[2]-border)); 
+        
+        vol_array.push_back(boost::shared_ptr<VolumeData<T> >(volumedata));
+    }
+
+    return vol_array; 
+}
+
 
 template <typename T>
 boost::shared_ptr<VolumeData<T> > VolumeData<T>::create_volume_from_images(

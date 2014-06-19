@@ -1,4 +1,5 @@
 #include "../Stack/Stack.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include "../Utilities/ScopeTime.h"
 #include "../Utilities/OptionParser.h"
 #include "../Rag/RagIO.h"
@@ -17,9 +18,7 @@ using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_set;
 
-
-
-// ?! have example create label volume with vertex near border (check edge cases and orientation)
+static const char * PRED_DATASET_NAME = "volume/predictions";
 
 struct BuildOptions
 {
@@ -36,6 +35,9 @@ struct BuildOptions
                 "name of the graph name", false, true); 
         parser.add_option(labels_name, "label-name",
                 "name of the label volume", false, true); 
+
+        parser.add_option(prediction_filename, "prediction-file",
+                "ilastik h5 file (x,y,z,ch) that has pixel predictions");
 
         // roi for image
         parser.add_option(x, "x", "x starting point", false, true); 
@@ -57,6 +59,9 @@ struct BuildOptions
     string uuid;
     string graph_name;
     string labels_name; 
+
+    // optional build with features
+    string prediction_filename;
 
     int x, y, z, xsize, ysize, zsize;
     bool dumpfile;
@@ -95,6 +100,15 @@ void run_graph_build(BuildOptions& options)
 
         // create stack to hold segmentation state
         Stack stack(initial_labels); 
+
+        if (options.prediction_filename != "") {
+            vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
+                    options.prediction_filename.c_str(), PRED_DATASET_NAME, stack.get_xsize());
+            FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
+            feature_manager->set_basic_features(); 
+            stack.set_feature_manager(feature_manager);
+            stack.set_prob_list(prob_list);
+        }
 
         // make new build_rag for stack (ignore 0s, add edge on greater than,
         // ignore 1 pixel border for vertex accum
