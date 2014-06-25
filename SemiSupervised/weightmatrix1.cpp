@@ -1,5 +1,7 @@
 #include "weightmatrix1.h"
 
+#define EPS 1e-6
+
 using namespace NeuroProof;
 
 double WeightMatrix1::vec_dot(std::vector<double>& vecA, std::vector<double>& vecB)
@@ -161,8 +163,13 @@ void WeightMatrix1::copy(std::vector< std::vector<double> >& src, std::vector< s
     for(size_t rr=0; rr < nrows; rr++){
 	dst[rr].resize(ncols);
 	for(size_t cc=0, cc1=0; cc < src[rr].size(); cc++){
-	    if ( (cc1 < ncols) && (_ignore.find(cc) == _ignore.end()))
-	      dst[rr][cc1++] = src[rr][cc]; 
+	    if ( (cc1 < ncols) && (_ignore.find(cc) == _ignore.end())){
+	      if (fabs(src[rr][cc])>EPS) //for numerical stability
+		  dst[rr][cc1] = src[rr][cc]; 
+	      else
+		  dst[rr][cc1] = 0; 
+	      cc1++;
+	    }
 	}
     }
     
@@ -195,13 +202,14 @@ void WeightMatrix1::EstimateBandwidth(std::vector< std::vector<double> >& pfeatu
 double WeightMatrix1::distw(std::vector<double>& vecA, std::vector<double>& vecB)
 {
     double dd=0;
-    size_t ll=0;
+//     size_t ll=0;
     for(size_t j = 0; j < vecA.size(); j++){
-	double d1 = (vecA[j] - vecB[j])*(vecA[j] - vecB[j]);
-	double d2 = d1 / (_deltas[j]*_deltas[j]);
-	ll++;
-	
-	dd += d2;
+	if (_deltas[j]>EPS){
+	    double d1 = (vecA[j] - vecB[j])*(vecA[j] - vecB[j]);
+	    double d2 = d1 / (_deltas[j]*_deltas[j]);
+// 	    ll++;
+	    dd += d2;
+	}
     }
     //dd /= ll;
     return dd;
@@ -222,7 +230,9 @@ void WeightMatrix1::scale_vec(std::vector<double>& vecA, std::vector<double>& de
 {
   
     for(size_t j=0; j< vecA.size(); j++){
-	vecA[j] /= deltas[j];
+	if (deltas[j]>EPS){
+	    vecA[j] /= deltas[j];
+	}
     }
        
 }
