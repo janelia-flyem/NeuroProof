@@ -79,6 +79,37 @@ class FeatureMgr {
 
     void set_basic_features();
 
+    string serialize_features(char * current_features, RagNode_t* node)
+    {
+        string buffer;
+        std::vector<void*>& feature_caches = node_caches[node];
+        int pos = 0;
+        for (int i = 0; i < num_channels; ++i) { 
+            std::vector<FeatureCompute*>& features = channels_features[i];
+            for (int j = 0; j < features.size(); ++j, ++pos) {
+                unsigned int bufsize = features[j]->serialize(current_features,
+                        feature_caches[pos], buffer);
+                current_features += bufsize; 
+            }
+        }
+        return buffer;
+    }
+
+    string serialize_features(char * current_features, RagEdge_t* edge)
+    {
+        string buffer;
+        std::vector<void*>& feature_caches = edge_caches[edge];
+        int pos = 0;
+        for (int i = 0; i < num_channels; ++i) { 
+            std::vector<FeatureCompute*>& features = channels_features[i];
+            for (int j = 0; j < features.size(); ++j, ++pos) {
+                unsigned int bufsize = features[j]->serialize(current_features,
+                        feature_caches[pos], buffer);
+                current_features += bufsize; 
+            }
+        }
+        return buffer;
+    }
     void add_val(double val, RagNode_t* node)
     {
         unsigned int starting_pos = 0;
@@ -89,7 +120,7 @@ class FeatureMgr {
             add_val(val, 0, starting_pos, feature_caches);
         } 
     } 
-    
+   
     void add_val(double val, RagEdge_t* edge)
     {
         unsigned int starting_pos = 0;

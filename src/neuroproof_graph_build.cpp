@@ -131,6 +131,52 @@ void run_graph_build(BuildOptions& options)
         } 
         dvid_node.update_edges(options.graph_name, edges); 
 
+        // update node features to the DVID graph
+        do {
+            // ?! use binary smart pointers?? 
+            // ?! vector<libdvid::Property> properties;
+            // ?! vector<libdvid::TransactionID> transaction_ids; 
+
+            // ?! retrieve vertex properties
+            // dvid_node.retrieve_properties(options.graph_name, vertices, properties, transaction_ids);
+
+            // ?! update properties
+            for (int i = 0; i < vertices.size(); ++i) {
+                RagNode_t* node = rag->find_rag_node(vertices[i].id);
+                //properties[i] = feature_mgr->serialize_features(properties[i], node);
+            } 
+    
+            // ?! set vertex properties
+            vector<libdvid::Vertex> leftover_vertices;
+            //dvid_node.set_properties(options.graph_name, vertices, properties,
+                //transaction_ids, leftover_vertices); 
+
+            vertices = leftover_vertices; 
+        } while(!vertices.empty());
+
+        // update edge features to the DVID graph
+        do {
+            // ?! use binary smart pointers?? 
+            // ?! vector<libdvid::Property> properties;
+            // ?! vector<libdvid::TransactionID> transaction_ids; 
+
+            // ?! retrieve vertex properties
+            // dvid_node.retrieve_properties(options.graph_name, edges, properties, transaction_ids);
+
+            // ?! update properties
+            for (int i = 0; i < edges.size(); ++i) {
+                RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+                //properties[i] = feature_mgr->serialize_features(properties[i], edge);
+            } 
+    
+            // ?! set vertex properties
+            vector<libdvid::Edge> leftover_edges;
+            //dvid_node.set_properties(options.graph_name, edges, properties,
+                //transaction_ids, leftover_edges); 
+            edges = leftover_edges; 
+        } while(!edges.empty());
+
+
         if (options.dumpfile) {
             stack.serialize_stack("debugsegstack.h5", 0, false);
         }
