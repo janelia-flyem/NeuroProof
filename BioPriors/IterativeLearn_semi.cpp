@@ -14,6 +14,7 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
     dtst.initialize();
     
     printf("total edges generated: %u\n",all_features.size());
+    printf("total features: %u\n",all_features[0].size());
     
     std::srand ( unsigned ( std::time(0) ) );
 
@@ -24,7 +25,7 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
     std::time_t start, end;
     std::time(&start);
 
-    /*C* Assuming feeture format: node 1 feat, node 2 feat, edges feat and diff feat
+    /*C* Assuming feature format: node 1 feat, node 2 feat, edges feat and diff feat
      * The first feature for each of these three components is size which we ignore
      * followed by 4 moments and 5 percentiles for each channel
      /**/ 
@@ -40,6 +41,16 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
 	printf("%u ", tmp_ignore[ff]);
     printf("\n");
       
+//     printf("sample values of ignore features:");
+//     for(size_t ff=0 ;ff<4; ff++)
+// 	printf("%lf ", all_features[0][tmp_ignore[ff]]);
+//     printf("\n");
+//     
+//     printf("sample values of all features:");
+//     for(size_t ff=0 ;ff<15; ff++)
+// 	printf("%lf ", all_features[0][ff]);
+//     printf("\n");
+    
     std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
     
     double w_dist_thd = 3;
