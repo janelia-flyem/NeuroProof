@@ -24,6 +24,11 @@ size_t FeatureCompute::serialize(char * bytes, void * cache1, string& buffer)
         return read_bytes;
 }
 
+// will overwrite other features
+size_t FeatureCompute::deserialize(char * bytes, void * cache1)
+{
+    return ((FeatureCache*)(cache1))->deserialize(bytes);
+}
 
 void* FeatureHist::create_cache(){
         return (void*)(new HistCache(num_bins+1));

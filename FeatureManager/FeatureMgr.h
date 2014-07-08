@@ -110,6 +110,49 @@ class FeatureMgr {
         }
         return buffer;
     }
+
+
+    void deserialize_features(char * current_features, RagNode_t* node)
+    {
+        string buffer;
+        int pos = 0;
+        if (node_caches.find(node) == node_caches.end()) {
+            std::vector<void*>& feature_caches = create_cache(node);
+        }        
+        std::vector<void*>& feature_caches = node_caches[node];
+
+        for (int i = 0; i < num_channels; ++i) { 
+            std::vector<FeatureCompute*>& features = channels_features[i];
+            for (int j = 0; j < features.size(); ++j, ++pos) {
+                unsigned int bufsize = features[j]->deserialize(current_features,
+                        feature_caches[pos]);
+                current_features += bufsize; 
+            }
+        }
+    }
+
+
+    void deserialize_features(char * current_features, RagEdge_t* edge)
+    {
+        string buffer;
+        int pos = 0;
+        if (edge_caches.find(edge) == edge_caches.end()) {
+            std::vector<void*>& feature_caches = create_cache(edge);
+        }        
+        std::vector<void*>& feature_caches = edge_caches[edge];
+
+        for (int i = 0; i < num_channels; ++i) { 
+            std::vector<FeatureCompute*>& features = channels_features[i];
+            for (int j = 0; j < features.size(); ++j, ++pos) {
+                unsigned int bufsize = features[j]->deserialize(current_features,
+                        feature_caches[pos]);
+                current_features += bufsize; 
+            }
+        }
+    }
+
+
+
     void add_val(double val, RagNode_t* node)
     {
         unsigned int starting_pos = 0;

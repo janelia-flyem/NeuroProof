@@ -21,7 +21,9 @@ class FeatureCompute {
     virtual void merge_cache(void * cache1, void * cache2) = 0; 
     virtual void print_cache(void* pcache) = 0; 	
     virtual void print_name() = 0; 	
+    // serialize feature and combine with bytes if not 0
     size_t serialize(char * bytes, void* cache1, std::string& buffer);
+    size_t deserialize(char * bytes, void * cache1);
     virtual ~FeatureCompute() {}
 };
 
