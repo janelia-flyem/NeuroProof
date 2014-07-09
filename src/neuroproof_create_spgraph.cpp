@@ -78,7 +78,7 @@ void generate_sp_graph(SpOptions& options)
     cout << "Read prediction array" << endl;
 
     VolumeLabelPtr raveler_labels = VolumeLabelData::create_volume(
-            options.segmentation_filename.c_str(), SEG_DATASET_NAME, false);
+            options.segmentation_filename.c_str(), SEG_DATASET_NAME);
    
     cout << "Read watershed" << endl;
 
