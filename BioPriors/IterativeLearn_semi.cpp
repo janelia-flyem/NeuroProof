@@ -13,6 +13,8 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
     compute_all_edge_features(all_features, all_labels);
     dtst.initialize();
     
+    feature_mgr->find_useless_features(all_features);
+    
     printf("total edges generated: %u\n",all_features.size());
     printf("total features: %u\n",all_features[0].size());
     
@@ -31,15 +33,15 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
      /**/ 
     
 //     unsigned int tmp_ignore[] = {0, 55, 110, 165}; 
-    unsigned int tmp_ignore[4];
-    tmp_ignore[0] = 0;
-    for(size_t ff=1 ;ff<4; ff++)
-	tmp_ignore[ff] = tmp_ignore[ff-1]+ (1 + nfeat_channels*4 + nfeat_channels *5); 
-    
-    printf("ignore features:");
-    for(size_t ff=0 ;ff<4; ff++)
-	printf("%u ", tmp_ignore[ff]);
-    printf("\n");
+//     unsigned int tmp_ignore[4];
+//     tmp_ignore[0] = 0;
+//     for(size_t ff=1 ;ff<4; ff++)
+// 	tmp_ignore[ff] = tmp_ignore[ff-1]+ (1 + nfeat_channels*4 + nfeat_channels *5); 
+//     
+//     printf("ignore features:");
+//     for(size_t ff=0 ;ff<4; ff++)
+// 	printf("%u ", tmp_ignore[ff]);
+//     printf("\n");
       
 //     printf("sample values of ignore features:");
 //     for(size_t ff=0 ;ff<4; ff++)
@@ -51,9 +53,10 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
 // 	printf("%lf ", all_features[0][ff]);
 //     printf("\n");
     
-    std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
-    
-    double w_dist_thd = 3;
+//     std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
+   
+    std::vector<unsigned int> ignore_list;
+    double w_dist_thd = 5;
     wt1 = new WeightMatrix1(w_dist_thd, ignore_list);
     wt1->weight_matrix_parallel(all_features, false);
     

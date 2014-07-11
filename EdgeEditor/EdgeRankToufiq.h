@@ -4,6 +4,7 @@
 
 #include "EdgeRank.h"
 #include <utility>
+
 #include "../BioPriors/IterativeLearn_semi.h"
 
 namespace NeuroProof{
@@ -29,6 +30,8 @@ class EdgeRankToufiq: public EdgeRank{
     virtual void update_priority() {};
     
     boost::thread* threadp;
+    
+    std::vector< boost::tuple<unsigned int, unsigned int, int> > all_labeled_edges;
     
 public:
     EdgeRankToufiq(BioStack* pstack, Rag_t& prag);
@@ -62,7 +65,8 @@ public:
         return num_processed;
     }
 
-
+    void add_to_edgelist(std::vector< std::pair<Node_t, Node_t> > &pedgebuffer, std::vector<int>& plabels);
+    void save_labeled_edges(string& save_fname);
 };
 }
 

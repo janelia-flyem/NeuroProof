@@ -21,6 +21,8 @@ EdgeRankToufiq::EdgeRankToufiq(BioStack* pstack, Rag_t& prag): EdgeRank(&prag)
     
     threadp = NULL;
     
+    all_labeled_edges.clear();
+    
 };
 
 
@@ -40,6 +42,7 @@ void EdgeRankToufiq::repopulate_buffer()
 {
   
     printf("repopulate buffer\n");
+    add_to_edgelist(backupbuffer, tmp_lbl);
     ils->update_new_labels(tmp_idx, tmp_lbl);
     ils->get_next_edge_set(subset_sz, backup_idx);
     ils->edgelist_from_index(backup_idx, backupbuffer);
@@ -93,4 +96,29 @@ void EdgeRankToufiq::set_label(int plbl) {
     new_lbl[edge_ptr++] = plbl; 
     num_processed++;
   
-};
+}
+
+void EdgeRankToufiq::add_to_edgelist(std::vector< std::pair<Node_t, Node_t> > &pedgebuffer, std::vector<int>& plabels){
+
+  for (size_t i=0; i< pedgebuffer.size(); i++){
+      std::pair<Node_t, Node_t> pair1 = pedgebuffer[i];
+      unsigned int node1 = pair1.first;
+      unsigned int node2 = pair1.second;
+      
+      int label1 = plabels[i];
+      all_labeled_edges.push_back(boost::make_tuple(node1, node2, label1));
+  }
+  
+}
+void EdgeRankToufiq::save_labeled_edges(std::string& session_name ){
+
+    std::string savefilename = session_name + "/all_labeled_edges.txt";
+    FILE* fp = fopen(savefilename.c_str(),"wt");
+    for (size_t i=0; i< all_labeled_edges.size(); i++){
+	boost::tuple<unsigned int, unsigned int, int> le1 = all_labeled_edges[i]; 
+	fprintf(fp,"%u  %u  %d\n",boost::get<0>(le1), boost::get<1>(le1), boost::get<2>(le1));
+    }
+    fclose(fp);
+  
+  
+}

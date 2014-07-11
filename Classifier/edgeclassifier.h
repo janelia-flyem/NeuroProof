@@ -20,6 +20,9 @@ public:
 	virtual bool is_trained()=0;
 
         virtual ~EdgeClassifier() {}
+        
+	virtual void set_ignore_featlist(std::vector<unsigned int>& pignore_list)=0;
+	virtual void get_ignore_featlist(std::vector<unsigned int>& pignore_list)=0;
 
 
      	virtual void set_tree_weights(std::vector<double>& pwts){};	

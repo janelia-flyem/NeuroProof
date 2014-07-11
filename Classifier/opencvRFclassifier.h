@@ -24,6 +24,7 @@ class OpencvRFclassifier: public EdgeClassifier{
     int _tree_count;
     int _max_depth;	
 		
+    std::vector<unsigned int> ignore_featlist;
     	
 
 public:
@@ -42,6 +43,10 @@ public:
      void get_tree_responses(vector<double>& pfeatures,vector<double>& responses);	
      void reduce_trees();	
 
+     void set_ignore_featlist(std::vector<unsigned int>& pignore_list){ignore_featlist = pignore_list;};
+     void get_ignore_featlist(std::vector<unsigned int>& pignore_list){pignore_list = ignore_featlist;};
+     
+     
      bool is_trained(){
 	if (_rf && _rf->get_tree_count()>0)
 	   return true;

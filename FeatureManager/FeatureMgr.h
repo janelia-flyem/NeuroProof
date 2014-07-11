@@ -153,6 +153,14 @@ class FeatureMgr {
     void set_classifier(EdgeClassifier* pclfr)
     {
         eclfr = pclfr;
+	std::vector<unsigned int> ignore_list;
+	eclfr->get_ignore_featlist(ignore_list);
+	printf("ignore features: ");
+	for(size_t i=0; i<ignore_list.size(); i++){
+	    printf("%u  ",ignore_list[i]);
+	    ignore_set.insert(ignore_list[i]);
+	}
+	printf("\n");
     }
 
     EdgeClassifier* get_classifier()
@@ -200,6 +208,8 @@ class FeatureMgr {
     std::vector<std::vector<FeatureCompute*> >& get_channel_features(){return channels_features;}; 	
     EdgeCaches& get_edge_cache(){return edge_caches;};  		
     NodeCaches& get_node_cache(){return node_caches;};  		
+    
+    void find_useless_features(std::vector< std::vector<double> >& all_features);
 
 
   private:
@@ -271,6 +281,7 @@ class FeatureMgr {
     int overlap_threshold;
     EdgeClassifier* eclfr;	 
     double border_weight;
+    std::set<unsigned int> ignore_set;
 };
 
 typedef boost::shared_ptr<FeatureMgr> FeatureMgrPtr;

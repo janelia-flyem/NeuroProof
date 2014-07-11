@@ -385,7 +385,16 @@ double FeatureMgr::get_prob(RagEdge_t* edge)
         prob = extract<double>(pyfunc(pylist));
 #endif
     } else if (eclfr){
-        prob = eclfr->predict(feature_results);
+	if (ignore_set.size()>0){
+	    vector<double> new_features;
+	    for(size_t ff=0; ff<feature_results.size(); ff++)
+		if (ignore_set.find(ff) == ignore_set.end())
+		    new_features.push_back(feature_results[ff]);
+	    prob = eclfr->predict(new_features);
+	}
+	/**/
+	else
+	    prob = eclfr->predict(feature_results);
     } else if (overlap) {
         unsigned long long edge_size = edge->get_size();
         unsigned long long total_edge_size1 = 0;
@@ -731,4 +740,75 @@ FeatureMgr::~FeatureMgr()
     }
 }
 
+void FeatureMgr::find_useless_features(std::vector< std::vector<double> >& all_features)
+{
+    
+//     std::vector< std::vector<double> >& all_features = dtst.get_features();
+    unsigned int nfeat_channels = num_channels;
+    
+    /* size features*/
+    unsigned int tmp_ignore[4];
+    tmp_ignore[0] = 0;
+    for(size_t ff=0 ;ff<4; ff++)
+	ignore_set.insert(ff*(1 + nfeat_channels*4 + nfeat_channels *5));
+    
+    
+    /* features with variance less than threshold*/
+    unsigned int nfeat = all_features[0].size();
+    unsigned int nsamples = all_features.size();
+    for(size_t ff=0; ff< nfeat; ff++){
+      
+	double fmean = 0;
+	for(size_t ii=0; ii < nsamples; ii++)
+	    fmean += all_features[ii][ff];
+	fmean /= nsamples;
+	
+	double fvar = 0;
+	for(size_t ii=0; ii < nsamples; ii++)
+	    fvar += (all_features[ii][ff] - fmean)*(all_features[ii][ff] - fmean);
+	fvar /= nsamples;
+	
+	double fstdev = sqrt(fvar);
+	
+	if (fstdev < 0.001){
+	    ignore_set.insert(ff);
+	}
+    }
+    ignore_set.insert(nfeat);
+//     std::set<unsigned int>::iterator iiter = ignore_set.begin();
+    
+    unsigned int nfeat2 = nfeat - ignore_set.size();
+    std:vector <double> newfeat;
+    for(size_t ii=0; ii < nsamples; ii++){
+	newfeat.clear();
+	unsigned int next = 0,ff =0;
+	std::set<unsigned int>::iterator iiter = ignore_set.begin();
+	while(ff<nfeat){
+	    for(; (ff< (*iiter)) && (ff<nfeat); ff++)
+		newfeat.push_back(all_features[ii][ff]);
+	    if((ff<nfeat) && (ff == (*iiter))){
+		ff++;
+		if (iiter!=ignore_set.end()) 
+		  iiter++;
+	    }
+	}
+	all_features[ii] = newfeat;
+    }
+    printf("ignore features:");
+    std::set<unsigned int>::iterator iit = ignore_set.begin();
+    for(; iit != ignore_set.end(); iit++)
+	printf("%u ", *iit);
+    printf("\n");
+    
+    std::vector<unsigned int> ignore_list;
+    for(iit = ignore_set.begin(); iit != ignore_set.end(); iit++)
+	ignore_list.push_back((*iit));
+    
+    eclfr->set_ignore_featlist(ignore_list);
+//     ignore_idx.clear();
+//     std::set<unsigned int>::iterator iiter = ignore_set.begin();
+//     for(; iiter != ignore_set.end() ; iiter++)
+//       ignore_idx.push_back((*iiter));
+    
+}
 

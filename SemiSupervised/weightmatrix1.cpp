@@ -380,6 +380,16 @@ void WeightMatrix1::weight_matrix_parallel(std::vector< std::vector<double> >& a
 			   bool exhaustive)
 {
 
+    /* C debug*/
+    FILE* fp=fopen("features.txt", "wt");
+    for(size_t rr = 0; rr < allfeatures.size(); rr++){
+	for(size_t cc=0; cc < allfeatures[rr].size(); cc++){
+	    fprintf(fp, "%lf ", allfeatures[rr][cc]);
+	}
+	fprintf(fp,"\n");
+    }
+    fclose(fp);
+    /*C*/
   
     printf("running parallel version\n");
     std::vector< std::vector<double> > pfeatures;
