@@ -4,6 +4,31 @@
 using namespace NeuroProof;
 using std::cout;
 using std::endl;
+using std::string;
+
+size_t FeatureCompute::serialize(char * bytes, void * cache1, string& buffer)
+{
+        size_t read_bytes = 0;
+        FeatureCache* serialize_cache = (FeatureCache*) cache1;
+
+        if (bytes != 0) {
+            FeatureCache* featurecompute_cache2 = (FeatureCache*) create_cache();
+            // determine cache
+            size_t read_bytes = featurecompute_cache2->deserialize(bytes);
+
+            // merge cache1 onto new cache2
+            merge_cache((void*) featurecompute_cache2, cache1);
+            serialize_cache = (FeatureCache*) featurecompute_cache2;
+        }
+        serialize_cache->serialize(buffer); 
+        return read_bytes;
+}
+
+// will overwrite other features
+size_t FeatureCompute::deserialize(char * bytes, void * cache1)
+{
+    return ((FeatureCache*)(cache1))->deserialize(bytes);
+}
 
 void* FeatureHist::create_cache(){
         return (void*)(new HistCache(num_bins+1));
@@ -43,7 +68,8 @@ void FeatureHist::add_point(double val, void * cache, unsigned int x , unsigned 
         ++(hist_cache->hist[val * num_bins]);
         ++(hist_cache->count);
 }
-    
+
+
 void FeatureHist::get_feature_array(void* cache, std::vector<double>& feature_array, RagEdge_t* edge, unsigned int node_num) {
         HistCache * hist_cache = (HistCache*) cache;
         for (unsigned int i = 0; i < thresholds.size(); ++i) {
@@ -167,6 +193,7 @@ void FeatureMoment::merge_cache(void * cache1, void * cache2){
         }
         delete moment_cache2;
 }
+
 
 
 void FeatureMoment::get_data(MomentCache * moment_cache, std::vector<double>& feature_array){

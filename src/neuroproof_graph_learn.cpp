@@ -76,10 +76,10 @@ void run_learning(LearnOptions& options)
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     
     VolumeLabelPtr watershed_data = VolumeLabelData::create_volume(
-            options.watershed_filename.c_str(), SEG_DATASET_NAME,false);
+            options.watershed_filename.c_str(), SEG_DATASET_NAME);
 
     VolumeLabelPtr groundtruth_data = VolumeLabelData::create_volume(
-            options.groundtruth_filename.c_str(), SEG_DATASET_NAME,false);
+            options.groundtruth_filename.c_str(), SEG_DATASET_NAME);
     
     const double threshold = 0.2;
 

@@ -109,7 +109,11 @@ void run_prediction(PredictOptions& options)
 
     // create watershed volume
     VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
+<<<<<<< HEAD
             options.watershed_filename.c_str(), SEG_DATASET_NAME,true);
+=======
+            options.watershed_filename.c_str(), SEG_DATASET_NAME);
+>>>>>>> 5345aad48dcdaaed4b43b284b3534866fe8987bd
     cout << "Read watershed" << endl;
 
     

@@ -19,6 +19,7 @@ using namespace boost::algorithm;
 using std::tr1::unordered_set;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";
+static const char * PROPERTY_KEY = "np-features";
 
 struct BuildOptions
 {
@@ -130,6 +131,56 @@ void run_graph_build(BuildOptions& options)
                         (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
         } 
         dvid_node.update_edges(options.graph_name, edges); 
+
+        // update node features to the DVID graph
+        do {
+            vector<libdvid::BinaryDataPtr> properties;
+            libdvid::VertexTransactions transaction_ids; 
+
+            // retrieve vertex properties
+            dvid_node.get_properties(options.graph_name, vertices, PROPERTY_KEY, properties, transaction_ids);
+
+            // update properties
+            for (int i = 0; i < vertices.size(); ++i) {
+                RagNode_t* node = rag->find_rag_node(vertices[i].id);
+                string modified_feature = 
+                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), node);
+                properties[i] = 
+                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
+            } 
+    
+            // set vertex properties
+            vector<libdvid::Vertex> leftover_vertices;
+            dvid_node.set_properties(options.graph_name, vertices, PROPERTY_KEY, properties,
+                transaction_ids, leftover_vertices); 
+
+            vertices = leftover_vertices; 
+        } while(!vertices.empty());
+
+        // update edge features to the DVID graph
+        do {
+            vector<libdvid::BinaryDataPtr> properties;
+            libdvid::VertexTransactions transaction_ids; 
+
+            // retrieve vertex properties
+            dvid_node.get_properties(options.graph_name, edges, PROPERTY_KEY, properties, transaction_ids);
+
+            // update properties
+            for (int i = 0; i < edges.size(); ++i) {
+                RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+                string modified_feature =
+                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), edge);
+                properties[i] = 
+                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
+            } 
+    
+            // set vertex properties
+            vector<libdvid::Edge> leftover_edges;
+            dvid_node.set_properties(options.graph_name, edges, PROPERTY_KEY, properties,
+                transaction_ids, leftover_edges); 
+            edges = leftover_edges; 
+        } while(!edges.empty());
+
 
         if (options.dumpfile) {
             stack.serialize_stack("debugsegstack.h5", 0, false);
