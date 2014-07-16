@@ -353,7 +353,8 @@ void StackQTController::save_as_session()
     main_ui->ui.statusbar->showMessage(msg.c_str());
     try {
         stack_session->export_session(session_name); 
-	priority_scheduler->save_labeled_edges(session_name);
+	if(priority_scheduler)
+	    priority_scheduler->save_labeled_edges(session_name);
       
     } catch (ErrMsg& err_msg) {
         string msg = string("Session could not be created: ") + err_msg.str;
@@ -371,7 +372,8 @@ void StackQTController::save_session()
         main_ui->ui.statusbar->showMessage(msg.c_str());
         main_ui->ui.statusbar->showMessage(msg.c_str());
         stack_session->save();
-	priority_scheduler->save_labeled_edges(session_name);
+	if(priority_scheduler)
+	    priority_scheduler->save_labeled_edges(session_name);
         main_ui->ui.statusbar->clearMessage();
     } else {
         save_as_session();
