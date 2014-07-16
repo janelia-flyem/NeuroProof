@@ -304,6 +304,11 @@ bool EdgeEditor::isFinished()
     return edge_mode->is_finished();
 }
 
+void EdgeEditor::save_labeled_edges(std::string& save_fname)
+{
+    edge_mode->save_labeled_edges(save_fname);
+}
+
 void EdgeEditor::setEdge(NodePair node_pair, double weight)
 {
     // only called to set weight for true edges
