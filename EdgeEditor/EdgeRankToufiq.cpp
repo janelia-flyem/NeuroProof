@@ -109,7 +109,7 @@ void EdgeRankToufiq::add_to_edgelist(std::vector< std::pair<Node_t, Node_t> > &p
       all_labeled_edges.push_back(boost::make_tuple(node1, node2, label1));
   }
   
-  /*Debug*/
+  /*Debug*
   for (size_t i=0; i< all_labeled_edges.size(); i++){
   
       boost::tuple<unsigned int, unsigned int, int> le1 = all_labeled_edges[i]; 
