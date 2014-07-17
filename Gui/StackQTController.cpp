@@ -301,7 +301,7 @@ void StackQTController::add_gt()
 void StackQTController::new_session()
 {
   //  printf("start new session\n");
-    QStringList file_name_list = QFileDialog::getOpenFileNames(main_ui, tr("Add label volume"),
+    QStringList file_name_list = QFileDialog::getOpenFileNames(main_ui, tr("Add grayscale images"),
         ".", tr("PNG(*.png *.PNG);;JPEG(*.jpg *.jpeg)"));
     
     printf("file names %d\n",file_name_list.size());
