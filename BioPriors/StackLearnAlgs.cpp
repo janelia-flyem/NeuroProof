@@ -28,7 +28,7 @@ void preprocess_stack(BioStack& stack, bool use_mito)
 
 
 void learn_edge_classifier_flat(BioStack& stack, double threshold,
-        UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito)
+        UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito, bool prune_feature)
 {
     preprocess_stack(stack, use_mito);
 
@@ -45,9 +45,13 @@ void learn_edge_classifier_flat(BioStack& stack, double threshold,
             Node_t label2 = rag_node2->get_node_id(); 
 
 	    int edge_label = stack.find_edge_label(label1, label2);
-            if (use_mito && (stack.is_mito(label1) || 
-                             stack.is_mito(label2))) {
-                edge_label = 1; 
+	    if (use_mito && (stack.is_mito(label1) && 
+			    stack.is_mito(label2))) {
+		edge_label = 0; 
+	    }
+	    else if (use_mito && (stack.is_mito(label1) || 
+			  stack.is_mito(label2))) {
+		edge_label = 1; 
             }
 
             if ( edge_label ){	
@@ -63,6 +67,9 @@ void learn_edge_classifier_flat(BioStack& stack, double threshold,
     vector<vector<double> > all_features;
     all_featuresu.get_feature_label(all_features, all_labels); 	    	
 
+    if (prune_feature) feature_mgr->find_useless_features(all_features);
+
+    
     cout << "Features generated" << endl;
     feature_mgr->get_classifier()->learn(all_features, all_labels); // number of trees
     cout << "Classifier learned" << endl;
@@ -79,7 +86,7 @@ void learn_edge_classifier_flat(BioStack& stack, double threshold,
 
 void learn_edge_classifier_queue(BioStack& stack, double threshold,
         UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels,
-        bool accumulate_all, bool use_mito)
+        bool accumulate_all, bool use_mito, bool prune_feature)
 {
     preprocess_stack(stack, use_mito);
     
@@ -127,7 +134,11 @@ void learn_edge_classifier_queue(BioStack& stack, double threshold,
         Label_t label2 = rag_node2->get_node_id(); 
 
         int edge_label = stack.find_edge_label(label1, label2);
-        if (use_mito && (stack.is_mito(label1) || 
+	if (use_mito && (stack.is_mito(label1) && 
+			stack.is_mito(label2))) {
+	    edge_label = 0; 
+	}
+	else if (use_mito && (stack.is_mito(label1) || 
                     stack.is_mito(label2))) {
             edge_label = 1; 
         }
@@ -160,6 +171,9 @@ void learn_edge_classifier_queue(BioStack& stack, double threshold,
     vector<vector<double> > all_features;
     all_featuresu.get_feature_label(all_features, all_labels);	
 
+    if (prune_feature) feature_mgr->find_useless_features(all_features);
+    
+    
     cout << "Features generated in " << (((double)clock() - start) / CLOCKS_PER_SEC) 
         << " secs" << endl;
     feature_mgr->get_classifier()->learn(all_features, all_labels); // number of trees
@@ -176,7 +190,7 @@ void learn_edge_classifier_queue(BioStack& stack, double threshold,
 }
 
 void learn_edge_classifier_lash(BioStack& stack, double threshold,
-        UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito)
+        UniqueRowFeature_Label& all_featuresu, vector<int>& all_labels, bool use_mito, bool prune_feature)
 {
     preprocess_stack(stack, use_mito);
     
@@ -229,7 +243,11 @@ void learn_edge_classifier_lash(BioStack& stack, double threshold,
         Label_t label2 = rag_node2->get_node_id(); 
 
         int edge_label = stack.find_edge_label(label1, label2);
-        if (use_mito && (stack.is_mito(label1) || 
+	if (use_mito && (stack.is_mito(label1) && 
+			stack.is_mito(label2))) {
+	    edge_label = 0; 
+	}
+	else if (use_mito && (stack.is_mito(label1) || 
                     stack.is_mito(label2))) {
             edge_label = 1; 
         }
@@ -250,6 +268,9 @@ void learn_edge_classifier_lash(BioStack& stack, double threshold,
     
     vector<vector<double> >	all_features;
     all_featuresu.get_feature_label(all_features, all_labels);	
+
+    if (prune_feature) feature_mgr->find_useless_features(all_features);
+    
     
     //printf("Time required to learn RF: %.2f with oob :%f\n", , oob_v.oob_breiman);
     printf("Features generated in %.2fsecs\n",((double)clock() - start) / CLOCKS_PER_SEC);

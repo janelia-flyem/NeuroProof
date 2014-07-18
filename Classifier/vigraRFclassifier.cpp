@@ -17,6 +17,29 @@ void  VigraRFclassifier::load_classifier(const char* rf_filename){
 	printf("RF loaded with %d trees, for %d class prob with %d dimensions\n",_rf->tree_count(), _rf->class_count(), _rf->column_count());
 	_nfeatures = _rf->column_count();
         _nclass = _rf->class_count();
+	
+	
+      /* read list of useless features*/ 
+      string filename = rf_filename;
+      unsigned found = filename.find_last_of(".");
+      string nameonly = filename.substr(0,found-1);	
+      nameonly += "_ignore.txt";
+      FILE* fp = fopen(nameonly.c_str(),"rt");
+      if (!fp){
+	  printf("no features to ignore\n");
+	  return;
+      }
+      else{
+	unsigned int a;
+	while(!feof(fp)){
+	    fscanf(fp,"%u ", &a);
+	    ignore_featlist.push_back(a);
+	    
+	}
+	fclose(fp);
+      }
+  
+	
      
 }
 
@@ -97,7 +120,20 @@ void VigraRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, std
 }
 
 void VigraRFclassifier::save_classifier(const char* rf_filename){
-     HDF5File rf_file(rf_filename,HDF5File::New); 	
-     rf_export_HDF5(*_rf, rf_file,"rf");
+    if (ignore_featlist.size()>0){
+	string filename = rf_filename;
+	unsigned found = filename.find_last_of(".");
+	string nameonly = filename.substr(0,found);	
+	nameonly += "_ignore.txt";
+	FILE* fp = fopen(nameonly.c_str(),"wt");
+	for(size_t i=0; i<ignore_featlist.size(); i++){
+	    fprintf(fp,"%u ", ignore_featlist[i]);
+	}
+	fclose(fp);
+    }
+  
+
+    HDF5File rf_file(rf_filename,HDF5File::New); 	
+    rf_export_HDF5(*_rf, rf_file,"rf");
 }
 

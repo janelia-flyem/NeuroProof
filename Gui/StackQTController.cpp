@@ -301,7 +301,7 @@ void StackQTController::add_gt()
 void StackQTController::new_session()
 {
   //  printf("start new session\n");
-    QStringList file_name_list = QFileDialog::getOpenFileNames(main_ui, tr("Add label volume"),
+    QStringList file_name_list = QFileDialog::getOpenFileNames(main_ui, tr("Add grayscale images"),
         ".", tr("PNG(*.png *.PNG);;JPEG(*.jpg *.jpeg)"));
     
     printf("file names %d\n",file_name_list.size());
@@ -353,6 +353,9 @@ void StackQTController::save_as_session()
     main_ui->ui.statusbar->showMessage(msg.c_str());
     try {
         stack_session->export_session(session_name); 
+	if(priority_scheduler)
+	    priority_scheduler->save_labeled_edges(session_name);
+      
     } catch (ErrMsg& err_msg) {
         string msg = string("Session could not be created: ") + err_msg.str;
         MessageBox msgbox(msg.c_str());
@@ -369,6 +372,8 @@ void StackQTController::save_session()
         main_ui->ui.statusbar->showMessage(msg.c_str());
         main_ui->ui.statusbar->showMessage(msg.c_str());
         stack_session->save();
+	if(priority_scheduler)
+	    priority_scheduler->save_labeled_edges(session_name);
         main_ui->ui.statusbar->clearMessage();
     } else {
         save_as_session();

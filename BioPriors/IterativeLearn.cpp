@@ -59,18 +59,20 @@ void IterativeLearn::compute_all_edge_features(std::vector< std::vector<double> 
             Node_t node2 = rag_node2->get_node_id(); 
 
 // 	    int edge_label = stack->decide_edge_label(rag_node1, rag_node2);
-	    int edge_label;
-	    if (stack->get_gt_labelvol()==NULL){
-		edge_label=2;
+	    int edge_label = 2;
+	    if (stack->get_gt_labelvol() != NULL){
+		printf("Full groundtruth CANNOT be provided in this mode, try other versions\n");
+		exit(0);
 	    }
-	    else{
-		edge_label= stack->find_edge_label(node1, node2);
-		
-		if (use_mito && (stack->is_mito(node1) || 
+	    else if (use_mito){
+		if ((stack->is_mito(node1) && 
+				stack->is_mito(node2))) {
+		    edge_label = 0; 
+		}
+		else if ((stack->is_mito(node1) || 
 				stack->is_mito(node2))) {
 		    edge_label = 1; 
 		}
-
 	    }
 	
  	    unsigned long long node1sz = rag_node1->get_size();	

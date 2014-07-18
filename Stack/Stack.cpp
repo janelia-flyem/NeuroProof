@@ -149,6 +149,9 @@ void Stack::build_rag()
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 
  
+//     FILE* fp = fopen("/groups/scheffer/home/paragt/Neuroproof_lean/NeuroProof_toufiq/check_rag_new.txt","wt");
+    
+    
     volume_forXYZ(*labelvol, x, y, z) {
         Label_t label = (*labelvol)(x,y,z); 
         if (!label) {
@@ -162,11 +165,15 @@ void Stack::build_rag()
             node =  rag->insert_rag_node(label); 
         }
         node->incr_size();
+	
+//         fprintf(fp,"%u %u %u %u ", x, y, z, node->get_node_id());
     
         // load all prediction values for a given x,y,z 
         for (unsigned int i = 0; i < prob_list.size(); ++i) {
             predictions[i] = (*(prob_list[i]))(x,y,z);
+// 	    fprintf(fp,"%lf ", predictions[i]);
         }
+// 	fprintf(fp,"\n");
 
         // add array of features/predictions for a given node
         if (feature_manager) {
@@ -213,6 +220,7 @@ void Stack::build_rag()
         labels.clear();
     }
  
+//     fclose(fp);
 
 
 

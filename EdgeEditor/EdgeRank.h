@@ -84,11 +84,12 @@ class EdgeRank {
     {
         return num_processed;
     }
-
     /*!
      * Virtual destructor for proper memory handling.
     */
     virtual ~EdgeRank() {}
+    
+    virtual void save_labeled_edges(std::string& save_fname){};
 
   protected:
     /*!

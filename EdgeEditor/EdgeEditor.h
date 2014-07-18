@@ -193,6 +193,8 @@ class EdgeEditor {
     */
     void set_custom_mode(EdgeRank* edge_mode_);
 
+    void save_labeled_edges(std::string& save_fname);
+    
     /*!
      * Editor destructor.
     */

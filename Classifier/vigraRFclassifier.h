@@ -23,6 +23,7 @@ class VigraRFclassifier: public EdgeClassifier{
      int _nfeatures;
      int _nclass;	
 	
+    std::vector<unsigned int> ignore_featlist;
 
 public:
      VigraRFclassifier():_rf(NULL){};	
@@ -34,6 +35,11 @@ public:
      double predict(std::vector<double>& features);
      void learn(std::vector< std::vector<double> >& pfeatures, std::vector<int>& plabels);
      void save_classifier(const char* rf_filename);
+
+     void set_ignore_featlist(std::vector<unsigned int>& pignore_list){ignore_featlist = pignore_list;};
+     void get_ignore_featlist(std::vector<unsigned int>& pignore_list){pignore_list = ignore_featlist;};
+     
+     
      bool is_trained(){
 	if (_rf && _rf->tree_count()>0)
 	   return true;

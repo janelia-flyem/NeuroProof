@@ -26,6 +26,26 @@ void  OpencvRFclassifier::load_classifier(const char* rf_filename){
     }
     _tree_weights.resize(_tree_count, 1.0/_tree_count); 		
      
+    /* read list of useless features*/ 
+    string filename = rf_filename;
+    unsigned found = filename.find_last_of(".");
+    string nameonly = filename.substr(0,found);	
+    nameonly += "_ignore.txt";
+    FILE* fp = fopen(nameonly.c_str(),"rt");
+    if (!fp){
+	printf("no features to ignore\n");
+	return;
+    }
+    else{
+	size_t i=0;
+	unsigned int a;
+	while(!feof(fp)){
+	    fscanf(fp,"%u ", &a);
+	    ignore_featlist.push_back(a);
+	    i++;
+	}
+	fclose(fp);
+    }
 }
 
 double OpencvRFclassifier::predict(std::vector<double>& pfeatures){
@@ -164,6 +184,18 @@ void OpencvRFclassifier::learn(std::vector< std::vector<double> >& pfeatures, st
 }
 
 void OpencvRFclassifier::save_classifier(const char* rf_filename){
+    if (ignore_featlist.size()>0){
+	string filename = rf_filename;
+	unsigned found = filename.find_last_of(".");
+	string nameonly = filename.substr(0,found);	
+	nameonly += "_ignore.txt";
+	FILE* fp = fopen(nameonly.c_str(),"wt");
+	for(size_t i=0; i<ignore_featlist.size(); i++){
+	    fprintf(fp,"%u ", ignore_featlist[i]);
+	}
+	fclose(fp);
+    }
+    
     _rf->save(rf_filename);	
 }
 
