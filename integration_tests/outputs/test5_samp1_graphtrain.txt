@@ -1,3 +1,4 @@
+ignore features: 
 
  ** Learning iteration 1  **
 
@@ -5,10 +6,11 @@ Learn edge classifier ...
 Building RAG ...done with 164 nodes
 Inclusion removal ...done with 163 nodes
 gt label counting
+ignore features:0 4 21 22 39 40 48 49 55 58 59 76 77 94 95 103 104 110 113 114 131 132 149 150 158 159 165 168 169 176 177 184 185 188 189 190 
 Features generated
-Number of samples and dimensions: 617, 190
+Number of samples and dimensions: 617, 155
 Number of merge: 192
-with training set accuracy :99.676
+with training set accuracy :99.514
 Classifier learned
-accuracy = 99.6759
+accuracy = 99.5138
 done with 163 nodes
