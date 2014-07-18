@@ -15,7 +15,7 @@ size_t FeatureCompute::serialize(char * bytes, void * cache1, string& buffer)
         copy_cache(cache1, serialize_cache);
 
         // check if there is data in the buffer to combine with the current features
-        if (string(bytes) != "") {
+        if (bytes != 0) {
             FeatureCache* cache2 = (FeatureCache*) create_cache();
             // extract data for cache
             read_bytes = cache2->deserialize(bytes);

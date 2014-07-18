@@ -135,9 +135,10 @@ void run_graph_prob(BuildOptions& options)
         // update properties
         for (int i = 0; i < vertices.size(); ++i) {
             RagNode_t* node = rag->find_rag_node(vertices[i].id);
+            assert((properties[i]->get_data().length() > 0));
+            
             feature_manager->deserialize_features((char*) properties[i]->get_raw(), node);
         } 
-
         properties.clear();
         transaction_ids.clear();    
 
@@ -147,6 +148,8 @@ void run_graph_prob(BuildOptions& options)
         // update properties
         for (int i = 0; i < edges.size(); ++i) {
             RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+            assert((properties[i]->get_data().length() > 0));
+
             feature_manager->deserialize_features((char*) properties[i]->get_raw(), edge);
         } 
 
@@ -173,7 +176,7 @@ void run_graph_prob(BuildOptions& options)
             if (!edges.empty()) {
                 dvid_node.get_properties(options.graph_name, edges, PROB_KEY, properties, transaction_ids);
             }
-        } while(!vertices.empty());
+        } while(!edges.empty());
 
         // dump prob graph 
         if (options.dumpgraph) {

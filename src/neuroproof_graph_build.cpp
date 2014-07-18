@@ -143,15 +143,19 @@ void run_graph_build(BuildOptions& options)
             // update properties
             for (int i = 0; i < vertices.size(); ++i) {
                 RagNode_t* node = rag->find_rag_node(vertices[i].id);
-                    
-                if (node->get_size() > 0) {
-                    string modified_feature = 
-                        stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), node);
-                    properties[i] = 
-                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
-                } else {
+                
+                if (node->get_size() == 0) {
                     stack.get_feature_manager()->create_cache(node);
                 } 
+               
+                char* curr_data = 0; 
+                if ((properties[i]->get_data().length() > 0)) {
+                    curr_data = (char*) properties[i]->get_raw();
+                }
+                string modified_feature = 
+                    stack.get_feature_manager()->serialize_features(curr_data, node);
+                properties[i] = 
+                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
             } 
     
             // set vertex properties
@@ -173,8 +177,13 @@ void run_graph_build(BuildOptions& options)
             // update properties
             for (int i = 0; i < edges.size(); ++i) {
                 RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
-                string modified_feature =
-                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), edge);
+
+                char* curr_data = 0; 
+                if ((properties[i]->get_data().length() > 0)) {
+                    curr_data = (char*) properties[i]->get_raw();
+                }
+                string modified_feature = 
+                    stack.get_feature_manager()->serialize_features(curr_data, edge);
                 properties[i] = 
                     libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
             } 
