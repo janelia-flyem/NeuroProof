@@ -291,7 +291,8 @@ class FeatureMgr {
             ++starting_pos;
         }
     }
-    
+   
+  public: 
     // !! assume all edge/node caches
     std::vector<void*>& create_cache(RagEdge_t* edge)
     {
@@ -320,8 +321,9 @@ class FeatureMgr {
             } 
         }
         return caches;
-    }    
+    }   
 
+  private:
     void add_feature(unsigned int channel, FeatureCompute * feature, std::vector<bool>& feature_modes);
 
 

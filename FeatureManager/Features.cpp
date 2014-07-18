@@ -9,18 +9,23 @@ using std::string;
 size_t FeatureCompute::serialize(char * bytes, void * cache1, string& buffer)
 {
         size_t read_bytes = 0;
-        FeatureCache* serialize_cache = (FeatureCache*) cache1;
+        FeatureCache* serialize_cache = (FeatureCache*) create_cache();
 
-        if (bytes != 0) {
-            FeatureCache* featurecompute_cache2 = (FeatureCache*) create_cache();
-            // determine cache
-            size_t read_bytes = featurecompute_cache2->deserialize(bytes);
+        // create temporary cache
+        copy_cache(cache1, serialize_cache);
 
-            // merge cache1 onto new cache2
-            merge_cache((void*) featurecompute_cache2, cache1);
-            serialize_cache = (FeatureCache*) featurecompute_cache2;
+        // check if there is data in the buffer to combine with the current features
+        if (string(bytes) != "") {
+            FeatureCache* cache2 = (FeatureCache*) create_cache();
+            // extract data for cache
+            read_bytes = cache2->deserialize(bytes);
+
+            // merge cache2 onto temporary serialize_cache
+            merge_cache((void*) serialize_cache, (void*) cache2);
         }
         serialize_cache->serialize(buffer); 
+        delete(serialize_cache);
+        
         return read_bytes;
 }
 

@@ -80,7 +80,7 @@ void run_graph_build(BuildOptions& options)
         libdvid::tuple start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
         libdvid::tuple sizes; sizes.push_back(options.xsize+2); sizes.push_back(options.ysize+2); sizes.push_back(options.zsize+2);
         libdvid::tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
-       
+      
         // retrieve volume 
         libdvid::DVIDLabelPtr labels;
         dvid_node.get_volume_roi(options.labels_name, start, sizes, channels, labels);
@@ -131,7 +131,7 @@ void run_graph_build(BuildOptions& options)
                         (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
         } 
         dvid_node.update_edges(options.graph_name, edges); 
-
+        
         // update node features to the DVID graph
         do {
             vector<libdvid::BinaryDataPtr> properties;
@@ -143,10 +143,15 @@ void run_graph_build(BuildOptions& options)
             // update properties
             for (int i = 0; i < vertices.size(); ++i) {
                 RagNode_t* node = rag->find_rag_node(vertices[i].id);
-                string modified_feature = 
-                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), node);
-                properties[i] = 
-                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
+                    
+                if (node->get_size() > 0) {
+                    string modified_feature = 
+                        stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), node);
+                    properties[i] = 
+                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
+                } else {
+                    stack.get_feature_manager()->create_cache(node);
+                } 
             } 
     
             // set vertex properties
@@ -183,7 +188,7 @@ void run_graph_build(BuildOptions& options)
 
 
         if (options.dumpfile) {
-            stack.serialize_stack("debugsegstack.h5", 0, false);
+            stack.serialize_stack("debugsegstack.h5", "debuggraph.json", false);
         }
 
     } catch (std::exception& e) {
