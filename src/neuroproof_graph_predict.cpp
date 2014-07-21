@@ -215,7 +215,7 @@ void run_prediction(PredictOptions& options)
     if (options.synapse_filename != "") {   
         stack.set_synapse_exclusions(options.synapse_filename.c_str());
     }
-
+        
     stack.serialize_stack(options.output_filename.c_str(),
                 options.graph_filename.c_str(), options.location_prob);
 

@@ -173,7 +173,12 @@ class StackQTController : public QObject, public StackObserver {
      * how to use the stack viewer program.
     */
     void show_help();
-    
+   
+    /*!
+     * Handles toggle of body id search.
+    */
+    void body_search();
+
     /*!
      * Handles the toggle gt click event in the view mode.  It resets
      * the stack session to show either the current stack labels

@@ -37,7 +37,9 @@ struct BuildOptions
         parser.add_option(num_channels, "num-chans",
                 "Number of prediction channels (should be dynamic in future)", false, true); 
         parser.add_option(bodylist_name, "bodylist-name",
-                "JSON file containing bodylist of ids to compute probability between (ignore duplicates)");
+                "JSON file containing bodylist of ids to compute probability between (ignore duplicates)", false, true);
+        parser.add_option(classifier_filename, "classifier-file",
+                "opencv or vigra agglomeration classifier (should end in h5)", false, true); 
 
         // dump simple graph (no locations or synapse information) -- for debugging purposes
         parser.add_option(dumpgraph, "dumpfile", "Dump graph prob file");
@@ -50,6 +52,7 @@ struct BuildOptions
     string uuid;
     string graph_name;
     string bodylist_name; 
+    string classifier_filename;
     int num_channels;
 
     bool dumpgraph;
@@ -109,7 +112,17 @@ void run_graph_prob(BuildOptions& options)
         // how to dynamically read the number of channels? 
         FeatureMgrPtr feature_manager(new FeatureMgr(options.num_channels));
         feature_manager->set_basic_features(); 
-       
+     
+        // set classifier 
+        EdgeClassifier* eclfr;
+        if (ends_with(options.classifier_filename, ".h5")) {
+            eclfr = new VigraRFclassifier(options.classifier_filename.c_str());
+        } else if (ends_with(options.classifier_filename, ".xml")) {	
+            cout << "Warning: should be using VIGRA classifier" << endl;
+            eclfr = new OpencvRFclassifier(options.classifier_filename.c_str());
+        }        
+        feature_manager->set_classifier(eclfr);   	 
+
         // iterate node and edges and load features
        
         // create vertex list
