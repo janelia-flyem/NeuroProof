@@ -335,12 +335,14 @@ class StackSession : public Dispatcher {
     */
     void set_children_labels(Label_t label_id, int color_id);
 
+  public:
     /*!
      * Helper function to select a given label.
      * \param current_label label selected
     */ 
     void select_label(Label_t current_label);
    
+  private:
     /*!
      * Sets all values to their default.  Called by the constructors.
     */

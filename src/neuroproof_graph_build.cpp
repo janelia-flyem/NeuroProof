@@ -48,6 +48,9 @@ struct BuildOptions
         parser.add_option(xsize, "xsize", "x size", false, true); 
         parser.add_option(ysize, "ysize", "y size", false, true); 
         parser.add_option(zsize, "zsize", "z size", false, true); 
+        
+        parser.add_option(classifier_filename, "classifier-file",
+                "opencv or vigra agglomeration classifier (should end in h5)"); 
       
         // for debugging purposes 
         parser.add_option(dumpfile, "dumpfile", "Dump segmentation file");
@@ -60,6 +63,7 @@ struct BuildOptions
     string uuid;
     string graph_name;
     string labels_name; 
+    string classifier_filename;
 
     // optional build with features
     string prediction_filename;
@@ -80,7 +84,7 @@ void run_graph_build(BuildOptions& options)
         libdvid::tuple start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
         libdvid::tuple sizes; sizes.push_back(options.xsize+2); sizes.push_back(options.ysize+2); sizes.push_back(options.zsize+2);
         libdvid::tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
-       
+      
         // retrieve volume 
         libdvid::DVIDLabelPtr labels;
         dvid_node.get_volume_roi(options.labels_name, start, sizes, channels, labels);
@@ -108,6 +112,18 @@ void run_graph_build(BuildOptions& options)
             FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
             feature_manager->set_basic_features(); 
             stack.set_feature_manager(feature_manager);
+           
+            // set classifier 
+            EdgeClassifier* eclfr;
+            if (ends_with(options.classifier_filename, ".h5")) {
+                eclfr = new VigraRFclassifier(options.classifier_filename.c_str());
+                feature_manager->set_classifier(eclfr);   	 
+            } else if (ends_with(options.classifier_filename, ".xml")) {	
+                cout << "Warning: should be using VIGRA classifier" << endl;
+                eclfr = new OpencvRFclassifier(options.classifier_filename.c_str());
+                feature_manager->set_classifier(eclfr);   	 
+            }     
+
             stack.set_prob_list(prob_list);
         }
 
@@ -116,7 +132,7 @@ void run_graph_build(BuildOptions& options)
         cout<<"Building RAG ..."; 	
         stack.build_rag_batch();
         cout<<"done with "<< stack.get_num_labels()<< " nodes\n";	
-
+        
         // iterate RAG vertices and nodes and update values
         RagPtr rag = stack.get_rag();
         vector<libdvid::Vertex> vertices;
@@ -131,61 +147,75 @@ void run_graph_build(BuildOptions& options)
                         (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
         } 
         dvid_node.update_edges(options.graph_name, edges); 
+       
+        if (options.prediction_filename != "") {
+            // update node features to the DVID graph
+            do {
+                vector<libdvid::BinaryDataPtr> properties;
+                libdvid::VertexTransactions transaction_ids; 
 
-        // update node features to the DVID graph
-        do {
-            vector<libdvid::BinaryDataPtr> properties;
-            libdvid::VertexTransactions transaction_ids; 
+                // retrieve vertex properties
+                dvid_node.get_properties(options.graph_name, vertices, PROPERTY_KEY, properties, transaction_ids);
 
-            // retrieve vertex properties
-            dvid_node.get_properties(options.graph_name, vertices, PROPERTY_KEY, properties, transaction_ids);
+                // update properties
+                for (int i = 0; i < vertices.size(); ++i) {
+                    RagNode_t* node = rag->find_rag_node(vertices[i].id);
 
-            // update properties
-            for (int i = 0; i < vertices.size(); ++i) {
-                RagNode_t* node = rag->find_rag_node(vertices[i].id);
-                string modified_feature = 
-                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), node);
-                properties[i] = 
-                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
-            } 
-    
-            // set vertex properties
-            vector<libdvid::Vertex> leftover_vertices;
-            dvid_node.set_properties(options.graph_name, vertices, PROPERTY_KEY, properties,
-                transaction_ids, leftover_vertices); 
+                    if (node->get_size() == 0) {
+                        stack.get_feature_manager()->create_cache(node);
+                    } 
 
-            vertices = leftover_vertices; 
-        } while(!vertices.empty());
+                    char* curr_data = 0; 
+                    if ((properties[i]->get_data().length() > 0)) {
+                        curr_data = (char*) properties[i]->get_raw();
+                    }
+                    string modified_feature = 
+                        stack.get_feature_manager()->serialize_features(curr_data, node);
+                    properties[i] = 
+                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
+                } 
 
-        // update edge features to the DVID graph
-        do {
-            vector<libdvid::BinaryDataPtr> properties;
-            libdvid::VertexTransactions transaction_ids; 
+                // set vertex properties
+                vector<libdvid::Vertex> leftover_vertices;
+                dvid_node.set_properties(options.graph_name, vertices, PROPERTY_KEY, properties,
+                        transaction_ids, leftover_vertices); 
 
-            // retrieve vertex properties
-            dvid_node.get_properties(options.graph_name, edges, PROPERTY_KEY, properties, transaction_ids);
+                vertices = leftover_vertices; 
+            } while(!vertices.empty());
 
-            // update properties
-            for (int i = 0; i < edges.size(); ++i) {
-                RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
-                string modified_feature =
-                    stack.get_feature_manager()->serialize_features((char*) properties[i]->get_raw(), edge);
-                properties[i] = 
-                    libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
-            } 
-    
-            // set vertex properties
-            vector<libdvid::Edge> leftover_edges;
-            dvid_node.set_properties(options.graph_name, edges, PROPERTY_KEY, properties,
-                transaction_ids, leftover_edges); 
-            edges = leftover_edges; 
-        } while(!edges.empty());
+            // update edge features to the DVID graph
+            do {
+                vector<libdvid::BinaryDataPtr> properties;
+                libdvid::VertexTransactions transaction_ids; 
 
+                // retrieve vertex properties
+                dvid_node.get_properties(options.graph_name, edges, PROPERTY_KEY, properties, transaction_ids);
 
-        if (options.dumpfile) {
-            stack.serialize_stack("debugsegstack.h5", 0, false);
+                // update properties
+                for (int i = 0; i < edges.size(); ++i) {
+                    RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+
+                    char* curr_data = 0; 
+                    if ((properties[i]->get_data().length() > 0)) {
+                        curr_data = (char*) properties[i]->get_raw();
+                    }
+                    string modified_feature = 
+                        stack.get_feature_manager()->serialize_features(curr_data, edge);
+                    properties[i] = 
+                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
+                } 
+
+                // set vertex properties
+                vector<libdvid::Edge> leftover_edges;
+                dvid_node.set_properties(options.graph_name, edges, PROPERTY_KEY, properties,
+                        transaction_ids, leftover_edges); 
+                edges = leftover_edges; 
+            } while(!edges.empty());
         }
-
+        
+        if (options.dumpfile) {
+            stack.serialize_stack("debugsegstack.h5", "debuggraph.json", false);
+        }
     } catch (std::exception& e) {
         cout << e.what() << endl;
     }

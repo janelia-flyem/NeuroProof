@@ -9,39 +9,39 @@ namespace NeuroProof {
 
 struct FeatureCache {
     virtual unsigned int deserialize(char * bytes) = 0;
-    virtual void serialize(std::string buffer) = 0;
+    virtual void serialize(std::string& buffer) = 0;
 };
 
-struct CountCache {
+struct CountCache : public FeatureCache {
     CountCache() : count(0) {}
     signed long long count; 
 
-    unsigned int deserialize(char * bytes)
+    virtual unsigned int deserialize(char * bytes)
     {
         assert(sizeof(signed long long) == 8);
         
         unsigned int bytes_read = 0;
         count = *((signed long long *) bytes);
-
+        
         bytes_read = sizeof(signed long long);
         bytes += sizeof(signed long long);
 
         return bytes_read;
     }
-    void serialize(std::string& buffer)
+    virtual void serialize(std::string& buffer)
     {
         assert(sizeof(signed long long) == 8);
-        
+
         // write 64-bit count
         buffer += std::string((char*)(&count), sizeof(signed long long));
     } 
 };
 
 
-struct MomentCache {
+struct MomentCache : public FeatureCache{
     MomentCache(unsigned int num_moments) : count(0), vals(num_moments, 0) {}
     // will overwrite previous cache
-    unsigned int deserialize(char * bytes)
+    virtual unsigned int deserialize(char * bytes)
     {
         assert(sizeof(unsigned long long) == 8);
         assert(sizeof(unsigned int) == 4);
@@ -69,7 +69,7 @@ struct MomentCache {
 
         return bytes_read;
     }
-    void serialize(std::string& buffer)
+    virtual void serialize(std::string& buffer)
     {
         assert(sizeof(unsigned long long) == 8);
         assert(sizeof(unsigned int) == 4);
@@ -92,12 +92,12 @@ struct MomentCache {
     std::vector<double> vals;
 };
 
-struct HistCache {
+struct HistCache : public FeatureCache {
     HistCache(unsigned num_bins) : count(0), hist(num_bins, 0) {}
     unsigned long long count;
     std::vector<unsigned long long> hist;
 
-    unsigned int deserialize(char * bytes)
+    virtual unsigned int deserialize(char * bytes)
     {
         assert(sizeof(unsigned long long) == 8);
         assert(sizeof(unsigned int) == 4);
@@ -124,7 +124,7 @@ struct HistCache {
 
         return bytes_read;
     }
-    void serialize(std::string& buffer)
+    virtual void serialize(std::string& buffer)
     {
         assert(sizeof(unsigned long long) == 8);
         assert(sizeof(unsigned int) == 4);

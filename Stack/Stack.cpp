@@ -54,6 +54,7 @@ void Stack::build_rag_batch()
     unsigned int maxy = get_ysize() - 1; 
     unsigned int maxz = get_zsize() - 1; 
     vector<double> predictions(prob_list.size(), 0.0);
+    unordered_set<Label_t> labels;
  
     volume_forXYZ(*labelvol, x, y, z) {
     
@@ -95,42 +96,58 @@ void Stack::build_rag_batch()
         Label_t label6 = (*labelvol)(x,y,z-1);
         Label_t label7 = (*labelvol)(x,y,z+1);
 
-        // if it is not a 0 label and is different from the current label, add edge
-        if (label2 && (label > label2)) {
-            rag_add_edge(label, label2, predictions);
-        } else if (label2 && (label != label2)) {
+        // if it is not a 0 label and is different from the current label, add edge prediction
+        // do not add features more than once for a a given pixel pair
+        if (label2 && (label != label2)) {
             rag_add_edge(label, label2, predictions, false);
+            labels.insert(label2);
         }
-
-        if (label3 && (label > label3)) {
-            rag_add_edge(label, label3, predictions);
-        } else if (label3 && (label != label3)) {
+        if (label3 && (label != label3) && (labels.find(label3) == labels.end())) {
             rag_add_edge(label, label3, predictions, false);
+            labels.insert(label3);
         }
-
-        if (label4 && (label > label4)) {
-            rag_add_edge(label, label4, predictions);
-        } else if (label4 && (label != label4)) {
+        if (label4 && (label != label4) && (labels.find(label4) == labels.end())) {
             rag_add_edge(label, label4, predictions, false);
+            labels.insert(label4);
         }
-        
-        if (label5 && (label > label5)) {
-            rag_add_edge(label, label5, predictions);
-        } else if (label5 && (label != label5)) {
+        if (label5 && (label != label5) && (labels.find(label5) == labels.end())) {
             rag_add_edge(label, label5, predictions, false);
+            labels.insert(label5);
         }
-       
-        if (label6 && (label > label6)) {
-            rag_add_edge(label, label6, predictions);
-        } else if (label6 && (label != label6)) {
+        if (label6 && (label != label6) && (labels.find(label6) == labels.end())) {
             rag_add_edge(label, label6, predictions, false);
+            labels.insert(label6);
         }
-        
-        if (label7 && (label > label7)) {
-            rag_add_edge(label, label7, predictions);
-        } else if (label7 && (label != label7)) {
+        if (label7 && (label != label7) && (labels.find(label7) == labels.end())) {
             rag_add_edge(label, label7, predictions, false);
         }
+        labels.clear();
+        
+        // increment edge once for each node pair but multiple faces possible
+        if (label2 && (label > label2)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label2);
+            edge->incr_size();
+        } 
+        if (label3 && (label > label3)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label3);
+            edge->incr_size();
+        }
+        if (label4 && (label > label4)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label4);
+            edge->incr_size();
+        }         
+        if (label5 && (label > label5)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label5);
+            edge->incr_size();
+        } 
+        if (label6 && (label > label6)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label6);
+            edge->incr_size();
+        }         
+        if (label7 && (label > label7)) {
+            RagEdge_t* edge = rag->find_rag_edge(label, label7);
+            edge->incr_size();
+        } 
     }
 }
 

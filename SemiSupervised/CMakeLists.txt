@@ -15,10 +15,9 @@ set (SOURCES kmeans.cpp weightmatrix1.cpp)
 
 add_library (SemiSupervised SHARED ${SOURCES})
 
-#if (NOT BUILDEM_DIR STREQUAL "None")
-#    add_dependencies (SemiSupervised ${boost_NAME} ${vigra_NAME})
-#endif()
-
+if (NOT BUILDEM_DIR STREQUAL "None")
+    add_dependencies (SemiSupervised ${boost_NAME} ${vigra_NAME})
+endif()
 
 #add_executable (stack_test stack_test.cpp)
 #add_dependencies (stack_test ${vigra_NAME} ${boost_NAME} ${hdf5_LIBRARIES})

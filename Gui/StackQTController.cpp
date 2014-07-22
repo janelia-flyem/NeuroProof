@@ -80,6 +80,9 @@ StackQTController::StackQTController(StackSession* stack_session_, QApplication*
     QObject::connect(main_ui->ui.toggleGT, 
             SIGNAL(clicked()), this, SLOT(toggle_gt()));
     
+    QObject::connect(main_ui->ui.searchBody, 
+            SIGNAL(clicked()), this, SLOT(body_search()));
+
     QObject::connect(main_ui->ui.currentButton, 
             SIGNAL(clicked()), this, SLOT(grab_current_edge()));
     
@@ -122,6 +125,15 @@ void StackQTController::update()
         } else if (next_change) {
             grab_next_edge();
         } 
+    } else {
+
+        Label_t select_curr;
+        Label_t select_old;
+        if (stack_session->get_select_label(select_curr, select_old)) {
+            stringstream str;
+            str << select_curr;
+            main_ui->ui.textEdit->setText(QString::fromStdString(str.str()));
+        }
     } 
 }
 
@@ -266,6 +278,16 @@ void StackQTController::grab_current_edge()
         stack_session->set_body_pair(node1, node2, location);
     } else {
         MessageBox msgbox("No more edges");
+    }
+}
+
+void StackQTController::body_search()
+{
+    string bodyid_string = main_ui->ui.textEdit->toPlainText().toStdString();    
+    stringstream str(bodyid_string);
+    int body_id = 0;
+    if (str >> body_id) {
+        stack_session->select_label(body_id);
     }
 }
 

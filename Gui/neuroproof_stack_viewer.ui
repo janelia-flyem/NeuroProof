@@ -349,7 +349,7 @@
               <x>0</x>
               <y>0</y>
               <width>361</width>
-              <height>161</height>
+              <height>158</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="viewLayout">
@@ -376,11 +376,40 @@
               </widget>
              </item>
              <item>
+              <widget class="QTextEdit" name="textEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>130</width>
+                 <height>31</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="searchBody">
+               <property name="maximumSize">
+                <size>
+                 <width>131</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Find Body</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="clearSelection">
                <property name="maximumSize">
                 <size>
                  <width>131</width>
-                 <height>31</height>
+                 <height>25</height>
                 </size>
                </property>
                <property name="text">
@@ -393,7 +422,7 @@
                <property name="maximumSize">
                 <size>
                  <width>131</width>
-                 <height>31</height>
+                 <height>25</height>
                 </size>
                </property>
                <property name="text">
