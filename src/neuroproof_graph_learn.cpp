@@ -23,7 +23,7 @@ static const char * PRED_DATASET_NAME = "volume/predictions";
 struct LearnOptions
 {
     LearnOptions(int argc, char** argv) : classifier_filename("classifier.xml"),
-                strategy_type(1), num_iterations(1), prune_feature(true)
+                strategy_type(1), num_iterations(1), prune_feature(true), use_mito(true)
     {
         OptionParser parser("Program that learns agglomeration classifier from an initial segmentation");
 
@@ -43,6 +43,8 @@ struct LearnOptions
                 "number of iterations used for learning");
         parser.add_option(prune_feature, "prune_feature",
                 "automatically prune useless features");
+        parser.add_option(use_mito, "use_mito",
+                "set delayed mito agglomeration");
 
         parser.parse_options(argc, argv);
     }
@@ -57,6 +59,7 @@ struct LearnOptions
     int strategy_type;
     int num_iterations;
     bool prune_feature;
+    bool use_mito;
 };
 
 bool endswith(string filename, string extn){
@@ -71,6 +74,7 @@ bool endswith(string filename, string extn){
 void run_learning(LearnOptions& options)
 {
     int strategy = 1;
+//     bool use_mito=false;
 
     vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
@@ -148,7 +152,7 @@ void run_learning(LearnOptions& options)
 	    }
 	    else
 		learn_edge_classifier_flat(stack, threshold, all_features,
-		      all_labels, true, options.prune_feature); // # iteration, threshold, clfr_filename
+		      all_labels, options.use_mito, options.prune_feature); // # iteration, threshold, clfr_filename
 	} else{
 	    if (options.strategy_type == 1){ //accumulate only misclassified 
 		cout << "cumulative learning, only misclassified" << endl;
@@ -157,7 +161,7 @@ void run_learning(LearnOptions& options)
 	    } else if (options.strategy_type == 2){ //accumulate all 
 		cout << "cumulative learning, all\n" << endl;
 	   	learn_edge_classifier_queue(stack, threshold, all_features,
-                        all_labels, true, true, options.prune_feature); // # iteration, threshold, clfr_filename	
+                        all_labels, true, options.use_mito, options.prune_feature); // # iteration, threshold, clfr_filename	
             } else if (options.strategy_type == 3){ // lash	
 		cout << "learning by LASH" << endl;
 	   	learn_edge_classifier_lash(stack, threshold, all_features,
