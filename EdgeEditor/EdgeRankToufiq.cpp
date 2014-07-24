@@ -3,9 +3,9 @@
 
 using namespace NeuroProof;
 
-EdgeRankToufiq::EdgeRankToufiq(BioStack* pstack, Rag_t& prag): EdgeRank(&prag)
+EdgeRankToufiq::EdgeRankToufiq(BioStack* pstack, Rag_t& prag, string session_name): EdgeRank(&prag)
 {
-    ils = new IterativeLearn_semi(pstack);
+    ils = new IterativeLearn_semi(pstack, session_name);
     maxEdges = 50000;
     subset_sz= 10;
 
@@ -59,32 +59,37 @@ bool EdgeRankToufiq::is_finished(){
 	    printf("size different: new_idx, new_lbl\n");
 	    return false;
 	}
-	tmp_idx = new_idx;
-	tmp_lbl = new_lbl;
-	repopulate_buffer();
-	edgebuffer = backupbuffer;
-	if (edgebuffer.size()<1)
-	    return true;
-	new_idx = backup_idx;
-	new_lbl.resize(edgebuffer.size());
-	edge_ptr = 0;
+	if(ils->is_parallel_mode()){
+    // 	ils->update_new_labels(new_idx, new_lbl);
+	    tmp_idx = new_idx;
+	    tmp_lbl = new_lbl;
+	    
+	    if (threadp)
+	      threadp->join();
+	    edgebuffer = backupbuffer;
+	    new_idx = backup_idx;
+	    new_lbl.resize(edgebuffer.size());
+	    edge_ptr = 0;
+	    if (edgebuffer.size()<1)
+		return true;
+	    if (threadp)
+	      delete threadp;  
+    // 	repopulate_buffer();
+	    threadp = new boost::thread(&EdgeRankToufiq::repopulate_buffer, this);
+	}
+	else{
+	    tmp_idx = new_idx;
+	    tmp_lbl = new_lbl;
+	    repopulate_buffer();
+	    edgebuffer = backupbuffer;
+	    if (edgebuffer.size()<1)
+		return true;
+	    new_idx = backup_idx;
+	    new_lbl.resize(edgebuffer.size());
+	    edge_ptr = 0;
+	}
 	
-// // // // 	ils->update_new_labels(new_idx, new_lbl);
-// // // 	tmp_idx = new_idx;
-// // // 	tmp_lbl = new_lbl;
-// // // 	
-// // // 	if (threadp)
-// // // 	  threadp->join();
-// // // 	edgebuffer = backupbuffer;
-// // // 	new_idx = backup_idx;
-// // // 	new_lbl.resize(edgebuffer.size());
-// // // 	edge_ptr = 0;
-// // // 	if (edgebuffer.size()<1)
-// // // 	    return true;
-// // // 	if (threadp)
-// // // 	  delete threadp;  
-// // // // 	repopulate_buffer();
-// // // 	threadp = new boost::thread(&EdgeRankToufiq::repopulate_buffer, this);
+	
 	
    }
    return false;
