@@ -56,7 +56,7 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
 //     std::vector<unsigned int> ignore_list(tmp_ignore, tmp_ignore + sizeof(tmp_ignore)/sizeof(unsigned int));
    
     std::vector<unsigned int> ignore_list;
-    double w_dist_thd = 5;
+
     wt1 = new WeightMatrix1(w_dist_thd, ignore_list);
     wt1->weight_matrix_parallel(all_features, false);
     
@@ -84,8 +84,8 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
     
     if (init_trn_idx.size()> start_with)
 	init_trn_idx.erase(init_trn_idx.begin(), init_trn_idx.begin()+start_with);
-    else
-	init_trn_idx.erase(init_trn_idx.begin(), init_trn_idx.end());
+//     else
+// 	init_trn_idx.erase(init_trn_idx.begin(), init_trn_idx.end());
 }
 
 void IterativeLearn_semi::compute_new_risks(std::multimap<double, unsigned int>& risks,

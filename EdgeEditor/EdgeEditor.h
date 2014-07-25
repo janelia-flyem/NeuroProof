@@ -96,7 +96,7 @@ class EdgeEditor {
     EdgeEditor(Rag_t& rag_, double min_val_, double max_val_,
             double start_val_, Json::Value& json_vals); 
 
-    void set_splearn_mode(BioStack* pstack);
+    void set_splearn_mode(BioStack* pstack, string session_name="");
     /*!
      * Write focused proofreading statistics and other configurations
      * to json format.  Assumes that graph will be written (or has been)

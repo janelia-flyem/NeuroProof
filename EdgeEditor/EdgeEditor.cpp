@@ -118,10 +118,10 @@ void EdgeEditor::reinitialize_scheduler()
     num_est_remaining = 0;
 }
 
-void EdgeEditor::set_splearn_mode(BioStack* pstack){
+void EdgeEditor::set_splearn_mode(BioStack* pstack, string session_name){
     stack = pstack;
     
-    edge_mode = new EdgeRankToufiq(stack, rag);
+    edge_mode = new EdgeRankToufiq(stack, rag, session_name);
 }
 
 EdgeEditor::EdgeEditor(Rag_t& rag_, double min_val_,

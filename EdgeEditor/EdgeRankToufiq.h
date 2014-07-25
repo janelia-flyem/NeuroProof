@@ -34,7 +34,7 @@ class EdgeRankToufiq: public EdgeRank{
     std::vector< boost::tuple<unsigned int, unsigned int, int> > all_labeled_edges;
     
 public:
-    EdgeRankToufiq(BioStack* pstack, Rag_t& prag);
+    EdgeRankToufiq(BioStack* pstack, Rag_t& prag, string session_name="");
     
     ~EdgeRankToufiq(){
 	if (ils)

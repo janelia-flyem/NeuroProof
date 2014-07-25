@@ -442,6 +442,7 @@ void Stack::compute_groundtruth_assignment()
 {
     // recompute contigency table
     compute_contingency_table();
+    printf("computed contingency table\n");
     assignment.clear();  	
     
     for(unordered_map<Label_t, vector<LabelCount> >::iterator mit = contingency.begin();
@@ -457,8 +458,9 @@ void Stack::compute_groundtruth_assignment()
                 max_label = gt_vec[j].lbl;
             }	
         }
-        assignment[i] = max_label;
+        assignment.insert(make_pair(i,max_label));//assignment[i] = max_label;
     }	
+    printf("gt label determined for %d nodes\n", assignment.size());
 }
 
 int Stack::find_edge_label(Label_t label1, Label_t label2)

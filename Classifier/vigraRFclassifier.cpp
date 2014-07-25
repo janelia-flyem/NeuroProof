@@ -22,7 +22,7 @@ void  VigraRFclassifier::load_classifier(const char* rf_filename){
       /* read list of useless features*/ 
       string filename = rf_filename;
       unsigned found = filename.find_last_of(".");
-      string nameonly = filename.substr(0,found-1);	
+      string nameonly = filename.substr(0,found);	
       nameonly += "_ignore.txt";
       FILE* fp = fopen(nameonly.c_str(),"rt");
       if (!fp){

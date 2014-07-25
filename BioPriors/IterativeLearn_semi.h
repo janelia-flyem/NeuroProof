@@ -33,9 +33,12 @@ class IterativeLearn_semi:public IterativeLearn{
 //     std::vector<unsigned int> tst_idx;
     const double INITPCT_SM ;
     const double CHUNKSZ_SM ;
+    double w_dist_thd;
+    int parallel_mode;
+
 public:
-    IterativeLearn_semi(BioStack* pstack, string pclfr_name=""): IterativeLearn(pstack, pclfr_name),
-				  INITPCT_SM(0.035), CHUNKSZ_SM(10){
+    IterativeLearn_semi(BioStack* pstack, string session_name="", string pclfr_name=""): IterativeLearn(pstack, pclfr_name),
+				  INITPCT_SM(0.035), CHUNKSZ_SM(10), w_dist_thd(5){
 	trn_idx.clear();
 	edgelist.clear();
 	initial_set_strategy = DEGREE;
@@ -47,6 +50,18 @@ public:
 	}
 	nfeat_channels = feature_mgr->get_num_channels();
 	printf("num feat channels: %u\n", nfeat_channels);
+	
+	string param_filename= session_name + "/param_semi.txt";
+	printf("%s\n",param_filename.c_str());
+	FILE* fp = fopen(param_filename.c_str(),"rt");
+	if(!fp)
+	    printf("No param file for semi-supervised\n");
+	else{
+	    fscanf(fp, "%lf %lf %lf %d", &INITPCT_SM, &CHUNKSZ_SM, &w_dist_thd, &parallel_mode);
+	    fclose(fp);
+	    printf("initial # edge= %.5lf, chunksz=%.1lf, max weight dist=%.5lf \n", INITPCT_SM, CHUNKSZ_SM, w_dist_thd);
+	}
+	
     }
     void get_initial_edges(std::vector<unsigned int>& new_idx);
     void learn_edge_classifier(double trnsz);
@@ -58,6 +73,10 @@ public:
     void get_extra_edges(std::vector<unsigned int>& ret_idx, size_t nedges);
     void compute_new_risks(std::multimap<double, unsigned int>& risks, 
 			   std::map<unsigned int, double>& prop_lbl);
+    
+    bool is_parallel_mode(){
+	return (parallel_mode==1? true : false);
+    }
     
 };
 

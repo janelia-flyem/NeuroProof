@@ -114,6 +114,8 @@ void run_learning(LearnOptions& options)
 	
 	cout << "Learn edge classifier ..." << endl; 
 	if (itr == 0) {
+	  
+	  
 	    if (options.strategy_type == 4){ 
 		cout << "random learning" << endl;
 		preprocess_stack(stack, true);
@@ -153,7 +155,11 @@ void run_learning(LearnOptions& options)
 	    else
 		learn_edge_classifier_flat(stack, threshold, all_features,
 		      all_labels, options.use_mito, options.prune_feature); // # iteration, threshold, clfr_filename
+	    
+	    
 	} else{
+	  
+	  
 	    if (options.strategy_type == 1){ //accumulate only misclassified 
 		cout << "cumulative learning, only misclassified" << endl;
 	   	learn_edge_classifier_queue(stack, threshold, all_features,
@@ -167,6 +173,8 @@ void run_learning(LearnOptions& options)
 	   	learn_edge_classifier_lash(stack, threshold, all_features,
                         all_labels, true, options.prune_feature); // # iteration, threshold, clfr_filename	
 	    }
+	    eclfr->save_classifier(options.classifier_filename.c_str());  	
+	    printf("Classifier saved to %s\n",options.classifier_filename.c_str());
 	}
 
 	cout << "done with "<< stack.get_num_labels()<< " nodes" << endl;	

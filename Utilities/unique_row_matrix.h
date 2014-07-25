@@ -19,7 +19,8 @@ struct vectorcomp {
                 else
                     return true; 	
             }
-        }		
+        }
+        return false;
 
     }
 };
