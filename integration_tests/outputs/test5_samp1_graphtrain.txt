@@ -6,6 +6,8 @@ Learn edge classifier ...
 Building RAG ...done with 164 nodes
 Inclusion removal ...done with 163 nodes
 gt label counting
+computed contingency table
+gt label determined for 163 nodes
 ignore features:0 4 21 22 39 40 48 49 55 58 59 76 77 94 95 103 104 110 113 114 131 132 149 150 158 159 165 168 169 176 177 184 185 188 189 190 
 Features generated
 Number of samples and dimensions: 617, 155

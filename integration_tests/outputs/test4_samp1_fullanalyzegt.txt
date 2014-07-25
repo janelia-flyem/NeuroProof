@@ -2,6 +2,8 @@ Read seg stack
 Read GT stack
 Built GT RAG
 Built seg RAG
+computed contingency table
+gt label determined for 164 nodes
 Create gt 0 boundaries
 ************Printing Statistics**************
 Graph edges: 618
@@ -13,6 +15,8 @@ Number of orphan bodies with at least 1 synapse annotations : 0; total number of
 Percent orphans matched for seg: 0
 Percent orphans matched for GT: -nan
 Orphan agreement rate: 0
+computed contingency table
+gt label determined for 164 nodes
 Number of unmerged pairs of large bodies: 41 from 58 large bodies
 Number of under-merged bodies: 12
 ************Finished Printing Statistics**************
@@ -33,6 +37,8 @@ Number of orphan bodies with at least 1 synapse annotations : 0; total number of
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan
 Orphan agreement rate: -nan
+computed contingency table
+gt label determined for 141 nodes
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************
@@ -51,6 +57,8 @@ Number of orphan bodies with at least 1 synapse annotations : 0; total number of
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan
 Orphan agreement rate: -nan
+computed contingency table
+gt label determined for 141 nodes
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************
@@ -69,6 +77,8 @@ Number of orphan bodies with at least 1 synapse annotations : 0; total number of
 Percent orphans matched for seg: -nan
 Percent orphans matched for GT: -nan
 Orphan agreement rate: -nan
+computed contingency table
+gt label determined for 141 nodes
 Number of unmerged pairs of large bodies: 3 from 40 large bodies
 Number of under-merged bodies: 7
 ************Finished Printing Statistics**************
