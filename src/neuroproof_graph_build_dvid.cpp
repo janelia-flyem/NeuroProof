@@ -20,10 +20,12 @@ using std::tr1::unordered_set;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";
 static const char * PROPERTY_KEY = "np-features";
+static const char * PROB_KEY = "np-prob";
 
 struct BuildOptions
 {
-    BuildOptions(int argc, char** argv) : x(0), y(0), z(0), xsize(0), ysize(0), zsize(0), dumpfile(false)
+    BuildOptions(int argc, char** argv) : x(0), y(0), z(0), xsize(0), ysize(0),
+        zsize(0), dvidgraph_load_saved(false), dvidgraph_update(true), dumpfile(false)
     {
         OptionParser parser("Program that builds graph over defined region");
 
@@ -51,7 +53,13 @@ struct BuildOptions
         
         parser.add_option(classifier_filename, "classifier-file",
                 "opencv or vigra agglomeration classifier (should end in h5)"); 
-      
+
+        // iteractions with DVID
+        parser.add_option(dvidgraph_load_saved, "dvidgraph-load-saved",
+                "This option will load graph probabilities and sizes saved (synapse file, predictions, and classifier should not be specified and dvigraph-update will be set false");
+        parser.add_option(dvidgraph_update, "dvidgraph-update", "Enable the writing of features and graph information to DVID");
+
+
         // for debugging purposes 
         parser.add_option(dumpfile, "dumpfile", "Dump segmentation file");
 
@@ -68,14 +76,30 @@ struct BuildOptions
     // optional build with features
     string prediction_filename;
 
+    // ?! add synapse option
+
     int x, y, z, xsize, ysize, zsize;
     bool dumpfile;
+    bool dvidgraph_load_saved;
+    bool dvidgraph_update;
 };
 
 
 void run_graph_build(BuildOptions& options)
 {
     try {
+        // option validation
+        if (options.dvidgraph_load_saved && options.dvidgraph_update) {
+            cout << "Warning: graph update not possible when loading saved information" << endl;
+            options.dvidgraph_update = false;
+        }
+
+        // ?! synapse file should not be included either
+        if (options.dvidgraph_load_saved && ((options.classifier_filename != "") ||
+                (options.prediction_filename != ""))) {
+            throw ErrMsg("Classifier and prediction file should not be specified when using saved DVID values");
+        }
+        
         // create DVID node accessor 
         libdvid::DVIDServer server(options.dvid_servername);
         libdvid::DVIDNode dvid_node(server, options.uuid);
@@ -132,92 +156,162 @@ void run_graph_build(BuildOptions& options)
         cout<<"Building RAG ..."; 	
         stack.build_rag_batch();
         cout<<"done with "<< stack.get_num_labels()<< " nodes\n";	
-        
-        // iterate RAG vertices and nodes and update values
+            
         RagPtr rag = stack.get_rag();
-        vector<libdvid::Vertex> vertices;
-        for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-            vertices.push_back(libdvid::Vertex((*iter)->get_node_id(), (*iter)->get_size()));
-        } 
-        dvid_node.update_vertices(options.graph_name, vertices); 
-
-        vector<libdvid::Edge> edges;
-        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-            edges.push_back(libdvid::Edge((*iter)->get_node1()->get_node_id(),
-                        (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
-        } 
-        dvid_node.update_edges(options.graph_name, edges); 
        
-        if (options.prediction_filename != "") {
+        // do not update dvid graph in updating is turned off
+        if (options.dvidgraph_update) {
+            // iterate RAG vertices and nodes and update values
+            vector<libdvid::Vertex> vertices;
+            for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+                vertices.push_back(libdvid::Vertex((*iter)->get_node_id(), (*iter)->get_size()));
+            } 
+            dvid_node.update_vertices(options.graph_name, vertices); 
+
+            vector<libdvid::Edge> edges;
+            for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+                edges.push_back(libdvid::Edge((*iter)->get_node1()->get_node_id(),
+                            (*iter)->get_node2()->get_node_id(), (*iter)->get_size()));
+            } 
+            dvid_node.update_edges(options.graph_name, edges);
+
             // update node features to the DVID graph
-            do {
-                vector<libdvid::BinaryDataPtr> properties;
-                libdvid::VertexTransactions transaction_ids; 
+            if ((options.prediction_filename != "")) {
+                do {
+                    vector<libdvid::BinaryDataPtr> properties;
+                    libdvid::VertexTransactions transaction_ids; 
 
-                // retrieve vertex properties
-                dvid_node.get_properties(options.graph_name, vertices, PROPERTY_KEY, properties, transaction_ids);
+                    // retrieve vertex properties
+                    dvid_node.get_properties(options.graph_name, vertices, PROPERTY_KEY, properties, transaction_ids);
 
-                // update properties
-                for (int i = 0; i < vertices.size(); ++i) {
-                    RagNode_t* node = rag->find_rag_node(vertices[i].id);
+                    // update properties
+                    for (int i = 0; i < vertices.size(); ++i) {
+                        RagNode_t* node = rag->find_rag_node(vertices[i].id);
 
-                    if (node->get_size() == 0) {
-                        stack.get_feature_manager()->create_cache(node);
+                        if (node->get_size() == 0) {
+                            stack.get_feature_manager()->create_cache(node);
+                        } 
+
+                        char* curr_data = 0; 
+                        if ((properties[i]->get_data().length() > 0)) {
+                            curr_data = (char*) properties[i]->get_raw();
+                        }
+                        string modified_feature = 
+                            stack.get_feature_manager()->serialize_features(curr_data, node);
+                        properties[i] = 
+                            libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
                     } 
 
-                    char* curr_data = 0; 
-                    if ((properties[i]->get_data().length() > 0)) {
-                        curr_data = (char*) properties[i]->get_raw();
-                    }
-                    string modified_feature = 
-                        stack.get_feature_manager()->serialize_features(curr_data, node);
-                    properties[i] = 
-                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length());
-                } 
+                    // set vertex properties
+                    vector<libdvid::Vertex> leftover_vertices;
+                    dvid_node.set_properties(options.graph_name, vertices, PROPERTY_KEY, properties,
+                            transaction_ids, leftover_vertices); 
 
-                // set vertex properties
-                vector<libdvid::Vertex> leftover_vertices;
-                dvid_node.set_properties(options.graph_name, vertices, PROPERTY_KEY, properties,
-                        transaction_ids, leftover_vertices); 
+                    vertices = leftover_vertices; 
+                } while(!vertices.empty());
 
-                vertices = leftover_vertices; 
-            } while(!vertices.empty());
+                // update edge features to the DVID graph
+                do {
+                    vector<libdvid::BinaryDataPtr> properties;
+                    libdvid::VertexTransactions transaction_ids; 
 
-            // update edge features to the DVID graph
-            do {
-                vector<libdvid::BinaryDataPtr> properties;
-                libdvid::VertexTransactions transaction_ids; 
+                    // retrieve vertex properties
+                    dvid_node.get_properties(options.graph_name, edges, PROPERTY_KEY, properties, transaction_ids);
 
-                // retrieve vertex properties
-                dvid_node.get_properties(options.graph_name, edges, PROPERTY_KEY, properties, transaction_ids);
+                    // update properties
+                    for (int i = 0; i < edges.size(); ++i) {
+                        RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
 
-                // update properties
-                for (int i = 0; i < edges.size(); ++i) {
-                    RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+                        char* curr_data = 0; 
+                        if ((properties[i]->get_data().length() > 0)) {
+                            curr_data = (char*) properties[i]->get_raw();
+                        }
+                        string modified_feature = 
+                            stack.get_feature_manager()->serialize_features(curr_data, edge);
+                        properties[i] = 
+                            libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
+                    } 
 
-                    char* curr_data = 0; 
-                    if ((properties[i]->get_data().length() > 0)) {
-                        curr_data = (char*) properties[i]->get_raw();
-                    }
-                    string modified_feature = 
-                        stack.get_feature_manager()->serialize_features(curr_data, edge);
-                    properties[i] = 
-                        libdvid::BinaryData::create_binary_data(modified_feature.c_str(), modified_feature.length()); 
-                } 
+                    // set vertex properties
+                    vector<libdvid::Edge> leftover_edges;
+                    dvid_node.set_properties(options.graph_name, edges, PROPERTY_KEY, properties,
+                            transaction_ids, leftover_edges); 
+                    edges = leftover_edges; 
+                } while(!edges.empty());
+            }
+        }
+      
+        // populate graph with saved values in DVID 
+        if (options.dvidgraph_load_saved) {
+            // ?! update synapse weights
 
-                // set vertex properties
-                vector<libdvid::Edge> leftover_edges;
-                dvid_node.set_properties(options.graph_name, edges, PROPERTY_KEY, properties,
-                        transaction_ids, leftover_edges); 
-                edges = leftover_edges; 
-            } while(!edges.empty());
+            // delete edges that contain a node with no weight to prevent creating an
+            // edge that exists beyond the ROI (should rarely happen)
+            vector<libdvid::Edge> edges;
+            vector<RagEdge_t*> edges_delete;
+            for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+                if (((*iter)->get_node1()->get_size() == 0) ||
+                    ((*iter)->get_node2()->get_size() == 0) ) {
+                    edges_delete.push_back(*iter);
+                } else {
+                    edges.push_back(libdvid::Edge((*iter)->get_node1()->get_node_id(),
+                                (*iter)->get_node2()->get_node_id(), 0));
+                }
+            }
+            for (int i = 0; i < edges_delete.size(); ++i) {
+                rag->remove_rag_edge(edges_delete[i]);
+            }
+
+            // grab stored size for all vertices
+            vector<libdvid::Vertex> vertices;
+            for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+                vertices.push_back(libdvid::Vertex((*iter)->get_node_id(), (*iter)->get_size()));
+            } 
+            
+            libdvid::Graph subgraph; 
+            dvid_node.get_subgraph(options.graph_name, vertices, subgraph); 
+
+            for (int i = 0; i < subgraph.vertices.size(); ++i) {
+                RagNode_t* rag_node = rag->find_rag_node(Node_t(subgraph.vertices[i].id));
+                rag_node->set_size((unsigned long long)(subgraph.vertices[i].weight));
+            } 
+
+            // set edge probability manually
+            vector<libdvid::BinaryDataPtr> properties;
+            libdvid::VertexTransactions transaction_ids; 
+
+            // retrieve vertex properties
+            dvid_node.get_properties(options.graph_name, edges, PROB_KEY, properties, transaction_ids);
+
+            // update edge weight
+            for (int i = 0; i < edges.size(); ++i) {
+                RagEdge_t* edge = rag->find_rag_edge(edges[i].id1, edges[i].id2);
+
+                // edge and probability value should exist
+                if (!edge) {
+                    throw ErrMsg("Edge was not found in DVID DB");
+                }
+
+                if (properties[i]->get_data().length() == 0) {
+                    throw ErrMsg("Edge probability was not stored at the edge");
+                }
+                
+                double* edge_prob = (double*) properties[i]->get_raw();
+                edge->set_weight(*edge_prob); 
+            }
         }
         
+        // disable computation of probability if DVID saved values are used 
         if (options.dumpfile) {
-            stack.serialize_stack("debugsegstack.h5", "debuggraph.json", false);
+            stack.serialize_stack("debugsegstack.h5", "debuggraph.json", false,
+                    options.dvidgraph_load_saved);
         }
+    } catch (ErrMsg& err) {
+        cout << err.str << endl;
+        exit(1);
     } catch (std::exception& e) {
         cout << e.what() << endl;
+        exit(1);
     }
 }
 

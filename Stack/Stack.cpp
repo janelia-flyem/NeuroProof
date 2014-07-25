@@ -481,10 +481,10 @@ int Stack::find_edge_label(Label_t label1, Label_t label2)
 }
 
 void Stack::serialize_stack(const char* h5_name, const char* graph_name, 
-        bool optimal_prob_edge_loc)
+        bool optimal_prob_edge_loc, bool disable_prob_comp)
 {
     if (graph_name != 0) {
-        serialize_graph(graph_name, optimal_prob_edge_loc);
+        serialize_graph(graph_name, optimal_prob_edge_loc, disable_prob_comp);
     }
     serialize_labels(h5_name);
    
@@ -493,7 +493,7 @@ void Stack::serialize_stack(const char* h5_name, const char* graph_name,
     } 
 }
 
-void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
+void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc, bool disable_prob_comp)
 {
     EdgeCount best_edge_z;
     EdgeLoc best_edge_loc;
@@ -502,7 +502,7 @@ void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc)
     // set edge properties for export 
     for (Rag_t::edges_iterator iter = rag->edges_begin();
            iter != rag->edges_end(); ++iter) {
-        if (!((*iter)->is_false_edge())) {
+        if (!((*iter)->is_false_edge()) && !disable_prob_comp) {
             if (feature_manager) {
                 double val = feature_manager->get_prob((*iter));
                 (*iter)->set_weight(val);

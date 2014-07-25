@@ -233,9 +233,10 @@ class Stack : public StackBase {
      * \param h5_name name of h5 file
      * \param graph_name name of graph json file
      * \param optimal_prob_edge_loc determine strategy to select edge location
+     * \param disable_prob_comp determines whether saved prob values are used
     */
     void serialize_stack(const char* h5_name, const char* graph_name,
-            bool optimal_prob_edge_loc);
+            bool optimal_prob_edge_loc, bool disable_prob_comp = false);
     
     /*!
      * Virtual function to allow derived controllers to add their own
@@ -342,8 +343,9 @@ class Stack : public StackBase {
      * the graph to json on disk.
      * \param graph_name name of graph json file
      * \param optimal_prob_edge_loc determine strategy to select edge location
+     * \param disable_prob_comp determines whether saved prob values are used
     */
-    void serialize_graph(const char* graph_name, bool optimal_prob_edge_loc);
+    void serialize_graph(const char* graph_name, bool optimal_prob_edge_loc, bool disable_prob_comp = false);
     
     /*!
      * Support function called by 'serialize_stack' that actually writes

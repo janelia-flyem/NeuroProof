@@ -204,8 +204,23 @@ std::vector<boost::shared_ptr<VolumeData<T> > >
     shape2[1] = shape[2];
     shape2[2] = shape[1];
 
+    // prediction must be the same size or larger than the label volume
+    if (dim1size > shape2[0]) {
+        throw ErrMsg("Label volume has a larger dimension than the prediction volume provided");
+    }
+    
     // extract border from shape and size of label volume
     unsigned int border = (shape2[0] - dim1size) / 2;
+
+    // if a border needs to be applied the volume should be equal size in all dimensions
+    // TODO: specify borders for each dimension
+    if (border > 0) {
+        if ((shape2[0] != shape2[1]) || (shape2[0] != shape2[2])) {
+            throw ErrMsg("Dimensions of prediction should be equal in X, Y, Z");
+        }
+    }
+
+
 
     // for each channel, create volume data and push in array
     for (int i = 0; i < shape[0]; ++i) {
