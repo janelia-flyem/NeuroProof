@@ -25,9 +25,9 @@ else()
 endif()
 
 if (NOT DISABLE_GUI)
-    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} RescanQt4)
+    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} ${opencv_NAME} RescanQt4)
 else()
-    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME})
+    add_dependencies (Stack ${boost_NAME} ${vigra_NAME} ${hdf5_LIBRARIES} ${jsoncpp_NAME} ${opencv_NAME})
 endif()
 
 add_executable (basic_stack_test unit_tests/basic_stack.cpp VolumeLabelData.cpp)
