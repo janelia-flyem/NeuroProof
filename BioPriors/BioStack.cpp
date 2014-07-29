@@ -240,7 +240,10 @@ void BioStack::set_edge_locations()
   
 }
 
-
+void BioStack::set_synapse_exclusions(vector<vector<unsigned int> >& synapse_locations_) 
+{
+    synapse_locations = synapse_locations_;
+}
 
 void BioStack::set_synapse_exclusions(const char* synapse_json)
 {

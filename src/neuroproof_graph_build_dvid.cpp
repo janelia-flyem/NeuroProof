@@ -1,4 +1,4 @@
-#include "../Stack/Stack.h"
+#include "../BioPriors/BioStack.h"
 #include "../FeatureManager/FeatureMgr.h"
 #include "../Utilities/ScopeTime.h"
 #include "../Utilities/OptionParser.h"
@@ -8,7 +8,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
-
 
 using namespace NeuroProof;
 
@@ -22,10 +21,100 @@ static const char * PRED_DATASET_NAME = "volume/predictions";
 static const char * PROPERTY_KEY = "np-features";
 static const char * PROB_KEY = "np-prob";
 
+// set synapses for stack -- don't flip y, use global offsets
+void set_synapse_exclusions(BioStack& stack, const char* synapse_json,
+        int xoffset, int yoffset, int zoffset)
+{
+    VolumeLabelPtr labelvol = stack.get_labelvol();
+    RagPtr rag = stack.get_rag();
+
+    unsigned int xsize = labelvol->shape(0);
+    unsigned int ysize = labelvol->shape(1);
+    unsigned int zsize = labelvol->shape(2);
+
+    vector<vector<unsigned int> > synapse_locations;
+
+    Json::Reader json_reader;
+    Json::Value json_reader_vals;
+    
+    ifstream fin(synapse_json);
+    if (!fin) {
+        throw ErrMsg("Error: input file: " + string(synapse_json) + " cannot be opened");
+    }
+    if (!json_reader.parse(fin, json_reader_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+ 
+    Json::Value synapses = json_reader_vals["data"];
+
+    // synapses not allowed at 0 or max id since false buffer is added
+    for (int i = 0; i < synapses.size(); ++i) {
+        vector<vector<unsigned int> > locations;
+        Json::Value location = synapses[i]["T-bar"]["location"];
+        if (!location.empty()) {
+            vector<unsigned int> loc;
+            
+            int xloc = location[(unsigned int)(0)].asUInt();
+            int yloc = location[(unsigned int)(1)].asUInt();
+            int zloc = location[(unsigned int)(2)].asUInt();
+            xloc -= xoffset;
+            yloc -= yoffset;
+            zloc -= zoffset;
+
+            if ((xloc > 0) && (yloc > 0) && (zloc > 0) &&
+                (xloc < (xsize-1)) && (yloc < (ysize-1)) && (zloc < (zsize-1))) {
+                loc.push_back(xloc);
+                loc.push_back(yloc);
+                loc.push_back(zloc);
+                synapse_locations.push_back(loc);
+                locations.push_back(loc);
+            }
+        }
+        
+        Json::Value psds = synapses[i]["partners"];
+        for (int i = 0; i < psds.size(); ++i) {
+            Json::Value location = psds[i]["location"];
+            if (!location.empty()) {
+                vector<unsigned int> loc;
+            
+                int xloc = location[(unsigned int)(0)].asUInt();
+                int yloc = location[(unsigned int)(1)].asUInt();
+                int zloc = location[(unsigned int)(2)].asUInt();
+                xloc -= xoffset;
+                yloc -= yoffset;
+                zloc -= zoffset;
+
+                if ((xloc > 0) && (yloc > 0) && (zloc > 0) &&
+                    (xloc < (xsize-1)) && (yloc < (ysize-1)) && (zloc < (zsize-1))) {
+                    loc.push_back(xloc);
+                    loc.push_back(yloc);
+                    loc.push_back(zloc);
+                    
+                    synapse_locations.push_back(loc);
+                    locations.push_back(loc);
+                }
+            }
+        }
+
+        for (int iter1 = 0; iter1 < locations.size(); ++iter1) {
+            for (int iter2 = (iter1 + 1); iter2 < locations.size(); ++iter2) {
+                stack.add_edge_constraint(rag, labelvol,
+                    locations[iter1][0], locations[iter1][1],
+                    locations[iter1][2], locations[iter2][0],
+                    locations[iter2][1], locations[iter2][2]);           
+            }
+        }
+    }
+
+    stack.set_synapse_exclusions(synapse_locations);
+}
+
+
 struct BuildOptions
 {
     BuildOptions(int argc, char** argv) : x(0), y(0), z(0), xsize(0), ysize(0),
-        zsize(0), dvidgraph_load_saved(false), dvidgraph_update(true), dumpfile(false)
+        zsize(0), dvidgraph_load_saved(false), dvidgraph_update(true), dumpgraph(false)
     {
         OptionParser parser("Program that builds graph over defined region");
 
@@ -59,9 +148,11 @@ struct BuildOptions
                 "This option will load graph probabilities and sizes saved (synapse file, predictions, and classifier should not be specified and dvigraph-update will be set false");
         parser.add_option(dvidgraph_update, "dvidgraph-update", "Enable the writing of features and graph information to DVID");
 
+        parser.add_option(synapse_filename, "synapse-file",
+                "Synapse file in JSON format should be based on global DVID coordinates.  Synapses outside of the segmentation ROI will be ignored.  Synapses are not loaded into DVID.  Synapses cannot have negative coordinates even though that is possible in DVID in general.");
 
         // for debugging purposes 
-        parser.add_option(dumpfile, "dumpfile", "Dump segmentation file");
+        parser.add_option(dumpgraph, "dumpgraph", "Dump segmentation file");
 
         parser.parse_options(argc, argv);
     }
@@ -76,10 +167,12 @@ struct BuildOptions
     // optional build with features
     string prediction_filename;
 
-    // ?! add synapse option
+    // add synapse option -- assume global coordinates
+    string synapse_filename;
+
 
     int x, y, z, xsize, ysize, zsize;
-    bool dumpfile;
+    bool dumpgraph;
     bool dvidgraph_load_saved;
     bool dvidgraph_update;
 };
@@ -94,7 +187,7 @@ void run_graph_build(BuildOptions& options)
             options.dvidgraph_update = false;
         }
 
-        // ?! synapse file should not be included either
+        // synapse file should not be included either
         if (options.dvidgraph_load_saved && ((options.classifier_filename != "") ||
                 (options.prediction_filename != ""))) {
             throw ErrMsg("Classifier and prediction file should not be specified when using saved DVID values");
@@ -128,7 +221,7 @@ void run_graph_build(BuildOptions& options)
         cout << "Read watershed" << endl;
 
         // create stack to hold segmentation state
-        Stack stack(initial_labels); 
+        BioStack stack(initial_labels); 
 
         if (options.prediction_filename != "") {
             vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
@@ -243,8 +336,6 @@ void run_graph_build(BuildOptions& options)
       
         // populate graph with saved values in DVID 
         if (options.dvidgraph_load_saved) {
-            // ?! update synapse weights
-
             // delete edges that contain a node with no weight to prevent creating an
             // edge that exists beyond the ROI (should rarely happen)
             vector<libdvid::Edge> edges;
@@ -302,8 +393,14 @@ void run_graph_build(BuildOptions& options)
         }
         
         // disable computation of probability if DVID saved values are used 
-        if (options.dumpfile) {
-            stack.serialize_stack("debugsegstack.h5", "debuggraph.json", false,
+        if (options.dumpgraph) {
+            // load synapses only graph is produced 
+            if (options.synapse_filename != "") {
+                set_synapse_exclusions(stack, options.synapse_filename.c_str(),
+                        options.x-1, options.y-1, options.z-1);
+            }
+
+            stack.serialize_stack("stack.h5", "graph.json", false,
                     options.dvidgraph_load_saved);
         }
     } catch (ErrMsg& err) {

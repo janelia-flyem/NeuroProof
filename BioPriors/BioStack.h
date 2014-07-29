@@ -18,6 +18,7 @@ class BioStack : public Stack {
     VolumeLabelPtr create_syn_label_volume();
     VolumeLabelPtr create_syn_gt_label_volume();
     void set_synapse_exclusions(const char * synapse_json);    
+    void set_synapse_exclusions(std::vector<std::vector<unsigned int> >& synapse_locations_); 
     void load_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
     void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
 
@@ -31,9 +32,10 @@ class BioStack : public Stack {
 
     virtual void build_rag();
 
-  private:
     void add_edge_constraint(RagPtr rag, VolumeLabelPtr labelvol, unsigned int x1,
             unsigned int y1, unsigned int z1, unsigned int x2, unsigned int y2, unsigned int z2);
+  
+  private:
     VolumeLabelPtr create_syn_volume(VolumeLabelPtr labelvol);
 
     std::vector<std::vector<unsigned int> > synapse_locations; 
