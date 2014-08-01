@@ -12,6 +12,6 @@ set (SOURCES EdgeRankToufiq.cpp EdgeEditor.cpp NodeCentricRank.cpp NodeSizeRank.
 add_library (EdgeEditor SHARED ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME})
+    add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME} ${opencv_NAME})
 endif()
 

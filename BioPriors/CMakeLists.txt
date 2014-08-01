@@ -17,7 +17,7 @@ set (SOURCES BioStack.cpp StackAgglomAlgs.cpp StackLearnAlgs.cpp IterativeLearn.
 add_library (BioPriors SHARED ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME})
+    add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
 endif()
 
 #add_executable (stack_test stack_test.cpp)

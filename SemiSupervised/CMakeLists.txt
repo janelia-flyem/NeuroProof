@@ -16,7 +16,7 @@ set (SOURCES kmeans.cpp weightmatrix1.cpp)
 add_library (SemiSupervised SHARED ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (SemiSupervised ${boost_NAME} ${vigra_NAME})
+    add_dependencies (SemiSupervised ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
 endif()
 
 #add_executable (stack_test stack_test.cpp)
