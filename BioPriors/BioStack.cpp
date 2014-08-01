@@ -49,6 +49,11 @@ VolumeLabelPtr BioStack::create_syn_volume(VolumeLabelPtr labelvol2)
     return synvol;
 }
 
+void BioStack::load_saved_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
+{
+    saved_synapse_counts = synapse_counts;
+}
+
 void BioStack::load_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
 {
     for (int i = 0; i < synapse_locations.size(); ++i) {
@@ -306,7 +311,12 @@ void BioStack::set_synapse_exclusions(const char* synapse_json)
 void BioStack::serialize_graph_info(Json::Value& json_writer)
 {
     unordered_map<Label_t, int> synapse_counts;
-    load_synapse_counts(synapse_counts);
+    if (saved_synapse_counts.size() > 0) {
+        synapse_counts = saved_synapse_counts;
+    } else { 
+        load_synapse_counts(synapse_counts);
+    }
+
     int id = 0;
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter, ++id) {

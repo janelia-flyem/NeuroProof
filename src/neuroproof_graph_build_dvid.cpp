@@ -16,10 +16,12 @@ using std::string;
 using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_set;
+using std::tr1::unordered_map;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";
 static const char * PROPERTY_KEY = "np-features";
 static const char * PROB_KEY = "np-prob";
+static const char * SYNAPSE_KEY = "synapse";
 
 // set synapses for stack -- don't flip y, use global offsets
 void set_synapse_exclusions(BioStack& stack, const char* synapse_json,
@@ -189,8 +191,8 @@ void run_graph_build(BuildOptions& options)
 
         // synapse file should not be included either
         if (options.dvidgraph_load_saved && ((options.classifier_filename != "") ||
-                (options.prediction_filename != ""))) {
-            throw ErrMsg("Classifier and prediction file should not be specified when using saved DVID values");
+                (options.prediction_filename != "") || (options.synapse_filename != ""))) {
+            throw ErrMsg("Classifier, prediction file, and synapses should not be specified when using saved DVID values");
         }
         
         // create DVID node accessor 
@@ -358,7 +360,7 @@ void run_graph_build(BuildOptions& options)
             for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
                 vertices.push_back(libdvid::Vertex((*iter)->get_node_id(), (*iter)->get_size()));
             } 
-            
+          
             libdvid::Graph subgraph; 
             dvid_node.get_subgraph(options.graph_name, vertices, subgraph); 
 
@@ -371,7 +373,47 @@ void run_graph_build(BuildOptions& options)
             vector<libdvid::BinaryDataPtr> properties;
             libdvid::VertexTransactions transaction_ids; 
 
+            // update synapse from global graph (don't include constraints for non-important
+            // edges); add constraints; load synapse_counts stored to BioStack to be used 
+            dvid_node.get_properties(options.graph_name, vertices, SYNAPSE_KEY, properties, transaction_ids);
+            unordered_map<Label_t, int> synapse_counts;
+            for (int i = 0; i < vertices.size(); ++i) {
+                RagNode_t* node = rag->find_rag_node(vertices[i].id);
+                // skip empty vertices
+                if (node->get_size() == 0) {
+                    continue;
+                }
+
+                // if synapse information exists
+                if (properties[i]->get_data().length() != 0) {
+                    unsigned long long* val_array = (unsigned long long*) properties[i]->get_raw();
+                    unsigned long long synapse_count = *val_array;
+                    synapse_counts[node->get_node_id()] = synapse_count;
+                    ++val_array;
+                    int num_partners = *val_array;
+                    ++val_array;
+
+                    // load partner constraints
+                    for (int j = 0; j < num_partners; ++j, ++val_array) {
+                        Node_t node2 = *val_array;
+                        RagNode_t* rag_node2 = rag->find_rag_node(node2);
+                        if ((vertices[i].id < node2) && (rag_node2->get_size() > 0)) {
+                            RagEdge_t* edge = rag->find_rag_edge(node, rag_node2);
+                            if (!edge) {
+                                edge = rag->insert_rag_edge(node, rag_node2);
+                                edge->set_weight(1.0);
+                                edge->set_false_edge(true);
+                            }
+                            edge->set_preserve(true);
+                        }
+                    }
+                }
+            }
+            stack.load_saved_synapse_counts(synapse_counts);
+
             // retrieve vertex properties
+            properties.clear();
+            transaction_ids.clear();
             dvid_node.get_properties(options.graph_name, edges, PROB_KEY, properties, transaction_ids);
 
             // update edge weight

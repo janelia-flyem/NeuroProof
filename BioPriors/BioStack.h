@@ -19,6 +19,7 @@ class BioStack : public Stack {
     VolumeLabelPtr create_syn_gt_label_volume();
     void set_synapse_exclusions(const char * synapse_json);    
     void set_synapse_exclusions(std::vector<std::vector<unsigned int> >& synapse_locations_); 
+    void load_saved_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
     void load_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
     void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
 
@@ -37,7 +38,8 @@ class BioStack : public Stack {
   
   private:
     VolumeLabelPtr create_syn_volume(VolumeLabelPtr labelvol);
-
+    
+    std::tr1::unordered_map<Label_t, int> saved_synapse_counts;
     std::vector<std::vector<unsigned int> > synapse_locations; 
 };
 
