@@ -335,24 +335,40 @@ void run_graph_build(BuildOptions& options)
                 } while(!edges.empty());
             }
         }
-      
+
+        // remove 'fake' edges (kept till now since edge size can be non-zero and loaded into dvid)  
+        vector<RagEdge_t*> edges_delete;
+        for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+            if (((*iter)->get_node1()->get_size() == 0) ||
+                    ((*iter)->get_node2()->get_size() == 0) ) {
+                edges_delete.push_back(*iter);
+            } 
+        }
+        for (int i = 0; i < edges_delete.size(); ++i) {
+            stack.get_feature_manager()->remove_edge(edges_delete[i]); 
+            rag->remove_rag_edge(edges_delete[i]);
+        }
+
+        // remove 'fake' vertices
+        vector<RagNode_t*> nodes_delete;
+        for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
+            if ((*iter)->get_size() == 0) {
+                nodes_delete.push_back(*iter);
+            }
+        } 
+        for (int i = 0; i < nodes_delete.size(); ++i) {
+            stack.get_feature_manager()->remove_node(nodes_delete[i]); 
+            rag->remove_rag_node(nodes_delete[i]);
+        }
+          
         // populate graph with saved values in DVID 
         if (options.dvidgraph_load_saved) {
             // delete edges that contain a node with no weight to prevent creating an
             // edge that exists beyond the ROI (should rarely happen)
             vector<libdvid::Edge> edges;
-            vector<RagEdge_t*> edges_delete;
             for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
-                if (((*iter)->get_node1()->get_size() == 0) ||
-                    ((*iter)->get_node2()->get_size() == 0) ) {
-                    edges_delete.push_back(*iter);
-                } else {
-                    edges.push_back(libdvid::Edge((*iter)->get_node1()->get_node_id(),
+                edges.push_back(libdvid::Edge((*iter)->get_node1()->get_node_id(),
                                 (*iter)->get_node2()->get_node_id(), 0));
-                }
-            }
-            for (int i = 0; i < edges_delete.size(); ++i) {
-                rag->remove_rag_edge(edges_delete[i]);
             }
 
             // grab stored size for all vertices
@@ -383,7 +399,7 @@ void run_graph_build(BuildOptions& options)
                 if (node->get_size() == 0) {
                     continue;
                 }
-
+                
                 // if synapse information exists
                 if (properties[i]->get_data().length() != 0) {
                     unsigned long long* val_array = (unsigned long long*) properties[i]->get_raw();
@@ -397,7 +413,7 @@ void run_graph_build(BuildOptions& options)
                     for (int j = 0; j < num_partners; ++j, ++val_array) {
                         Node_t node2 = *val_array;
                         RagNode_t* rag_node2 = rag->find_rag_node(node2);
-                        if ((vertices[i].id < node2) && (rag_node2->get_size() > 0)) {
+                        if (rag_node2 && (vertices[i].id < node2) && (rag_node2->get_size() > 0)) {
                             RagEdge_t* edge = rag->find_rag_edge(node, rag_node2);
                             if (!edge) {
                                 edge = rag->insert_rag_edge(node, rag_node2);
@@ -433,7 +449,7 @@ void run_graph_build(BuildOptions& options)
                 edge->set_weight(*edge_prob); 
             }
         }
-        
+       
         // disable computation of probability if DVID saved values are used 
         if (options.dumpgraph) {
             // load synapses only graph is produced 

@@ -217,7 +217,19 @@ class FeatureMgr {
 
     void remove_node(RagNode_t* node)
     {
-        node_caches.erase(node);
+        if (node_caches.find(node) != node_caches.end()) {
+            std::vector<void*>& node_vec = node_caches[node];
+            assert(node_vec.size() > 0);
+            unsigned int pos = 0;
+            for (int i = 0; i < num_channels; ++i) {
+                vector<FeatureCompute*>& features = channels_features[i];
+                for (int j = 0; j < features.size(); ++j) {
+                    features[j]->delete_cache(node_vec[pos]);
+                    ++pos;
+                } 
+            }
+            node_caches.erase(node);
+        }
     }
 
     void merge_features(RagNode_t* node1, RagNode_t* node2);
