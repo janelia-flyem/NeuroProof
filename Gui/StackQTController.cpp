@@ -192,7 +192,7 @@ void StackQTController::start_training()
         // TODO: allow user to change priority mode (training, body, etc)
         // TODO: compute real probabilities for the edge, looking at everything
         priority_scheduler = new EdgeEditor(*rag, 0.0,0.99,0.0,json_vals_priority);
-	prioirty_scheduler->set_custom_mode(new EdgeRankToufiq(stack_session->get_stack(),
+	priority_scheduler->set_custom_mode(new EdgeRankToufiq(stack_session->get_stack(),
 		*rag, stack_session->get_session_name()));
     }
     

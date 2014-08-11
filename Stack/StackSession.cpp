@@ -3,6 +3,7 @@
 #include "Stack.h"
 #include "../Rag/RagIO.h"
 #include "../EdgeEditor/EdgeEditor.h"
+#include "../FeatureManager/FeatureMgr.h"
 #include <json/json.h>
 #include <json/value.h>
 #include <fstream>

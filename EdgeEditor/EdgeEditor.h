@@ -55,13 +55,21 @@ class LowWeightCombine : public RagNodeCombineAlg {
         if ((!(edge_remove->is_false_edge())) && (weight <= edge_keep->get_weight() && (edge_keep->get_weight() <= 1.0))
                 || (weight > 1.0) ) { 
             edge_keep->set_weight(weight);
-	    Location location = edge_remove->get_property<Location>("location");
-	    edge_keep->set_property("location", location);
+            try {
+                Location location = edge_remove->get_property<Location>("location");
+                edge_keep->set_property("location", location);
+            } catch (...) {
+                //
+            }
 	}
 
 	if (edge_keep->is_false_edge()) {
-		Location location = edge_remove->get_property<Location>("location");
-		edge_keep->set_property("location", location);
+            try {
+                Location location = edge_remove->get_property<Location>("location");
+                edge_keep->set_property("location", location);
+            } catch (...) {
+                //
+            }
 	}
     }
 
