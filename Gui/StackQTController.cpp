@@ -5,6 +5,7 @@
 #include <QTimer>
 #include "../Stack/StackSession.h"
 #include "../EdgeEditor/EdgeEditor.h"
+#include "../EdgeEditor/EdgeRankToufiq.h"
 #include "MessageBox.h"
 #include <QFileDialog>
 #include <QApplication>
@@ -191,7 +192,8 @@ void StackQTController::start_training()
         // TODO: allow user to change priority mode (training, body, etc)
         // TODO: compute real probabilities for the edge, looking at everything
         priority_scheduler = new EdgeEditor(*rag, 0.0,0.99,0.0,json_vals_priority);
-	priority_scheduler->set_splearn_mode(stack_session->get_stack(), stack_session->get_session_name());
+	prioirty_scheduler->set_custom_mode(new EdgeRankToufiq(stack_session->get_stack(),
+		*rag, stack_session->get_session_name()));
     }
     
     training_mode = true;

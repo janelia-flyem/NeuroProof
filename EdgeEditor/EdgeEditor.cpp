@@ -64,7 +64,7 @@ void EdgeEditor::set_orphan_mode(double ignore_size_)
 
 void EdgeEditor::set_custom_mode(EdgeRank* edge_mode_)
 {
-    reinitialize_scheduler();
+    //reinitialize_scheduler(); -- should be enabled but untested
     edge_mode = edge_mode_;
 }
 
@@ -116,12 +116,6 @@ void EdgeEditor::reinitialize_scheduler()
 {
     history_queue.clear();
     num_est_remaining = 0;
-}
-
-void EdgeEditor::set_splearn_mode(BioStack* pstack, string session_name){
-    stack = pstack;
-    
-    edge_mode = new EdgeRankToufiq(stack, rag, session_name);
 }
 
 EdgeEditor::EdgeEditor(Rag_t& rag_, double min_val_,
@@ -338,8 +332,8 @@ boost::tuple<Node_t, Node_t> EdgeEditor::getTopEdge(Location& location)
         if (!status) {
             throw ErrMsg("No edge can be found");
         }
-        Label_t node1 = boost::get<0>(node_pair);
-        Label_t node2 = boost::get<1>(node_pair);
+        Node_t node1 = boost::get<0>(node_pair);
+        Node_t node2 = boost::get<1>(node_pair);
 	
 	//printf("received firstedge: (%d, %d)\n", node1, node2);
         RagEdge_t* edge = rag.find_rag_edge(node1, node2);

@@ -16,12 +16,10 @@
 
 #include "../Rag/RagNodeCombineAlg.h"
 #include "../Rag/Rag.h"
-#include "../Stack/Stack.h"
 #include "NodeSizeRank.h"
 #include "ProbEdgeRank.h"
 #include "OrphanRank.h"
 #include "SynapseRank.h"
-#include "EdgeRankToufiq.h"
 
 #include <vector>
 #include <json/value.h>
@@ -54,10 +52,17 @@ class LowWeightCombine : public RagNodeCombineAlg {
         double weight = edge_remove->get_weight();
         // take the smaller weight except if it is marked with a value
         // over 1.0 which means that it is definitely an edge
-        if ((weight <= edge_keep->get_weight() && (edge_keep->get_weight() <= 1.0))
+        if ((!(edge_remove->is_false_edge())) && (weight <= edge_keep->get_weight() && (edge_keep->get_weight() <= 1.0))
                 || (weight > 1.0) ) { 
             edge_keep->set_weight(weight);
-        }
+	    Location location = edge_remove->get_property<Location>("location");
+	    edge_keep->set_property("location", location);
+	}
+
+	if (edge_keep->is_false_edge()) {
+		Location location = edge_remove->get_property<Location>("location");
+		edge_keep->set_property("location", location);
+	}
     }
 
     void post_node_join(RagNode<unsigned int>* node_keep,
@@ -96,7 +101,6 @@ class EdgeEditor {
     EdgeEditor(Rag_t& rag_, double min_val_, double max_val_,
             double start_val_, Json::Value& json_vals); 
 
-    void set_splearn_mode(BioStack* pstack, string session_name="");
     /*!
      * Write focused proofreading statistics and other configurations
      * to json format.  Assumes that graph will be written (or has been)
@@ -233,8 +237,6 @@ class EdgeEditor {
     */
     bool undo2();
     
-    BioStack* stack;
-
     //! Rag that will be examined with a focused strategy
     Rag_t& rag;
 

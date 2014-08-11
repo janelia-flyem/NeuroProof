@@ -134,8 +134,9 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     endif()
 else ()
     FIND_PACKAGE(PythonLibs)
-    find_package ( cppnetlib 0.11.0 REQUIRED )
-    find_package ( libdvidcpp 0.1.0 REQUIRED )
+    FIND_PACKAGE(Boost)
+    find_package ( cppnetlib 0.11.0)
+    find_package ( libdvidcpp 0.1.0)
     
     if (NOT DISABLE_GUI)
         SET (QT_BUILT TRUE)
@@ -163,7 +164,7 @@ else ()
     set (hdf5_LIBRARIES hdf5 hdf5_hl)
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
-    set (boost_LIBS boost_thread-mt boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
+    set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
     set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ssl crypto)
     
     if (NOT DISABLE_GUI)
@@ -173,6 +174,7 @@ else ()
     
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
     set (PYTHON_EXE "python") 
+
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
@@ -223,7 +225,7 @@ if (NOT DISABLE_GUI)
     add_executable (neuroproof_stack_viewer src/neuroproof_stack_viewer.cpp)
 endif()
 
-add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp)
+add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp Rag/RagIO.cpp Rag/RagUtils.cpp)
 add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/Stack.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -236,7 +238,7 @@ target_link_libraries (neuroproof_create_spgraph ${NEUROPROOF_INT_LIBS} ${NEUROP
 if (NOT DISABLE_GUI)
     target_link_libraries (neuroproof_stack_viewer ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 endif()
-target_link_libraries (NeuroProofPriority ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+target_link_libraries (NeuroProofPriority ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
