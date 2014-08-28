@@ -124,7 +124,14 @@ class Stack : public StackBase {
     int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label_t>& candidate_regions,
         RagPtr gt_rag, std::tr1::unordered_set<Label_t>& labels_matched,
         std::tr1::unordered_set<Label_t>& gtlabels_matched);
-    
+   
+
+    /*!
+     * Find labels that belong to ground truth body.
+    */
+    void get_gt2segs_map(RagPtr gt_rag,
+            std::tr1::unordered_map<Label_t, std::vector<Label_t> >& gt2segs);
+
     /*!
      * Creates a set of labels from a json file and zeros out these labels
      * in the label volume.

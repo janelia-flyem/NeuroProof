@@ -123,7 +123,7 @@ class EdgeEditor {
      * \param ignore_size_ minimum size for an important body
      * \param depth path length considered for node affinity (0=unbounded)
     */ 
-    void set_body_mode(double ignore_size_, int depth);
+    void set_body_mode(double ignore_size_, int depth, double upper=0.9);
     
     /*!
      * Set focused algorithm/strategy to look at bodies not touching
@@ -147,7 +147,7 @@ class EdgeEditor {
      * annotations with the unertainty value.
      * \param ignore_size_ minimum number of synapses in an important body
     */
-    void set_synapse_mode(double ignore_size_);
+    void set_synapse_mode(double ignore_size_, double upper=0.9);
 
     /*!
      * Find the number of edges that need to be examined (or an estimate).

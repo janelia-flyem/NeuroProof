@@ -437,6 +437,7 @@ double find_affinity_path(Rag_t& rag, RagNode_t* rag_node_head, RagNode_t* rag_n
     } else {
         return iter->weight;
     }
+    //return int(-1*log(iter->weight)/log(2.0)+0.5);
 }
 
 }

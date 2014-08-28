@@ -35,21 +35,21 @@ vector<Node_t> EdgeEditor::getQAViolators(unsigned int threshold)
     return violators;
 }
 
-void EdgeEditor::set_synapse_mode(double ignore_size_)
+void EdgeEditor::set_synapse_mode(double ignore_size_, double upper)
 {
     reinitialize_scheduler();
 
     ignore_size = ignore_size_;
-    synapse_edge_mode->initialize(ignore_size_);
+    synapse_edge_mode->initialize(ignore_size_, upper);
     edge_mode = synapse_edge_mode;
 }
 
-void EdgeEditor::set_body_mode(double ignore_size_, int depth)
+void EdgeEditor::set_body_mode(double ignore_size_, int depth, double upper)
 {
     reinitialize_scheduler();
     
     ignore_size = ignore_size_;
-    body_edge_mode->initialize(ignore_size_, depth);
+    body_edge_mode->initialize(ignore_size_, depth, upper);
     edge_mode = body_edge_mode;
 }
 

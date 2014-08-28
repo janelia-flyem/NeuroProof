@@ -404,6 +404,33 @@ int Stack::absorb_small_regions(VolumeProbPtr boundary_pred,
     return num_removed;
 }
 
+void Stack::get_gt2segs_map(RagPtr gt_rag, unordered_map<Label_t, vector<Label_t> >& gt2segs)
+{
+    gt2segs.clear();
+    compute_contingency_table();
+
+    for(unordered_map<Label_t, vector<LabelCount> >::iterator mit = contingency.begin();
+            mit != contingency.end(); ++mit){
+        Label_t i = mit->first;
+        vector<LabelCount>& gt_vec = mit->second; 	
+        unsigned long long largest_size = 0;
+        Label_t matched_label = 0;
+
+        for (int j=0; j< gt_vec.size();j++){
+            unsigned long long gt_size = gt_vec[j].count;
+            if (gt_size > largest_size) {
+                largest_size = gt_size;
+                matched_label = gt_vec[j].lbl;
+            }
+        }
+
+        if (matched_label != 0) {
+            gt2segs[matched_label].push_back(i);
+        }
+    }
+}
+
+
 // TODO: keep gt rag with gt_labelvol 
 int Stack::match_regions_overlap(Label_t label,
         unordered_set<Label_t>& candidate_regions, RagPtr gt_rag,

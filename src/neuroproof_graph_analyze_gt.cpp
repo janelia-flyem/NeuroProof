@@ -48,7 +48,9 @@
 #include <iostream>
 #include <json/json.h>
 #include <json/value.h>
+#include <map>
 
+using std::multimap;
 using std::cerr; using std::cout; using std::endl;
 using std::ifstream;
 using std::string;
@@ -227,6 +229,17 @@ int num_synapse_errors(BioStack& stack, int threshold, int& total_synapse_errors
     return synapse_body_errors;
 }
 
+double calc_voi_change(double size1, double size2,
+        unsigned long long total_volume)
+{
+    double part1 = log(size1/total_volume)/log(2.0)*size1/total_volume + 
+        log(size2/total_volume)/log(2.0)*size2/total_volume;
+    double part2 = log((size1 + size2)/total_volume)/
+                    log(2.0)*(size1 + size2)/total_volume;
+    double part3 = -1 * (part1 - part2);
+    return part3;
+}
+
 /*!
  * Helper function for determining the number of segmentation
  * violations with respect to the node/region size or morphology.
@@ -292,6 +305,7 @@ void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
  * \param stack segmentation stack
  * \param threshold VI threshold below which labels are not printed
 */
+//void dump_vi_differences(Stack& stack, double threshold, RagPtr gt_rag)
 void dump_vi_differences(Stack& stack, double threshold)
 {
     double merge, split;
@@ -322,9 +336,12 @@ void dump_vi_differences(Stack& stack, double threshold)
     for (multimap<double, Label_t>::reverse_iterator iter = gt_ranked.rbegin();
             iter != gt_ranked.rend(); ++iter) {
         if (split < threshold) {
+            //continue;
             break;
         }
-        cout << iter->second << " " << iter->first << endl;
+        //if (gt_rag->find_rag_node(iter->second)->get_size() > 101500) {
+            cout << iter->second << " " << iter->first << endl;
+        //}
         split -= iter->first;
     }
     cout << endl; 
@@ -351,6 +368,8 @@ void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
     int num_exclusions = 0;
     RagPtr rag = stack.get_rag();
     LowWeightCombine join_alg;
+    double edge_size = 0.0;
+
 
     while (!priority_scheduler.isFinished()) {
         EdgeEditor::Location location;
@@ -361,6 +380,8 @@ void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
         Label_t node1 = boost::get<0>(pair);
         Label_t node2 = boost::get<1>(pair);
         RagEdge_t* temp_edge = opt_rag->find_rag_edge(node1, node2);
+        edge_size += temp_edge->get_size();
+
         double weight = temp_edge->get_weight();
       
         bool merged = false;
@@ -382,6 +403,8 @@ void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
         }
         ++num_examined;
     }
+
+    //cout << "Average edge size: " << edge_size / num_examined << endl;
 }
 
 /*!
@@ -602,6 +625,7 @@ void run_body(EdgeEditor& priority_scheduler, Json::Value json_vals,
     unsigned int path_length = json_vals.get("path-length", 0).asUInt();
     // body size threshold for examining
     unsigned int threshold = json_vals.get("threshold", 25000).asUInt();
+    double upper = json_vals.get("upper-prob", 0.99).asDouble();
     // not being used currently
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
@@ -612,7 +636,7 @@ void run_body(EdgeEditor& priority_scheduler, Json::Value json_vals,
     cout << endl << "Starting body mode with threshold " << threshold << " and path length "
         << path_length << endl;
 
-    priority_scheduler.set_body_mode(threshold, path_length);
+    priority_scheduler.set_body_mode(threshold, path_length, upper);
 
     get_num_edits(priority_scheduler, stack, synapse_stack, opt_rag,
             num_modified, num_examined, use_exclusions); 
@@ -639,6 +663,7 @@ void run_synapse(EdgeEditor& priority_scheduler, Json::Value json_vals,
 {
     // synapse connectivity threshold
     double threshold = json_vals.get("threshold", 0.1).asDouble();
+    double upper = json_vals.get("upper-prob", 0.99).asDouble();
     // not being used currently
     bool use_exclusions = json_vals.get("use-body-exclusions", false).asBool(); 
     num_modified = 0;
@@ -648,7 +673,7 @@ void run_synapse(EdgeEditor& priority_scheduler, Json::Value json_vals,
 
     cout << endl << "Starting synapse mode with threshold " << threshold << endl;
 
-    priority_scheduler.set_synapse_mode(threshold);
+    priority_scheduler.set_synapse_mode(threshold, upper);
 
     get_num_edits(priority_scheduler, stack, synapse_stack, opt_rag,
             num_modified, num_examined, use_exclusions); 
@@ -747,6 +772,49 @@ void set_rag_probs(Stack& stack, RagPtr rag) {
         }
     }
 }
+
+void print_uncertainty_distribution(Stack& stack, RagPtr rag)
+{
+    int precision = 100;
+    vector<int> merge_count(precision+1, 0);
+    vector<int> split_count(precision+1, 0);
+
+    for (Rag_t::edges_iterator iter = rag->edges_begin();
+            iter != rag->edges_end(); ++iter) {
+        int val = stack.find_edge_label((*iter)->get_node1()->get_node_id(),
+                (*iter)->get_node2()->get_node_id()); 
+        double weight = (*iter)->get_weight();
+        int bin = int(weight * precision + 0.5) % (precision+1);
+
+        if (val == -1) {
+            merge_count[bin] += 1; 
+        } else {
+            split_count[bin] += 1; 
+        }
+
+    }
+
+    // dump bins
+    for (int i = 0; i <= precision; ++i) {
+        cout << "Bin: " << i << ", merge: " << merge_count[i] << ", split: " << split_count[i] << endl;
+    }
+
+    // dump cumulative distribution
+    int total_split = 0;
+    double total_ideal = 0;
+    for (int i = 0; i <= precision; ++i) {
+        total_split += split_count[i];
+
+        // find how many in the bucket
+        int temp_total = split_count[i] + merge_count[i]; 
+        total_ideal += (temp_total * double(i)/precision);
+        
+        cout << "Prob: " << i << ", " << total_split << ", " << total_ideal << endl;
+    }
+
+}
+
+
 
 /*!
  * Runs a recipe created in a json file that specifies which types
@@ -861,6 +929,92 @@ void run_recipe(string recipe_filename, BioStack& stack,
 
 }
 
+void print_synapse_violations(const char* synapse_json, VolumeLabelPtr labels, VolumeLabelPtr gtlabels)
+{
+    unsigned int ysize = labels->shape(1);
+    Json::Reader json_reader;
+    Json::Value json_reader_vals;
+    
+    ifstream fin(synapse_json);
+    if (!fin) {
+        throw ErrMsg("Error: input file: " + string(synapse_json) + " cannot be opened");
+    }
+    if (!json_reader.parse(fin, json_reader_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+ 
+    Json::Value synapses = json_reader_vals["data"];
+
+    // violations are false mergers; false violations is a merge that the seg wouldn't do
+    int total_violations = 0;
+    int true_violations = 0;
+    int total_tsynapses = 0;
+    int total_tvio = 0;
+    int total_pairs = 0;
+    int total_gtmerges = 0;
+
+    for (int i = 0; i < synapses.size(); ++i) {
+        vector<vector<unsigned int> > locations;
+        Json::Value location = synapses[i]["T-bar"]["location"];
+        ++total_tsynapses;
+        if (!location.empty()) {
+            vector<unsigned int> loc;
+            loc.push_back(location[(unsigned int)(0)].asUInt());
+            loc.push_back(ysize - location[(unsigned int)(1)].asUInt() - 1);
+            loc.push_back(location[(unsigned int)(2)].asUInt());
+            locations.push_back(loc);
+        }
+        Json::Value psds = synapses[i]["partners"];
+        for (int i = 0; i < psds.size(); ++i) {
+            Json::Value location = psds[i]["location"];
+            if (!location.empty()) {
+                vector<unsigned int> loc;
+                loc.push_back(location[(unsigned int)(0)].asUInt());
+                loc.push_back(ysize - location[(unsigned int)(1)].asUInt() - 1);
+                loc.push_back(location[(unsigned int)(2)].asUInt());
+                locations.push_back(loc);
+            }
+        }
+
+        bool violation = false;
+        for (int iter1 = 0; iter1 < locations.size(); ++iter1) {
+            ++total_pairs;
+            for (int iter2 = (iter1 + 1); iter2 < locations.size(); ++iter2) {
+                
+                Label_t body1 = (*labels)(locations[iter1][0], locations[iter1][1], locations[iter1][2]);
+                Label_t gtbody1 = (*gtlabels)(locations[iter1][0], locations[iter1][1], locations[iter1][2]);
+                Label_t body2 = (*labels)(locations[iter2][0], locations[iter2][1], locations[iter2][2]);
+                Label_t gtbody2 = (*gtlabels)(locations[iter2][0], locations[iter2][1], locations[iter2][2]);
+                if (body1 == body2) {
+                    ++total_violations;
+                    if (gtbody1 != gtbody2) {
+                        violation = true;
+                        cout << "Vio: " << body1 << endl;
+                        ++true_violations;
+                    }
+                }
+                if (gtbody1 == gtbody2) {
+                    ++total_gtmerges;
+                }
+
+            }
+        }
+        if (violation) {
+            ++total_tvio;
+        }
+    }
+
+    cout << "Total constraint violations: " << total_violations << endl;
+    cout << "Total true violations: " << true_violations << endl;
+    cout << "Total gt false violations: " << total_gtmerges << endl;
+    cout << "Total possible constraints: " << total_pairs << endl;
+    cout << "Total tbars: " << total_tsynapses << endl;
+    cout << "Total tbars with true violation: " << total_tvio << endl;
+}
+
+
+
 /*!
  * Main function that calls into the various functions that
  * analyze the segmentation with respect to the ground truth.
@@ -893,6 +1047,9 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     cout << "Built seg RAG" << endl;
     stack.compute_groundtruth_assignment();
 
+    // evaluate synapse violations
+    //print_synapse_violations(options.synapse_filename.c_str(), seg_labels, gt_labels);
+
     if (options.graph_filename != "") {
         // TODO: rag utility that implements prob load from file
         // use previously generated probs
@@ -913,10 +1070,176 @@ void run_analyze_gt(AnalyzeGTOptions& options)
                 edge->set_weight(prob);
             }
         }
+
+        /*
+        RagPtr seg_rag2 = stack.get_rag();
+        for (Rag_t::edges_iterator iter = seg_rag2->edges_begin();
+                iter != seg_rag2->edges_end(); ++iter) {
+            int weight = rand()%101;
+            (*iter)->set_weight(weight/100.0);
+        }*/
+
+        // dump probs
+        //print_uncertainty_distribution(stack, stack.get_rag());
     } else {
         // use optimal probs
         set_rag_probs(stack, stack.get_rag());
     }
+
+#if 0
+    RagPtr gt_rag2 = gt_stack.get_rag();
+    for (Rag_t::nodes_iterator iter = gt_rag2->nodes_begin();
+            iter != gt_rag2->nodes_end(); ++iter) {
+        cout  << "GT size: " << (*iter)->get_size() << endl;
+    }
+    exit(1);
+#endif
+
+#if 0
+    // ------------- check how reasonable the segmentation is ----------------------
+    cout << "Checking segmentation reasonableness..." << endl;
+    RagPtr gt_rag = gt_stack.get_rag();
+    unordered_map<Label_t, vector<Label_t> > gt2segs;
+    stack.get_gt2segs_map(gt_rag, gt2segs);
+    int threshold2 = 55000; // 55756 gives us 90 percent coverage on the gt side
+    int threshold3 = 105000; // 105467 gives us 90 percent coverage on the gt side (minimize border bodies)
+    int threshold = 25000;
+    int num_big_bodies = 0;
+    
+    unordered_map<Label_t, int> max_depth;
+    unordered_map<Label_t, double> max_prob_depth;
+    RagPtr seg_rag2 = stack.get_rag();
+
+   
+    /* 
+    unsigned long long volume_size = gt_rag->get_rag_size();
+    vector<unsigned long long> sizes;
+    for (Rag_t::nodes_iterator iter = gt_rag->nodes_begin();
+            iter != gt_rag->nodes_end(); ++iter) {
+        sizes.push_back((*iter)->get_size());
+    }
+    sort(sizes.begin(), sizes.end());
+    unsigned long long accum = 0;
+    unsigned long long accum_thres = (unsigned long long)(volume_size * 0.90);
+    for (int i = sizes.size()-1; i>=0; --i) {
+        accum += sizes[i];
+        if (accum > accum_thres) {
+            cout << "GT size threshold: " << sizes[i] << endl;
+            break;
+        }
+    }
+    cout << "Total size: " << volume_size << endl;
+    */
+    unordered_map<Label_t, unsigned long long> gt_count;
+    unsigned long long volume_size = 0; 
+    
+    volume_forXYZ(*gt_labels, x, y, z) {
+        Label_t label = (*gt_labels)(x,y,z); 
+        if (!label) {
+            continue;
+        }
+        if (x < 150 || y < 150 || z < 150) {
+            continue;
+        }
+        if (x > 350 || y > 350 || z > 350) {
+            continue;
+        }
+        ++volume_size;
+        gt_count[label]++;
+    }
+    unsigned long long accum_thres = (unsigned long long)(volume_size * 0.90);
+    unsigned long long accum = 0;
+
+    multimap<unsigned long long, Label_t> sizes;
+    for (unordered_map<Label_t, unsigned long long>::iterator iter = gt_count.begin();
+            iter != gt_count.end(); ++iter) {
+        sizes.insert(std::make_pair(gt_rag->find_rag_node(iter->first)->get_size(), iter->first));
+    }
+
+    for (multimap<unsigned long long, Label_t>::reverse_iterator iter = sizes.rbegin();
+            iter != sizes.rend(); ++iter) {
+        accum += gt_count[iter->second];
+        if (accum > accum_thres) {
+            cout << "GT size threshold: " << iter->first << endl;
+            break;
+        }
+    }
+
+
+
+    for (int m = 1000; m <= 25000; m+=1000) {
+    int num_bad_bodies = 0;
+    num_big_bodies = 0;
+    threshold = m;
+    
+
+    
+    for (unordered_map<Label_t, vector<Label_t> >::iterator iter = gt2segs.begin();
+            iter != gt2segs.end(); ++iter) {
+        if (gt_rag->find_rag_node(iter->first)->get_size() < 105000) {
+            continue;
+        }
+        ++num_big_bodies;
+        vector<Label_t>& segs = iter->second;
+        unsigned long long total_good = 0;
+        unsigned long long total_bad = 0;
+        for (int i = 0; i < segs.size(); ++i) {
+            if (seg_rag2->find_rag_node(segs[i])->get_size() > threshold) {
+                total_good += seg_rag2->find_rag_node(segs[i])->get_size();
+            } else {
+                total_bad += seg_rag2->find_rag_node(segs[i])->get_size();
+            }
+        }        
+        //cout << segs.size() << " " << total_good/double(total_good+total_bad)*100 << endl;
+
+        if (total_bad > 25000) {
+            ++num_bad_bodies;
+        }
+
+        /*
+        if (segs.size() == 1) {
+            max_prob_depth[iter->first] = 1;
+            max_depth[iter->first] = 0;
+            continue;
+        }
+    
+        // iterate all segs and get maximum depth and minimum prob    
+        max_prob_depth[iter->first] = 0;
+        for (int i = 0; i < segs.size(); ++i) {
+            for (int j = i+1; j < segs.size(); ++j) {
+                double prob = find_affinity_path(*seg_rag2, seg_rag2->find_rag_node(segs[i]),
+                        seg_rag2->find_rag_node(segs[j]));
+
+                //if (prob < max_prob_depth[iter->first]) {
+                //    max_prob_depth[iter->first] += (prob/((segs.size()-1)*(segs.size())/2));
+                //}
+                
+                //if (prob > max_prob_depth[iter->first]) {
+                    max_prob_depth[iter->first] += (prob/((segs.size()-1)*(segs.size())/2));
+                //}
+
+            }
+        }*/
+
+        //cout << segs.size() << " " << max_prob_depth[iter->first] << endl;
+    }
+    cout << "Number of bad bodies: " << num_bad_bodies << endl;
+    cout << "Percentage of bad bodies: " << num_bad_bodies/double(num_big_bodies)*100 << ", threshold: " << m << endl;
+    }
+
+    cout << "Number of big bodies: " << num_big_bodies << endl;
+    /*int precision = 100;
+    vector<int> prob_count(precision+1, 0);
+    for (unordered_map<Label_t, double>::iterator iter = max_prob_depth.begin();
+           iter != max_prob_depth.end(); ++iter) {
+        prob_count[int(iter->second * precision + 0.5) % precision+1] += 1;
+    } 
+    for (int i = 0; i <= precision; ++i) {
+        cout << "Prob connected: " << i << " " << prob_count[i] << endl;
+    }*/
+
+    // -------------  end check how reasonable the segmentation is ----------------------
+#endif
 
     // create ground truth assignments to be maintained with rag
     RagPtr seg_rag = stack.get_rag();
@@ -991,13 +1314,39 @@ void run_analyze_gt(AnalyzeGTOptions& options)
                 gt_stack, rag_comp, options);
     }
 
+    // biologically important change
+//    double voi_change_thres = calc_voi_change(25000, 101500, seg_rag->get_rag_size());
+//    RagPtr gt_rag = gt_stack.get_rag();
+
     // dump final list of bad bodies if option is specified 
     if (options.dump_split_merge_bodies) {
         cout << "Showing body VI differences" << endl;
         dump_vi_differences(stack, options.vi_threshold);
+        //dump_vi_differences(stack, voi_change_thres, gt_rag);
         if (options.synapse_filename != "") {
             cout << "Showing synapse body VI differences" << endl;
             dump_vi_differences(synapse_stack, options.vi_threshold);
+           
+#if 0 
+            unsigned long long volume_size = 0;
+            // designate the number of synapse annotations as being a node's size
+            for (Rag_t::nodes_iterator iter = seg_rag->nodes_begin();
+                    iter != seg_rag->nodes_end(); ++iter) {
+                unsigned long long synapse_weight = 0;
+                try {   
+                    synapse_weight = (*iter)->get_property<unsigned long long>("synapse_weight");
+                } catch(...) {
+                    //
+                }
+                if (synapse_weight == 0) {
+                    continue;
+                }
+
+                volume_size += synapse_weight;
+            }
+            double voi_change_thres = calc_voi_change(0.1, 0.1, volume_size);
+            dump_vi_differences(synapse_stack, voi_change_thres, gt_rag);
+#endif
         }
     }
 }

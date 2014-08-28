@@ -22,6 +22,7 @@
  * of data and imaging resolutions.
 */
 #define BIGBODY10NM 25000
+//#define BIGBODY10NM 101500
 
 namespace NeuroProof {
 

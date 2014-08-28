@@ -39,7 +39,7 @@ class SynapseRank : public NodeCentricRank {
      * \param ignore_size threshold used to determine importance of a node
      * \param depth maximum path length in affinity analysis (0 is unbounded)
     */
-    void initialize(double ignore_size);
+    void initialize(double ignore_size, double upper);
     
     /*!
      * Determine the name of a given derived class.
@@ -79,6 +79,9 @@ class SynapseRank : public NodeCentricRank {
   private:
     //! threshold used to determine whether a node is important
     double ignore_size;
+    
+    //! probability threshold
+    double connection_limit;
     
     //! threshold for information change above which the path is examined
     double voi_change_thres;

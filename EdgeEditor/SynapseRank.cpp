@@ -3,11 +3,12 @@
 
 using namespace NeuroProof;
 
-void SynapseRank::initialize(double ignore_size_)
+void SynapseRank::initialize(double ignore_size_, double upper)
 {
     ignore_size = ignore_size_;
     volume_size = 0;
-    
+    connection_limit = upper;
+
     node_list.clear(); 
 
     // designate the number of synapse annotations as being a node's size
@@ -39,7 +40,7 @@ void SynapseRank::initialize(double ignore_size_)
 RagNode_t* SynapseRank::find_most_uncertain_node(RagNode_t* head_node)
 {
     AffinityPair::Hash affinity_pairs;
-    grab_affinity_pairs(*rag, head_node, 0, 0.01, true, affinity_pairs);
+    grab_affinity_pairs(*rag, head_node, 0, 1.0-connection_limit, true, affinity_pairs);
     double biggest_change = -1.0;
     double total_information_affinity = 0.0;
     RagNode_t* strongest_affinity_node = 0;
@@ -107,7 +108,7 @@ void SynapseRank::update_neighboring_nodes(Node_t keep_node)
 {
     RagNode_t* head_node = rag->find_rag_node(keep_node);
     AffinityPair::Hash affinity_pairs;
-    grab_affinity_pairs(*rag, head_node, 0, 0.01, true, affinity_pairs);
+    grab_affinity_pairs(*rag, head_node, 0, 1.0-connection_limit, true, affinity_pairs);
 
     // reinsert all nodes with synapse annotations that could have
     // been affected by a change in the RAG

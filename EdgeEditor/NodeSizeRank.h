@@ -41,7 +41,7 @@ class NodeSizeRank : public NodeCentricRank {
      * \param ignore_size size below which nodes are ignored
      * \param depth maximum path length in affinity analysis (0 is unbounded)
     */
-    void initialize(double ignore_size, unsigned int depth);
+    void initialize(double ignore_size, unsigned int depth, double upper);
 
     /*!
      * Determine the name of a given derived class.
@@ -81,6 +81,9 @@ class NodeSizeRank : public NodeCentricRank {
   private:
     //! size below which nodes are not examined
     double ignore_size;
+
+    //! probability threshold
+    double connection_limit;
 
     //! threshold for information change above which the path is examined
     double voi_change_thres;

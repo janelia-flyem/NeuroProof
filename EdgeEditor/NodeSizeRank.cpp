@@ -4,12 +4,13 @@
 
 using namespace NeuroProof;
 
-void NodeSizeRank::initialize(double ignore_size_, unsigned int depth_)
+void NodeSizeRank::initialize(double ignore_size_, unsigned int depth_, double upper)
 {
     ignore_size = ignore_size_;
     depth = depth_;
     volume_size = rag->get_rag_size();
     // hack: BIGBODY10NM represents the 'smallest' allowable volume
+    connection_limit = upper;
     voi_change_thres = calc_voi_change(BIGBODY10NM, ignore_size, volume_size);
     node_list.clear(); 
 
@@ -29,7 +30,7 @@ void NodeSizeRank::initialize(double ignore_size_, unsigned int depth_)
 RagNode_t* NodeSizeRank::find_most_uncertain_node(RagNode_t* head_node)
 {
     AffinityPair::Hash affinity_pairs;
-    grab_affinity_pairs(*rag, head_node, depth, 0.01, true, affinity_pairs);
+    grab_affinity_pairs(*rag, head_node, depth, 1.0-connection_limit, true, affinity_pairs);
     double biggest_change = -1.0;
     double total_information_affinity = 0.0;
     RagNode_t* strongest_affinity_node = 0;
@@ -77,7 +78,7 @@ void NodeSizeRank::update_neighboring_nodes(Node_t keep_node)
 {
     RagNode_t* head_node = rag->find_rag_node(keep_node);
     AffinityPair::Hash affinity_pairs;
-    grab_affinity_pairs(*rag, head_node, depth, 0.01, true, affinity_pairs);
+    grab_affinity_pairs(*rag, head_node, depth, 1.0-connection_limit, true, affinity_pairs);
 
     // reinsert all nodes that may have been affected
     // by a change in the RAG
