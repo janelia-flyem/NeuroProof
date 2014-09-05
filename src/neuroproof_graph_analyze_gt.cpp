@@ -39,6 +39,11 @@
 // utitlies for parsing options
 #include "../Utilities/OptionParser.h"
 
+// for interacting with analyze service
+#include <boost/network/protocol/http/client.hpp>
+
+#include <libdvid/BinaryData.h>
+
 #include "../Rag/RagUtils.h"
 
 #include <vector>
@@ -95,8 +100,8 @@ struct AnalyzeGTOptions
     AnalyzeGTOptions(int argc, char** argv) : gt_dilation(1), seg_dilation(0),
     dump_split_merge_bodies(false), dump_orphans(false), vi_threshold(0.02), synapse_filename(""),
     clear_synapse_exclusions(false), body_error_size(25000), synapse_error_size(1),
-    graph_filename(""), exclusions_filename(""), recipe_filename(""), min_filter_size(0),
-    random_seed(1) 
+    graph_filename(""), callback_uri(""), exclusions_filename(""), recipe_filename(""),
+    min_filter_size(0), random_seed(1) 
     {
         OptionParser parser("Program analyzes a segmentation graph with respect to ground truth");
 
@@ -133,6 +138,8 @@ struct AnalyzeGTOptions
                 "json file that specifies editing operations to be performed automatically"); 
         parser.add_option(min_filter_size, "filter-size",
                 "body size filter below which bodies are ignored in VI computation -- should not run with synapse VI"); 
+        parser.add_option(callback_uri, "callback-uri",
+                "URI to post JSON results"); 
     
         // invisible arguments
         parser.add_option(random_seed, "random-seed",
@@ -182,6 +189,9 @@ struct AnalyzeGTOptions
     */ 
     string graph_filename; 
    
+    //! uri to post json results
+    string callback_uri;
+
     string exclusions_filename; //! file that contains all bodies to ignore
      
     /*!
@@ -306,7 +316,7 @@ void load_orphans(BioStack& stack, unordered_set<Label_t>& orphans,
  * \param threshold VI threshold below which labels are not printed
 */
 //void dump_vi_differences(Stack& stack, double threshold, RagPtr gt_rag)
-void dump_vi_differences(Stack& stack, double threshold)
+void dump_vi_differences(Stack& stack, double threshold, Json::Value& json_data)
 {
     double merge, split;
     multimap<double, Label_t> label_ranked;
@@ -315,11 +325,15 @@ void dump_vi_differences(Stack& stack, double threshold)
 
     cout << "Dumping VI differences to threshold: " << threshold << " where MergeSplit: ("
         << merge << ", " << split << ")" << endl;
+    
+    json_data["underseg-vi"] = merge;
+    json_data["overseg-vi"] = split;
 
     double totalS = 0.0;
     double totalG = 0.0;
     // print undersegmented regions in the segmentation graph
     cout << endl << "******Seg Merged Bodies*****" << endl;
+    unsigned int lnum = 0;
     for (multimap<double, Label_t>::reverse_iterator iter = label_ranked.rbegin();
             iter != label_ranked.rend(); ++iter) {
         if (merge < threshold) {
@@ -327,12 +341,16 @@ void dump_vi_differences(Stack& stack, double threshold)
         }
         cout << iter->second << " " << iter->first << endl;
         merge -= iter->first;
+        json_data["underseg-label"][lnum] = iter->second;
+        json_data["underseg-val"][lnum] = iter->first;
+        ++lnum;
     }
     cout << endl; 
 
     // print undersegmented region in the groundtruth graph
     // (oversegmentation in the segmentation compared to the groundtruth)
     cout << endl << "******GT Merged Bodies*****" << endl;
+    lnum = 0;
     for (multimap<double, Label_t>::reverse_iterator iter = gt_ranked.rbegin();
             iter != gt_ranked.rend(); ++iter) {
         if (split < threshold) {
@@ -343,6 +361,9 @@ void dump_vi_differences(Stack& stack, double threshold)
             cout << iter->second << " " << iter->first << endl;
         //}
         split -= iter->first;
+        json_data["overseg-label"][lnum] = iter->second;
+        json_data["overseg-val"][lnum] = iter->first;
+        ++lnum;
     }
     cout << endl; 
 } 
@@ -419,7 +440,7 @@ void get_num_edits(EdgeEditor& priority_scheduler, Stack& stack,
  * \param options program options
 */
 void dump_differences(BioStack& stack, Stack& synapse_stack,
-        BioStack& gt_stack, RagPtr opt_rag, AnalyzeGTOptions& options)
+        BioStack& gt_stack, RagPtr opt_rag, AnalyzeGTOptions& options, Json::Value& json_data)
 {
     RagPtr seg_rag = stack.get_rag();
     RagPtr gt_rag = gt_stack.get_rag();
@@ -435,6 +456,9 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     stack.compute_vi(merge, split);
     cout << "MergeSplit: (" << merge << ", " << split << ")" << endl; 
 
+    json_data["vol"]["underseg-vi"] = merge;
+    json_data["vol"]["overseg-vi"] = split;
+
     // find body errors
     int body_errors = num_body_errors(stack, options.body_error_size);
     cout << "Number of orphan bodies with more than " << options.body_error_size << 
@@ -445,9 +469,12 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
         synapse_stack.compute_vi(merge, split);
         cout << "MergeSplit: (" << merge << ", " << split << ")" << endl; 
 
+        json_data["syn"]["underseg-vi"] = merge;
+        json_data["syn"]["overseg-vi"] = split;
         // find synapse errors
         int total_orphan_synapse = 0; 
         int synapse_errors = num_synapse_errors(stack, options.synapse_error_size, total_orphan_synapse); 
+        json_data["syn"]["orphans"] = total_orphan_synapse;
         cout << "Number of orphan bodies with at least " << options.synapse_error_size << 
             " synapse annotations : " << synapse_errors << "; total number of orphan synapses (Tbar or PSD): "
             << total_orphan_synapse << endl;   
@@ -835,7 +862,7 @@ void print_uncertainty_distribution(Stack& stack, RagPtr rag)
 */
 void run_recipe(string recipe_filename, BioStack& stack,
         Stack& synapse_stack, BioStack& gt_stack,
-        RagPtr opt_rag, AnalyzeGTOptions& options)
+        RagPtr opt_rag, AnalyzeGTOptions& options, Json::Value& json_data)
 {
     // open json file
     Json::Reader json_reader;
@@ -904,16 +931,20 @@ void run_recipe(string recipe_filename, BioStack& stack,
         int num_modified2 = 0;
         if (type == "body") {
             run_body(priority_scheduler, operation, stack, synapse_stack,
-                    opt_rag, num_modified2, num_examined2); 
+                    opt_rag, num_modified2, num_examined2);
+            json_data["vol"]["edges-examined"] = num_examined2; 
         } else if (type == "synapse") {
             run_synapse(priority_scheduler, operation, stack, synapse_stack,
                     opt_rag, num_modified2, num_examined2); 
+            json_data["syn"]["edges-examined"] = num_examined2; 
         } else if (type == "edge") {
             run_edge(priority_scheduler, operation, stack, synapse_stack,
                     opt_rag, num_modified2, num_examined2); 
+            json_data["edge"]["edges-examined"] = num_examined2; 
         } else if (type == "orphan") {
             run_orphan(priority_scheduler, operation, stack, synapse_stack,
                     opt_rag, num_modified2, num_examined2); 
+            json_data["orphan"]["edges-examined"] = num_examined2; 
         } else {
             throw ErrMsg("Unknow operation type: " + type);
         } 
@@ -921,7 +952,9 @@ void run_recipe(string recipe_filename, BioStack& stack,
          
         num_examined += num_examined2; 
         num_modified += num_modified2; 
-        dump_differences(stack, synapse_stack, gt_stack, opt_rag, options);
+    
+        Json::Value current_status;
+        dump_differences(stack, synapse_stack, gt_stack, opt_rag, options, current_status);
     } 
 
     cout << "Total edges examined: " << num_examined << endl;
@@ -1013,7 +1046,25 @@ void print_synapse_violations(const char* synapse_json, VolumeLabelPtr labels, V
     cout << "Total tbars with true violation: " << total_tvio << endl;
 }
 
+void load_json(string uri, Json::Value& json_data, boost::network::http::client& request_client)
+{
+    if (uri == "") {
+        return; 
+    }
+    boost::network::http::client::request requestobj(uri);
+    requestobj << boost::network::header("Connection", "close");
 
+    stringstream datastr;
+    datastr << json_data;
+    libdvid::BinaryDataPtr value = 
+        libdvid::BinaryData::create_binary_data(datastr.str().c_str(), datastr.str().length());
+    boost::network::http::client::response respdata = request_client.post(requestobj,
+            value->get_data(), string("application/octet-stream"));
+    int status_code = status(respdata);
+    if (status_code != 200) {
+        throw ErrMsg(body(respdata));
+    }
+}
 
 /*!
  * Main function that calls into the various functions that
@@ -1022,6 +1073,12 @@ void print_synapse_violations(const char* synapse_json, VolumeLabelPtr labels, V
 */
 void run_analyze_gt(AnalyzeGTOptions& options)
 {
+    clock_t initial_time = clock();
+    boost::network::http::client request_client;
+    Json::Value status_json;
+    status_json["status"] = "Loading label volumes";
+    load_json(options.callback_uri, status_json, request_client);
+    
     //seg_filename, groundtruth_filename 
     VolumeLabelPtr seg_labels = VolumeLabelData::create_volume(
             options.seg_filename.c_str(), SEG_DATASET_NAME);
@@ -1034,6 +1091,9 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     if (seg_labels->shape() != gt_labels->shape()) {
         throw ErrMsg("Mismatch in dimension sizes");
     }
+    
+    status_json["status"] = "Analyzing similarities";
+    load_json(options.callback_uri, status_json, request_client);
 
     // create GT stack to get GT rag
     BioStack gt_stack(gt_labels);
@@ -1292,7 +1352,9 @@ void run_analyze_gt(AnalyzeGTOptions& options)
         cout << "Created seg 0 boundaries" << endl;
     }        
 
-    dump_differences(stack, synapse_stack, gt_stack, rag_comp, options);
+    Json::Value initial_status;
+    dump_differences(stack, synapse_stack, gt_stack, rag_comp, options, initial_status);
+    status_json["start"] = initial_status;
 
     // find gt body errors
     int body_errors = num_body_errors(gt_stack, options.body_error_size);
@@ -1307,11 +1369,16 @@ void run_analyze_gt(AnalyzeGTOptions& options)
             " synapse annotations : " << synapse_errors << "; total number of orphan synapses (Tbar or PSD): "
             << total_orphan_synapse << endl;   
     }
+    
+    status_json["status"] = "Performing automatic proofreading";
+    load_json(options.callback_uri, status_json, request_client);
 
     // try different strategies to refine the graph
     if (options.recipe_filename != "") {
+        Json::Value recipe_data;
         run_recipe(options.recipe_filename, stack, synapse_stack,
-                gt_stack, rag_comp, options);
+                gt_stack, rag_comp, options, recipe_data);
+        status_json["proofreading-work"] = recipe_data;
     }
 
     // biologically important change
@@ -1321,11 +1388,15 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     // dump final list of bad bodies if option is specified 
     if (options.dump_split_merge_bodies) {
         cout << "Showing body VI differences" << endl;
-        dump_vi_differences(stack, options.vi_threshold);
+        Json::Value vol_json;
+        dump_vi_differences(stack, options.vi_threshold, vol_json);
+        status_json["final"]["vol"] = vol_json;
         //dump_vi_differences(stack, voi_change_thres, gt_rag);
         if (options.synapse_filename != "") {
             cout << "Showing synapse body VI differences" << endl;
-            dump_vi_differences(synapse_stack, options.vi_threshold);
+            Json::Value syn_json;
+            dump_vi_differences(synapse_stack, options.vi_threshold, syn_json);
+            status_json["final"]["syn"] = syn_json;
            
 #if 0 
             unsigned long long volume_size = 0;
@@ -1349,6 +1420,10 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 #endif
         }
     }
+
+    status_json["status"] = "Finished";
+    status_json["runtime"] = (clock() - initial_time) / double(CLOCKS_PER_SEC);
+    load_json(options.callback_uri, status_json, request_client);
 }
 
 
