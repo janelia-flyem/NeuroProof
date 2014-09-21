@@ -345,7 +345,9 @@ void run_graph_build(BuildOptions& options)
             } 
         }
         for (int i = 0; i < edges_delete.size(); ++i) {
-            stack.get_feature_manager()->remove_edge(edges_delete[i]); 
+            if (options.prediction_filename != "") {
+                stack.get_feature_manager()->remove_edge(edges_delete[i]); 
+            }
             rag->remove_rag_edge(edges_delete[i]);
         }
 
@@ -357,7 +359,9 @@ void run_graph_build(BuildOptions& options)
             }
         } 
         for (int i = 0; i < nodes_delete.size(); ++i) {
-            stack.get_feature_manager()->remove_node(nodes_delete[i]); 
+            if (options.prediction_filename != "") {
+                stack.get_feature_manager()->remove_node(nodes_delete[i]);
+            } 
             rag->remove_rag_node(nodes_delete[i]);
         }
           
