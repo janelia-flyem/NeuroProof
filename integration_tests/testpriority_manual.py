@@ -16,6 +16,11 @@ decision = 0
 undo = 0
 num_undo = 0
 
+npp.estimate_work()
+estimated = npp.get_estimated_num_remaining_edges()
+
+print "Num estimated edges: ", estimated
+
 while npp.get_estimated_num_remaining_edges() > 0:
     priority_info = npp.get_next_edge()
     xyzlocation = priority_info.location
