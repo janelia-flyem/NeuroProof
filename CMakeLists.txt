@@ -109,7 +109,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     endif()
 
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so)
+    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so ${BUILDEM_LIB_DIR}/libpng.so)
 
     if (NOT DISABLE_GUI)
         # set to buildem path
@@ -165,7 +165,7 @@ else ()
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
     set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ssl crypto)
+    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ssl crypto png)
     
     if (NOT DISABLE_GUI)
         set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon QVTK)
