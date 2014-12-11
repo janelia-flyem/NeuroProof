@@ -83,6 +83,7 @@ void EdgeEditor::estimateWork()
 {
     int num_edges = 0;
 
+
     // estimator decides true or false by random assignment
     // weighted by the confidence for a certain edge    
     while (!(edge_mode->is_finished())) {
@@ -92,13 +93,13 @@ void EdgeEditor::estimateWork()
         Node_t node1 = boost::get<0>(pair);
         Node_t node2 = boost::get<1>(pair);
         RagEdge_t* temp_edge = rag.find_rag_edge(node1, node2);
-        
+
         double weight = temp_edge->get_weight();
         int weightint = int(100 * weight);
         if ((rand() % 100) > (weightint)) {
-            edge_mode->examined_edge(pair, true);
+            removeEdge(pair, true);
         } else {
-            edge_mode->examined_edge(pair, false);
+            removeEdge(pair, false);
         }
         ++num_edges;
     }
