@@ -155,6 +155,9 @@ struct BuildOptions
 
         // for debugging purposes 
         parser.add_option(dumpgraph, "dumpgraph", "Dump segmentation file");
+        
+        // for debugging purposes 
+        parser.add_option(roi, "roi", "ROI for the data");
 
         parser.parse_options(argc, argv);
     }
@@ -172,6 +175,7 @@ struct BuildOptions
     // add synapse option -- assume global coordinates
     string synapse_filename;
 
+    string roi;
 
     int x, y, z, xsize, ysize, zsize;
     bool dumpgraph;
@@ -206,7 +210,7 @@ void run_graph_build(BuildOptions& options)
       
         // retrieve volume 
         libdvid::DVIDLabelPtr labels;
-        dvid_node.get_volume_roi(options.labels_name, start, sizes, channels, labels);
+        dvid_node.get_volume_roi(options.labels_name, start, sizes, channels, labels, true, options.roi);
 
         // load labels into VIGRA
         unsigned long long* ptr = (unsigned long long int*) labels->get_raw();
