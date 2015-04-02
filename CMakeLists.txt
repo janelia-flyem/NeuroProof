@@ -228,6 +228,8 @@ endif()
 
 add_library (NeuroProofPriority SHARED src/pythonNeuroProofPriorityInterface.cpp EdgeEditor/EdgeEditor.cpp EdgeEditor/NodeCentricRank.cpp EdgeEditor/NodeSizeRank.cpp EdgeEditor/OrphanRank.cpp EdgeEditor/SynapseRank.cpp EdgeEditor/ProbEdgeRank.cpp Rag/RagIO.cpp Rag/RagUtils.cpp)
 add_library (NeuroProofRag SHARED src/pythonRagInterface.cpp Rag/RagIO.cpp FeatureManager/FeatureMgr.cpp FeatureManager/Features.cpp Algorithms/MergePriorityFunction.cpp Algorithms/BatchMergeMRFh.cpp Rag/RagUtils.cpp Stack/Stack.cpp Stack/VolumeLabelData.cpp BioPriors/StackAgglomAlgs.cpp)
+add_library (NeuroProofMetrics SHARED src/pythonMetrics.cpp Stack/VolumeLabelData.cpp) 
+
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_build_dvid ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -242,6 +244,7 @@ if (NOT DISABLE_GUI)
 endif()
 target_link_libraries (NeuroProofPriority ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
+target_link_libraries (NeuroProofMetrics ${NEUROPROOF_EXT_LIBS})
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (neuroproof_graph_analyze ${NEUROPROOF_DEPS})
@@ -257,6 +260,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     endif()
     add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
     add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
+    add_dependencies (NeuroProofMetrics ${NEUROPROOF_DEPS})
 endif()
 
 # need to build components separately to set python flag
@@ -264,6 +268,7 @@ set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
 get_target_property (NeuroProofPriority_lib NeuroProofPriority LOCATION)
 get_target_property (NeuroProofRag_lib NeuroProofRag LOCATION)
+get_target_property (NeuroProofMetrics_lib NeuroProofMetrics LOCATION)
 
 
 # copy executables
@@ -277,6 +282,10 @@ add_custom_command (
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${PYLIBLOC})
 
+add_custom_command (
+    TARGET NeuroProofMetrics
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofMetrics_lib} ${PYLIBLOC})
 # ctests
 
 enable_testing()
