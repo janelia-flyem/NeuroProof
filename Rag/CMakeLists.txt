@@ -10,7 +10,7 @@ set (SOURCES RagIO.cpp RagUtils.cpp)
 add_library (Rag SHARED ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (Rag ${jsoncpp_NAME} ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
+    add_dependencies (Rag ${jsoncpp_NAME} ${boost_NAME} ${vigra_NAME})
 endif()
 
 add_executable (basic_rag_test unit_tests/basic_rag.cpp)
