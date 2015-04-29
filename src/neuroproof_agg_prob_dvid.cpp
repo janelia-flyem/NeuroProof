@@ -4,7 +4,7 @@
 #include "../Utilities/OptionParser.h"
 #include "../Rag/RagIO.h"
 
-#include <libdvid/DVIDNode.h>
+#include <libdvid/DVIDNodeService.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
@@ -63,8 +63,7 @@ void run_graph_prob(BuildOptions& options)
 {
     try {
         // create DVID node accessor 
-        libdvid::DVIDServer server(options.dvid_servername);
-        libdvid::DVIDNode dvid_node(server, options.uuid);
+        libdvid::DVIDNodeService dvid_node(options.dvid_servername, options.uuid);
 
         // read bodies from json
         Json::Reader json_reader;
@@ -88,7 +87,7 @@ void run_graph_prob(BuildOptions& options)
         
             // get vertex and edge weight 
             libdvid::Graph subgraph;
-            dvid_node.get_vertex_neighbors(options.graph_name, (libdvid::VertexID) node, subgraph);
+            dvid_node.get_vertex_neighbors(options.graph_name, libdvid::Vertex(node), subgraph);
             
             // load graph and weight
             for (int j = 0; j < subgraph.vertices.size(); ++j) {

@@ -39,11 +39,6 @@
 // utitlies for parsing options
 #include "../Utilities/OptionParser.h"
 
-// for interacting with analyze service
-#include <boost/network/protocol/http/client.hpp>
-
-#include <libdvid/BinaryData.h>
-
 #include "../Rag/RagUtils.h"
 
 #include <vector>
@@ -1046,24 +1041,13 @@ void print_synapse_violations(const char* synapse_json, VolumeLabelPtr labels, V
     cout << "Total tbars with true violation: " << total_tvio << endl;
 }
 
-void load_json(string uri, Json::Value& json_data, boost::network::http::client& request_client)
+void load_json(string uri, Json::Value& json_data)
 {
     if (uri == "") {
         return; 
     }
-    boost::network::http::client::request requestobj(uri);
-    requestobj << boost::network::header("Connection", "close");
 
-    stringstream datastr;
-    datastr << json_data;
-    libdvid::BinaryDataPtr value = 
-        libdvid::BinaryData::create_binary_data(datastr.str().c_str(), datastr.str().length());
-    boost::network::http::client::response respdata = request_client.post(requestobj,
-            value->get_data(), string("application/octet-stream"));
-    int status_code = status(respdata);
-    if (status_code != 200) {
-        throw ErrMsg(body(respdata));
-    }
+    throw ErrMsg("Functionality no longer available");
 }
 
 /*!
@@ -1074,10 +1058,9 @@ void load_json(string uri, Json::Value& json_data, boost::network::http::client&
 void run_analyze_gt(AnalyzeGTOptions& options)
 {
     clock_t initial_time = clock();
-    boost::network::http::client request_client;
     Json::Value status_json;
     status_json["status"] = "Loading label volumes";
-    load_json(options.callback_uri, status_json, request_client);
+    load_json(options.callback_uri, status_json);
     
     //seg_filename, groundtruth_filename 
     VolumeLabelPtr seg_labels = VolumeLabelData::create_volume(
@@ -1093,7 +1076,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     }
     
     status_json["status"] = "Analyzing similarities";
-    load_json(options.callback_uri, status_json, request_client);
+    load_json(options.callback_uri, status_json);
 
     // create GT stack to get GT rag
     BioStack gt_stack(gt_labels);
@@ -1371,7 +1354,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     }
     
     status_json["status"] = "Performing automatic proofreading";
-    load_json(options.callback_uri, status_json, request_client);
+    load_json(options.callback_uri, status_json);
 
     // try different strategies to refine the graph
     if (options.recipe_filename != "") {
@@ -1423,7 +1406,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     status_json["status"] = "Finished";
     status_json["runtime"] = (clock() - initial_time) / double(CLOCKS_PER_SEC);
-    load_json(options.callback_uri, status_json, request_client);
+    load_json(options.callback_uri, status_json);
 }
 
 

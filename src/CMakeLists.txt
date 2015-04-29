@@ -33,23 +33,27 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         include (vtk)
     endif()
 
+    set (LIBDVID_VERSION master)
+
     include (hdf5)
     include (python)
     include (jsoncpp)
     include (boost)
     include (vigra)
     include (opencv)
-    include (cppnetlib)
     include (libdvidcpp)
 
     if (NOT DISABLE_GUI)
-        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${cppnetlib_NAME} ${libdvidcpp_NAME} RescanQt4)
+        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME} RescanQt4)
     else()
-        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${cppnetlib_NAME} ${libdvidcpp_NAME})
+        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME})
     endif()
 
     set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ${BUILDEM_LIB_DIR}/libssl.so ${BUILDEM_LIB_DIR}/libcrypto.so ${BUILDEM_LIB_DIR}/libpng.so)
+    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${BUILDEM_LIB_DIR}/libpng.so
+        ${BUILDEM_LIB_DIR}/libjpeg.so   
+        ${BUILDEM_LIB_DIR}/liblz4.so   
+        ${BUILDEM_LIB_DIR}/libcurl.so   )
 
     if (NOT DISABLE_GUI)
         # set to buildem path
@@ -78,8 +82,7 @@ else ()
     
     FIND_PACKAGE(PythonLibs)
     FIND_PACKAGE(Boost)
-    find_package ( cppnetlib 0.11.0)
-    find_package ( libdvidcpp 0.1.0)
+    find_package ( libdvidcpp)
     
     if (NOT DISABLE_GUI)
         SET (QT_BUILT TRUE)
@@ -108,7 +111,7 @@ else ()
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
     set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${CPPNETLIB_LIBRARIES} ssl crypto png)
+    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} png curl jpeg lz4)
     
     if (NOT DISABLE_GUI)
         set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon QVTK)
@@ -158,7 +161,7 @@ endif()
 
 # Handle all of NeuroProof sources and dependent code
 add_executable (neuroproof_graph_analyze neuroproof_graph_analyze.cpp)
-#add_executable (neuroproof_graph_build_dvid neuroproof_graph_build_dvid.cpp)
+add_executable (neuroproof_graph_build_dvid neuroproof_graph_build_dvid.cpp)
 add_executable (neuroproof_graph_build_stream neuroproof_graph_build_stream.cpp)
 add_executable (neuroproof_agg_prob_dvid neuroproof_agg_prob_dvid.cpp)
 add_executable (neuroproof_graph_analyze_gt neuroproof_graph_analyze_gt.cpp)
@@ -174,7 +177,7 @@ add_library (NeuroProofRag SHARED pythonRagInterface.cpp ../Rag/RagIO.cpp ../Fea
 
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
-#target_link_libraries (neuroproof_graph_build_dvid ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
+target_link_libraries (neuroproof_graph_build_dvid ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_build_stream ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_agg_prob_dvid ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
 target_link_libraries (neuroproof_graph_analyze_gt ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -189,7 +192,7 @@ target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
     add_dependencies (neuroproof_graph_analyze ${NEUROPROOF_DEPS})
-    #add_dependencies (neuroproof_graph_build_dvid ${NEUROPROOF_DEPS})
+    add_dependencies (neuroproof_graph_build_dvid ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_build_stream ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_agg_prob_dvid ${NEUROPROOF_DEPS})
     add_dependencies (neuroproof_graph_analyze_gt ${NEUROPROOF_DEPS})

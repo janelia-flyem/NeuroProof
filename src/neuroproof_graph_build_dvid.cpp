@@ -4,7 +4,7 @@
 #include "../Utilities/OptionParser.h"
 #include "../Rag/RagIO.h"
 
-#include <libdvid/DVIDNode.h>
+#include <libdvid/DVIDNodeService.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
@@ -200,20 +200,17 @@ void run_graph_build(BuildOptions& options)
         }
         
         // create DVID node accessor 
-        libdvid::DVIDServer server(options.dvid_servername);
-        libdvid::DVIDNode dvid_node(server, options.uuid);
+        libdvid::DVIDNodeService dvid_node(options.dvid_servername, options.uuid);
        
         // establish ROI (make a 1 pixel border)
-        libdvid::tuple start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
-        libdvid::tuple sizes; sizes.push_back(options.xsize+2); sizes.push_back(options.ysize+2); sizes.push_back(options.zsize+2);
-        libdvid::tuple channels; channels.push_back(0); channels.push_back(1); channels.push_back(2);
+        vector<unsigned int> start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
+        libdvid::Dims_t sizes; sizes.push_back(options.xsize+2); sizes.push_back(options.ysize+2); sizes.push_back(options.zsize+2);
       
         // retrieve volume 
-        libdvid::DVIDLabelPtr labels;
-        dvid_node.get_volume_roi(options.labels_name, start, sizes, channels, labels, true, options.roi);
+        libdvid::Labels3D labels = dvid_node.get_labels3D(options.labels_name, sizes, start, true, true, options.roi);
 
         // load labels into VIGRA
-        unsigned long long* ptr = (unsigned long long int*) labels->get_raw();
+        unsigned long long* ptr = (unsigned long long int*) labels.get_raw();
         unsigned long long total_size = (options.xsize+2) * (options.ysize+2) * (options.zsize+2);
 
         VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(options.xsize+2,
