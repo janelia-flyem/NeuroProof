@@ -1,15 +1,15 @@
-#include "../FeatureManager/FeatureMgr.h"
-#include "../BioPriors/BioStack.h"
-#include "../BioPriors/StackLearnAlgs.h"
-#include "../BioPriors/IterativeLearn_unc.h"
-#include "../BioPriors/IterativeLearn_semi.h"
-#include "../BioPriors/IterativeLearn_iwal.h"
-#include "../BioPriors/IterativeLearn_cotrain.h"
-#include "../BioPriors/IterativeLearn_simulate.h"
-#include "../BioPriors/IterativeLearn_random.h"
+#include <FeatureManager/FeatureMgr.h>
+#include <BioPriors/BioStack.h>
+#include <BioPriors/StackLearnAlgs.h>
+#include <BioPriors/IterativeLearn_unc.h>
+#include <BioPriors/IterativeLearn_semi.h>
+#include <BioPriors/IterativeLearn_iwal.h>
+#include <BioPriors/IterativeLearn_cotrain.h>
+#include <BioPriors/IterativeLearn_simulate.h>
+#include <BioPriors/IterativeLearn_random.h>
 
-#include "../Utilities/ScopeTime.h"
-#include "../Utilities/OptionParser.h"
+#include <Utilities/ScopeTime.h"
+#include <Utilities/OptionParser.h"
 
 #include <iostream>
 

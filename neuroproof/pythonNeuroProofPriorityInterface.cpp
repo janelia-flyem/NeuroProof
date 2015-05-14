@@ -1,7 +1,7 @@
 #include "pythonNeuroProofPriorityInterface.h"
-#include "../Utilities/ErrMsg.h"
-#include "../EdgeEditor/EdgeEditor.h"
-#include "../Rag/RagIO.h"
+#include <Utilities/ErrMsg.h>
+#include <EdgeEditor/EdgeEditor.h>
+#include <Rag/RagIO.h>
 
 #include <json/json.h>
 #include <json/value.h>

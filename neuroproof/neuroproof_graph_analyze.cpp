@@ -17,22 +17,22 @@
 */
 
 // algorithms used to estimate how many edges need to be examine
-#include "../EdgeEditor/EdgeEditor.h"
+#include <EdgeEditor/EdgeEditor.h>
 
 // contains library for storing a region adjacency graph (RAG)
-#include "../Rag/Rag.h"
+#include <Rag/Rag.h>
 
 // algorithms to calculate generalized probabilistic rand (GPR)
-#include "../EdgeEditor/GPR.h"
+#include <EdgeEditor/GPR.h>
 
 // simple function for measuring runtime
-#include "../Utilities/ScopeTime.h"
+#include <Utilities/ScopeTime.h>
 
 // utilties for importing rags
-#include "../Rag/RagIO.h"
+#include <Rag/RagIO.h>
 
 // utitlies for parsing options
-#include "../Utilities/OptionParser.h"
+#include <Utilities/OptionParser.h>
 
 #include <vector>
 #include <fstream>

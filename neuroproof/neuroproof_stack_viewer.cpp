@@ -9,13 +9,13 @@
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */
 
-#include "../Utilities/OptionParser.h"
+#include <Utilities/OptionParser.h>
 
 // main GUI model
-#include "../Stack/StackSession.h"
+#include <Stack/StackSession.h>
 
 // main GUI controller
-#include "../Gui/StackQTController.h"
+#include <Gui/StackQTController.h>
 
 #include <QApplication>
 #include <string>

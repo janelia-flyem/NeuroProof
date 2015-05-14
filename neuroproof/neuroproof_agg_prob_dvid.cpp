@@ -1,8 +1,8 @@
-#include "../Stack/Stack.h"
-#include "../FeatureManager/FeatureMgr.h"
-#include "../Utilities/ScopeTime.h"
-#include "../Utilities/OptionParser.h"
-#include "../Rag/RagIO.h"
+#include <Stack/Stack.h>
+#include <FeatureManager/FeatureMgr.h>
+#include <Utilities/ScopeTime.h>
+#include <Utilities/OptionParser.h>
+#include <Rag/RagIO.h>
 
 #include <libdvid/DVIDNodeService.h>
 

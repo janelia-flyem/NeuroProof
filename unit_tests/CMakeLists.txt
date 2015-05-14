@@ -3,11 +3,11 @@ project (UnitTests)
 
 include_directories (BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_subdirectory (../Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
-add_subdirectory (../Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
-add_subdirectory (../Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
-add_subdirectory (../FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
-add_subdirectory (../IO "${CMAKE_CURRENT_BINARY_DIR}/IO")
+add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
+add_subdirectory (../src/Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
+add_subdirectory (../src/Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
+add_subdirectory (../src/FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
+add_subdirectory (../src/IO "${CMAKE_CURRENT_BINARY_DIR}/IO")
 
 add_executable (basic_rag_test Rag/basic_rag.cpp)
 add_executable (basic_stack_test Stack/basic_stack.cpp)

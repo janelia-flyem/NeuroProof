@@ -1,4 +1,4 @@
-#include "../Stack/VolumeLabelData.h"
+#include <Stack/VolumeLabelData.h>
 #include <boost/python.hpp>
 
 using namespace NeuroProof;

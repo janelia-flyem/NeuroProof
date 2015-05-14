@@ -8,13 +8,13 @@
  * \author Stephen Plaza (plaza.stephen@gmail.com)
 */
 
-#include "../FeatureManager/FeatureMgr.h"
+#include <FeatureManager/FeatureMgr.h>
 
-#include "../Stack/Stack.h"
+#include <Stack/Stack.h>
 
-#include "../Utilities/ScopeTime.h"
-#include "../Utilities/OptionParser.h"
-#include "../Rag/RagIO.h"
+#include <Utilities/ScopeTime.h>
+#include <Utilities/OptionParser.h>
+#include <Rag/RagIO.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>

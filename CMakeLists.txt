@@ -69,27 +69,30 @@ if (NOT EXISTS ${BUILDLOC}/lib)
     file (MAKE_DIRECTORY ${BUILDLOC}/lib)
 endif() 
 
+include_directories (BEFORE ${CMAKE_SOURCE_DIR}/src)
 
-
-
-enable_testing()
-
-
-# metric library default disabled
-set (NEUROPROOF_METRICS NO CACHE BOOL "Build neuroproof metric library")
+# metric library default
+set (ENABLE_METRICS YES CACHE BOOL "Build neuroproof metric library")
 
 # default NeuroProof executables
-set (NEUROPROOF_EXES YES CACHE BOOL "Build Neurproof executables")
+set (ENABLE_NEUROPROOF YES CACHE BOOL "Build Neurproof executables")
 
-# default NeuroProof executables
+# default unit test disable (but always turn on if neuroproof is built)
+set (ENABLE_UNITTESTS NO CACHE BOOL "Build Neurproof unittests")
+
+# default gui enable off
 set (ENABLE_GUI NO CACHE BOOL "Build GUI for NeuroProof")
 
-if (NEUROPROOF_EXES)
+if (ENABLE_NEUROPROOF)
     # add the source executables
     add_subdirectory(neuroproof)
 endif()
 
-if (NEUROPROOF_METRICS)
+if (ENABLE_NEUROPROOF OR ENABLE_UNITTESTS)
+    add_subdirectory(unit_tests)
+endif()
+
+if (ENABLE_METRICS)
     add_subdirectory(libMetrics)
 endif()
 

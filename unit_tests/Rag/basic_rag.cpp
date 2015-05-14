@@ -5,9 +5,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
-#include "../RagUtils.h"
-#include "../Rag.h"
-#include "../RagIO.h"
+#include <Rag/RagUtils.h>
+#include <Rag/Rag.h>
+#include <IO/RagIO.h>
 
 using namespace boost::unit_test_framework; 
 using namespace NeuroProof;

@@ -4,8 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../VolumeLabelData.h"
-#include "../VolumeData.h"
+#include <Stack/VolumeLabelData.h>
+#include <Stack/VolumeData.h>
 #include <iostream>
 #include <vector>
 #include <tr1/unordered_set>

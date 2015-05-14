@@ -40,10 +40,10 @@ endif()
 include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
 
 # add stack and rag directory dependency
-add_subdirectory (../Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
-add_subdirectory (../Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
-add_subdirectory (../Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
-add_subdirectory (../FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
+add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
+add_subdirectory (../src/Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
+add_subdirectory (../src/Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
+add_subdirectory (../src/FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
 
 
 # include other external libraries

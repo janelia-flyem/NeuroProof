@@ -1,9 +1,9 @@
-#include "../FeatureManager/FeatureMgr.h"
-#include "../Rag/Rag.h"
-#include "../Rag/RagIO.h"
-#include "../Utilities/ErrMsg.h"
-#include "../Stack/Stack.h"
-#include "../BioPriors/StackAgglomAlgs.h"
+#include <FeatureManager/FeatureMgr.h>
+#include <Rag/Rag.h>
+#include <Rag/RagIO.h>
+#include <Utilities/ErrMsg.h>
+#include <Stack/Stack.h>
+#include <BioPriors/StackAgglomAlgs.h>
 
 #include <boost/python.hpp>
 

@@ -1,7 +1,7 @@
-#include "../BioPriors/BioStack.h"
-#include "../FeatureManager/FeatureMgr.h"
-#include "../Rag/RagIO.h"
-#include "../Utilities/OptionParser.h"
+#include <BioPriors/BioStack.h>
+#include <FeatureManager/FeatureMgr.h>
+#include <Rag/RagIO.h>
+#include <Utilities/OptionParser.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
