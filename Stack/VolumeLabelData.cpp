@@ -20,38 +20,6 @@ VolumeLabelPtr VolumeLabelData::create_volume(int xsize, int ysize, int zsize)
 }
 
 
-VolumeLabelPtr VolumeLabelData::create_volume(
-        const char * h5_name, const char * dset, bool use_transforms)
-{
-    vigra::HDF5ImportInfo info(h5_name, dset);
-    vigra_precondition(info.numDimensions() == 3, "Dataset must be 3-dimensional.");
-
-    VolumeLabelData* volumedata = new VolumeLabelData;
-    vigra::TinyVector<long long unsigned int,3> shape(info.shape().begin());
-    volumedata->reshape(shape);
-    vigra::readHDF5(info, *volumedata);
-
-    if (use_transforms) {
-        // looks for a dataset called transforms which is a label
-        // to label mapping
-        try {
-            vigra::HDF5ImportInfo info(h5_name, "transforms");
-            vigra::TinyVector<long long unsigned int,2> tshape(info.shape().begin()); 
-            vigra::MultiArray<2,long long unsigned int> transforms(tshape);
-            vigra::readHDF5(info, transforms);
-
-            for (int row = 0; row < transforms.shape(1); ++row) {
-                volumedata->label_mapping[transforms(0,row)] = transforms(1,row);
-            }
-            // rebase all of the labels so the initial label hash is empty
-            volumedata->rebase_labels();
-        } catch (std::runtime_error& err) {
-        }
-    }
-
-    return VolumeLabelPtr(volumedata); 
-}
-
 void VolumeLabelData::get_label_history(Label_t label, std::vector<Label_t>& member_labels)
 {
     member_labels = label_remapping_history[label];

@@ -1,0 +1,22 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+project (StackGui)
+
+set (SOURCES StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackBodyView.cpp StackBodyController.cpp)
+
+if (QT_BUILT)
+    QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
+    add_library (StackGui SHARED ${SOURCES} ${QTHEADERS})
+else()
+    add_library (StackGui SHARED ${SOURCES})
+endif()
+
+if (NOT BUILDEM_DIR STREQUAL "None")
+    include (qt4)
+    include (vtk)
+    include (boost)
+    include (hdf5)
+    include (jsoncpp) 
+    add_dependencies (StackGui ${boost_NAME} ${hdf5_NAME} ${json_NAME} ${opencv_NAME} RescanQt4)
+else()
+    add_dependencies (Stack RescanQt4)
+endif()

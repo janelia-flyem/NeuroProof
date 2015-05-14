@@ -8,12 +8,7 @@
 #include <tr1/unordered_map>
 
 
-
-#include "../Classifier/vigraRFclassifier.h"
-#include "../Classifier/opencvRFclassifier.h"
-#include "../Classifier/opencvABclassifier.h"
-#include "../Classifier/opencvSVMclassifier.h"
-
+#include "../Classifier/edgeclassifier.h"
 
 // node features and edge features -- different amounts ??!!
 
@@ -79,9 +74,9 @@ class FeatureMgr {
 
     void set_basic_features();
 
-    string serialize_features(char * current_features, RagNode_t* node)
+    std::string serialize_features(char * current_features, RagNode_t* node)
     {
-        string buffer;
+        std::string buffer;
         std::vector<void*>& feature_caches = node_caches[node];
         int pos = 0;
         for (int i = 0; i < num_channels; ++i) { 
@@ -95,9 +90,9 @@ class FeatureMgr {
         return buffer;
     }
 
-    string serialize_features(char * current_features, RagEdge_t* edge)
+    std::string serialize_features(char * current_features, RagEdge_t* edge)
     {
-        string buffer;
+        std::string buffer;
         std::vector<void*>& feature_caches = edge_caches[edge];
         int pos = 0;
         for (int i = 0; i < num_channels; ++i) { 
@@ -114,7 +109,7 @@ class FeatureMgr {
 
     void deserialize_features(char * current_features, RagNode_t* node)
     {
-        string buffer;
+        std::string buffer;
         int pos = 0;
         if (node_caches.find(node) == node_caches.end()) {
             std::vector<void*>& feature_caches = create_cache(node);
@@ -134,7 +129,7 @@ class FeatureMgr {
 
     void deserialize_features(char * current_features, RagEdge_t* edge)
     {
-        string buffer;
+        std::string buffer;
         int pos = 0;
         if (edge_caches.find(edge) == edge_caches.end()) {
             std::vector<void*>& feature_caches = create_cache(edge);
@@ -222,7 +217,7 @@ class FeatureMgr {
             assert(node_vec.size() > 0);
             unsigned int pos = 0;
             for (int i = 0; i < num_channels; ++i) {
-                vector<FeatureCompute*>& features = channels_features[i];
+                std::vector<FeatureCompute*>& features = channels_features[i];
                 for (int j = 0; j < features.size(); ++j) {
                     features[j]->delete_cache(node_vec[pos]);
                     ++pos;
@@ -278,7 +273,7 @@ class FeatureMgr {
 
     ~FeatureMgr();
 
-    void get_responses(RagEdge_t* edge, vector<double>& responses);
+    void get_responses(RagEdge_t* edge, std::vector<double>& responses);
 
     void compute_all_features(RagEdge_t* edge, std::vector<double>&);
     void compute_node_features(RagNode_t* edge, std::vector<double>&);

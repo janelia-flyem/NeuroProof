@@ -2,7 +2,6 @@
 #include "Stack.h"
 #include "../Rag/RagUtils.h"
 #include "../Algorithms/FeatureJoinAlgs.h"
-#include "../Rag/RagIO.h"
 
 #include <fstream>
 
@@ -13,7 +12,9 @@
 #include <vigra/seededregiongrowing3d.hxx>
 
 
-using std::vector;
+#include <iostream>
+
+using std::vector; using std::cerr; using std::endl;
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
 using std::string;
@@ -25,21 +26,6 @@ static const char * SEG_DATASET_NAME = "stack";
 
 // assume all grayscale volumes are written to "gray" for now
 static const char * GRAY_DATASET_NAME = "gray";
-
-Stack::Stack(string stack_name) : StackBase(VolumeLabelPtr())
-{     
-    try {
-        labelvol = VolumeLabelData::create_volume(stack_name.c_str(), SEG_DATASET_NAME);
-    } catch (std::runtime_error &error) {
-        throw ErrMsg(stack_name + string(" not loaded"));
-    }
- 
-    try {
-        grayvol = VolumeGray::create_volume(stack_name.c_str(), GRAY_DATASET_NAME);
-    } catch (std::runtime_error &error) {
-        // allow stacks without grayscale volumes
-    }
-}
 
 void Stack::build_rag_batch()
 {
@@ -509,82 +495,7 @@ int Stack::find_edge_label(Label_t label1, Label_t label2)
     return edge_label;	
 }
 
-void Stack::serialize_stack(const char* h5_name, const char* graph_name, 
-        bool optimal_prob_edge_loc, bool disable_prob_comp)
-{
-    if (graph_name != 0) {
-        serialize_graph(graph_name, optimal_prob_edge_loc, disable_prob_comp);
-    }
-    serialize_labels(h5_name);
-   
-    if (grayvol) {
-        grayvol->serialize(h5_name, GRAY_DATASET_NAME);
-    } 
-}
 
-void Stack::serialize_graph(const char* graph_name, bool optimal_prob_edge_loc, bool disable_prob_comp)
-{
-    EdgeCount best_edge_z;
-    EdgeLoc best_edge_loc;
-    determine_edge_locations(best_edge_z, best_edge_loc, optimal_prob_edge_loc);
-    
-    // set edge properties for export 
-    for (Rag_t::edges_iterator iter = rag->edges_begin();
-           iter != rag->edges_end(); ++iter) {
-        if (!((*iter)->is_false_edge()) && !disable_prob_comp) {
-            if (feature_manager) {
-                double val = feature_manager->get_prob((*iter));
-                (*iter)->set_weight(val);
-            } 
-        }
-        Label_t x = 0;
-        Label_t y = 0;
-        Label_t z = 0;
-        
-        if (best_edge_loc.find(*iter) != best_edge_loc.end()) {
-            Location loc = best_edge_loc[*iter];
-            x = boost::get<0>(loc);
-            // assume y is bottom of image
-            // (technically ignored by raveler so okay)
-            y = boost::get<1>(loc); //height - boost::get<1>(loc) - 1;
-            z = boost::get<2>(loc);
-        }
-        
-        (*iter)->set_property("location", Location(x,y,z));
-    }
-
-    Json::Value json_writer;
-    bool status = create_json_from_rag(rag.get(), json_writer);
-    if (!status) {
-        throw ErrMsg("Error in rag export");
-    }
-
-    // biopriors might write specific information -- calls derived function
-    serialize_graph_info(json_writer);
-
-    int id = 0;
-    for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
-        if (!((*iter)->is_boundary())) {
-            json_writer["orphan_bodies"][id] = (*iter)->get_node_id();
-            ++id;
-        } 
-    }
-    
-    // write out graph json
-    ofstream fout(graph_name);
-    if (!fout) {
-        throw ErrMsg("Error: output file " + string(graph_name) + " could not be opened");
-    }
-    
-    fout << json_writer;
-    fout.close();
-}
-
-void Stack::serialize_labels(const char* h5_name)
-{
-    labelvol->rebase_labels();
-    labelvol->serialize(h5_name, SEG_DATASET_NAME);
-}
 
 
 VolumeLabelPtr Stack::dilate_label_edges(VolumeLabelPtr labelvolh, int disc_size)
@@ -738,37 +649,6 @@ void Stack::determine_edge_locations(EdgeCount& best_edge_z,
     }
 
     return;
-}
-
-
-void Stack::set_body_exclusions(string exclusions_json)
-{
-    Json::Reader json_reader;
-    Json::Value json_vals;
-    unordered_set<Label_t> exclusion_set;
-    
-    ifstream fin(exclusions_json.c_str());
-    if (!fin) {
-        throw ErrMsg("Error: input file: " + exclusions_json + " cannot be opened");
-    }
-    if (!json_reader.parse(fin, json_vals)) {
-        throw ErrMsg("Error: Json incorrectly formatted");
-    }
-    fin.close();
-    
-    // all exclusions should be in a json list
-    Json::Value exclusions = json_vals["exclusions"];
-    for (unsigned int i = 0; i < json_vals["exclusions"].size(); ++i) {
-        exclusion_set.insert(exclusions[i].asUInt());
-    }
-
-    // 0 out all bodies in the exclusion list    
-    volume_forXYZ(*labelvol, x, y, z) {
-        Label_t label = (*labelvol)(x,y,z);
-        if (exclusion_set.find(label) != exclusion_set.end()) {
-            labelvol->set(x,y,z,0);
-        }
-    }
 }
 
 void Stack::compute_vi(double& merge, double& split, 

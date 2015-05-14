@@ -26,9 +26,9 @@
 #include <map>
 #include <string>
 
-// json format is used to represent the serialized rag 
-#include <json/json.h>
-#include <json/value.h>
+namespace Json {
+struct Value;
+}
 
 namespace NeuroProof {
 
@@ -46,13 +46,6 @@ class Stack : public StackBase {
      * \param stack_ Stack
     */
     Stack(VolumeLabelPtr labels_) : StackBase(labels_) {}
-
-
-    /*!
-     * Constructor that initializes from a stack h5 file
-     * \param stack_name name of stack h5 file
-    */
-    Stack(std::string stack_name);
 
     /*!
      * Constructs a RAG by interating through the 3D label volume and looking
@@ -132,13 +125,6 @@ class Stack : public StackBase {
     void get_gt2segs_map(RagPtr gt_rag,
             std::tr1::unordered_map<Label_t, std::vector<Label_t> >& gt2segs);
 
-    /*!
-     * Creates a set of labels from a json file and zeros out these labels
-     * in the label volume.
-     * \param exclusions_json name of json file with exclusion labels
-    */
-    void set_body_exclusions(std::string exclusions_json);
-    
     /*!
      * Dilates the borders between labels using the given disc size.
      * A disc size of 1 will just create a 0 border using each voxels
@@ -233,26 +219,6 @@ class Stack : public StackBase {
     }
 
     /*!
-     * Write the stack to disk.  The graph is written to the json
-     * file format.  The label volume is rebased and written
-     * to an h5 file.  There is an option to determine the best location
-     * for observing the edge using the information in the probability volumes.
-     * \param h5_name name of h5 file
-     * \param graph_name name of graph json file
-     * \param optimal_prob_edge_loc determine strategy to select edge location
-     * \param disable_prob_comp determines whether saved prob values are used
-    */
-    void serialize_stack(const char* h5_name, const char* graph_name,
-            bool optimal_prob_edge_loc, bool disable_prob_comp = false);
-    
-    /*!
-     * Virtual function to allow derived controllers to add their own
-     * information to the graph being written.
-     * \param json_write json data to be written to disk
-    */
-    virtual void serialize_graph_info(Json::Value& json_write) {}
-    
-    /*!
      * Determined whether an edge exists between label1 and label2
      * given the ground truth label volume.
      * \param label1 volume label
@@ -266,6 +232,12 @@ class Stack : public StackBase {
     */
     void compute_groundtruth_assignment();
 
+    /*!
+     * Virtual function to allow derived controllers to add their own
+     * information to the graph being written.
+     * \param json_write json data to be written to disk
+    */
+    virtual void serialize_graph_info(Json::Value* json_write) {}
      
   protected:
     /*!
@@ -344,22 +316,6 @@ class Stack : public StackBase {
      * of correspondence between the label volume and the ground truth.
     */
     void compute_contingency_table();
-    
-    /*!
-     * Support function called by 'serialize_stack' that actually writes
-     * the graph to json on disk.
-     * \param graph_name name of graph json file
-     * \param optimal_prob_edge_loc determine strategy to select edge location
-     * \param disable_prob_comp determines whether saved prob values are used
-    */
-    void serialize_graph(const char* graph_name, bool optimal_prob_edge_loc, bool disable_prob_comp = false);
-    
-    /*!
-     * Support function called by 'serialize_stack' that actually writes
-     * the volume labels to h5 on disk.
-     * \param h5_name name of h5 file
-    */
-    void serialize_labels(const char* h5_name);
 
     /*!
      * Contains information on the correspondence between the gt label

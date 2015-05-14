@@ -27,6 +27,7 @@ endif ()
 ###############################################################################
 
 if (NOT ${BUILDEM_DIR} STREQUAL "None")
+    set (BUILDLOC ${BUILDEM_DIR})
     ###############################################################################
     # Download and install buildem, if it isn't already in BUILDEM_DIR.
     set (BUILDEM_REPO_DIR ${BUILDEM_DIR}/src/buildem)
@@ -53,9 +54,23 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     # Use modules from the downloaded buildem
     set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
     message("Using cmake modules from ${BUILDEM_REPO_DIR}")
-
-
+else()
+    set (BUILDLOC ${CMAKE_SOURCE_DIR})
 endif()
+
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
+if (NOT EXISTS ${BUILDLOC}/bin)
+    file (MAKE_DIRECTORY ${BUILDLOC}/bin)
+endif() 
+
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILDLOC}/lib)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILDLOC}/lib)
+if (NOT EXISTS ${BUILDLOC}/lib)
+    file (MAKE_DIRECTORY ${BUILDLOC}/lib)
+endif() 
+
+
+
 
 enable_testing()
 
@@ -66,15 +81,16 @@ set (NEUROPROOF_METRICS NO CACHE BOOL "Build neuroproof metric library")
 # default NeuroProof executables
 set (NEUROPROOF_EXES YES CACHE BOOL "Build Neurproof executables")
 
+# default NeuroProof executables
+set (ENABLE_GUI NO CACHE BOOL "Build GUI for NeuroProof")
+
 if (NEUROPROOF_EXES)
     # add the source executables
-    add_subdirectory(src)
-else()
-    set (DISABLE_GUI "ON")
+    add_subdirectory(neuroproof)
 endif()
 
 if (NEUROPROOF_METRICS)
-    add_subdirectory(Metrics)
+    add_subdirectory(libMetrics)
 endif()
 
 

@@ -308,7 +308,7 @@ void BioStack::set_synapse_exclusions(const char* synapse_json)
 
 }
     
-void BioStack::serialize_graph_info(Json::Value& json_writer)
+void BioStack::serialize_graph_info(Json::Value* json_writer)
 {
     unordered_map<Label_t, int> synapse_counts;
     if (saved_synapse_counts.size() > 0) {
@@ -323,7 +323,7 @@ void BioStack::serialize_graph_info(Json::Value& json_writer)
         Json::Value synapse_pair;
         synapse_pair[(unsigned int)(0)] = iter->first;
         synapse_pair[(unsigned int)(1)] = iter->second;
-        json_writer["synapse_bodies"][id] =  synapse_pair;
+        (*json_writer)["synapse_bodies"][id] =  synapse_pair;
     }
 }
 

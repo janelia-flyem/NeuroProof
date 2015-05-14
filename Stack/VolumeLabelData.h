@@ -39,20 +39,6 @@ class VolumeLabelData : public VolumeData<Label_t> {
    
     /*!
      * Static function to create a volume label data object
-     * from an h5 file.  Input h5 files are assummed to be Z,Y,X.
-     * If this h5 file contains a transform dataset, the labels in the
-     * label volume dataset will be mapped to new labels according
-     * to the transform.  TODO: allow user-defined axis specification.
-     * \param h5_name name of h5 file
-     * \param dset name of dataset
-     * \param use_tranforms decide whether to use transforms or not
-     * \return shared pointer to volum label data
-    */
-    static VolumeLabelPtr create_volume(const char * h5_name, const char* dset,
-            bool use_transforms = true);
-
-    /*!
-     * Static function to create a volume label data object
      * from the given dimensions. 
      * \param xsize is x dimension
      * \param ysize is y dimension
