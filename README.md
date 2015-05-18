@@ -38,6 +38,11 @@ by running the following command:
 
     % doxygen doxygenconfig.file
 
+See the CMakeLists.txt file for the ENABLE flags supported.  The GUI is currently
+disabled by default.  Please add -DENABLE_GUI=1.  This will greatly increase build
+time when using Buildem (see below).  One can also selectively build libraries
+and disable the main neuroproof builds by -DENABLE_NEUROPROOF=0.
+    
 NeuroProof supports two mechanisms for installation:
 
 ### Buildem
@@ -60,6 +65,7 @@ To build NeuroProof using buildem
 This will automatically load the binaries into BUILDEM_DIR/bin.  To run
 the test regressions, add this directory into your PATH environment and
 run <i>make test</i> in the <i>build</i> directory.
+
 
 ### NeuroProof Only
 
