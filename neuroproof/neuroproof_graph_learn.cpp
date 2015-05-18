@@ -7,9 +7,12 @@
 #include <BioPriors/IterativeLearn_cotrain.h>
 #include <BioPriors/IterativeLearn_simulate.h>
 #include <BioPriors/IterativeLearn_random.h>
+#include <IO/StackIO.h>
 
-#include <Utilities/ScopeTime.h"
-#include <Utilities/OptionParser.h"
+#include <Utilities/ScopeTime.h>
+#include <Utilities/OptionParser.h>
+#include <Classifier/vigraRFclassifier.h>
+#include <Classifier/opencvRFclassifier.h>
 
 #include <iostream>
 
@@ -76,13 +79,13 @@ void run_learning(LearnOptions& options)
     int strategy = 1;
 //     bool use_mito=false;
 
-    vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
+    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     
-    VolumeLabelPtr watershed_data = VolumeLabelData::create_volume(
+    VolumeLabelPtr watershed_data = import_h5labels(
             options.watershed_filename.c_str(), SEG_DATASET_NAME);
 
-    VolumeLabelPtr groundtruth_data = VolumeLabelData::create_volume(
+    VolumeLabelPtr groundtruth_data = import_h5labels(
             options.groundtruth_filename.c_str(), SEG_DATASET_NAME);
     
     const double threshold = 0.2;

@@ -3,9 +3,12 @@
 
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
+#include <IO/StackIO.h>
 
 #include <BioPriors/StackAgglomAlgs.h>
+#include <Classifier/vigraRFclassifier.h>
+#include <Classifier/opencvRFclassifier.h>
 
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -102,13 +105,13 @@ struct PredictOptions
 void run_prediction(PredictOptions& options)
 {
     // create prediction array
-    vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
+    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     VolumeProbPtr boundary_channel = prob_list[0];
     cout << "Read prediction array" << endl;
 
     // create watershed volume
-    VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
+    VolumeLabelPtr initial_labels = import_h5labels(
             options.watershed_filename.c_str(), SEG_DATASET_NAME);
     cout << "Read watershed" << endl;
 
@@ -215,8 +218,8 @@ void run_prediction(PredictOptions& options)
     if (options.synapse_filename != "") {   
         stack.set_synapse_exclusions(options.synapse_filename.c_str());
     }
-        
-    stack.serialize_stack(options.output_filename.c_str(),
+    
+    export_stack(&stack, options.output_filename.c_str(),
                 options.graph_filename.c_str(), options.location_prob);
 
     delete eclfr;

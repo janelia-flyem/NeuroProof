@@ -26,17 +26,9 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         set (QT_BUILT FALSE)
     endif()
 
-
-    # disable vigra numpy build
-    SET(DISABLE_VIGRANUMPY "TRUE")
-
     # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
-    set (LIBDVID_VERSION master)
-
-    include (python)
-    include (libdvidcpp)
-
     if (ENABLE_GUI)
+        include (vtk)
         set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME} RescanQt4)
     else()
         set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME})
@@ -71,10 +63,6 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     endif()
 else ()
     set (PYLIBLOC ${CMAKE_SOURCE_DIR}/lib)
-    
-    FIND_PACKAGE(PythonLibs)
-    FIND_PACKAGE(Boost)
-    find_package ( libdvidcpp)
     
     if (ENABLE_GUI)
         SET (QT_BUILT TRUE)
@@ -116,20 +104,9 @@ else ()
 endif (NOT ${BUILDEM_DIR} STREQUAL "None")
 
 # Compile NeuroProof components
-include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
-include_directories(${LIBDVIDCPP_INCLUDE_DIRS})
-include_directories (${CMAKE_SOURCE_DIR}/SemiSupervised)
+#include_directories (${CMAKE_SOURCE_DIR}/SemiSupervised)
 
 enable_testing()
-add_subdirectory (../src/Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
-add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
-add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/IO")
-add_subdirectory (../src/EdgeEditor "${CMAKE_CURRENT_BINARY_DIR}/EdgeEditor")
-add_subdirectory (../src/BioPriors "${CMAKE_CURRENT_BINARY_DIR}/BioPriors")
-add_subdirectory (../src/FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
-add_subdirectory (../src/Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
-add_subdirectory (../src/Classifier "${CMAKE_CURRENT_BINARY_DIR}/Classifier")
-add_subdirectory (../src/SemiSupervised "${CMAKE_CURRENT_BINARY_DIR}/SemiSupervised")
 
 if (ENABLE_GUI)
     add_subdirectory (../src/Gui "${CMAKE_CURRENT_BINARY_DIR}/Gui")
@@ -138,7 +115,7 @@ if (ENABLE_GUI)
         Algorithms Classifier SemiSupervised IO StackGui)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
 else()
-    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor IO BioPriors FeatureManager Algorithms Classifier SemiSupervised)
+    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors IO FeatureManager Algorithms Classifier SemiSupervised)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE})
 endif()
 
@@ -156,8 +133,16 @@ if (ENABLE_GUI)
     add_executable (neuroproof_stack_viewer neuroproof_stack_viewer.cpp)
 endif()
 
-add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp ../EdgeEditor/EdgeEditor.cpp ../EdgeEditor/NodeCentricRank.cpp ../EdgeEditor/NodeSizeRank.cpp ../EdgeEditor/OrphanRank.cpp ../EdgeEditor/SynapseRank.cpp ../EdgeEditor/ProbEdgeRank.cpp ../Rag/RagIO.cpp ../Rag/RagUtils.cpp)
-add_library (NeuroProofRag SHARED pythonRagInterface.cpp ../Rag/RagIO.cpp ../FeatureManager/FeatureMgr.cpp ../FeatureManager/Features.cpp ../Algorithms/MergePriorityFunction.cpp ../Algorithms/BatchMergeMRFh.cpp ../Rag/RagUtils.cpp ../Stack/Stack.cpp ../Stack/VolumeLabelData.cpp ../BioPriors/StackAgglomAlgs.cpp)
+add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp
+    ../src/EdgeEditor/EdgeEditor.cpp ../src/EdgeEditor/NodeCentricRank.cpp
+    ../src/EdgeEditor/NodeSizeRank.cpp ../src/EdgeEditor/OrphanRank.cpp
+    ../src/EdgeEditor/SynapseRank.cpp ../src/EdgeEditor/ProbEdgeRank.cpp
+    ../src/IO/RagIO.cpp ../src/Rag/RagUtils.cpp)
+add_library (NeuroProofRag SHARED pythonRagInterface.cpp ../src/IO/RagIO.cpp
+    ../src/FeatureManager/FeatureMgr.cpp ../src/FeatureManager/Features.cpp
+    ../src/Algorithms/MergePriorityFunction.cpp
+    ../src/Algorithms/BatchMergeMRFh.cpp ../src/Rag/RagUtils.cpp
+    ../src/Stack/Stack.cpp ../src/Stack/VolumeLabelData.cpp ../src/BioPriors/StackAgglomAlgs.cpp)
 
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})

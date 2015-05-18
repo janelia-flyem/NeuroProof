@@ -14,7 +14,8 @@
 
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
+#include <IO/StackIO.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
@@ -26,6 +27,7 @@ using std::string;
 using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_set;
+using std::ofstream;
 
 static const char * SEG_DATASET_NAME = "stack";
 static const char * PRED_DATASET_NAME = "volume/predictions";
@@ -71,13 +73,13 @@ struct SpOptions
 void generate_sp_graph(SpOptions& options)
 {
     // create prediction array
-    vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
+    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     VolumeProbPtr boundary_channel = prob_list[0];
     //(*boundary_channel) += (*(prob_list[2]));
     cout << "Read prediction array" << endl;
 
-    VolumeLabelPtr raveler_labels = VolumeLabelData::create_volume(
+    VolumeLabelPtr raveler_labels = import_h5labels(
             options.segmentation_filename.c_str(), SEG_DATASET_NAME);
    
     cout << "Read watershed" << endl;

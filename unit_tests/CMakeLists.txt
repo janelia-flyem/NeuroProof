@@ -3,27 +3,24 @@ project (UnitTests)
 
 include_directories (BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
-add_subdirectory (../src/Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
-add_subdirectory (../src/Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
-add_subdirectory (../src/FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
-add_subdirectory (../src/IO "${CMAKE_CURRENT_BINARY_DIR}/IO")
-
 add_executable (basic_rag_test Rag/basic_rag.cpp)
 add_executable (basic_stack_test Stack/basic_stack.cpp)
 
 
 if (NOT BUILDEM_DIR STREQUAL "None")
-    add_dependencies (basic_rag_test ${hdf5_NAME} ${jsoncpp_NAME} ${boost_NAME})
-    add_dependencies (basic_stack_test ${hdf5_NAME} ${jsoncpp_NAME} ${boost_NAME})
+    add_dependencies (basic_rag_test ${hdf5_NAME} ${vigra_NAME} ${jsoncpp_NAME} ${boost_NAME})
+    add_dependencies (basic_stack_test ${hdf5_NAME} ${vigra_NAME} ${jsoncpp_NAME} ${boost_NAME})
 else()
     set (json_LIB jsoncpp)
     set (hdf5_LIBRARIES hdf5 hdf5_hl)
     set (boost_LIBS boost_thread boost_system boost_program_options boost_unit_test_framework boost_filesystem)
+    set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
+    set (vigra_LIB vigraimpex)
 endif()
 
-target_link_libraries (basic_rag_test Rag ${hdf5_libraries} ${json_LIB} ${boost_LIBS})
-target_link_libraries (basic_stack_test Stack Rag ${hdf5_libraries} ${json_LIB} ${boost_LIBS} )
+target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_libraries} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
+target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_libraries}
+    ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
 get_target_property (basic_rag_test_exe basic_rag_test LOCATION)
 get_target_property (basic_stack_test_exe basic_stack_test LOCATION)
@@ -49,6 +46,6 @@ add_test ("simple_rag_unit_tests" ${CMAKE_SOURCE_DIR}/bin/basic_rag_test)
 
 add_test ("simple_stack_unit_tests"
         ${CMAKE_SOURCE_DIR}/bin/basic_stack_test
-        ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_labels.h5
-        ${CMAKE_SOURCE_DIR}/Stack/unit_tests/samp1_prediction.h5
+        ${CMAKE_SOURCE_DIR}/unit_tests/Stack/samp1_labels.h5
+        ${CMAKE_SOURCE_DIR}/unit_tests/Stack/samp1_prediction.h5
         )

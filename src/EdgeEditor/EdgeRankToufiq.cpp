@@ -1,6 +1,5 @@
 #include "EdgeRankToufiq.h"
 
-
 using namespace NeuroProof;
 
 EdgeRankToufiq::EdgeRankToufiq(BioStack* pstack, Rag_t& prag, string session_name): EdgeRank(&prag)

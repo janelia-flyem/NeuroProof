@@ -13,6 +13,8 @@ set (CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 set (CMAKE_CXX_LINK_FLAGS "-O3")
 set (CMAKE_DEBUG_POSTFIX "-g")
 
+enable_testing()
+
 
 ################################################################################
 # Check if BUILDEM_DIR has already been assigned.  If not, create a default.
@@ -84,16 +86,134 @@ set (ENABLE_UNITTESTS NO CACHE BOOL "Build Neurproof unittests")
 set (ENABLE_GUI NO CACHE BOOL "Build GUI for NeuroProof")
 
 if (ENABLE_NEUROPROOF)
+    # (buildem) dependencies for package
+    if (NOT ${BUILDEM_DIR} STREQUAL "None")
+        if (NOT TARGET ${boost_NAME})
+            include (boost)
+        endif()
+        
+        if (NOT TARGET ${jsoncpp_NAME})
+            include (jsoncpp)
+        endif()
+        
+        if (NOT TARGET ${hdf5_NAME})
+            include (hdf5)
+        endif()
+        
+        if (NOT TARGET ${python_NAME})
+            include (python)
+        endif()
+        
+        if (NOT TARGET ${vigra_NAME})
+            # disable vigra numpy build
+            SET(DISABLE_VIGRANUMPY "TRUE")
+            set(VIGRA_WITH_BOOST_THREAD 1) 
+            include (vigra)
+        endif()
+        
+        if (NOT TARGET ${opencv_NAME})
+            include (opencv)
+        endif()
+
+        set (LIBDVID_VERSION master)
+        if (NOT TARGET ${libdvidcpp_NAME})
+            include (libdvidcpp)
+        endif()
+    else()
+        FIND_PACKAGE(PythonLibs)
+        FIND_PACKAGE(Boost)
+        find_package ( libdvidcpp)
+    endif()
+    
+    include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
+    include_directories(${LIBDVIDCPP_INCLUDE_DIRS})
+    include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
+
     # add the source executables
     add_subdirectory(neuroproof)
+
+    # np packages to include that are shared across packages
+    add_subdirectory (src/Utilities)
+    add_subdirectory (src/Rag)
+    add_subdirectory (src/Stack)
+    add_subdirectory (src/IO)
+    add_subdirectory (src/EdgeEditor)
+    add_subdirectory (src/BioPriors)
+    add_subdirectory (src/FeatureManager)
+    add_subdirectory (src/Algorithms)
+    add_subdirectory (src/Classifier)
+    add_subdirectory (src/SemiSupervised)
 endif()
 
 if (ENABLE_NEUROPROOF OR ENABLE_UNITTESTS)
+    # (buildem) dependencies for package
+    if (NOT ${BUILDEM_DIR} STREQUAL "None")
+        if (NOT TARGET ${boost_NAME})
+            include (boost)
+        endif()
+        
+        if (NOT TARGET ${vigra_NAME})
+            # disable vigra numpy build
+            SET(DISABLE_VIGRANUMPY "TRUE")
+            set(VIGRA_WITH_BOOST_THREAD 1) 
+            include (vigra)
+        endif()
+
+        if (NOT TARGET ${jsoncpp_NAME})
+            include (jsoncpp)
+        endif()
+        
+        if (NOT TARGET ${hdf5_NAME})
+            include (hdf5)
+        endif()
+    else()
+        FIND_PACKAGE(PythonLibs)
+        FIND_PACKAGE(Boost)
+    endif()
+    
+    include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
+    
     add_subdirectory(unit_tests)
+
+    # np packages to include that are shared across packages
+    if (NOT ENABLE_NEUROPROOF)
+        add_subdirectory (src/Utilities)
+        add_subdirectory (src/Rag)
+        add_subdirectory (src/Stack)
+        add_subdirectory (src/IO)
+        add_subdirectory (src/FeatureManager)
+        add_subdirectory (src/Algorithms)
+    endif()
 endif()
 
 if (ENABLE_METRICS)
+    # (buildem) dependencies for package
+    if (NOT ${BUILDEM_DIR} STREQUAL "None")
+        if (NOT TARGET ${boost_NAME})
+            include (boost)
+        endif()
+        
+        if (NOT TARGET ${python_NAME})
+            include (python)
+        endif()
+    else()
+        # initial packages if not using buildem 
+        FIND_PACKAGE(PythonLibs)
+        FIND_PACKAGE(Boost)
+    endif()
+    
+    include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
     add_subdirectory(libMetrics)
+
+    # np packages to include that are shared across packages
+    if (NOT ENABLE_NEUROPROOF)
+        # ?! add condition for unit tests
+        add_subdirectory (src/Utilities)
+        add_subdirectory (src/Rag)
+        add_subdirectory (src/Stack)
+        add_subdirectory (src/FeatureManager)
+        add_subdirectory (src/Algorithms)
+    endif()
 endif()
 
 

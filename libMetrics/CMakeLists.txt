@@ -22,9 +22,6 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     set (METRICS_DEPS ${boost_NAME} ${python_NAME})
     add_dependencies (NeuroProofMetrics ${METRICS_DEPS})
 else ()
-    # initial packages if not using buildem 
-    FIND_PACKAGE(PythonLibs)
-    FIND_PACKAGE(Boost)
     
     set (PYLIBLOC ${CMAKE_SOURCE_DIR}/lib/)
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
@@ -35,16 +32,7 @@ else ()
     set (boost_LIBS boost_system boost_python)
 endif()
 
-
-
 include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
-
-# add stack and rag directory dependency
-add_subdirectory (../src/Stack "${CMAKE_CURRENT_BINARY_DIR}/Stack")
-add_subdirectory (../src/Rag "${CMAKE_CURRENT_BINARY_DIR}/Rag")
-add_subdirectory (../src/Algorithms "${CMAKE_CURRENT_BINARY_DIR}/Algorithms")
-add_subdirectory (../src/FeatureManager "${CMAKE_CURRENT_BINARY_DIR}/FeatureManager")
-
 
 # include other external libraries
 set (METRICS_EXT_LIBS  ${boost_LIBS} ${PYTHON_LIBRARY_FILE})

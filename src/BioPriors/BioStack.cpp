@@ -1,14 +1,20 @@
 #include <FeatureManager/FeatureMgr.h>
 #include "BioStack.h"
 #include "MitoTypeProperty.h"
+#include <IO/StackIO.h>
+#include <Classifier/opencvRFclassifier.h>
 
 #include <json/value.h>
 #include <json/reader.h>
 #include <vector>
+#include <fstream>
 
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
 using std::vector;
+using std::cout; using std::endl;
+using std::ifstream;
+using std::string;
 
 namespace NeuroProof {
 
@@ -77,7 +83,8 @@ void BioStack::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
 
 void BioStack::read_prob_list(std::string prob_filename, std::string dataset_name)
 {
-    prob_list = VolumeProb::create_volume_array(prob_filename.c_str(), dataset_name.c_str());
+    prob_list = import_3Dh5vol_array<double>(prob_filename.c_str(),
+            dataset_name.c_str());
     cout << "Read prediction array" << endl;  
     
 }

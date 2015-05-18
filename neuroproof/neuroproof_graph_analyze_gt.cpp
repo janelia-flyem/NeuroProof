@@ -34,7 +34,10 @@
 #include <Utilities/ScopeTime.h>
 
 // utilties for importing rags
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
+
+// utilties for importing stacks
+#include <IO/StackIO.h>
 
 // utitlies for parsing options
 #include <Utilities/OptionParser.h>
@@ -1063,11 +1066,11 @@ void run_analyze_gt(AnalyzeGTOptions& options)
     load_json(options.callback_uri, status_json);
     
     //seg_filename, groundtruth_filename 
-    VolumeLabelPtr seg_labels = VolumeLabelData::create_volume(
+    VolumeLabelPtr seg_labels = import_h5labels( 
             options.seg_filename.c_str(), SEG_DATASET_NAME);
     cout << "Read seg stack" << endl;
 
-    VolumeLabelPtr gt_labels = VolumeLabelData::create_volume(
+    VolumeLabelPtr gt_labels = import_h5labels(
             options.groundtruth_filename.c_str(), SEG_DATASET_NAME);
     cout << "Read GT stack" << endl;
 
@@ -1305,7 +1308,7 @@ void run_analyze_gt(AnalyzeGTOptions& options)
 
     // load body exclusions for comparative analysis (e.g., glia)
     if (options.exclusions_filename != "") {
-        gt_stack.set_body_exclusions(options.exclusions_filename);
+        import_stack_exclusions(&gt_stack, options.exclusions_filename);
         stack.set_gt_labelvol(gt_stack.get_gt_labelvol());
     }
 

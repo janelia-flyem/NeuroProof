@@ -29,7 +29,7 @@
 #include <Utilities/ScopeTime.h>
 
 // utilties for importing rags
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
 
 // utitlies for parsing options
 #include <Utilities/OptionParser.h>

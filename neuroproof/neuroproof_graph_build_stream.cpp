@@ -1,6 +1,6 @@
 #include <BioPriors/BioStack.h>
 #include <FeatureManager/FeatureMgr.h>
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
 #include <Utilities/OptionParser.h>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -12,7 +12,7 @@
 
 using namespace NeuroProof;
 
-using std::cerr; using std::cout; using std::endl;
+using std::cerr; using std::cin; using std::cout; using std::endl;
 using std::string;
 using std::vector;
 using namespace boost::algorithm;

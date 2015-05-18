@@ -128,14 +128,14 @@ class VolumeLabelData : public VolumeData<Label_t> {
         return label_mapping;
     }
 
+    //! TODO: Factor out (DANGER) hash table that keeps track of label mappings
+    std::tr1::unordered_map<Label_t, Label_t> label_mapping;
   private:
     /*!
      * Private definition of constructor to prevent stack allocation.
     */
     VolumeLabelData() : VolumeData<Label_t>() {}
 
-    //! hash table that keeps track of label mappings
-    std::tr1::unordered_map<Label_t, Label_t> label_mapping;
 
     /*!
      * Keeps track of which labels have been mapped to which label.

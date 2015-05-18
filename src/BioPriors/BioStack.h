@@ -5,13 +5,14 @@
 #include <string>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
+#include <IO/StackIO.h>
 
 namespace NeuroProof {
 
 class BioStack : public Stack {
   public:
     BioStack(VolumeLabelPtr labels_) : Stack(labels_) {}
-    BioStack(std::string stack_name) : Stack(stack_name) {}
+    BioStack(std::string stack_name) : Stack(import_stack(stack_name)) {}
     
     void read_prob_list(std::string prob_filename, std::string dataset_name);
 
@@ -24,7 +25,7 @@ class BioStack : public Stack {
     void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
 
     bool is_mito(Label_t label);
-    void serialize_graph_info(Json::Value& json_writer);
+    void serialize_graph_info(Json::Value* json_writer);
     
     void set_classifier();
     void save_classifier(std::string clfr_name);

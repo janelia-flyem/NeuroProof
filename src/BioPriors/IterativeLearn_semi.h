@@ -4,6 +4,7 @@
 #include "IterativeLearn.h"
 #include <SemiSupervised/weightmatrix1.h>
 #include <SemiSupervised/kmeans.h>
+#include <Classifier/opencvRFclassifier.h>
 // #include "../Utilities/unique_row_matrix.h"
 
 

@@ -1,17 +1,29 @@
 #include "StackIO.h"
 #include "RagIO.h"
-#include <Stack/Stack.h>
 
-// used for importing h5 files
-#include <vigra/hdf5impex.hxx>
-#include <vigra/impex.hxx>
+#include <FeatureManager/FeatureMgr.h>
 
+using std::string;
+using boost::shared_ptr;
+using std::vector;
+using std::tr1::unordered_set;
+using std::tr1::unordered_map;
+using std::ifstream;
+using std::ofstream;
+
+namespace NeuroProof {
 
 // assume all label volumes are written to "stack" for now
-static const char * SEG_DATASET_NAME = "stack";
+static const char *SEG_DATASET_NAME = "stack";
 
 // assume all grayscale volumes are written to "gray" for now
 static const char * GRAY_DATASET_NAME = "gray";
+
+//! declaration of typedef for mapping of rag edges to doubles
+typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
+    
+//! declaration of typedef for mapping of rag edges to location 
+typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
 
 /*!
  * Support function called by 'serialize_stack' that actually writes
@@ -20,7 +32,8 @@ static const char * GRAY_DATASET_NAME = "gray";
  * \param optimal_prob_edge_loc determine strategy to select edge location
  * \param disable_prob_comp determines whether saved prob values are used
 */
-void export_stack_graph(const char* graph_name, bool optimal_prob_edge_loc, bool disable_prob_comp = false);
+void export_stack_graph(Stack* stack, const char* graph_name,
+        bool optimal_prob_edge_loc, bool disable_prob_comp = false);
 
 
 /*!
@@ -28,30 +41,29 @@ void export_stack_graph(const char* graph_name, bool optimal_prob_edge_loc, bool
  * the volume labels to h5 on disk.
  * \param h5_name name of h5 file
 */
-void export_labelsh5(const char* h5_name);
+void export_labelsh5(Stack* stack, const char* h5_name);
 
 
 Stack import_h5stack(std::string stack_name)
 {
-    Stack stack(VolumeLabelPtr());
+    VolumeLabelPtr ptr;
+    Stack stack(ptr);
     
     try {
-        labelvol = VolumeLabelData::create_volume(stack_name.c_str(),
+        VolumeLabelPtr labelvol = import_h5labels(stack_name.c_str(),
                 SEG_DATASET_NAME);
+        stack.set_labelvol(labelvol);
     } catch (std::runtime_error &error) {
         throw ErrMsg(stack_name + string(" not loaded"));
     }
  
     try {
-        grayvol = VolumeGray::create_volume(stack_name.c_str(),
+        VolumeGrayPtr grayvol = import_3Dh5vol<unsigned char>(stack_name.c_str(),
                 GRAY_DATASET_NAME);
+        stack.set_grayvol(grayvol);
     } catch (std::runtime_error &error) {
         // allow stacks without grayscale volumes
     }
-}
-
-
-
 }
 
 VolumeLabelPtr import_h5labels(const char * h5_name,
@@ -86,112 +98,7 @@ VolumeLabelPtr import_h5labels(const char * h5_name,
     return volumedata; 
 }
 
-template <typename T>
-boost::shared_ptr<VolumeData<T> >::import_3Dh5vol(
-        const char * h5_name, const char * dset)
 
-{
-    vigra::HDF5ImportInfo info(h5_name, dset);
-    vigra_precondition(info.numDimensions() == 3, "Dataset must be 3-dimensional.");
-
-    shared_ptr<Volumedata<T> > volumedata = VolumeData<T>::create_volume();
-
-    vigra::TinyVector<long long unsigned int,3> shape(info.shape().begin());
-    volumedata->reshape(shape);
-    // read h5 file into volumedata with correctly set shape
-    vigra::readHDF5(info, *volumedata);
-
-    return volumedata; 
-}
-
-template <typename T>
-vector<shared_ptr<VolumeData<T> > > 
-    import_3Dh5vol_array(const char * h5_name, const char * dset)
-{
-    vigra::HDF5ImportInfo info(h5_name, dset);
-    vigra_precondition(info.numDimensions() == 4, "Dataset must be 4-dimensional.");
-
-    vigra::TinyVector<long long unsigned int,4> shape(info.shape().begin());
-    vigra::MultiArray<4, T> volumedata_temp(shape);
-    vigra::readHDF5(info, volumedata_temp);
-    
-    // since the X,Y,Z,ch is read in as ch,Z,Y,X transpose
-    volumedata_temp = volumedata_temp.transpose();
-
-    vector<VolumeProbPtr> vol_array;
-    vigra::TinyVector<long long unsigned int,3> shape2;
-
-    // tranpose the shape dimensions as well
-    shape2[0] = shape[3];
-    shape2[1] = shape[2];
-    shape2[2] = shape[1];
-
-    // for each channel, create volume data and push in array
-    for (int i = 0; i < shape[0]; ++i) {
-        shared_ptr<Volumedata<T> > volumedata = VolumeData<T>::create_volume();
-        vigra::TinyVector<vigra::MultiArrayIndex, 1> channel(i);
-        (*volumedata) = volumedata_temp.bindOuter(channel); 
-        
-        vol_array.push_back(boost::shared_ptr<VolumeData<T> >(volumedata));
-    }
-
-    return vol_array; 
-}
-
-template <typename T>
-vector<boost::shared_ptr<VolumeData<T> > > 
-    import_3Dh5vol_array(const char * h5_name, const char * dset,
-            unsigned int dim1size)
-{
-    vigra::HDF5ImportInfo info(h5_name, dset);
-    vigra_precondition(info.numDimensions() == 4, "Dataset must be 4-dimensional.");
-
-    vigra::TinyVector<long long unsigned int,4> shape(info.shape().begin());
-    vigra::MultiArray<4, T> volumedata_temp(shape);
-    vigra::readHDF5(info, volumedata_temp);
-    
-    // since the X,Y,Z,ch is read in as ch,Z,Y,X transpose
-    volumedata_temp = volumedata_temp.transpose();
-
-    vector<VolumeProbPtr> vol_array;
-    vigra::TinyVector<long long unsigned int,3> shape2;
-
-    // tranpose the shape dimensions as well
-    shape2[0] = shape[3];
-    shape2[1] = shape[2];
-    shape2[2] = shape[1];
-
-    // prediction must be the same size or larger than the label volume
-    if (dim1size > shape2[0]) {
-        throw ErrMsg("Label volume has a larger dimension than the prediction volume provided");
-    }
-    
-    // extract border from shape and size of label volume
-    unsigned int border = (shape2[0] - dim1size) / 2;
-
-    // if a border needs to be applied the volume should be equal size in all dimensions
-    // TODO: specify borders for each dimension
-    if (border > 0) {
-        if ((shape2[0] != shape2[1]) || (shape2[0] != shape2[2])) {
-            throw ErrMsg("Dimensions of prediction should be equal in X, Y, Z");
-        }
-    }
-
-
-
-    // for each channel, create volume data and push in array
-    for (int i = 0; i < shape[0]; ++i) {
-        shared_ptr<Volumedata<T> > volumedata = VolumeData<T>::create_volume();
-        vigra::TinyVector<vigra::MultiArrayIndex, 1> channel(i);
-        (*volumedata) = (volumedata_temp.bindOuter(channel)).subarray(
-                vigra::Shape3(border, border, border), vigra::Shape3(shape2[0]-border,
-                    shape2[1]-border, shape2[2]-border)); 
-        
-        vol_array.push_back(boost::shared_ptr<VolumeData<T> >(volumedata));
-    }
-
-    return vol_array; 
-}
 
 shared_ptr<VolumeData<unsigned char> > import_8bit_images(
         vector<string>& file_names)
@@ -203,7 +110,7 @@ shared_ptr<VolumeData<unsigned char> > import_8bit_images(
         throw ErrMsg("Cannot read non-grayscale image stack");
     }
 
-    shared_ptr<Volumedata<unsigned char> > volumedata =
+    shared_ptr<VolumeData<unsigned char> > volumedata =
         VolumeData<unsigned char>::create_volume();
     volumedata->reshape(vigra::MultiArrayShape<3>::type(info_init.width(),
                 info_init.height(), file_names.size()));
@@ -222,13 +129,14 @@ shared_ptr<VolumeData<unsigned char> > import_8bit_images(
     return volumedata;
 }
 
-
-void export_3Dh5vol(shared_ptr<VolumeData<T> > volume,
+void export_3Dh5vol(VolumeLabelPtr volume, 
         const char* h5_name, const char * h5_path)
 {
     // x,y,z data will be written as z,y,x in the h5 file by default
     vigra::writeHDF5(h5_name, h5_path, *volume);
 }
+
+
 
 void import_stack_exclusions(Stack* stack, string exclusions_json)
 {
@@ -270,16 +178,17 @@ void export_stack(Stack* stack, const char* h5_name, const char* graph_name,
                 optimal_prob_edge_loc, disable_prob_comp);
     }
     export_labelsh5(stack, h5_name);
-   
+  
+    VolumeGrayPtr grayvol = stack->get_grayvol(); 
     if (grayvol) {
-        export_3Dh5vol(graphvol, h5_name, GRAY_DATASET_NAME)
+        export_3Dh5vol(grayvol, h5_name, GRAY_DATASET_NAME);
     } 
 }
 
-void Stack::export_labelsh5(Stack* stack, const char* h5_name)
+void export_labelsh5(Stack* stack, const char* h5_name)
 {
     stack->get_labelvol()->rebase_labels();
-    export_3Dh5vol(labelvol-stack->get_labelvol(), h5_name, SEG_DATASET_NAME)
+    export_3Dh5vol(stack->get_labelvol(), h5_name, SEG_DATASET_NAME);
 }
 
 
@@ -290,6 +199,8 @@ void export_stack_graph(Stack* stack, const char* graph_name,
     EdgeLoc best_edge_loc;
     stack->determine_edge_locations(best_edge_z, best_edge_loc, optimal_prob_edge_loc);
     RagPtr rag = stack->get_rag();
+
+    FeatureMgrPtr feature_manager = stack->get_feature_manager();
 
     // set edge properties for export 
     for (Rag_t::edges_iterator iter = rag->edges_begin();
@@ -323,7 +234,7 @@ void export_stack_graph(Stack* stack, const char* graph_name,
     }
 
     // biopriors might write specific information -- calls derived function
-    serialize_graph_info(json_writer);
+    stack->serialize_graph_info(&json_writer);
 
     int id = 0;
     for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {
@@ -341,4 +252,6 @@ void export_stack_graph(Stack* stack, const char* graph_name,
     
     fout << json_writer;
     fout.close();
+}
+
 }

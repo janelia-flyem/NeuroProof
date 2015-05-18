@@ -3,7 +3,7 @@ project (SemiSupervised)
 
 set (SOURCES kmeans.cpp weightmatrix1.cpp)
 
-include_directories (${CMAKE_SOURCE_DIR}/src/external_packages)
+include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
 
 add_library (SemiSupervised SHARED ${SOURCES})
 

@@ -48,12 +48,6 @@ class VolumeData : public vigra::MultiArray<3, T> {
      * \return shared pointer to volume data
     */
     static boost::shared_ptr<VolumeData<T> > create_volume();
-
-  protected:
-    /*!
-     * Private definition of constructor to prevent stack allocation.
-    */
-    VolumeData() : vigra::MultiArray<3,T>() {}
     
     /*!
      * Copy constructor to create VolumeData from a multiarray view.  It
@@ -61,6 +55,13 @@ class VolumeData : public vigra::MultiArray<3, T> {
      * \param view_ view to a multiarray
     */
     VolumeData(const vigra::MultiArrayView<3, T>& view_) : vigra::MultiArray<3,T>(view_) {}
+
+  protected:
+    /*!
+     * Private definition of constructor to prevent stack allocation.
+    */
+    VolumeData() : vigra::MultiArray<3,T>() {}
+    
 };
 
 

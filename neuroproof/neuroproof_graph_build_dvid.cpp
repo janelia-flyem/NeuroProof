@@ -2,9 +2,12 @@
 #include <FeatureManager/FeatureMgr.h>
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
+#include <IO/StackIO.h>
 
 #include <libdvid/DVIDNodeService.h>
+#include <Classifier/vigraRFclassifier.h>
+#include <Classifier/opencvRFclassifier.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
@@ -17,6 +20,7 @@ using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
+using std::ifstream;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";
 static const char * PROPERTY_KEY = "np-features";
@@ -203,7 +207,7 @@ void run_graph_build(BuildOptions& options)
         libdvid::DVIDNodeService dvid_node(options.dvid_servername, options.uuid);
        
         // establish ROI (make a 1 pixel border)
-        vector<unsigned int> start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
+        vector<int> start; start.push_back(options.x-1); start.push_back(options.y-1); start.push_back(options.z-1);
         libdvid::Dims_t sizes; sizes.push_back(options.xsize+2); sizes.push_back(options.ysize+2); sizes.push_back(options.zsize+2);
       
         // retrieve volume 
@@ -227,7 +231,7 @@ void run_graph_build(BuildOptions& options)
         BioStack stack(initial_labels); 
 
         if (options.prediction_filename != "") {
-            vector<VolumeProbPtr> prob_list = VolumeProb::create_volume_array(
+            vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
                     options.prediction_filename.c_str(), PRED_DATASET_NAME, stack.get_xsize());
             FeatureMgrPtr feature_manager(new FeatureMgr(prob_list.size()));
             feature_manager->set_basic_features(); 
@@ -463,7 +467,7 @@ void run_graph_build(BuildOptions& options)
                         options.x-1, options.y-1, options.z-1);
             }
 
-            stack.serialize_stack("stack.h5", "graph.json", false,
+            export_stack(&stack, "stack.h5", "graph.json", false,
                     options.dvidgraph_load_saved);
         }
     } catch (ErrMsg& err) {

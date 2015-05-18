@@ -237,8 +237,8 @@ class Stack : public StackBase {
      * information to the graph being written.
      * \param json_write json data to be written to disk
     */
-    virtual void serialize_graph_info(Json::Value* json_write) {}
-     
+    virtual void serialize_graph_info(Json::Value* json_writer) {}
+
   protected:
     /*!
      * Add edge to rag and update feature manager.
@@ -259,6 +259,19 @@ class Stack : public StackBase {
     //! declaration of typedef for mapping of rag edges to location 
     typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
    
+    // TODO: remove labelcount in favor of an unordered_map
+    /*!
+     * Structure to associate a count with each label used
+     * in the construction of the contigency table.
+    */
+    struct LabelCount{
+        Label_t lbl;
+        size_t count;
+        LabelCount(): lbl(0), count(0) {};	 	 		
+        LabelCount(Label_t plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
+    };
+
+  public:
     /*!
      * Support function called by 'serialize_graph_info' to find the
      * ideal point on the edge between two labels for examination.
@@ -271,18 +284,6 @@ class Stack : public StackBase {
     void determine_edge_locations(EdgeCount& best_edge_z,
         EdgeLoc& best_edge_loc, bool use_probs);
 
-    // TODO: remove labelcount in favor of an unordered_map
-    /*!
-     * Structure to associate a count with each label used
-     * in the construction of the contigency table.
-    */
-    struct LabelCount{
-        Label_t lbl;
-        size_t count;
-        LabelCount(): lbl(0), count(0) {};	 	 		
-        LabelCount(Label_t plbl, size_t pcount): lbl(plbl), count(pcount) {};	 	 		
-    };
-    
   private:
     /*!
      * Updates the assignment of labels to ground truth labels when

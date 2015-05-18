@@ -2,13 +2,16 @@
 #include <FeatureManager/FeatureMgr.h>
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
-#include <Rag/RagIO.h>
+#include <IO/RagIO.h>
 
 #include <libdvid/DVIDNodeService.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <iostream>
+#include <fstream>
 
+#include <Classifier/opencvRFclassifier.h>
+#include <Classifier/vigraRFclassifier.h>
 
 using namespace NeuroProof;
 
@@ -17,6 +20,8 @@ using std::string;
 using std::vector;
 using namespace boost::algorithm;
 using std::tr1::unordered_set;
+using std::ifstream;
+
 
 static const char * PROPERTY_KEY = "np-features";
 static const char * PROB_KEY = "np-prob";
