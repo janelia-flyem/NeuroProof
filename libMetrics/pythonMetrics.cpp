@@ -21,7 +21,7 @@ class StackPython {
 
         volume_forXYZ(*labels,x,y,z) {
             labels->set(x,y,z,
-                    boost::python::extract<unsigned long long>(stack_labels[boost::python::make_tuple(z,y,x)]));
+                    boost::python::extract<double>(stack_labels[boost::python::make_tuple(z,y,x)]));
         }
     }
 
