@@ -18,8 +18,8 @@ else()
     set (vigra_LIB vigraimpex)
 endif()
 
-target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_libraries} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
-target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_libraries}
+target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
+target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES}
     ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
 get_target_property (basic_rag_test_exe basic_rag_test LOCATION)

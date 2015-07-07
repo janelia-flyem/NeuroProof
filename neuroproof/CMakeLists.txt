@@ -91,8 +91,8 @@ else ()
     set (vigra_LIB vigraimpex)
     set (opencv_LIBS opencv_ml opencv_core)
     set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} png curl jpeg lz4)
-    
+    set (libdvid_LIBS dvidcpp.a  png curl jpeg lz4)
+
     if (ENABLE_GUI)
         set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon QVTK)
         set (qt_LIBS  ${QT_LIBRARIES})
