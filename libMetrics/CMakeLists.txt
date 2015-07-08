@@ -22,8 +22,8 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     set (METRICS_DEPS ${boost_NAME} ${python_NAME})
     add_dependencies (NeuroProofMetrics ${METRICS_DEPS})
 else ()
-    
-    set (PYLIBLOC ${CMAKE_SOURCE_DIR}/lib/)
+   
+    set (PYLIBLOC ${NEUROPROOF_PYTHON_INSTALL_DIR})
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
 
     set (hdf5_LIBRARIES hdf5 hdf5_hl)
@@ -41,7 +41,7 @@ target_link_libraries (NeuroProofMetrics Stack Rag FeatureManager Algorithms ${M
     
 # copy neuroproof metric lib to the proper location
 get_target_property (NeuroProofMetrics_lib NeuroProofMetrics LOCATION)
-add_custom_command (
-    TARGET NeuroProofMetrics
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofMetrics_lib} ${PYLIBLOC})
+
+install(FILES ${NeuroProofMetrics_lib} 
+        DESTINATION ${PYLIBLOC})
+

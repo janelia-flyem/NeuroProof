@@ -62,7 +62,7 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
         )
     endif()
 else ()
-    set (PYLIBLOC ${CMAKE_SOURCE_DIR}/lib)
+    set (PYLIBLOC ${NEUROPROOF_PYTHON_INSTALL_DIR})
     
     if (ENABLE_GUI)
         SET (QT_BUILT TRUE)
@@ -183,15 +183,12 @@ get_target_property (NeuroProofRag_lib NeuroProofRag LOCATION)
 
 
 # copy executables
-add_custom_command (
-    TARGET NeuroProofPriority
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofPriority_lib} ${PYLIBLOC})
 
-add_custom_command (
-    TARGET NeuroProofRag
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${NeuroProofRag_lib} ${PYLIBLOC})
+install(FILES ${NeuroProofPriority_lib} 
+        DESTINATION ${PYLIBLOC})
+
+install(FILES ${NeuroProofRag_lib} 
+        DESTINATION ${PYLIBLOC})
 
 # ctests
 

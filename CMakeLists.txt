@@ -58,6 +58,24 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
     message("Using cmake modules from ${BUILDEM_REPO_DIR}")
 else()
     set (BUILDLOC ${CMAKE_SOURCE_DIR})
+
+    ######################################################################
+    #
+    #      find default install directory for Python modules
+    #      (usually PYTHONDIR/Lib/site-packages)
+    #
+    ######################################################################
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+        "from distutils.sysconfig import *; print get_python_lib(1)"
+        OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+    FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} NEUROPROOF_PYTHON_INSTALL_DIR)
+    SET(NEUROPROOF_PYTHON_INSTALL_DIR ${NEUROPROOF_PYTHON_INSTALL_DIR}
+        CACHE PATH "where to install the libdvid Python package" FORCE)
+    # this is the install path relative to CMAKE_INSTALL_PREFIX,
+    # use this in INSTALL() commands to get packaging right
+    FILE(RELATIVE_PATH NEUROPROOF_PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${NEUROPROOF_PYTHON_INSTALL_DIR})
+
+
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
