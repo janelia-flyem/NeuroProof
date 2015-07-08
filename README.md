@@ -5,12 +5,19 @@ The NeuroProof software is an image segmentation tool currently being used
 in [the FlyEM project at Janelia Farm Research Campus](http://janelia.org/team-project/fly-em)
 to help reconstruct neuronal structure in the fly brain.  This tool
 provides routines for efficiently agglomerating an initial volume that
-is over-segmented.  While NeuroProof has been tested in the domain
+is over-segmented.  It provides several advances over Fly EM previous, but actively maintained tool, [Gala](https://github.com/janelia-flyem/gala):
+
+* Faster implementation of agglomeration written in C++ (instead of Python)
+* Incorporation of biological priors (like mitochondria) to improve the quality of the segmentation
+(see [PLOS ONE paper](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
+* Introduction of new metrics for analyzing segmentation quality
+
+While NeuroProof has been tested in the domain
 of EM reconstruction, we believe it to be widely applicable to other
 application domains.  In addition, to graph agglomeration tools, this
 package also provides routines for estimating the uncertainty of a segmentation
 [Plaza, et al '12](http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448)
-and mechanisms to comparing with ground truth.
+and algorithms to compare with ground truth.
 
 ###Features
 
@@ -20,80 +27,95 @@ and mechanisms to comparing with ground truth.
 * Algorithm to estimate uncertainty of graph and is predicted edge confidences
 * Tools to assess the amount of work required to edit/revise a segmentation
 * GUI front-end for visualizing segmentation results; interface for merging segments together
-* Algorithm for performing focused training using simple GUI
+* Algorithm for performing focused training (active learning based supervoxel merging classification) using simple GUI
 * Simple and access-efficient graph-library implementation and straightforward conversion
 to powerful boost graph library
 * Data stack implementation that allows one to leverage image processing
 algorithms in [Vigra](http://hci.iwr.uni-heidelberg.de/vigra)
 * Python bindings to enable accessing the Rag, segmentation routines, and
-editing operations in various tool environments like in [Gala](https://github.com/janelia-flyem/gala) and [Raveler](https://openwiki.janelia.org/wiki/display/flyem/Raveler)
+editing operations in various tool environments like in
+[Gala](https://github.com/janelia-flyem/gala) and [Raveler](https://openwiki.janelia.org/wiki/display/flyem/Raveler)
 
 
 ## Installation Instructions
 
-NeuroProof is currently only supported on linux operating systems.  It probably
-would be relatively straightforward to build on a MacOS.  Documentation
+NeuroProof has been on several different linux environments.  Tests on MacOS are forthcoming.
+Documentation
 in NeuroProof follow Doxygen comment conventions; an html view can be created
 by running the following command:
 
     % doxygen doxygenconfig.file
 
-See the CMakeLists.txt file for the ENABLE flags supported.  The GUI is currently
-disabled by default.  Please add -DENABLE_GUI=1.  This will greatly increase build
-time when using Buildem (see below).  One can also selectively build libraries
-and disable the main neuroproof builds by -DENABLE_NEUROPROOF=0.
-    
-NeuroProof supports two mechanisms for installation:
+Neuroproof has several dependencies.  In principle, all of these dependencies
+can be built by hand and then the following commands issued:
 
-### Buildem
-
-The most-supported and most push-button approach involves using the build system
-called [buildem](https://github.com/janelia-flyem/buildem).  The advantage
-of using buildem is that it will automatically build all of the dependencies
-and put it in a separate environment so as not to conflict with any other
-builds.  These automatic builds contain versions of the dependencies that
-are know to work with NeuroProof.  The disadvantage of buildem is that it will
-install a lot of package dependencies.  The initial build of all of the dependencies
-could take on the order of an hour to complete.
-
-To build NeuroProof using buildem
-
-    % mkdir build; cd build;
-    % cmake .. -DBUILDEM_DIR=/user-defined/path/to/build/directory
-    % make -j num_processors
-
-This will automatically load the binaries into BUILDEM_DIR/bin.  To run
-the test regressions, add this directory into your PATH environment and
-run <i>make test</i> in the <i>build</i> directory.
-
-
-### NeuroProof Only
-
-NeuroProof can be built without Buildem with the following:
-
-    % mkdir build; cd build;
+    % mkdir build; cd build
     % cmake ..
-    % make
+    % make; make install
 
-To successfully compile this code, you will need to install the following
-dependencies and make sure their headers and libraries can be found in
-the common linux search paths:
+To simplify the build we now use the [conda-build][2] tool.
+The resulting binary is uploaded to the [ilastik binstar channel][3],
+and can be installed using the [conda][1] package manager.  The installation
+will install all of the neuroproof binaries (including the interactive tool)
+and the python libraries.
 
-* jsoncpp
-* boost
-* vigra
-* hdf5
-* opencv
-* vtk
-* qt4
+    [1]: http://conda.pydata.org/
+    [2]: http://conda.pydata.org/docs/build.html
+    [3]: https://binstar.org/flyem
 
-For more information on the supported versions of these dependencies, please
-consult buildem.
+The NeuroProof dependencies can be found in [Fly EM's conda recipes](https://github.com/janelia-flyem/flyem-build-conda.git).
 
-To run <i>make test</i>, the installed libraries will need to be in the default
-library search path or set in LD_LIBRARY_PATH.  The PYTHONPATH environment
-variable will need to be set to the lib directory created within NeuroProof.  The
-binaries produced will be placed in the NeuroProof <i>bin</i> directory.
+[buildem](https://github.com/janelia-flyem/buildem) is no longer supported.  Instructions on how to compile/develop NeuroProof without having to worry
+about conda are provided below.
+
+### CONDA
+The [Miniconda](http://conda.pydata.org/miniconda.html) tool first needs to installed:
+
+```
+# Install miniconda to the prefix of your choice, e.g. /my/miniconda
+
+# LINUX:
+wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+bash Miniconda-latest-Linux-x86_64.sh
+
+# MAC:
+wget https://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh
+bash Miniconda-latest-MacOSX-x86_64.sh
+
+# Activate conda
+CONDA_ROOT=`conda info --root`
+source ${CONDA_ROOT}/bin/activate root
+```
+Once conda is in your system path, call the following to install neuroproof:
+
+    % conda create -n CHOOSE_ENV_NAME -c flyem neuroproof
+
+Conda allows builder to create multiple environments.  To use the executables
+and libraries, set your PATH to the location of PREFIX/CHOOSE_ENV_NAME/bin.
+
+### Developers' Builder Guide
+Developing has never been easier using conda.  If you plan to actively modify
+the code, first install neuroproof as discussed above.  Then clone
+this repository into the directory of your choosing.  The package cmake
+can still be used but the environment variables must be set to point to
+the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  NeuroProof
+includes a simple wrapper script 'compile_against_conda.sh' that simply
+call cmake with the correct environment variables.  To build NeuroProof:
+
+    % mkdir build; cd build
+    % export CONDA_ENV_PATH=PREFIX/CHOOSE_ENV_NAME
+    % make -j NUM_PROCESSORS
+    % make install
+
+Calling make install will over-write the binaries and libraries in your CHOOSE_ENV_NAME.
+Currently, LD_LIBRARY_PATH needs to be set to PREFIX/CHOOSE_ENV_NAME/lib to use
+libraries installed this way.
+
+For coding that requires adding new dependencies please consult documentation for
+building conda builds and consult Fly EM's conda recipes.
+
+Contributors should verify regressions using 'make test' and submit pull requests
+so that the authors can properly update the binstar repository and build system.
 
 ## NeuroProof Examples
 
@@ -112,8 +134,7 @@ due to the size of the directory.)
 
 ## To Be Done
 
-* Finish comments; better integration of latest training algorithms (build_rag -- unnecessary feature comp?, iterative learning in BioPriors, etc)
-* Add capability to call NeuroProof as a service in clustered environments
+* Update algorithms based on latest Fly EM research
+* Add more library/service capabilities (especially for generating metrics)
 * Direct support for 2D datasets (2D data is generally allowable in the current implementation)
-* Improved algorithms for handling EM reconstruction specific goals
 
