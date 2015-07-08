@@ -1,20 +1,20 @@
-# NeuroProof 1.1 [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/gray_janelia_logo.png)](http://janelia.org/)
+# NeuroProof 1.1 [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 ##Toolkit for Graph-based Image Segmentation and Analysis
 
 The NeuroProof software is an image segmentation tool currently being used
 in [the FlyEM project at Janelia Farm Research Campus](http://janelia.org/team-project/fly-em)
 to help reconstruct neuronal structure in the fly brain.  This tool
 provides routines for efficiently agglomerating an initial volume that
-is over-segmented.  It provides several advances over Fly EM previous, but actively maintained tool, [Gala](https://github.com/janelia-flyem/gala):
+is over-segmented.  It provides several advances over Fly EM's previous, but actively maintained tool, [Gala](https://github.com/janelia-flyem/gala):
 
-* Faster implementation of agglomeration written in C++ (instead of Python)
+* Faster implementation of agglomeration (written in C++ instead of Python)
 * Incorporation of biological priors (like mitochondria) to improve the quality of the segmentation
 (see [PLOS ONE paper](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
 * Introduction of new metrics for analyzing segmentation quality
 
 While NeuroProof has been tested in the domain
 of EM reconstruction, we believe it to be widely applicable to other
-application domains.  In addition, to graph agglomeration tools, this
+application domains.  In addition to graph agglomeration tools, this
 package also provides routines for estimating the uncertainty of a segmentation
 [Plaza, et al '12](http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448)
 and algorithms to compare with ground truth.
@@ -24,7 +24,7 @@ and algorithms to compare with ground truth.
 * Algorithm for efficiently learning an agglomeration classifier
 * Algorithm for efficiently agglomerating an oversegmented volume
 * Implementation of variation of information metric for comparing two labeled volumes
-* Algorithm to estimate uncertainty of graph and is predicted edge confidences
+* Algorithm to estimate uncertainty in the segmentation graph
 * Tools to assess the amount of work required to edit/revise a segmentation
 * GUI front-end for visualizing segmentation results; interface for merging segments together
 * Algorithm for performing focused training (active learning based supervoxel merging classification) using simple GUI
@@ -39,7 +39,7 @@ editing operations in various tool environments like in
 
 ## Installation Instructions
 
-NeuroProof has been on several different linux environments.  Tests on MacOS are forthcoming.
+NeuroProof has been tested on several different linux environments.  Tests on MacOS are forthcoming.
 Documentation
 in NeuroProof follow Doxygen comment conventions; an html view can be created
 by running the following command:
@@ -53,20 +53,15 @@ can be built by hand and then the following commands issued:
     % cmake ..
     % make; make install
 
-To simplify the build we now use the [conda-build][2] tool.
-The resulting binary is uploaded to the [ilastik binstar channel][3],
-and can be installed using the [conda][1] package manager.  The installation
+To simplify the build we now use the [conda-build](http://conda.pydata.org/docs/build.html) tool.
+The resulting binary is uploaded to the [flyem binstar channel](https://binstar.org/flyem),
+and can be installed using the [conda](http://conda.pydata.org/) package manager.  The installation
 will install all of the neuroproof binaries (including the interactive tool)
 and the python libraries.
 
-    [1]: http://conda.pydata.org/
-    [2]: http://conda.pydata.org/docs/build.html
-    [3]: https://binstar.org/flyem
-
 The NeuroProof dependencies can be found in [Fly EM's conda recipes](https://github.com/janelia-flyem/flyem-build-conda.git).
 
-[buildem](https://github.com/janelia-flyem/buildem) is no longer supported.  Instructions on how to compile/develop NeuroProof without having to worry
-about conda are provided below.
+[buildem](https://github.com/janelia-flyem/buildem) is no longer supported.  Instructions on how to compile/develop NeuroProof with minimal interaction with conda are provided below.
 
 ### CONDA
 The [Miniconda](http://conda.pydata.org/miniconda.html) tool first needs to installed:
@@ -100,7 +95,7 @@ this repository into the directory of your choosing.  The package cmake
 can still be used but the environment variables must be set to point to
 the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  NeuroProof
 includes a simple wrapper script 'compile_against_conda.sh' that simply
-call cmake with the correct environment variables.  To build NeuroProof:
+calls cmake with the correct environment variables.  To build NeuroProof:
 
     % mkdir build; cd build
     % export CONDA_ENV_PATH=PREFIX/CHOOSE_ENV_NAME
