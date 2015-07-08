@@ -22,7 +22,7 @@ namespace NeuroProof {
  * Initializes from a stack h5 file
  * \param stack_name name of stack h5 file
 */
-Stack import_stack(std::string stack_name);
+Stack import_h5stack(std::string stack_name);
 
 /*!
  * Function to create a volume label data object

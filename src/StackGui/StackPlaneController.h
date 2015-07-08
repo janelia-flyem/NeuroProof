@@ -11,7 +11,7 @@
 #ifndef STACKPLANECONTROLLER_H
 #define STACKPLANECONTROLLER_H
 
-#include "StackObserver.h"
+#include <Stack/StackObserver.h>
 #include <vtkCommand.h>
 #include <vtkSmartPointer.h>
 #include <vtkInteractorStyleImage.h>

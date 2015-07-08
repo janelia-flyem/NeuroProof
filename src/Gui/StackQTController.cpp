@@ -1,9 +1,9 @@
 #include "StackQTController.h"
 #include "StackQTUi.h"
-#include <Stack/StackPlaneController.h>
-#include <Stack/StackBodyController.h>
+#include <StackGui/StackPlaneController.h>
+#include <StackGui/StackBodyController.h>
 #include <QTimer>
-#include <Stack/StackSession.h>
+#include <StackGui/StackSession.h>
 #include <EdgeEditor/EdgeEditor.h>
 #include <EdgeEditor/EdgeRankToufiq.h>
 #include "MessageBox.h"

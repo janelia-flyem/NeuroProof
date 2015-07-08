@@ -17,8 +17,6 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     include (hdf5)
     include (jsoncpp) 
     add_dependencies (StackGui ${boost_NAME} ${hdf5_NAME} ${json_NAME} ${opencv_NAME} RescanQt4)
-else()
-    add_dependencies (Stack RescanQt4)
 endif()
 
 install (TARGETS StackGui DESTINATION lib${LIB_SUFFIX})

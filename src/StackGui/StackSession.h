@@ -11,11 +11,13 @@
 
 // model dispatches events
 #include <Stack/Dispatcher.h>
-#include <BioPriors/BioStack.h>
 #include <tr1/unordered_map>
+#include <BioPriors/BioStack.h>
 #include <string>
 
 namespace NeuroProof {
+
+struct BioStack;
 
 /*!
  * A type of dispatcher that is a model containing the state

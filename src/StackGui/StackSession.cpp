@@ -2,6 +2,7 @@
 #include <Rag/RagUtils.h>
 #include <Stack/Stack.h>
 #include <IO/RagIO.h>
+#include <IO/StackIO.h>
 #include <EdgeEditor/EdgeEditor.h>
 #include <FeatureManager/FeatureMgr.h>
 #include <json/json.h>
@@ -103,11 +104,10 @@ StackSession::StackSession(vector<string>& gray_images, string labelvolume)
 {
     initialize();
     try {
-        VolumeLabelPtr initial_labels = VolumeLabelData::create_volume(
-                labelvolume.c_str(), "stack");
+        VolumeLabelPtr initial_labels =  import_h5labels(labelvolume.c_str(), "stack");
         stack = new BioStack(initial_labels);
 
-        VolumeGrayPtr gray_data = VolumeGray::create_volume_from_images(gray_images);
+        VolumeGrayPtr gray_data = import_8bit_images(gray_images);
         stack->set_grayvol(gray_data);
         
         // create a new rag
@@ -143,7 +143,7 @@ void StackSession::export_session(string session_name)
 
             string stack_name = session_name + "/stack.h5"; 
             string graph_name = session_name + "/graph.json"; 
-            stack_exp->serialize_stack(stack_name.c_str(), graph_name.c_str(), false);
+            export_stack(stack_exp, stack_name.c_str(), graph_name.c_str(), false);
 	    //*Toufiq* save the classifier
             string classifier_name = session_name + "/sp_classifier.xml"; 
 	    if(stack!=NULL){
@@ -165,7 +165,7 @@ void StackSession::export_session(string session_name)
                 gtstack_exp->set_grayvol(VolumeGrayPtr());
                 string gtstack_name = session_name + "/gtstack.h5"; 
                 string gtgraph_name = session_name + "/gtgraph.json"; 
-                gtstack_exp->serialize_stack(gtstack_name.c_str(), gtgraph_name.c_str(), false);
+                export_stack(gtstack_exp, gtstack_name.c_str(), gtgraph_name.c_str(), false);
                 gtstack_exp->set_grayvol(stack->get_grayvol());
             }
         } catch (...) {

@@ -13,7 +13,7 @@
 #include "ui_neuroproof_stack_viewer.h"
 
 // main model for the stack viewer
-#include <Stack/StackSession.h>
+#include <StackGui/StackSession.h>
 
 namespace NeuroProof {
 

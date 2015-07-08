@@ -12,7 +12,7 @@
 #include <Utilities/OptionParser.h>
 
 // main GUI model
-#include <Stack/StackSession.h>
+#include <StackGui/StackSession.h>
 
 // main GUI controller
 #include <Gui/StackQTController.h>

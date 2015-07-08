@@ -17,6 +17,13 @@ using std::ifstream;
 using std::string;
 
 namespace NeuroProof {
+    
+BioStack::BioStack(string stack_name) : Stack(VolumeLabelPtr())
+{
+    Stack stack = import_h5stack(stack_name);
+    set_labelvol(stack.get_labelvol()); 
+    set_grayvol(stack.get_grayvol()); 
+}
 
 VolumeLabelPtr BioStack::create_syn_label_volume()
 {

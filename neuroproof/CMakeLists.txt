@@ -112,7 +112,7 @@ if (ENABLE_GUI)
     add_subdirectory (../src/Gui "${CMAKE_CURRENT_BINARY_DIR}/Gui")
     add_subdirectory (../src/StackGui "${CMAKE_CURRENT_BINARY_DIR}/StackGui")
     set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor Gui BioPriors FeatureManager
-        Algorithms Classifier SemiSupervised IO StackGui)
+        Algorithms Classifier SemiSupervised StackGui IO)
     set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
 else()
     set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors IO FeatureManager Algorithms Classifier SemiSupervised)

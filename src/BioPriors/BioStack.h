@@ -5,14 +5,13 @@
 #include <string>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#include <IO/StackIO.h>
 
 namespace NeuroProof {
 
 class BioStack : public Stack {
   public:
     BioStack(VolumeLabelPtr labels_) : Stack(labels_) {}
-    BioStack(std::string stack_name) : Stack(import_stack(stack_name)) {}
+    BioStack(std::string stack_name);
     
     void read_prob_list(std::string prob_filename, std::string dataset_name);
 
