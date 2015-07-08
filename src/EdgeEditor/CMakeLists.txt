@@ -14,3 +14,4 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME} ${opencv_NAME})
 endif()
 
+install (TARGETS EdgeEditor DESTINATION lib${LIB_SUFFIX})

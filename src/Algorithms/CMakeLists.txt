@@ -11,3 +11,5 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)
     add_dependencies (Algorithms ${boost_NAME})
 endif()
+
+install (TARGETS Algorithms DESTINATION lib${LIB_SUFFIX})

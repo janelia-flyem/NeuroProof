@@ -20,3 +20,5 @@ if (NOT BUILDEM_DIR STREQUAL "None")
 else()
     add_dependencies (Stack RescanQt4)
 endif()
+
+install (TARGETS StackGui DESTINATION lib${LIB_SUFFIX})

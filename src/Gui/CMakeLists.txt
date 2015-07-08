@@ -20,3 +20,5 @@ if (NOT BUILDEM_DIR STREQUAL "None")
 else()
     add_dependencies (Gui RescanQt4)
 endif()
+
+install (TARGETS Gui DESTINATION lib${LIB_SUFFIX})

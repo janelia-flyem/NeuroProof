@@ -13,3 +13,5 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (SemiSupervised ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
 endif()
 
+install (TARGETS SemiSupervised DESTINATION lib${LIB_SUFFIX})
+

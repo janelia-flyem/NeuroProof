@@ -9,4 +9,4 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (Rag ${boost_NAME})
 endif()
 
-
+install (TARGETS Rag DESTINATION lib${LIB_SUFFIX})

@@ -13,4 +13,4 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (Rag ${jsoncpp_NAME} ${boost_NAME} ${vigra_NAME}  ${hdf5_NAME})
 endif()
 
-
+install (TARGETS IO DESTINATION lib${LIB_SUFFIX})

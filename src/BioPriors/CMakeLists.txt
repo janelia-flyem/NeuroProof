@@ -14,4 +14,4 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
 endif()
 
-
+install (TARGETS BioPriors DESTINATION lib${LIB_SUFFIX})

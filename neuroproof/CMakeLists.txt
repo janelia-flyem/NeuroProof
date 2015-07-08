@@ -182,7 +182,7 @@ get_target_property (NeuroProofPriority_lib NeuroProofPriority LOCATION)
 get_target_property (NeuroProofRag_lib NeuroProofRag LOCATION)
 
 
-# copy executables
+# install python scripts and supporting libraries
 
 install(FILES ${NeuroProofPriority_lib} 
         DESTINATION ${PYLIBLOC})
@@ -190,6 +190,19 @@ install(FILES ${NeuroProofPriority_lib}
 install(FILES ${NeuroProofRag_lib} 
         DESTINATION ${PYLIBLOC})
 
+# install executables
+install (TARGETS neuroproof_graph_analyze DESTINATION bin)
+install (TARGETS neuroproof_graph_build_dvid DESTINATION bin)
+install (TARGETS neuroproof_graph_build_stream DESTINATION bin)
+install (TARGETS neuroproof_agg_prob_dvid DESTINATION bin)
+install (TARGETS neuroproof_graph_analyze_gt DESTINATION bin)
+install (TARGETS neuroproof_graph_learn DESTINATION bin)
+install (TARGETS neuroproof_graph_predict DESTINATION bin)
+install (TARGETS neuroproof_create_spgraph DESTINATION bin)
+
+if (ENABLE_GUI)
+    install (TARGETS neuroproof_stack_viewer DESTINATION bin)
+endif()
 # ctests
 
 enable_testing()

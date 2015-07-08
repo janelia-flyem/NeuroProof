@@ -12,4 +12,4 @@ if (NOT BUILDEM_DIR STREQUAL "None")
     add_dependencies (Stack ${boost_NAME})
 endif()
 
-
+install (TARGETS Stack DESTINATION lib${LIB_SUFFIX})
