@@ -29,6 +29,11 @@ StackSession::StackSession(string session_name)
     if (ends_with(session_name, ".h5")) {
         stack = new BioStack(session_name);
         stack->build_rag();
+        return;
+    } else if (ends_with(session_name, ".json")) {
+        stack = new BioStack(session_name);
+        stack->build_rag();
+        return;
     } else { //cirectory read
         // load label volume to examine
         stack = new BioStack(session_name + "/stack.h5"); 

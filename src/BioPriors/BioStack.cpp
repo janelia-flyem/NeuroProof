@@ -8,9 +8,11 @@
 #include <json/reader.h>
 #include <vector>
 #include <fstream>
+#include <boost/algorithm/string/predicate.hpp>
 
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
+using namespace boost::algorithm;
 using std::vector;
 using std::cout; using std::endl;
 using std::ifstream;
@@ -20,9 +22,15 @@ namespace NeuroProof {
     
 BioStack::BioStack(string stack_name) : Stack(VolumeLabelPtr())
 {
-    Stack stack = import_h5stack(stack_name);
-    set_labelvol(stack.get_labelvol()); 
-    set_grayvol(stack.get_grayvol()); 
+    if (ends_with(stack_name, ".json")) {
+        Stack stack = import_dvidstack(stack_name);
+        set_labelvol(stack.get_labelvol()); 
+        set_grayvol(stack.get_grayvol()); 
+    } else {
+        Stack stack = import_h5stack(stack_name);
+        set_labelvol(stack.get_labelvol()); 
+        set_grayvol(stack.get_grayvol()); 
+    }
 }
 
 VolumeLabelPtr BioStack::create_syn_label_volume()

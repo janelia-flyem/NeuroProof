@@ -25,6 +25,12 @@ namespace NeuroProof {
 Stack import_h5stack(std::string stack_name);
 
 /*!
+ * Initializes a substack from DVID
+ * \param json_name dvid config file
+*/
+Stack import_dvidstack(std::string json_name);
+
+/*!
  * Function to create a volume label data object
  * from an h5 file.  Input h5 files are assummed to be Z,Y,X.
  * If this h5 file contains a transform dataset, the labels in the

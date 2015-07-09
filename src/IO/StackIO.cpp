@@ -2,6 +2,7 @@
 #include "RagIO.h"
 
 #include <FeatureManager/FeatureMgr.h>
+#include <libdvid/DVIDNodeService.h>
 
 using std::string;
 using boost::shared_ptr;
@@ -64,6 +65,66 @@ Stack import_h5stack(std::string stack_name)
     } catch (std::runtime_error &error) {
         // allow stacks without grayscale volumes
     }
+
+    return stack;
+}
+
+Stack import_dvidstack(std::string json_name)
+{
+    VolumeLabelPtr ptr;
+    Stack stack(ptr);
+    
+    // parse json
+    Json::Reader json_reader;
+    Json::Value json_data;
+    ifstream fin(json_name.c_str());
+    json_reader.parse(fin, json_data);
+    fin.close();
+
+    string server = json_data["dvid-server"].asString();
+    string uuid = json_data["uuid"].asString();
+    string seg_name = json_data["segmentation-name"].asString();
+    int x = json_data["x"].asInt();
+    int y = json_data["y"].asInt();
+    int z = json_data["z"].asInt();
+    
+    int SIZE = 512;
+
+    libdvid::DVIDNodeService dvid_node(server, uuid);
+
+    vector<int> start;
+    start.push_back(x); start.push_back(y); start.push_back(z);
+    
+    // load grayscale
+    libdvid::Dims_t sizes; sizes.push_back(SIZE); sizes.push_back(SIZE); sizes.push_back(SIZE);
+    libdvid::Grayscale3D gray = dvid_node.get_gray3D("grayscale", sizes, start);
+    const libdvid::uint8* grayval = gray.get_raw();
+    
+    // load into array
+    shared_ptr<VolumeData<unsigned char> > grayvol =
+        VolumeData<unsigned char>::create_volume();
+    grayvol->reshape(vigra::MultiArrayShape<3>::type(SIZE,
+                SIZE, SIZE));
+    volume_forXYZ(*grayvol, i, j, k) {
+       (*grayvol)(i,j,k) = *grayval;
+       grayval++;
+    }
+    stack.set_grayvol(grayvol);
+
+    // load labels from dvid and store in memory
+    libdvid::Labels3D labelsbin = dvid_node.get_labels3D(seg_name, sizes, start);
+
+    VolumeLabelPtr labels = VolumeLabelData::create_volume(SIZE, SIZE, SIZE);
+    
+    const libdvid::uint64* val = labelsbin.get_raw();
+
+    volume_forXYZ(*labels, i, j, k) {
+        labels->set(i,j,k,*val);
+        val++;
+    }
+    stack.set_labelvol(labels);
+
+    return stack;
 }
 
 VolumeLabelPtr import_h5labels(const char * h5_name,

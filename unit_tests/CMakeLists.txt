@@ -16,11 +16,11 @@ else()
     set (boost_LIBS boost_thread boost_system boost_program_options boost_unit_test_framework boost_filesystem)
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
     set (vigra_LIB vigraimpex)
+    set (libdvid_LIBS dvidcpp.a  png curl jpeg lz4)
 endif()
 
-target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
-target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES}
-    ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
+target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${json_LIB} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE})
+target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${libdvid_LIBS} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
 get_target_property (basic_rag_test_exe basic_rag_test LOCATION)
 get_target_property (basic_stack_test_exe basic_stack_test LOCATION)
