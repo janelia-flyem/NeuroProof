@@ -40,8 +40,7 @@ set (METRICS_EXT_LIBS  ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 target_link_libraries (NeuroProofMetrics Stack Rag FeatureManager Algorithms ${METRICS_EXT_LIBS} )
     
 # copy neuroproof metric lib to the proper location
-get_target_property (NeuroProofMetrics_lib NeuroProofMetrics LOCATION)
 
-install(FILES ${NeuroProofMetrics_lib} 
+install(FILES NeuroProofMetrics
         DESTINATION ${PYLIBLOC})
 

@@ -22,24 +22,20 @@ endif()
 target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${json_LIB} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE})
 target_link_libraries (basic_stack_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${libdvid_LIBS} ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
-get_target_property (basic_rag_test_exe basic_rag_test LOCATION)
-get_target_property (basic_stack_test_exe basic_stack_test LOCATION)
-
-
 if (NOT ${CMAKE_SOURCE_DIR} STREQUAL ${BUILDLOC})  
     add_custom_command (
         TARGET basic_rag_test 
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${basic_rag_test_exe} ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E remove ${basic_rag_test_exe})
+        COMMAND ${CMAKE_COMMAND} -E copy basic_rag_test ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E remove basic_rag_test)
 
     add_custom_command (
         TARGET basic_stack_test 
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E copy ${basic_stack_test_exe} ${CMAKE_SOURCE_DIR}/bin
-        COMMAND ${CMAKE_COMMAND} -E remove ${basic_stack_test_exe})
+        COMMAND ${CMAKE_COMMAND} -E copy basic_stack_test ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E remove basic_stack_test)
 endif()
 
 add_test ("simple_rag_unit_tests" ${CMAKE_SOURCE_DIR}/bin/basic_rag_test)

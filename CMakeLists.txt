@@ -142,7 +142,8 @@ if (ENABLE_NEUROPROOF)
         FIND_PACKAGE(Boost)
         find_package ( libdvidcpp)
     endif()
-    
+   
+    include_directories (${Boost_INCLUDE_DIR})
     include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
     include_directories(${LIBDVIDCPP_INCLUDE_DIRS})
     include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
@@ -189,6 +190,7 @@ if (ENABLE_NEUROPROOF OR ENABLE_UNITTESTS)
         FIND_PACKAGE(Boost)
     endif()
     
+    include_directories (${Boost_INCLUDE_DIR})
     include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
     
     add_subdirectory(unit_tests)
@@ -220,6 +222,7 @@ if (ENABLE_METRICS)
         FIND_PACKAGE(Boost)
     endif()
     
+    include_directories (${Boost_INCLUDE_DIR})
     include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
     add_subdirectory(libMetrics)
 

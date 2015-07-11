@@ -178,16 +178,12 @@ endif()
 # need to build components separately to set python flag
 set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
-get_target_property (NeuroProofPriority_lib NeuroProofPriority LOCATION)
-get_target_property (NeuroProofRag_lib NeuroProofRag LOCATION)
-
-
 # install python scripts and supporting libraries
 
-install(FILES ${NeuroProofPriority_lib} 
+install(FILES NeuroProofPriority 
         DESTINATION ${PYLIBLOC})
 
-install(FILES ${NeuroProofRag_lib} 
+install(FILES NeuroProofRag_lib
         DESTINATION ${PYLIBLOC})
 
 # install executables
