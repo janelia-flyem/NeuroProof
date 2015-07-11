@@ -3,7 +3,11 @@ project (Classifier)
 
 set (SOURCES opencvABclassifier.cpp opencvRFclassifier.cpp opencvSVMclassifier.cpp vigraRFclassifier.cpp)
 
-add_library (Classifier ${SOURCES})
+if (APPLE) 
+	add_library (Classifier ${SOURCES})
+else()
+	add_library (Classifier SHARED ${SOURCES})
+endif()	
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)

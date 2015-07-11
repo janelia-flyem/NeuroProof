@@ -2,7 +2,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 project (Stack)
 
 set (SOURCES VolumeLabelData.cpp Stack.cpp )
-add_library (Stack ${SOURCES})
+    if (APPLE) 
+	add_library (Stack ${SOURCES})
+    else()
+	add_library (Stack SHARED ${SOURCES})
+    endif()	
+
 
 # prevent vigra from overwriting boost declarations
 set_target_properties(Stack PROPERTIES COMPILE_DEFINITIONS "WITH_BOOST_GRAPH")

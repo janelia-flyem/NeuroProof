@@ -5,7 +5,11 @@ set (SOURCES EdgeRankToufiq.cpp EdgeEditor.cpp NodeCentricRank.cpp NodeSizeRank.
 
 include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
 
-add_library (EdgeEditor ${SOURCES})
+if (APPLE) 
+	add_library (EdgeEditor ${SOURCES})
+else()
+	add_library (EdgeEditor SHARED ${SOURCES})
+endif()	
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)

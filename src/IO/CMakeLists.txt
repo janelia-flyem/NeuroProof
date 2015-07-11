@@ -3,7 +3,11 @@ project (IO)
 
 set (SOURCES RagIO.cpp StackIO.cpp)
 
-add_library (IO ${SOURCES})
+    if (APPLE) 
+	add_library (IO ${SOURCES})
+    else()
+	add_library (IO SHARED ${SOURCES})
+    endif()	
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)
