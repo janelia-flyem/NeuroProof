@@ -39,7 +39,7 @@ editing operations in various tool environments like in
 
 ## Installation Instructions
 
-NeuroProof has been tested on several different linux environments.  Tests on MacOS are forthcoming.
+NeuroProof has been tested on several different linux environments and compiles on Mac.
 Documentation
 in NeuroProof follow Doxygen comment conventions; an html view can be created
 by running the following command:
@@ -87,6 +87,9 @@ Once conda is in your system path, call the following to install neuroproof:
 
 Conda allows builder to create multiple environments.  To use the executables
 and libraries, set your PATH to the location of PREFIX/CHOOSE_ENV_NAME/bin.
+
+Note: this should work on many distributions of linux and on Mac OSX 10.10+.  For Mac,
+you will need to set DYLD_FALLBACK_LIBRARY_PATH to PREFIX/CHOOSE_ENV_NAME/lib.
 
 ### Developers' Builder Guide
 Developing has never been easier using conda.  If you plan to actively modify
