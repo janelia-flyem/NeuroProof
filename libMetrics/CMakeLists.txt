@@ -46,6 +46,10 @@ target_link_libraries (NeuroProofMetrics Stack Rag FeatureManager Algorithms ${M
     
 # copy neuroproof metric lib to the proper location
 
+if (APPLE)
+    set_target_properties( NeuroProofMetrics PROPERTIES SUFFIX  ".so")
+endif()
+
 install(TARGETS NeuroProofMetrics
         DESTINATION ${PYLIBLOC})
 
