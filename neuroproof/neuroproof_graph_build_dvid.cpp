@@ -1,5 +1,5 @@
-#include <BioPriors/BioStack.h>
 #include <FeatureManager/FeatureMgr.h>
+#include <BioPriors/BioStack.h>
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
 #include <IO/RagIO.h>

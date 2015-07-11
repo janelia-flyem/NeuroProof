@@ -1,5 +1,5 @@
-#include <Stack/Stack.h>
 #include <FeatureManager/FeatureMgr.h>
+#include <Stack/Stack.h>
 #include <Utilities/ScopeTime.h>
 #include <Utilities/OptionParser.h>
 #include <IO/RagIO.h>

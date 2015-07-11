@@ -180,10 +180,10 @@ set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
 # install python scripts and supporting libraries
 
-install(FILES NeuroProofPriority 
+install(TARGETS NeuroProofPriority 
         DESTINATION ${PYLIBLOC})
 
-install(FILES NeuroProofRag_lib
+install(TARGETS NeuroProofRag
         DESTINATION ${PYLIBLOC})
 
 # install executables

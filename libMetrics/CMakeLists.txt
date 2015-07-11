@@ -37,10 +37,15 @@ include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
 # include other external libraries
 set (METRICS_EXT_LIBS  ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 
+#SET_TARGET_PROPERTIES (NeuroProofMetrics
+#  PROPERTIES BUILD_WITH_INSTALL_RPATH 1
+#  INSTALL_NAME_DIR ${PYLIBLOC}
+#)
+
 target_link_libraries (NeuroProofMetrics Stack Rag FeatureManager Algorithms ${METRICS_EXT_LIBS} )
     
 # copy neuroproof metric lib to the proper location
 
-install(FILES NeuroProofMetrics
+install(TARGETS NeuroProofMetrics
         DESTINATION ${PYLIBLOC})
 
