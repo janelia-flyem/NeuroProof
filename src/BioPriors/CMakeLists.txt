@@ -5,7 +5,7 @@ set (SOURCES BioStack.cpp StackAgglomAlgs.cpp StackLearnAlgs.cpp IterativeLearn.
 
 include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
 
-add_library (BioPriors SHARED ${SOURCES})
+add_library (BioPriors ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)

@@ -3,7 +3,7 @@ project (IO)
 
 set (SOURCES RagIO.cpp StackIO.cpp)
 
-add_library (IO SHARED ${SOURCES})
+add_library (IO ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)

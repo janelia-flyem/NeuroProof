@@ -5,7 +5,7 @@ set (SOURCES kmeans.cpp weightmatrix1.cpp)
 
 include_directories (AFTER ${CMAKE_SOURCE_DIR}/src/external_packages)
 
-add_library (SemiSupervised SHARED ${SOURCES})
+add_library (SemiSupervised ${SOURCES})
 
 if (NOT BUILDEM_DIR STREQUAL "None")
     include (boost)

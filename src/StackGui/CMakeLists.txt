@@ -5,9 +5,9 @@ set (SOURCES StackSession.cpp StackPlaneController.cpp StackPlaneView.cpp StackB
 
 if (QT_BUILT)
     QT4_WRAP_CPP(QTHEADERS StackPlaneController.h)
-    add_library (StackGui SHARED ${SOURCES} ${QTHEADERS})
+    add_library (StackGui ${SOURCES} ${QTHEADERS})
 else()
-    add_library (StackGui SHARED ${SOURCES})
+    add_library (StackGui ${SOURCES})
 endif()
 
 if (NOT BUILDEM_DIR STREQUAL "None")
