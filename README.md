@@ -9,15 +9,16 @@ is over-segmented.  It provides several advances over Fly EM's previous, but act
 
 * Faster implementation of agglomeration (written in C++ instead of Python)
 * Incorporation of biological priors (like mitochondria) to improve the quality of the segmentation
-(see [PLOS ONE paper](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
+(see [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
 * Introduction of new metrics for analyzing segmentation quality
 
 While NeuroProof has been tested in the domain
 of EM reconstruction, we believe it to be widely applicable to other
 application domains.  In addition to graph agglomeration tools, this
 package also provides routines for estimating the uncertainty of a segmentation
-[Plaza, et al '12](http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448)
-and algorithms to compare with ground truth.
+[Plaza, et al '12](http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0044448),
+algorithms to compare segmentation with ground truth, and focused proofreading algorithms
+to accelerate semi-manual EM tracing [Plaza '14](http://arxiv.org/abs/1409.1199).
 
 ###Features
 
