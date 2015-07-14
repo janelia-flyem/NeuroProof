@@ -1,4 +1,4 @@
-#include <Stack/VolumeLabelData.h>
+#include <Stack/Stack.h>
 #include <boost/python.hpp>
 
 using namespace NeuroProof;
@@ -8,7 +8,7 @@ using std::tr1::unordered_map;
 // ?! inherit properly from Stack (reuse some implementation, etC)
 class StackPython {
   public:
-    StackPython(object stack_labels)
+    StackPython(object stack_labels, int padding_radius)
     {
         boost::python::tuple labels_shape(stack_labels.attr("shape"));
 
@@ -23,6 +23,9 @@ class StackPython {
             labels->set(x,y,z,
                     boost::python::extract<double>(stack_labels[boost::python::make_tuple(z,y,x)]));
         }
+
+        Stack stack(labels);
+        stack.dilate_labelvol(padding_radius);
     }
 
     boost::python::list find_overlaps(StackPython* stack2)
@@ -62,7 +65,7 @@ class StackPython {
 //    class_<StackPython>("Stack", "Contains segmentation labels", init<object>(args("labels"), "Provide numpy labels to init Stack")[])
 BOOST_PYTHON_MODULE(libNeuroProofMetrics)
 {
-    class_<StackPython>("Stack", "Contains segmentation labels", init<object>())
+    class_<StackPython>("Stack", "Contains segmentation labels", init<object, int>())
         .def("find_overlaps", &StackPython::find_overlaps)
         ;
 }
