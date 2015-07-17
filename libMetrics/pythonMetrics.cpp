@@ -25,7 +25,8 @@ class StackPython {
         }
 
         Stack stack(labels);
-        stack.dilate_labelvol(padding_radius);
+        if (padding_radius > 0) stack.dilate_labelvol(padding_radius);
+        labels = stack.get_labelvol();
     }
 
     boost::python::list find_overlaps(StackPython* stack2)
