@@ -10,6 +10,8 @@ is over-segmented.  It provides several advances over Fly EM's previous, but act
 * Faster implementation of agglomeration (written in C++ instead of Python)
 * Incorporation of biological priors (like mitochondria) to improve the quality of the segmentation
 (see [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
+
+* Interactive training
 * Introduction of new metrics for analyzing segmentation quality
 
 While NeuroProof has been tested in the domain
