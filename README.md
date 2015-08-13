@@ -103,6 +103,7 @@ calls cmake with the correct environment variables.  To build NeuroProof:
 
     % mkdir build; cd build
     % export CONDA_ENV_PATH=PREFIX/CHOOSE_ENV_NAME
+    % ../compile_against_conda.sh
     % make -j NUM_PROCESSORS
     % make install
 
