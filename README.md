@@ -99,17 +99,24 @@ the code, first install neuroproof as discussed above.  Then clone
 this repository into the directory of your choosing.  The package cmake
 can still be used but the environment variables must be set to point to
 the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  NeuroProof
-includes a simple wrapper script 'compile_against_conda.sh' that simply
-calls the conda recipe build script with the appropriate environment variables.
-To build it:
+includes a simple wrapper script `configure-for-conda.sh` that simply
+calls the [build script][build.sh] from NeuroProof's recipe with the appropriate environment variables.
 
-    % ./compile_against_conda.sh /path/to/your/environment-prefix
+    % ./configure-for-conda.sh /path/to/your/environment-prefix
 
-That will over-write the binaries and libraries in the environment path you gave.
-(If necessary, it will install gcc first.)
-To use your custom build of NeuroProof, you'll need to set the `LD_LIBRARY_PATH` environment variable:
+[build.sh]: https://github.com/janelia-flyem/flyem-build-conda/blob/master/neuroproof/build.sh
+
+That will create a directory named `build` (if necessary) configured to install to your environment prefix.
+(If necessary, it will install gcc first.)  To actually run the build, try these commands:
+
+    % cd build 
+    % make
+    % make install
+
+To use (or test) your custom build of NeuroProof, you'll need to set the `LD_LIBRARY_PATH` environment variable:
 
     % export LD_LIBRARY_PATH=/path/to/your/environment-prefix/lib
+    % make test
 
 For coding that requires adding new dependencies please consult documentation for
 building conda builds and consult Fly EM's conda recipes.
