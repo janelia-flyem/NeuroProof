@@ -31,4 +31,4 @@ fi
 bash "${FLYEM_RECIPES_DIR}/neuroproof/build.sh"
 
 BUILD_SCRIPT_URL=https://raw.githubusercontent.com/janelia-flyem/flyem-build-conda/master/neuroproof/build.sh
-"$CURL" "$BUILD_SCRIPT_URL" | bash
+"$CURL" "$BUILD_SCRIPT_URL" | bash -x -e -s - --configure-only
