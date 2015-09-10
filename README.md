@@ -103,7 +103,7 @@ includes a simple wrapper script 'compile_against_conda.sh' that simply
 calls the conda recipe build script with the appropriate environment variables.
 To build it:
 
-    % ./compile_against_conda.sh /path/to/flyem-build-conda /path/to/your/environment-prefix
+    % ./compile_against_conda.sh /path/to/your/environment-prefix
 
 That will over-write the binaries and libraries in the environment path you gave.
 (If necessary, it will install gcc first.)
