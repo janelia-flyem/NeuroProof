@@ -10,7 +10,7 @@
 #include <float.h>
 #include <cstdlib>
 
-#include "../FeatureManager/FeatureMgr.h"
+#include <FeatureManager/FeatureMgr.h>
 
 #define IVAL 500
 

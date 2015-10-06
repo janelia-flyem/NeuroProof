@@ -46,13 +46,6 @@ void IterativeLearn::edgelist_from_index(std::vector<unsigned int>& new_idx,
 void IterativeLearn::compute_all_edge_features(std::vector< std::vector<double> >& all_features,
 					      std::vector<int>& all_labels){
 
-    cout << "RAG with " << stack->get_num_labels() << " nodes" << endl;
-
-
-    cout << "Inclusion removal ..."; 
-    stack->remove_inclusions();
-    cout << "done with " << stack->get_num_labels() << " nodes" << endl;
-
     
     int count=0; 	
     for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
@@ -64,7 +57,6 @@ void IterativeLearn::compute_all_edge_features(std::vector< std::vector<double> 
             RagNode_t* rag_node2 = rag_edge->get_node2();
             Node_t node1 = rag_node1->get_node_id(); 
             Node_t node2 = rag_node2->get_node_id(); 
-	    
 
 // 	    int edge_label = stack->decide_edge_label(rag_node1, rag_node2);
 	    int edge_label = 2;
@@ -89,11 +81,6 @@ void IterativeLearn::compute_all_edge_features(std::vector< std::vector<double> 
 	    if ( edge_label ){	
 		std::vector<double> feature;
 		feature_mgr->compute_all_features(rag_edge,feature);
-		
-// 		if(count<5){
-// 		    printf("(%u, %u): %d\n",node1,node2, edge_label);
-// 		    count++;
-// 		}
 
 		all_features.push_back(feature);
 		all_labels.push_back(edge_label);

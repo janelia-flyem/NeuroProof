@@ -11,7 +11,7 @@ namespace NeuroProof {
 class BioStack : public Stack {
   public:
     BioStack(VolumeLabelPtr labels_) : Stack(labels_) {}
-    BioStack(std::string stack_name) ;
+//     BioStack(std::string stack_name) : Stack(stack_name) {}
     
     void read_prob_list(std::string prob_filename, std::string dataset_name);
 

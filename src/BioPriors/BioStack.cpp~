@@ -6,7 +6,6 @@
 #include <json/reader.h>
 #include <vector>
 #include <boost/algorithm/string/predicate.hpp>
-#include <Classifier/opencvRFclassifier.h>
 
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;

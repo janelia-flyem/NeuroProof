@@ -114,10 +114,40 @@ void run_learning(LearnOptions& options)
 	if (itr == 0) {
 	  
 	  
-	    if (options.strategy_type == 6){ 
+	    if (options.strategy_type == 4){ 
+		cout << "random learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_rnd(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 5){ 
+		cout << "uncertain learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_uncertain(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 6){ 
 		cout << "sem-supervised learning" << endl;
 		preprocess_stack(stack, true);
 		itlearn = new IterativeLearn_semi(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 7){ 
+		cout << "IWAL learning" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_iwal(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 8){ 
+		cout << "Co-training" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_co(&stack);
+		itlearn->learn_edge_classifier(5000);
+	    }
+	    else if (options.strategy_type == 9){ 
+		cout << "Simluating" << endl;
+		preprocess_stack(stack, true);
+		itlearn = new IterativeLearn_simulate(&stack);
 		itlearn->learn_edge_classifier(5000);
 	    }
 	    else

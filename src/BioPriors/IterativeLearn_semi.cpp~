@@ -80,10 +80,10 @@ void IterativeLearn_semi::get_initial_edges(std::vector<unsigned int>& new_idx){
 
     std::vector< std::vector<double> >& all_features = dtst.get_features();
     size_t start_with = (size_t) (INITPCT_SM*all_features.size());
-    if (initial_set_strategy == INITIAL_METHOD_DEGREE)
+    if (initial_set_strategy == DEGREE)
 	//*C* initial samples by large degree
 	wt1->find_large_degree(init_trn_idx);
-    else if  (initial_set_strategy == INITIAL_METHOD_KMEANS){ 
+    else if  (initial_set_strategy == KMEANS){ 
 	//*C* initial samples by clustering, e.g., kmeans.
 	std::vector< std::vector<double> > scaled_features;
 	wt1->scale_features(all_features, scaled_features);

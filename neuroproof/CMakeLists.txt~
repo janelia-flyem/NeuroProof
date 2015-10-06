@@ -193,9 +193,9 @@ install(TARGETS NeuroProofRag
 
 # install executables
 install (TARGETS neuroproof_graph_analyze DESTINATION bin)
-# install (TARGETS neuroproof_graph_build_dvid DESTINATION bin)
+install (TARGETS neuroproof_graph_build_dvid DESTINATION bin)
 install (TARGETS neuroproof_graph_build_stream DESTINATION bin)
-# install (TARGETS neuroproof_agg_prob_dvid DESTINATION bin)
+install (TARGETS neuroproof_agg_prob_dvid DESTINATION bin)
 install (TARGETS neuroproof_graph_analyze_gt DESTINATION bin)
 install (TARGETS neuroproof_graph_learn DESTINATION bin)
 install (TARGETS neuroproof_graph_predict DESTINATION bin)

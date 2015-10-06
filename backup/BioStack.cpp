@@ -1,37 +1,38 @@
-#include "../FeatureManager/FeatureMgr.h"
+#include <FeatureManager/FeatureMgr.h>
 #include "BioStack.h"
 #include "MitoTypeProperty.h"
 #include <IO/StackIO.h>
+#include <Classifier/opencvRFclassifier.h>
+
 #include <json/value.h>
 #include <json/reader.h>
 #include <vector>
+#include <fstream>
 #include <boost/algorithm/string/predicate.hpp>
-#include <Classifier/opencvRFclassifier.h>
 
 using std::tr1::unordered_set;
 using std::tr1::unordered_map;
-using std::vector;
-using std::string;
 using namespace boost::algorithm;
+using std::vector;
 using std::cout; using std::endl;
 using std::ifstream;
-
+using std::string;
 
 namespace NeuroProof {
-
-BioStack::BioStack(std::string stack_name) : Stack(VolumeLabelPtr())
+    
+BioStack::BioStack(string stack_name) : Stack(VolumeLabelPtr())
 {
     if (ends_with(stack_name, ".json")) {
-	Stack stack = import_dvidstack(stack_name);
-	set_labelvol(stack.get_labelvol());
-	set_grayvol(stack.get_grayvol());
+        Stack stack = import_dvidstack(stack_name);
+        set_labelvol(stack.get_labelvol()); 
+        set_grayvol(stack.get_grayvol()); 
     } else {
-	Stack stack = import_h5stack(stack_name);
-	set_labelvol(stack.get_labelvol());
-	set_grayvol(stack.get_grayvol());
+        Stack stack = import_h5stack(stack_name);
+        set_labelvol(stack.get_labelvol()); 
+        set_grayvol(stack.get_grayvol()); 
     }
-}  
-  
+}
+
 VolumeLabelPtr BioStack::create_syn_label_volume()
 {
     if (!labelvol) {
@@ -69,6 +70,11 @@ VolumeLabelPtr BioStack::create_syn_volume(VolumeLabelPtr labelvol2)
     return synvol;
 }
 
+void BioStack::load_saved_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
+{
+    saved_synapse_counts = synapse_counts;
+}
+
 void BioStack::load_synapse_counts(unordered_map<Label_t, int>& synapse_counts)
 {
     for (int i = 0; i < synapse_locations.size(); ++i) {
@@ -93,8 +99,9 @@ void BioStack::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
 void BioStack::read_prob_list(std::string prob_filename, std::string dataset_name)
 {
     prob_list = import_3Dh5vol_array<double>(prob_filename.c_str(),
-    dataset_name.c_str());
-    cout << "Read prediction array" << endl; 
+            dataset_name.c_str());
+    cout << "Read prediction array" << endl;  
+    
 }
 
 bool BioStack::is_mito(Label_t label)
@@ -114,11 +121,6 @@ bool BioStack::is_mito(Label_t label)
 }
 void BioStack::set_classifier()
 {
-    if (!feature_manager){
-	FeatureMgrPtr feature_manager_(new FeatureMgr(prob_list.size()));
-	set_feature_manager(feature_manager_);
-	feature_manager->set_basic_features(); 
-    }
     assert(feature_manager);
     EdgeClassifier* eclfr = new OpencvRFclassifier();	
     feature_manager->set_classifier(eclfr);
@@ -265,7 +267,10 @@ void BioStack::set_edge_locations()
   
 }
 
-
+void BioStack::set_synapse_exclusions(vector<vector<unsigned int> >& synapse_locations_) 
+{
+    synapse_locations = synapse_locations_;
+}
 
 void BioStack::set_synapse_exclusions(const char* synapse_json)
 {
@@ -325,17 +330,22 @@ void BioStack::set_synapse_exclusions(const char* synapse_json)
 
 }
     
-void BioStack::serialize_graph_info(Json::Value& json_writer)
+void BioStack::serialize_graph_info(Json::Value* json_writer)
 {
     unordered_map<Label_t, int> synapse_counts;
-    load_synapse_counts(synapse_counts);
+    if (saved_synapse_counts.size() > 0) {
+        synapse_counts = saved_synapse_counts;
+    } else { 
+        load_synapse_counts(synapse_counts);
+    }
+
     int id = 0;
     for (unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter, ++id) {
         Json::Value synapse_pair;
         synapse_pair[(unsigned int)(0)] = iter->first;
         synapse_pair[(unsigned int)(1)] = iter->second;
-        json_writer["synapse_bodies"][id] =  synapse_pair;
+        (*json_writer)["synapse_bodies"][id] =  synapse_pair;
     }
 }
 
