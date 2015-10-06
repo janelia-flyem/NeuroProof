@@ -6,6 +6,7 @@
 #include <fstream>
 
 // needed for erosion/dilation algorithms
+#define WITH_BOOST_GRAPH 1
 #include <vigra/multi_morphology.hxx>
 
 // needed for seeded watershed
