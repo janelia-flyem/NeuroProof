@@ -16,7 +16,7 @@ else()
     set (boost_LIBS boost_thread boost_system boost_program_options boost_unit_test_framework boost_filesystem)
     set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
     set (vigra_LIB vigraimpex)
-    set (libdvid_LIBS dvidcpp.a  png curl jpeg lz4)
+    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARY})
 endif()
 
 target_link_libraries (basic_rag_test Stack FeatureManager Rag IO ${vigra_LIB} ${hdf5_LIBRARIES} ${json_LIB} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE})

@@ -55,8 +55,10 @@ if (NOT ${BUILDEM_DIR} STREQUAL "None")
 
     # Use modules from the downloaded buildem
     set (CMAKE_MODULE_PATH ${BUILDEM_REPO_DIR})
-    message("Using cmake modules from ${BUILDEM_REPO_DIR}")
+    message("Using cmake modules from ${CMAKE_MODULE_PATH}")
 else()
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+    message("Using cmake modules from ${CMAKE_MODULE_PATH}")
     set (BUILDLOC ${CMAKE_SOURCE_DIR})
 
     ######################################################################
@@ -70,12 +72,10 @@ else()
         OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
     FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} NEUROPROOF_PYTHON_INSTALL_DIR)
     SET(NEUROPROOF_PYTHON_INSTALL_DIR ${NEUROPROOF_PYTHON_INSTALL_DIR}
-        CACHE PATH "where to install the libdvid Python package" FORCE)
+        CACHE PATH "where to install the NeuroProof Python package" FORCE)
     # this is the install path relative to CMAKE_INSTALL_PREFIX,
     # use this in INSTALL() commands to get packaging right
     FILE(RELATIVE_PATH NEUROPROOF_PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX} ${NEUROPROOF_PYTHON_INSTALL_DIR})
-
-
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILDLOC}/bin)
@@ -140,7 +140,7 @@ if (ENABLE_NEUROPROOF)
     else()
         FIND_PACKAGE(PythonLibs)
         FIND_PACKAGE(Boost)
-        find_package ( libdvidcpp)
+        find_package(LIBDVIDCPP)
     endif()
    
     include_directories (${Boost_INCLUDE_DIR})
