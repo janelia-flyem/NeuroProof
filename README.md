@@ -1,6 +1,9 @@
 # NeuroProof 1.1 [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 ##Toolkit for Graph-based Image Segmentation and Analysis
 
+[![Picture](https://anaconda.org/flyem/neuroproof/badges/version.svg)]
+[![Build Status](https://drone.io/github.com/janelia-flyem/NeuroProof/status.png)](https://drone.io/github.com/janelia-flyem/NeuroProof/latest)
+
 The NeuroProof software is an image segmentation tool currently being used
 in [the FlyEM project at Janelia Farm Research Campus](http://janelia.org/team-project/fly-em)
 to help reconstruct neuronal structure in the fly brain.  This tool
