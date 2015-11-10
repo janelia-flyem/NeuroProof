@@ -295,7 +295,7 @@ void export_stack_graph(Stack* stack, const char* graph_name,
     }
 
     // biopriors might write specific information -- calls derived function
-    stack->serialize_graph_info(&json_writer);
+    stack->serialize_graph_info(json_writer);
 
     int id = 0;
     for (Rag_t::nodes_iterator iter = rag->nodes_begin(); iter != rag->nodes_end(); ++iter) {

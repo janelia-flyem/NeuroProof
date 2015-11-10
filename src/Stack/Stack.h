@@ -237,7 +237,7 @@ class Stack : public StackBase {
      * information to the graph being written.
      * \param json_write json data to be written to disk
     */
-    virtual void serialize_graph_info(Json::Value* json_writer) {}
+    virtual void serialize_graph_info(Json::Value& json_writer) {}
 
   protected:
     /*!
