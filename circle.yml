@@ -10,6 +10,9 @@ machine:
 
 ## Customize dependencies
 dependencies:
+  cache_directories:
+    - ${CONDA_ROOT}
+    
   override:
     # System libraries
     - sudo apt-get install libgl1-mesa-dev
@@ -17,9 +20,9 @@ dependencies:
     # This is ugly... we should figure out which library needs this and fix it.
     - sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
     
-    # Download/install conda
-    - wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
-    - bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT}
+    # Download/install conda (if not already cached)
+    - if [[ ! -e ${CONDA_ROOT} ]]; then wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh && bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT}; else echo "Using cached Miniconda install"; fi
+
     - conda install --quiet -y anaconda-client
     
     # Install neuroproof and all dependencies
