@@ -21,7 +21,7 @@ static const char * PRED_DATASET_NAME = "volume/predictions";
 struct LearnOptions
 {
     LearnOptions(int argc, char** argv) : classifier_filename("classifier.xml"),
-                strategy_type(1), num_iterations(1), prune_feature(true), use_mito(true)
+                strategy_type(1), num_iterations(1), prune_feature(false), use_mito(true)
     {
         OptionParser parser("Program that learns agglomeration classifier from an initial segmentation");
 
@@ -40,7 +40,7 @@ struct LearnOptions
         parser.add_option(num_iterations, "num-iterations",
                 "number of iterations used for learning");
         parser.add_option(prune_feature, "prune_feature",
-                "automatically prune useless features");
+                "automatically prune useless features (now deprecated and disabled within code)");
         parser.add_option(use_mito, "use_mito",
                 "set delayed mito agglomeration");
 
@@ -126,8 +126,6 @@ void run_learning(LearnOptions& options)
 	    
 	    
 	} else{
-	  
-	  
 	    if (options.strategy_type == 1){ //accumulate only misclassified 
 		cout << "cumulative learning, only misclassified" << endl;
 	   	learn_edge_classifier_queue(stack, threshold, all_features,
