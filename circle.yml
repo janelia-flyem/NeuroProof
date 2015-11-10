@@ -34,6 +34,6 @@ test:
     - echo "insecure" >> /home/ubuntu/.curlrc
     - ./configure-for-conda.sh ${TEST_ENV_PREFIX}
     - cd build && make && cd -
-    - cd build && make install && cd =
+    - cd build && make install && cd -
     - cd build && make test && cd -
     
