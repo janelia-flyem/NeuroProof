@@ -26,7 +26,7 @@ fi
 # Install gcc first if necessary.
 if [ ! -e "${PREFIX}/bin/gcc" ]; then
     echo "Installing gcc..."
-    conda install --quiet -p "${PREFIX}" -c flyem gcc
+    conda install --quiet -y -p "${PREFIX}" -c flyem gcc
 fi
 
 # Do you already have curl?
@@ -35,7 +35,8 @@ if [[ $? == 0 ]]; then
     CURL=curl
 else
     # Install to conda prefix
-    conda install -p "${PREFIX}" curl
+    echo "Installing curl..."
+    conda install --quiet -y -p "${PREFIX}" curl
     CURL="${PREFIX}/bin/curl"
 fi
 
