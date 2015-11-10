@@ -6,6 +6,7 @@ machine:
     TEST_ENV_NAME: test-env
     TEST_ENV_PREFIX: /home/ubuntu/miniconda/envs/test-env
     LD_LIBRARY_PATH: /home/ubuntu/miniconda/envs/test-env/lib
+    PATH: ${TEST_ENV_PREFIX}/bin:${CONDA_ROOT}/bin:${PATH}
 
 ## Customize dependencies
 dependencies:
@@ -13,21 +14,26 @@ dependencies:
     # System libraries
     - sudo apt-get install libgl1-mesa-dev
     
+    # This is ugly... we should figure out which library needs this and fix it.
+    - sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
+    
     # Download/install conda
     - wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
     - bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT}
-    - ${CONDA_ROOT}/bin/conda install --quiet -y anaconda-client
+    - conda install --quiet -y anaconda-client
     
     # Install neuroproof and all dependencies
-    - ${CONDA_ROOT}/bin/conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof
+    - conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof
 
     # Remove neuroproof itself
-    - ${CONDA_ROOT}/bin/conda remove -y -n ${TEST_ENV_NAME} neuroproof
+    - conda remove -y -n ${TEST_ENV_NAME} neuroproof
 
 ## Customize test commands
 test:
   override:
+    - echo "insecure" >> /home/ubuntu/.curlrc
     - ./configure-for-conda.sh ${TEST_ENV_PREFIX}
     - cd build && make && cd -
-    - cd build && make test && cd -
     - cd build && make install && cd =
+    - cd build && make test && cd -
+    
