@@ -14,23 +14,13 @@ SET(CMAKE_DEBUG_POSTFIX "-g")
 # create library
 add_library (NeuroProofMetrics SHARED pythonMetrics.cpp) 
 
-if (NOT ${BUILDEM_DIR} STREQUAL "None")
-    include (python)
-   
-    # set buildem dependencies
-    set (PYLIBLOC ${BUILDEM_DIR}/lib/python2.7/site-packages/)
-    set (METRICS_DEPS ${boost_NAME} ${python_NAME})
-    add_dependencies (NeuroProofMetrics ${METRICS_DEPS})
-else ()
-   
-    set (PYLIBLOC ${NEUROPROOF_PYTHON_INSTALL_DIR})
-    set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
+set (PYLIBLOC ${NEUROPROOF_PYTHON_INSTALL_DIR})
+set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
 
-    set (hdf5_LIBRARIES hdf5 hdf5_hl)
-    set (vigra_LIB vigraimpex)
-    set (opencv_LIBS opencv_ml opencv_core)
-    set (boost_LIBS boost_system boost_python)
-endif()
+set (hdf5_LIBRARIES hdf5 hdf5_hl)
+set (vigra_LIB vigraimpex)
+set (opencv_LIBS opencv_ml opencv_core)
+set (boost_LIBS boost_system boost_python)
 
 include_directories (BEFORE ${PYTHON_INCLUDE_PATH})
 

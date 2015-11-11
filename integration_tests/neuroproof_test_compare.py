@@ -2,7 +2,7 @@ import sys
 import subprocess
 import os
 
-buildempath = sys.argv[1]
+prefix_path = sys.argv[1]
 cmakepath = sys.argv[2]
 
 
@@ -11,7 +11,7 @@ testoutprefix = cmakepath + "/integration_tests/temp_data/"
 
 
 def compare_outputs(exe_string, stdoutfile, file_comps=None):
-    exe_string = exe_string.replace("${BUILDEM_DIR}", buildempath)
+    exe_string = exe_string.replace("${INSTALL_PREFIX_PATH}", prefix_path)
     exe_string = exe_string.replace("${CMAKE_SOURCE_DIR}", cmakepath)
 
     if not os.path.exists(testoutprefix):
