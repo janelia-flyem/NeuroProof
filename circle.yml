@@ -21,12 +21,24 @@ dependencies:
     - sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
     
     # Download/install conda (if not already cached)
-    - if [[ ! -e ${CONDA_ROOT} ]]; then wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh && bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT}; else echo "Using cached Miniconda install"; fi
+    - >
+      if [[ ! -d ${CONDA_ROOT} ]]; then
+          echo "Installing Miniconda...";
+          wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh &&
+          bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
+      else
+          echo "Using cached Miniconda install";
+      fi
 
     - conda install --quiet -y anaconda-client
     
     # Install neuroproof and all dependencies
-    - conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof
+    - >
+      if [ ! -d ${TEST_ENV_PREFIX} ]; then
+          conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof;
+      else
+          conda install --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof;
+      fi
 
     # Remove neuroproof itself
     - conda remove -y -n ${TEST_ENV_NAME} neuroproof
