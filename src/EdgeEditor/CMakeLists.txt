@@ -11,11 +11,4 @@ else()
 	add_library (EdgeEditor SHARED ${SOURCES})
 endif()	
 
-if (NOT BUILDEM_DIR STREQUAL "None")
-    include (boost)
-    include (jsoncpp)
-    include (opencv)
-    add_dependencies (EdgeEditor ${jsoncpp_NAME} ${boost_NAME} ${opencv_NAME})
-endif()
-
 install (TARGETS EdgeEditor DESTINATION lib${LIB_SUFFIX})

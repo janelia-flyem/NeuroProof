@@ -1,122 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-set(ENABLE_COMPILER_H5 TRUE)
-set(ENABLE_COMPILER_H5)
-set(ENABLE_COMPILER_H5)
-
-if (NOT ${BUILDEM_DIR} STREQUAL "None")
-    set (PYLIBLOC ${BUILDEM_DIR}/lib/python2.7/site-packages)
-    # check if GUI is disabled
-    if (ENABLE_GUI)
-        set (QT_QMAKE_EXECUTABLE ${BUILDEM_DIR}/bin/qmake) 
-        set (QT_BUILT FALSE)
-        if (EXISTS ${QT_QMAKE_EXECUTABLE})
-            SET (QT_BUILT TRUE)
-        endif()
-
-        if (NOT QT_BUILT)
-            include (qt4)
-            add_custom_target(RescanQt4 ALL ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR} DEPENDS ${qt4_NAME})
-        else()
-            add_custom_target(RescanQt4)
-            FIND_PACKAGE(Qt4 REQUIRED) 
-            include(${QT_USE_FILE}) 
-        endif()
-    else()
-        set (QT_BUILT FALSE)
-    endif()
-
-    # Download and compile dependencies -- dependencies need to be built manually if BUILDEM_DIR is not set
-    if (ENABLE_GUI)
-        include (vtk)
-        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME} RescanQt4)
-    else()
-        set (NEUROPROOF_DEPS ${vtk_NAME} ${qt4_NAME} ${jsoncpp_NAME} ${boost_NAME} ${hdf5_NAME} ${vigra_NAME} ${opencv_NAME} ${libdvidcpp_NAME})
-    endif()
-
-    set (boost_LIBS ${boost_LIBS} ${BUILDEM_LIB_DIR}/libboost_unit_test_framework.so)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARIES} ${BUILDEM_LIB_DIR}/libpng.so
-        ${BUILDEM_LIB_DIR}/libjpeg.so   
-        ${BUILDEM_LIB_DIR}/liblz4.so   
-        ${BUILDEM_LIB_DIR}/libcurl.so   )
-
-    if (ENABLE_GUI)
-        # set to buildem path
-        INCLUDE_DIRECTORIES(
-                ${BUILDEM_DIR}/include/Qt
-                ${BUILDEM_DIR}/include/QtGui
-                ${BUILDEM_DIR}/include/QtCore
-        )
-        
-        set (vtk_LIBS 
-            ${vtk_LIBPATH}/libQVTK.so
-            ${vtk_LIBPATH}/libvtkHybrid.so
-            ${vtk_LIBPATH}/libvtkCommon.so
-            ${vtk_LIBPATH}/libvtkRendering.so
-            ${vtk_LIBPATH}/libvtkVolumeRendering.so
-            ${vtk_LIBPATH}/libvtkWidgets.so)
-       
-        set (qt_LIBS
-            ${BUILDEM_DIR}/lib/libQtCore.so
-            ${BUILDEM_DIR}/lib/libQtGui.so
-        )
-    endif()
-else ()
-    set (PYLIBLOC ${NEUROPROOF_PYTHON_INSTALL_DIR})
-    
-    if (ENABLE_GUI)
-        SET (QT_BUILT TRUE)
-        add_custom_target(RescanQt4)
-        FIND_PACKAGE(VTK REQUIRED)
-        FIND_PACKAGE(Qt4 REQUIRED)
-
-        INCLUDE(${VTK_USE_FILE})
-        IF(NOT VTK_USE_RENDERING)
-            MESSAGE(FATAL_ERROR
-                "Example requires VTK_USE_RENDERING.")
-        ENDIF(NOT VTK_USE_RENDERING)
-        INCLUDE(${QT_USE_FILE})
-        INCLUDE_DIRECTORIES(
-            ${QT_INCLUDE_DIR}
-            ${QT_QTGUI_INCLUDE_DIR}
-            ${QT_QTCORE_INCLUDE_DIR}
-        )
-    else()
-        SET (QT_BUILT FALSE)
-    endif()
-
-    # ensure the libjsoncpp.so is symbolically linked somewhere your lib path
-    set (json_LIB jsoncpp)
-    set (hdf5_LIBRARIES hdf5 hdf5_hl)
-    set (vigra_LIB vigraimpex)
-    set (opencv_LIBS opencv_ml opencv_core)
-    set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
-    set (libdvid_LIBS ${LIBDVIDCPP_LIBRARY})
-
-    if (ENABLE_GUI)
-        set (vtk_LIBS vtkHybrid vtkRendering vtkVolumeRendering vtkWidgets vtkCommon QVTK)
-        set (qt_LIBS  ${QT_LIBRARIES})
-    endif()
-    
-    set (PYTHON_LIBRARY_FILE ${PYTHON_LIBRARIES})
-    set (PYTHON_EXE "python") 
-
-endif (NOT ${BUILDEM_DIR} STREQUAL "None")
-
-# Compile NeuroProof components
-#include_directories (${CMAKE_SOURCE_DIR}/SemiSupervised)
-
 enable_testing()
 
 if (ENABLE_GUI)
     add_subdirectory (../src/Gui "${CMAKE_CURRENT_BINARY_DIR}/Gui")
     add_subdirectory (../src/StackGui "${CMAKE_CURRENT_BINARY_DIR}/StackGui")
-    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor Gui BioPriors FeatureManager
-        Algorithms Classifier SemiSupervised StackGui IO)
-    set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE} ${vtk_LIBS} ${qt_LIBS})
-else()
-    set (NEUROPROOF_INT_LIBS Rag Stack EdgeEditor BioPriors IO FeatureManager Algorithms Classifier SemiSupervised)
-    set (NEUROPROOF_EXT_LIBS ${json_LIB} ${hdf5_LIBRARIES} ${vigra_LIB} ${opencv_LIBS} ${boost_LIBS} ${libdvid_LIBS} ${PYTHON_LIBRARY_FILE})
 endif()
 
 
@@ -159,22 +47,6 @@ endif()
 target_link_libraries (NeuroProofPriority ${json_LIB} ${boost_LIBS} ${PYTHON_LIBRARY_FILE})
 target_link_libraries (NeuroProofRag ${NEUROPROOF_EXT_LIBS})
 
-if (NOT ${BUILDEM_DIR} STREQUAL "None")
-    add_dependencies (neuroproof_graph_analyze ${NEUROPROOF_DEPS})
-#     add_dependencies (neuroproof_graph_build_dvid ${NEUROPROOF_DEPS})
-    add_dependencies (neuroproof_graph_build_stream ${NEUROPROOF_DEPS})
-#     add_dependencies (neuroproof_agg_prob_dvid ${NEUROPROOF_DEPS})
-    add_dependencies (neuroproof_graph_analyze_gt ${NEUROPROOF_DEPS})
-    add_dependencies (neuroproof_graph_learn ${NEUROPROOF_DEPS})
-    add_dependencies (neuroproof_graph_predict ${NEUROPROOF_DEPS})
-    add_dependencies (neuroproof_create_spgraph ${NEUROPROOF_DEPS})
-    if (ENABLE_GUI)
-        add_dependencies (neuroproof_stack_viewer ${NEUROPROOF_DEPS})
-    endif()
-    add_dependencies (NeuroProofPriority ${NEUROPROOF_DEPS})
-    add_dependencies (NeuroProofRag ${NEUROPROOF_DEPS})
-endif()
-
 # need to build components separately to set python flag
 set_target_properties(NeuroProofRag PROPERTIES COMPILE_DEFINITIONS "SETPYTHON")
 
@@ -186,10 +58,10 @@ if (APPLE)
 endif()
 
 install(TARGETS NeuroProofPriority 
-        DESTINATION ${PYLIBLOC})
+        DESTINATION ${NEUROPROOF_PYTHON_INSTALL_DIR})
 
 install(TARGETS NeuroProofRag
-        DESTINATION ${PYLIBLOC})
+        DESTINATION ${NEUROPROOF_PYTHON_INSTALL_DIR})
 
 # install executables
 install (TARGETS neuroproof_graph_analyze DESTINATION bin)

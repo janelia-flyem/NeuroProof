@@ -9,11 +9,4 @@ else()
 	add_library (Classifier SHARED ${SOURCES})
 endif()	
 
-if (NOT BUILDEM_DIR STREQUAL "None")
-    include (boost)
-    include (vigra)
-    include (opencv)
-    add_dependencies (Classifier ${vigra_NAME} ${opencv_NAME} ${boost_NAME})
-endif()
-
 install (TARGETS Classifier DESTINATION lib${LIB_SUFFIX})

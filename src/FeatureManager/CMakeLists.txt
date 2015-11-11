@@ -9,9 +9,4 @@ else()
 	add_library (FeatureManager SHARED ${SOURCES})
 endif()	
 
-if (NOT BUILDEM_DIR STREQUAL "None")
-    include (boost)
-    add_dependencies (FeatureManager ${boost_NAME})
-endif()
-
 install (TARGETS FeatureManager DESTINATION lib${LIB_SUFFIX})

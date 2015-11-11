@@ -20,14 +20,4 @@ else()
     endif()	
 endif()
 
-
-if (NOT BUILDEM_DIR STREQUAL "None")
-    include (qt4)
-    include (vtk)
-    include (boost) 
-    add_dependencies (Gui ${boost_NAME} ${vtk_NAME} ${qt4_NAME} RescanQt4)
-else()
-    add_dependencies (Gui RescanQt4)
-endif()
-
 install (TARGETS Gui DESTINATION lib${LIB_SUFFIX})

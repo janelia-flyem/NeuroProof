@@ -11,11 +11,4 @@ else()
 	add_library (BioPriors SHARED ${SOURCES})
 endif()	
 
-if (NOT BUILDEM_DIR STREQUAL "None")
-    include (boost)
-    include (vigra)
-    include (opencv)
-    add_dependencies (BioPriors ${boost_NAME} ${vigra_NAME} ${opencv_NAME})
-endif()
-
 install (TARGETS BioPriors DESTINATION lib${LIB_SUFFIX})
