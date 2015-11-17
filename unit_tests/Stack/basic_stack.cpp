@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE (stack_simple)
 {
     char ** argv = boost::unit_test::framework::master_test_suite().argv;
     VolumeLabelPtr labels = import_h5labels(argv[1], "stack");
-    vector<VolumeProbPtr> preds = import_3Dh5vol_array<double>(argv[2], "volume/predictions");
+    vector<VolumeProbPtr> preds = import_3Dh5vol_array<Prob_t>(argv[2], "volume/predictions");
 
     BOOST_CHECK(6 == preds.size());
     BOOST_CHECK(labels->shape(0) == 100);

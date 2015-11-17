@@ -74,7 +74,7 @@ void run_learning(LearnOptions& options)
     int strategy = 1;
 //     bool use_mito=false;
 
-    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
+    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<Prob_t>(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     
     VolumeLabelPtr watershed_data = import_h5labels(

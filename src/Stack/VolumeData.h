@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <Utilities/ErrMsg.h>
+#include <Utilities/Glb.h>
 
 namespace NeuroProof {
 
@@ -27,8 +28,9 @@ template <typename T>
 class VolumeData;
 
 // defines some of the common volume types used in NeuroProof
-typedef VolumeData<double> VolumeProb;
-typedef VolumeData<unsigned char> VolumeGray;
+typedef float Prob_t;
+typedef VolumeData<Prob_t> VolumeProb;
+typedef VolumeData<uint8> VolumeGray;
 typedef boost::shared_ptr<VolumeProb> VolumeProbPtr;
 typedef boost::shared_ptr<VolumeGray> VolumeGrayPtr;
 

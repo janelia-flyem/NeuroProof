@@ -15,7 +15,7 @@ using std::string;
 
 namespace NeuroProof {
 
-typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
+//typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
 
 Rag_t* create_rag_from_jsonfile(const char * file_name)
 {

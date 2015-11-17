@@ -92,7 +92,7 @@ void BioStack::load_synapse_labels(unordered_set<Label_t>& synapse_labels)
 
 void BioStack::read_prob_list(std::string prob_filename, std::string dataset_name)
 {
-    prob_list = import_3Dh5vol_array<double>(prob_filename.c_str(),
+    prob_list = import_3Dh5vol_array<Prob_t>(prob_filename.c_str(),
     dataset_name.c_str());
     cout << "Read prediction array" << endl; 
 }

@@ -105,7 +105,7 @@ struct PredictOptions
 void run_prediction(PredictOptions& options)
 {
     // create prediction array
-    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<double>(
+    vector<VolumeProbPtr> prob_list = import_3Dh5vol_array<Prob_t>(
         options.prediction_filename.c_str(), PRED_DATASET_NAME);
     VolumeProbPtr boundary_channel = prob_list[0];
     cout << "Read prediction array" << endl;
