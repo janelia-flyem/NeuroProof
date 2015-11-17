@@ -37,6 +37,6 @@ BOOST_PYTHON_MODULE(_classifier_python)
 }
 
 
-}};
+}}
 
 

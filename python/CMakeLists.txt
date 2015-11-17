@@ -161,27 +161,36 @@ include_directories(${PYTHON_INCLUDE_PATH} ${PYTHON_NUMPY_INCLUDE_DIR})
 #add_library( _classifier_python SHARED src/Classifier.cpp ${CMAKE_SOURCE_DIR}/src/vigraRFclassifier.cpp ${CMAKE_SOURCE_DIR}/src/Classifier/opencvRFclassifier.cpp )
 
 add_library( _classifier_python SHARED src/Classifier.cpp)
+add_library( _agglomeration_python SHARED src/Agglomeration.cpp)
 
 target_link_libraries( _classifier_python Classifier ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _classifier_python PROPERTIES PREFIX  ""
                                                DEBUG_POSTFIX "" )
+target_link_libraries( _agglomeration_python Stack ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
+set_target_properties( _agglomeration_python PROPERTIES PREFIX  "")
 
 if (APPLE)
-    set_target_properties( _classifier_python PROPERTIES SUFFIX  ".so")
+    set_target_properties( _agglomeration_python PROPERTIES SUFFIX  ".so")
 endif()
 
 if (NOT (APPLE OR MSVC))
     # FIXME: This may not be needed anymore because timing now uses std::chrono
     target_link_libraries( _classifier_python rt)
+    target_link_libraries( _agglomeration_python rt)
 endif()
 
 install(TARGETS _classifier_python
     RUNTIME DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Classifier
     LIBRARY DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Classifier)
+install(TARGETS _agglomeration_python
+    RUNTIME DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Agglomeration
+    LIBRARY DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Agglomeration)
+
 install(FILES neuroproof/__init__.py
         DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof)
 install(FILES neuroproof/Classifier/__init__.py
     DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Classifier)
+install(FILES neuroproof/Agglomeration/__init__.py
+    DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Agglomeration)
 
-enable_testing()
-       
+enable_testing() 
