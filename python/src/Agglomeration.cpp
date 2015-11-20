@@ -10,13 +10,12 @@
 #include "converters.hpp"
 
 using namespace boost::python;
+using std::vector;
 
 namespace NeuroProof { namespace python {
 
-VolumeLabelPtr agglomerate(VolumeLabelPtr labels)
+VolumeLabelPtr agglomerate(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_array)
 {
-    std::cout << "inside: " << (*labels)(0,0,0) << std::endl;
-    std::cout << "shape: " << labels->shape(0) << " " << labels->shape(1) << " " << labels->shape(2) << std::endl;
     return labels;
 }
 
@@ -25,6 +24,7 @@ BOOST_PYTHON_MODULE(_agglomeration_python)
     // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
     import_array();
     ndarray_to_segmentation();
+    ndarray_to_predictionarray(); 
  
     def("agglomerate" , agglomerate);
 }
