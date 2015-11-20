@@ -166,7 +166,7 @@ add_library( _agglomeration_python SHARED src/Agglomeration.cpp)
 target_link_libraries( _classifier_python Classifier ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _classifier_python PROPERTIES PREFIX  ""
                                                DEBUG_POSTFIX "" )
-target_link_libraries( _agglomeration_python Stack ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
+target_link_libraries( _agglomeration_python ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _agglomeration_python PROPERTIES PREFIX  "")
 
 if (APPLE)
@@ -194,3 +194,13 @@ install(FILES neuroproof/Agglomeration/__init__.py
     DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/Agglomeration)
 
 enable_testing() 
+
+add_test("test_agglom_python"
+    ${PYTHON_EXE}
+    ${CMAKE_SOURCE_DIR}/integration_tests/testpyagglom.py
+    ${CMAKE_SOURCE_DIR}/integration_tests/inputs/samp1_labels.h5 
+    ${CMAKE_SOURCE_DIR}/integration_tests/inputs/samp1_prediction.h5
+    ${CMAKE_SOURCE_DIR}/integration_tests/inputs/250-1_agglo_itr1_trial1_opencv_rf_tr255.xml
+    0.2
+)
+
