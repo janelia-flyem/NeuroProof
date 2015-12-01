@@ -1,4 +1,4 @@
-# NeuroProof 1.1 [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
+# NeuroProof [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 ##Toolkit for Graph-based Image Segmentation and Analysis
 
 [![Picture](https://anaconda.org/flyem/neuroproof/badges/version.svg)]
