@@ -10,7 +10,7 @@ VigraRFclassifier::VigraRFclassifier(const char* rf_filename){
 }
 
 void  VigraRFclassifier::load_classifier(const char* rf_filename){
-     	HDF5File rf_file(rf_filename,HDF5File::Open); 	
+     	HDF5File rf_file(rf_filename,HDF5File::OpenReadOnly);
 	if(!_rf)
 		_rf = new RandomForest<>;
      	rf_import_HDF5(*_rf, rf_file,"rf");
