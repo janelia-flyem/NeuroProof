@@ -21,7 +21,7 @@ static const char * PRED_DATASET_NAME = "volume/predictions";
 struct LearnOptions
 {
     LearnOptions(int argc, char** argv) : classifier_filename("classifier.xml"),
-                strategy_type(1), num_iterations(1), prune_feature(false), use_mito(true)
+                strategy_type(2), num_iterations(1), prune_feature(false), use_mito(true)
     {
         OptionParser parser("Program that learns agglomeration classifier from an initial segmentation");
 
