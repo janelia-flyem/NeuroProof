@@ -15,6 +15,7 @@ dependencies:
     
   override:
     # System libraries
+    - sudo apt-get update
     - sudo apt-get install libgl1-mesa-dev
     
     # This is ugly... we should figure out which library needs this and fix it.
