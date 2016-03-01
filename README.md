@@ -127,6 +127,29 @@ building conda builds and consult Fly EM's conda recipes.
 Contributors should verify regressions using 'make test' and submit pull requests
 so that the authors can properly update the binstar repository and build system.
 
+So, the full build process, from scratch, is this:
+
+```bash
+# Set up a conda environment with all dependencies
+conda create -n myenv -c flyem neuroproof
+source activate myenv
+PREFIX=$(conda info --root)/myenv
+export LD_LIBRARY_PATH=${PREFIX}/lib # Linux
+export DYLD_FALLBACK_LIBRARY_PATH=${PREFIX}/lib # Mac
+
+# Discard the neuroproof downloaded binary; we'll build our own.
+conda remove neuroproof
+
+# Clone and build
+git clone https://github.com/janelia-flyem/neuroproof
+cd neuroproof
+./configure-for-conda.sh ${PREFIX}
+cd build
+make -j4
+make install
+make test
+```
+
 ## NeuroProof Examples
 
 The top-level programs that are built in NeuroProof are defined
