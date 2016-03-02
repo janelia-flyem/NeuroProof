@@ -133,7 +133,7 @@ So, the full build process, from scratch, is this:
 # Set up a conda environment with all dependencies
 conda create -n myenv -c flyem neuroproof
 source activate myenv
-PREFIX=$(conda info --root)/myenv
+PREFIX=$(conda info --root)/envs/myenv
 export LD_LIBRARY_PATH=${PREFIX}/lib # Linux
 export DYLD_FALLBACK_LIBRARY_PATH=${PREFIX}/lib # Mac
 
