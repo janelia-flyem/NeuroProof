@@ -23,7 +23,7 @@ class MitoTypeProperty {
         double mito_pct = sum_mitop/npixels;	
         assert(mito_pct <= 1.0);
 
-        if (mito_pct >= 0.35) {        
+        if (mito_pct >= 0.3) {
             node_type = 2;
         } else {
             node_type = 1;	
