@@ -1,0 +1,54 @@
+package:
+    name: neuroproof
+
+  {% if GIT_DESCRIBE_NUMBER|int == 0 %}
+    version: {{GIT_DESCRIBE_TAG}}
+  {% else %}
+    # If we're using a non-tagged revision, append '.postN' to the version
+    version: {{GIT_DESCRIBE_TAG}}.post{{GIT_DESCRIBE_NUMBER}}
+  {% endif %}
+  
+source:
+  path: ../
+
+build:
+  number: 0
+
+  #
+  # You must build this recipe using 'conda build --numpy=X.Y'
+  #
+  string: np{{np}}py{{py}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
+
+  detect_binary_files_with_prefix: true # (defaults to false)
+
+requirements:
+  build:
+    - gcc 4.8.5*
+    - python 2.7*
+    - numpy {{NPY_VER}}*
+    - jsoncpp 1.6.2
+    - vigra 1.11*
+    - libdvid-cpp
+    - vtk         5.10.1.99
+    - hdf5        1.8.16
+    - qt          4.8.6.99 # [osx]
+    - qt          4.8.6    # [linux]
+    - opencv      2.4.10.1
+    
+  run:
+    - libgcc 4.8.5*
+    - python 2.7*
+    - numpy {{NPY_VER}}*
+    - jsoncpp 1.6.2
+    - vigra 1.11*
+    - libdvid-cpp
+    - vtk         5.10.1.99
+    - hdf5        1.8.16
+    - qt          4.8.6.99 # [osx]
+    - qt          4.8.6     # [linux]
+    - opencv      2.4.10.1
+
+about:
+  home: http://github.com/janelia-flyem/NeuroProof
+  license: BSD (3-clause)
+  summary: C++ library for image segmentation and analysis 
