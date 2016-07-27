@@ -91,17 +91,21 @@ Once conda is in your system path, call the following to install neuroproof:
     % conda create -n CHOOSE_ENV_NAME -c flyem neuroproof
 
 Conda allows builder to create multiple environments.  To use the executables
-and libraries, set your PATH to the location of PREFIX/CHOOSE_ENV_NAME/bin.
+and libraries, set your PATH to the location of `PREFIX/CHOOSE_ENV_NAME/bin`.
 
-Note: this should work on many distributions of linux and on Mac OSX 10.10+.  For Mac,
-you will need to set DYLD_FALLBACK_LIBRARY_PATH to PREFIX/CHOOSE_ENV_NAME/lib.
+Note: This should work on many distributions of linux and on Mac OSX 10.10+.  For Mac,
+you will need to set `DYLD_FALLBACK_LIBRARY_PATH` to `PREFIX/CHOOSE_ENV_NAME/lib`.
+
+Note: For now, the NeuroProof conda package expects certain files to live in `/usr/lib64/`.
+On Ubuntu, you may need to run `sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64` to use NeuroProof.
+(This is currently tracked as issue [#6](https://github.com/janelia-flyem/NeuroProof/issues/6).)
 
 ### Developers' Builder Guide
 Developing has never been easier using conda.  If you plan to actively modify
 the code, first install neuroproof as discussed above.  Then clone
 this repository into the directory of your choosing.  The package cmake
 can still be used but the environment variables must be set to point to
-the dependencies and libraries stored in PREFIX/CHOOSE_ENV_NAME.  NeuroProof
+the dependencies and libraries stored in `PREFIX/CHOOSE_ENV_NAME`.  NeuroProof
 includes a simple wrapper script `configure-for-conda.sh` that simply
 calls the [build script][build.sh] from NeuroProof's recipe with the appropriate environment variables.
 
