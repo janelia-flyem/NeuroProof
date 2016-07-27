@@ -19,8 +19,6 @@ build:
   #
   string: np{{np}}py{{py}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
 
-  detect_binary_files_with_prefix: true # (defaults to false)
-
 requirements:
   build:
     - gcc 4.8.5*
