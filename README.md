@@ -1,7 +1,7 @@
 # NeuroProof [![Picture](https://raw.github.com/janelia-flyem/janelia-flyem.github.com/master/images/HHMI_Janelia_Color_Alternate_180x40.png)](http://www.janelia.org)
 ##Toolkit for Graph-based Image Segmentation and Analysis
 
-[![Picture](https://anaconda.org/flyem/neuroproof/badges/version.svg)]
+[![Picture](https://anaconda.org/flyem/neuroproof/badges/version.svg)](https://anaconda.org/flyem/neuroproof)
 [![Build Status](https://circleci.com/gh/janelia-flyem/NeuroProof.svg?style=shield)](https://circleci.com/gh/janelia-flyem/NeuroProof)
 
 The NeuroProof software is an image segmentation tool currently being used
