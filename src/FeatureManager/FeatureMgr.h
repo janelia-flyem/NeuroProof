@@ -84,7 +84,9 @@ class FeatureMgr {
             for (int j = 0; j < features.size(); ++j, ++pos) {
                 unsigned int bufsize = features[j]->serialize(current_features,
                         feature_caches[pos], buffer);
-                current_features += bufsize; 
+                if (current_features) {
+                    current_features += bufsize; 
+                }
             }
         }
         return buffer;
@@ -100,7 +102,9 @@ class FeatureMgr {
             for (int j = 0; j < features.size(); ++j, ++pos) {
                 unsigned int bufsize = features[j]->serialize(current_features,
                         feature_caches[pos], buffer);
-                current_features += bufsize; 
+                if (current_features) {
+                    current_features += bufsize; 
+                }
             }
         }
         return buffer;
