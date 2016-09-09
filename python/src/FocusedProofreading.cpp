@@ -89,6 +89,7 @@ Json::Value combine_edge_features(string edge1_str, string edge2_str, int num_ch
     reader.parse(edge1_str, edge1); 
     reader.parse(edge2_str, edge2); 
 
+
     // create feature manager and load classifier
     FeatureMgrPtr feature_manager(new FeatureMgr(num_channels));
     feature_manager->set_basic_features(); 
@@ -148,10 +149,8 @@ Json::Value combine_vertex_features(string node1_str, string node2_str, int num_
     Rag_t* rag = new Rag_t;
 
     unsigned long long n1 = node1["Id"].asUInt64();
-    unsigned long long n2 = node2["Id"].asUInt64();
 
     RagNode_t* rn1 = rag->insert_rag_node(n1);
-    RagNode_t* rn2 = rag->insert_rag_node(n2);
 
     string node1_features = node1["Features"].asString();
     string node2_features = node2["Features"].asString();
@@ -163,7 +162,6 @@ Json::Value combine_vertex_features(string node1_str, string node2_str, int num_
     hex2bytes(node2_features, node2_bytes);
     
     feature_manager->deserialize_features((char*) node1_bytes.c_str(), rn1);
-
 
     // combine features  
     string feature_data = feature_manager->serialize_features((char*) node2_bytes.c_str(), rn1);
@@ -226,7 +224,11 @@ Json::Value extract_features(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_a
     } 
 
     i = 0;
-    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter, ++i) {
+    for (Rag_t::edges_iterator iter = rag->edges_begin(); iter != rag->edges_end(); ++iter) {
+        // empty nodes should get ignored because other processes will find
+        if ((*iter)->get_size() == 0) {
+            continue;
+        }
         Json::Value edge_data;
         edge_data["Id1"] = (*iter)->get_node1()->get_node_id();    
         edge_data["Id2"] = (*iter)->get_node2()->get_node_id();    
@@ -238,6 +240,7 @@ Json::Value extract_features(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_a
         edge_data["Features"] = byte2hex(feature_data);
 
         json_data["Edges"][i] = edge_data;
+        ++i;
     }
 
     return json_data; 
