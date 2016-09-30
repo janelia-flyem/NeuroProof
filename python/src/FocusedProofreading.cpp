@@ -7,6 +7,8 @@
 #include <FeatureManager/FeatureMgr.h>
 #include <BioPriors/BioStack.h>
 #include <BioPriors/StackAgglomAlgs.h>
+#include <IO/RagIO.h>
+#include <Rag/RagUtils.h>
 
 #include <json/json.h>
 #include <sstream>
@@ -27,9 +29,80 @@ using namespace boost::python;
 using namespace boost::algorithm;
 using std::vector;
 using std::cout; using std::endl;
-
+using std::string;
 
 namespace NeuroProof { namespace python {
+
+
+class Graph {
+  public:
+    // TODO allow init to dynamically pull from DB
+    Graph(string filename);
+    
+    // return affinity pairs (TODO: produce path, allow for filtering or handle on client?)
+    /*!
+     * Find bodies near provided body (within a certain confidence)
+     * /param id body id for head node
+     * /param path_cutoff length of path to consider (0=infinite)
+     * /param prob_cutoff minimum affinity between nodes allowed
+     * /return json containing nodes near the head node
+    */
+    Json::Value find_close_bodies(unsigned long long id, int path_cutoff, double prob_cutoff);
+
+  private:
+    RagPtr rag;
+
+};
+
+
+Graph::Graph(string filename)
+{
+    ifstream fin(filename.c_str());
+    Json::Reader json_reader;
+    Json::Value json_vals;
+    if (!json_reader.parse(fin, json_vals)) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+    fin.close();
+
+    rag = RagPtr(create_rag_from_json(json_vals));
+    if (!rag) {
+        throw ErrMsg("Error: Json incorrectly formatted");
+    }
+}
+
+Json::Value Graph::find_close_bodies(unsigned long long id, int path_cutoff, double prob_cutoff)
+{
+    RagNode_t* node1 = rag->find_rag_node(id);
+   
+    if (!node1) {
+        throw ErrMsg("Error: head node not found");
+    }
+
+    AffinityPair::Hash affinity_pairs;
+    grab_affinity_pairs(*rag.get(), node1, path_cutoff, prob_cutoff, false, affinity_pairs);
+
+    Json::Value data;
+    int i = 0;
+
+    for (AffinityPair::Hash::iterator iter = affinity_pairs.begin();
+            iter != affinity_pairs.end(); ++iter) {
+        Node_t region;
+        
+        region = iter->region1;
+        if (region == id) {
+            region = iter->region2;
+        }
+
+        data[i][0] = region;
+        data[i][1] = iter->weight;
+    
+        ++i;
+    }
+
+    return data;
+
+}
 
 // convert from hex to string bytes
 void hex2bytes(string& original, string& processed)
@@ -248,7 +321,7 @@ Json::Value extract_features(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_a
 
 class ComputeProbPy {
   public:
-    ComputeProbPy(std::string fn, int num_channels) : feature_manager(new FeatureMgr(num_channels))
+    ComputeProbPy(string fn, int num_channels) : feature_manager(new FeatureMgr(num_channels))
     {
         feature_manager->set_basic_features(); 
         if (ends_with(fn, ".h5")) {
@@ -337,8 +410,12 @@ BOOST_PYTHON_MODULE(_focusedproofreading_python)
     def("combine_edge_features" , combine_edge_features);
     def("combine_vertex_features" , combine_vertex_features);
     
-    class_<ComputeProbPy>("ComputeProb", init<std::string, int>())
+    class_<ComputeProbPy>("ComputeProb", init<string, int>())
         .def("compute_prob", &ComputeProbPy::compute_prob)
+        ;
+
+    class_<Graph>("Graph", init<string>())
+        .def("find_close_bodies", &Graph::find_close_bodies)
         ;
 }
 
