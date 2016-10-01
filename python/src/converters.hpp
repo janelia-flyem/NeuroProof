@@ -77,7 +77,7 @@ struct ndarray_to_segmentation
         // Verify ndarray memory order
         if (!ndarray.attr("flags")["C_CONTIGUOUS"])
         {
-            throw ErrMsg("Volume is not F_CONTIGUOUS");
+            throw ErrMsg("Volume is not C_CONTIGUOUS");
         }
 
         // Extract dims from ndarray.shape (which is already in C-order)
