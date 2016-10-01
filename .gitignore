@@ -8,3 +8,4 @@ integration_tests/temp_data
 .cproject
 .project
 .pydevproject
+/Debug/
