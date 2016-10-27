@@ -174,6 +174,7 @@ target_link_libraries( _focusedproofreading_python ${NEUROPROOF_INT_LIBS} ${NEUR
 set_target_properties( _focusedproofreading_python PROPERTIES PREFIX  "")
 
 if (APPLE)
+    set_target_properties( _classifier_python PROPERTIES SUFFIX  ".so")
     set_target_properties( _agglomeration_python PROPERTIES SUFFIX  ".so")
     set_target_properties( _focusedproofreading_python PROPERTIES SUFFIX  ".so")
 endif()
