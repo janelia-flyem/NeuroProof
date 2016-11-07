@@ -122,7 +122,7 @@ BoostGraph* create_boost_graph(boost::shared_ptr<Rag<Index_t> > rag);
 */
 void grab_affinity_pairs(Rag<Index_t>& rag, RagNode<Index_t>* rag_node_head,
         int path_restriction, double connection_threshold, bool preserve,
-        AffinityPair::Hash& affinity_pairs);
+        AffinityPair::Hash& affinity_pairs, bool extract_path=false);
 
 /*!
  * Calls 'grab_affinity_pairs' to find the affinity beetween two nodes.

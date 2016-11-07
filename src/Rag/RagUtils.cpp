@@ -320,7 +320,7 @@ struct BestNodeCmp {
 };
 
 void grab_affinity_pairs(Rag_t& rag, RagNode_t* rag_node_head, int path_restriction,
-        double connection_threshold, bool preserve, AffinityPair::Hash& affinity_pairs)
+        double connection_threshold, bool preserve, AffinityPair::Hash& affinity_pairs, bool extract_path)
 {
     typedef std::priority_queue<BestNode, std::vector<BestNode>, BestNodeCmp> BestNodeQueue;
     BestNode best_node_head;
@@ -398,7 +398,11 @@ void grab_affinity_pairs(Rag_t& rag, RagNode_t* rag_node_head, int path_restrict
                 best_node_new.weight = edge_prob;
                 best_node_new.path = best_node_curr.path + 1;
                 if (best_node_new.path > 1) {
-                    best_node_new.second_node = best_node_curr.second_node;
+                    if (!extract_path) {
+                        best_node_new.second_node = best_node_curr.second_node;
+                    } else {
+                        best_node_new.second_node = best_node_curr.rag_node_curr->get_node_id();
+                    }
                 } else {
                     best_node_new.second_node = best_node_new.rag_node_curr->get_node_id();
                 }

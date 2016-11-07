@@ -80,7 +80,7 @@ Json::Value Graph::find_close_bodies(unsigned long long id, int path_cutoff, dou
     }
 
     AffinityPair::Hash affinity_pairs;
-    grab_affinity_pairs(*rag.get(), node1, path_cutoff, prob_cutoff, false, affinity_pairs);
+    grab_affinity_pairs(*rag.get(), node1, path_cutoff, prob_cutoff, false, affinity_pairs, true);
 
     Json::Value data;
     int i = 0;
@@ -94,9 +94,29 @@ Json::Value Graph::find_close_bodies(unsigned long long id, int path_cutoff, dou
             region = iter->region2;
         }
 
-        data[i][0] = region;
-        data[i][1] = iter->weight;
     
+        data[i][0] = region;
+        unsigned int count = 1;
+
+        // extract entire path
+        Node_t temp_id = iter->size;
+        Node_t r1 = iter->region1;
+        Node_t r2 = iter->region2;
+        while ((temp_id != r1) && (temp_id != r2)) {
+            // add node 
+            data[i][count] = temp_id;
+
+            // find next node
+            AffinityPair temp_pair(id, temp_id);
+            AffinityPair::Hash::iterator iter_temp = affinity_pairs.find(temp_pair); 
+            assert(iter_temp != affinity_pairs.end());
+            temp_id = iter_temp->size;
+            r1 = iter_temp->region1;
+            r2 = iter_temp->region2;
+            ++count;
+        }
+        
+        data[i][count] = iter->weight;
         ++i;
     }
 
