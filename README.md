@@ -154,6 +154,52 @@ make install
 make test
 ```
 
+## Focused Proofreading
+If one generates edge probability between segments, focused proofreading can be used.
+The original focused proofreading approach is implemented in NeuroProof and available as a plugin
+within [Raveler](https://openwiki.janelia.org/wiki/display/flyem/Raveler).
+
+Edge probability can be determined using the agglomeration executable neuroproof_graph_predict.  After
+agglomerating the segmentation, a final graph is produced which can be used for focused proofreading.
+(Other techniques to generate uncertainty will be compatible with neuroproof as long as the format
+matches the graph output of agglomeration).
+
+### Raveler
+
+Install Raveler and launch the focused proofreading workflow providing a body importance threshold
+and a graph json file produced by neuroproof_graph_predict.  In the current workflow,
+Raveler will look for all paths connecting bodies whose risk (impact * uncertainty) is high
+enough to warrant examination.  For a given important path, it will navigate to the first edge
+in the path, and recompute uncertainty for each merge/no merge decision.  Merge decisions currently
+do not result in re-running the edge classifier, rather the highest affinity probability is used
+when merging edges.
+
+### neuroproof_graph_analyze_gt
+
+To use focused proofreading outside of Raveler, examine the functions used to evaluate GT in
+neuroproof_graph_analyze_gt.  In particular, run_body and run_synapse functions show how to use neuroproof to choose the most important edge and how the thresholds are set.
+
+### static path computation
+
+The easiest way to use focused proofreading is probably the following:
+
+1.  Generate a graph file by running something like neuroproof_graph_predict (or the workflow in DVIDSparkServices)
+2.  Choose a set of important bodies in a segmentation (e.g., big bodies or bodies that contain synapse points)
+3.  For each important body, use Disjkstra's algorithm to find the closest bodies and consider paths whose endpoints are within the important body set and whose affinity is reasonably high.
+
+Neuroproof has a simple implementation of Dijsktra's algorithm that will work over the neuroproof output.  See example below
+
+    % from neuroproof import FocusedProofreading
+    % graph = FocusedProofreading.Graph("graph.json")
+    % BODYID = 1
+    % PATHCUTOFF = 0
+    % THRES = 0.1
+    % close_bodies = graph.find_close_bodies(BODYID, PATHCUTOFF, THRES)
+    % #This will return something like
+    % [2,6,3,0.4]
+    
+Where this gives a path 1-3-6-2 with an affinity between 1 and 2 of 0.40.  PATHCUTOFF specifies the length of path that will be considered (0 is infinite to within the constraint).  THRES is the minimum acceptable affinity (0.1 or 10% here).
+
 ## NeuroProof Examples
 
 The top-level programs that are built in NeuroProof are defined
