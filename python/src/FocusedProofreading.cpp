@@ -33,6 +33,8 @@ using std::string;
 
 namespace NeuroProof { namespace python {
 
+typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
+typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
 
 class Graph {
   public:
@@ -182,7 +184,6 @@ Json::Value combine_edge_features(string edge1_str, string edge2_str, int num_ch
     reader.parse(edge1_str, edge1); 
     reader.parse(edge2_str, edge2); 
 
-
     // create feature manager and load classifier
     FeatureMgrPtr feature_manager(new FeatureMgr(num_channels));
     feature_manager->set_basic_features(); 
@@ -221,7 +222,13 @@ Json::Value combine_edge_features(string edge1_str, string edge2_str, int num_ch
     
     // update edge features
     edge1["Features"] = byte2hex(feature_data);
-    
+   
+    // use location from the larger edge
+    if (edge2_size > edge1_size) {
+        edge1["Loc1"] = edge2["Loc1"];
+        edge1["Loc2"] = edge2["Loc2"];
+    }
+     
     delete rag;
 
     return edge1;
@@ -295,6 +302,16 @@ Json::Value extract_features(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_a
 
     RagPtr rag = stack.get_rag();
 
+    // determine edge locations
+    EdgeCount best_edge_z;
+    EdgeLoc best_edge_loc;
+
+    // assume channel 0 is cytoplasm
+    stack.determine_edge_locations(best_edge_z, best_edge_loc, true);
+    
+    VolumeLabelPtr labelsvol = stack.get_labelvol();
+
+
     Json::Value json_data;
 
     int i = 0;
@@ -322,9 +339,57 @@ Json::Value extract_features(VolumeLabelPtr labels, vector<VolumeProbPtr> prob_a
         if ((*iter)->get_size() == 0) {
             continue;
         }
+    
+        Location location = best_edge_loc[(*iter)];
+        unsigned int x = boost::get<0>(location);
+        unsigned int y = boost::get<1>(location);
+        unsigned int z = boost::get<2>(location);
+        
+        unsigned int x2 = x;
+        unsigned int y2 = y;
+        unsigned int z2 = z; 
+    
+
+        Label_t label = (*labelsvol)(x,y,z);
+        Label_t otherlabel = (*iter)->get_node2()->get_node_id();
+        bool isnode1 = true;
+
+        if ((*iter)->get_node2()->get_node_id() == label) {
+            otherlabel = (*iter)->get_node1()->get_node_id();
+            isnode1 = false;
+        }
+
+        if ((x<(stack.get_xsize()-1)) && (*labelsvol)(x+1,y,z) == otherlabel) {
+            x2 = x+1;
+        } else if ((y<(stack.get_ysize()-1)) && (*labelsvol)(x,y+1,z) == otherlabel) {
+            y2 = y+1;
+        } else if ((x>0) && (*labelsvol)(x-1,y,z) == otherlabel) {
+            x2 = x-1;
+        } else if ((y>0) && (*labelsvol)(x,y-1,z) == otherlabel) {
+            y2 = y-1;
+        } else if ((z>0) && (*labelsvol)(x,y,z-1) == otherlabel) {
+            z2 = z-1;
+        } else {
+            z2 = z+1;
+        }
+
+        if (!isnode1) {
+            std::swap(x, x2);
+            std::swap(y, y2);
+            std::swap(z, z2);
+        }
+
         Json::Value edge_data;
         edge_data["Id1"] = (*iter)->get_node1()->get_node_id();    
         edge_data["Id2"] = (*iter)->get_node2()->get_node_id();    
+        edge_data["Loc1"][0] = x;
+        edge_data["Loc1"][1] = y;
+        edge_data["Loc1"][2] = z;
+        
+        edge_data["Loc2"][0] = x2;
+        edge_data["Loc2"][1] = y2;
+        edge_data["Loc2"][2] = z2;
+
         edge_data["Weight"] = (*iter)->get_size();    
 
         string feature_data = feature_manager->serialize_features(0, (*iter));
