@@ -38,7 +38,9 @@ for iter1, body in enumerate(important_bodies):
         for element in path:
             # avoid duplicate paths
             if body < element[0] and element[0] in important_bodies:
-                all_paths.append([body, element[0], element[1]])
+                patharr = [body]
+                patharr.extend(element) # start body, end body, hop1, hop2, ..., probability
+                all_paths.append(patharr)
     else:
         bad_bodies.append(body)
 
