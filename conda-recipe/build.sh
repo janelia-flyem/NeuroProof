@@ -38,8 +38,12 @@ cmake ..\
 
 if [[ $CONFIGURE_ONLY == 0 ]]; then
     # BUILD
-    make -j${CPU_COUNT}
-    
+    if [[ `uname` == 'Darwin' ]]; then
+        make -j${CPU_COUNT} 2> >(python "${RECIPE_DIR}"/filter-macos-linker-warnings.py)
+    else
+        make -j${CPU_COUNT}
+    fi
+        
     # "install" to the build prefix (conda will relocate these files afterwards)
     make install
 fi
