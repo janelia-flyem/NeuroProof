@@ -46,6 +46,11 @@ requirements:
     - qt          4.8.6     # [linux]
     - opencv      2.4.10.1
 
+test:
+  source_files:
+    - build
+    - lib
+
 about:
   home: http://github.com/janelia-flyem/NeuroProof
   license: BSD (3-clause)

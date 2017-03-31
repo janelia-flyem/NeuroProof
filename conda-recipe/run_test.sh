@@ -7,9 +7,9 @@ else
     export LD_LIBRARY_PATH="$PREFIX/lib":"${LD_LIBRARY_PATH}"
 fi
 
-export PYTHONPATH="${SRC_DIR}/lib"
+export PYTHONPATH="$(pwd)/lib"
 
-cd "${SRC_DIR}/build"
+cd "build"
 
 # Test executables in the build directory have internal links to .dylibs in the build prefix,
 #  but conda deletes the build prefix before it runs this test script.
