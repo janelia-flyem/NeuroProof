@@ -11,7 +11,7 @@
 
 // model dispatches events
 #include <Stack/Dispatcher.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <BioPriors/BioStack.h>
 #include <string>
 
@@ -145,7 +145,7 @@ class StackSession : public Dispatcher {
      * \param active_labels_ map of labels to colors that are currently active
      * \return true if the active labels have changed for the current dispatch
     */
-    bool get_active_labels(std::tr1::unordered_map<Label_t, int>& active_labels_);
+    bool get_active_labels(std::unordered_map<Label_t, int>& active_labels_);
     
     /*!
      * Retrieve which label was currently clicked.  This is not an active label
@@ -364,7 +364,7 @@ class StackSession : public Dispatcher {
     BioStack* gt_stack;  
   
     //! contains a set of active labels for examination
-    std::tr1::unordered_map<Label_t, int> active_labels;
+    std::unordered_map<Label_t, int> active_labels;
    
     //! true if active labels have changed
     bool active_labels_changed;

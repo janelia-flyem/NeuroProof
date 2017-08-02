@@ -33,8 +33,8 @@ using std::string;
 
 namespace NeuroProof { namespace python {
 
-typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
-typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
+typedef std::unordered_map<RagEdge_t*, double> EdgeCount;
+typedef std::unordered_map<RagEdge_t*, Location> EdgeLoc; 
 
 class Graph {
   public:

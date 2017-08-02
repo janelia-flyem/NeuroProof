@@ -2,7 +2,7 @@
 #define AFFINITYPAIR
 
 #include <boost/functional/hash.hpp>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 
 namespace NeuroProof {
@@ -86,7 +86,7 @@ struct AffinityPair : public OrderedPair {
         }
         
         // fundamental datastructure for using AffinityPairs
-        typedef std::tr1::unordered_set<AffinityPair, AffinityPair> Hash;
+        typedef std::unordered_set<AffinityPair, AffinityPair> Hash;
 
         // probability of connection
         double weight;

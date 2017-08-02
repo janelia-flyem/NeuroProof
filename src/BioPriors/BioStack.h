@@ -3,8 +3,8 @@
 
 #include "../Stack/Stack.h"
 #include <string>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace NeuroProof {
 
@@ -18,8 +18,8 @@ class BioStack : public Stack {
     VolumeLabelPtr create_syn_label_volume();
     VolumeLabelPtr create_syn_gt_label_volume();
     void set_synapse_exclusions(const char * synapse_json);    
-    void load_synapse_counts(std::tr1::unordered_map<Label_t, int>& synapse_counts);
-    void load_synapse_labels(std::tr1::unordered_set<Label_t>& synapse_labels);
+    void load_synapse_counts(std::unordered_map<Label_t, int>& synapse_counts);
+    void load_synapse_labels(std::unordered_set<Label_t>& synapse_labels);
 
     bool is_mito(Label_t label);
     void serialize_graph_info(Json::Value& json_writer);

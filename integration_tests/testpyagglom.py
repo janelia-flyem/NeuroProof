@@ -18,8 +18,10 @@ pred = pred.copy()
 
 res = Agglomeration.agglomerate(seg, pred, classifier, threshold)
 
-# should be 232 unique labels (including 0) in the resulting segmentation
-if len(numpy.unique(res)) != 232:
-    exit(1)
+expected_unique = 239
+result_unique = len(numpy.unique(res))
+assert result_unique == 239, \
+    "Expected {} unique labels (including 0) in the resulting segmentation, but got {}"\
+    .format(expected_unique, len(numpy.unique(res)))
 
 print "SUCCESS"

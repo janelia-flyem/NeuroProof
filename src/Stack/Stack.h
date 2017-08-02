@@ -21,8 +21,8 @@
 // used to represent x,y,z locations
 #include <boost/tuple/tuple.hpp>
 
-#include <tr1/unordered_set>
-#include <tr1/unordered_map>
+#include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <string>
 
@@ -91,7 +91,7 @@ class Stack : public StackBase {
      * \return number of regions absorbed
     */
     int absorb_small_regions(VolumeProbPtr boundary_pred, int threshold,
-                    std::tr1::unordered_set<Label_t>& exclusions);
+                    std::unordered_set<Label_t>& exclusions);
     
     /*!
      * Similar to absorb_small_regions except removed regions are assigned a 0
@@ -101,7 +101,7 @@ class Stack : public StackBase {
      * \return number of regions removed
     */
     int remove_small_regions(int threshold,
-                    std::tr1::unordered_set<Label_t>& exclusions);
+                    std::unordered_set<Label_t>& exclusions);
 
     /*!
      * Determines the ground truth label(s) from a list of a set of
@@ -114,16 +114,16 @@ class Stack : public StackBase {
      * \param gtlabels_matched reference to set of gt labels matching labels
      * \return number of matches found to the given label
     */
-    int match_regions_overlap(Label_t label, std::tr1::unordered_set<Label_t>& candidate_regions,
-        RagPtr gt_rag, std::tr1::unordered_set<Label_t>& labels_matched,
-        std::tr1::unordered_set<Label_t>& gtlabels_matched);
+    int match_regions_overlap(Label_t label, std::unordered_set<Label_t>& candidate_regions,
+        RagPtr gt_rag, std::unordered_set<Label_t>& labels_matched,
+        std::unordered_set<Label_t>& gtlabels_matched);
    
 
     /*!
      * Find labels that belong to ground truth body.
     */
     void get_gt2segs_map(RagPtr gt_rag,
-            std::tr1::unordered_map<Label_t, std::vector<Label_t> >& gt2segs);
+            std::unordered_map<Label_t, std::vector<Label_t> >& gt2segs);
 
     /*!
      * Dilates the borders between labels using the given disc size.
@@ -254,10 +254,10 @@ class Stack : public StackBase {
     typedef boost::tuple<unsigned int, unsigned int, unsigned int> Location;
     
     //! declaration of typedef for mapping of rag edges to doubles
-    typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
+    typedef std::unordered_map<RagEdge_t*, double> EdgeCount;
 
     //! declaration of typedef for mapping of rag edges to location 
-    typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
+    typedef std::unordered_map<RagEdge_t*, Location> EdgeLoc; 
    
     // TODO: remove labelcount in favor of an unordered_map
     /*!
@@ -323,14 +323,14 @@ class Stack : public StackBase {
      * volume and the original label volume.  This could probably be
      * moved the Stack.
     */
-    std::tr1::unordered_map<Label_t, std::vector<LabelCount> > contingency;	
+    std::unordered_map<Label_t, std::vector<LabelCount> > contingency;	
     
     /*!
      * Contains a map that shows which ground truth label each original
      * label is mapped to (based on overlap).  This could probably be
      * moved to the Stack.
     */
-    std::tr1::unordered_map<Label_t, Label_t> assignment;
+    std::unordered_map<Label_t, Label_t> assignment;
 
 };
 

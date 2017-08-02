@@ -7,13 +7,13 @@
 #include <vtkCamera.h>
 #include <vtkInteractorStyle.h>
 #include <vtkPointData.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include <boost/thread/mutex.hpp>
 
 using namespace NeuroProof;
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 
 #include <Utilities/ScopeTime.h>
 #include <QVBoxLayout>
@@ -44,7 +44,7 @@ StackBodyView::~StackBodyView()
     }
 }
 
-void StackBodyView::create_label_volume(std::tr1::unordered_map<unsigned int, int>& labels)
+void StackBodyView::create_label_volume(std::unordered_map<unsigned int, int>& labels)
 {
     unordered_map<Label_t, unsigned char> color_mapping;
     Stack* stack = stack_session->get_stack();

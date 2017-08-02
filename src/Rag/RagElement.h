@@ -10,7 +10,7 @@
 
 #include "Property.h"
 #include <Utilities/ErrMsg.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <string>
 
 namespace NeuroProof {
@@ -106,7 +106,7 @@ class RagElement {
     void rm_properties();
   
   private:
-    typedef std::tr1::unordered_map<std::string, PropertyPtr> Properties_t;
+    typedef std::unordered_map<std::string, PropertyPtr> Properties_t;
     //! Properties stored for rag element (string index)
     Properties_t properties;
 };

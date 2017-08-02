@@ -13,8 +13,8 @@ using namespace NeuroProof;
 using namespace boost::python;
 using std::cout;
 using std::vector;
-using std::tr1::unordered_map;
-using std::tr1::unordered_set;
+using std::unordered_map;
+using std::unordered_set;
 
 RagNode_t* (Rag_t::*find_rag_node_ptr)(Label_t) = &Rag_t::find_rag_node;
 RagNode_t* (Rag_t::*insert_rag_node_ptr)(Label_t) = &Rag_t::insert_rag_node;

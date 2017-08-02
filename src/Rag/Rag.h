@@ -16,7 +16,7 @@
 #include <Utilities/ErrMsg.h>
 
 // has set used for efficient accessing of edges and nodes
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 #include <boost/shared_ptr.hpp>
 
@@ -125,10 +125,10 @@ class Rag {
     unsigned long long get_rag_size();
 
     //! Container for all edges using a hash
-    typedef std::tr1::unordered_set<RagEdge<Region>*, RagEdgePtrHash<Region>, RagEdgePtrEq<Region> >  EdgeHash;
+    typedef std::unordered_set<RagEdge<Region>*, RagEdgePtrHash<Region>, RagEdgePtrEq<Region> >  EdgeHash;
     
     //! Container for all nodes using a hash
-    typedef std::tr1::unordered_set<RagNode<Region>*, RagNodePtrHash<Region>, RagNodePtrEq<Region> >  NodeHash;
+    typedef std::unordered_set<RagNode<Region>*, RagNodePtrHash<Region>, RagNodePtrEq<Region> >  NodeHash;
 
     //! Defines iterator type for nodes container
     typedef typename NodeHash::iterator nodes_iterator;

@@ -13,7 +13,7 @@
 #include <boost/filesystem.hpp>
 
 using namespace NeuroProof;
-using std::tr1::unordered_map;
+using std::unordered_map;
 using namespace boost::algorithm;
 using namespace boost::filesystem;
 using std::string;

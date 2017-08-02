@@ -9,11 +9,11 @@
 #include <IO/StackIO.h>
 #include <iostream>
 #include <vector>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 using namespace std;
 using namespace NeuroProof;
-using std::tr1::unordered_set;
+using std::unordered_set;
 
 BOOST_AUTO_TEST_CASE (stack_simple)
 {

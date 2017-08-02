@@ -6,7 +6,7 @@
 #include <map>
 
 using std::vector; using std::set;
-using std::tr1::unordered_set; using std::tr1::unordered_map;
+using std::unordered_set; using std::unordered_map;
 using std::string;
 using std::cerr; using std::cout; using std::endl;
 using std::pair;
