@@ -3,7 +3,12 @@
 #include "BioStack.h"
 #include "StackLearnAlgs.h"
 
+#include<iostream>
+
+using std::cout;
+
 namespace NeuroProof {
+
 
 void preprocess_stack(BioStack& stack, bool use_mito)
 {

@@ -7,6 +7,7 @@
 #include <json/value.h>
 #include <vector>
 
+#include <iostream>
 #include <fstream>
 #include <boost/python.hpp>
 //#include <Python.h>

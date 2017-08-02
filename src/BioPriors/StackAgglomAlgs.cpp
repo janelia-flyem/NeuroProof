@@ -5,6 +5,7 @@
 #include <Algorithms/FeatureJoinAlgs.h>
 
 #include <vector>
+#include <iostream>
 
 using std::vector;
 
@@ -74,7 +75,7 @@ void agglomerate_stack_mrf(Stack& stack, double threshold, bool use_mito)
 
     agglomerate_stack(stack, 0.06, use_mito); //0.01 for 250, 0.02 for 500
     stack.remove_inclusions();	  	
-    cout <<  "Remaining regions: " << stack.get_num_labels();	
+    std::cout <<  "Remaining regions: " << stack.get_num_labels();
 
     RagPtr rag = stack.get_rag();
     FeatureMgrPtr feature_mgr = stack.get_feature_manager();
