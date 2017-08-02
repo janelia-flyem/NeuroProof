@@ -26,7 +26,7 @@ set (BUILDLOC ${CMAKE_SOURCE_DIR})
 #
 ######################################################################
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-    "from distutils.sysconfig import *; print get_python_lib(1)"
+    "from distutils.sysconfig import *; print(get_python_lib(1))"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
 FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} NEUROPROOF_PYTHON_INSTALL_DIR)
 SET(NEUROPROOF_PYTHON_INSTALL_DIR ${NEUROPROOF_PYTHON_INSTALL_DIR}
