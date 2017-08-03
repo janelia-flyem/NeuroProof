@@ -18,7 +18,6 @@ using namespace boost::algorithm;
 using namespace boost::filesystem;
 using std::string;
 using std::vector;
-using std::ifstream; using std::ofstream;
 
 // to be called from command line
 StackSession::StackSession(string session_name)
@@ -67,7 +66,7 @@ StackSession::StackSession(string session_name)
     Json::Reader json_reader;
     Json::Value json_reader_vals;
     string session_file = session_name + "/session.json";
-    ifstream fin(session_file.c_str());
+    std::ifstream fin(session_file.c_str());
     if (!fin) {
         throw ErrMsg("Could not open session json file");
     }
@@ -160,7 +159,7 @@ void StackSession::export_session(string session_name)
 
             Json::Value json_writer;
             string session_file = session_name + "/session.json";
-            ofstream fout(session_file.c_str());
+            std::ofstream fout(session_file.c_str());
             json_writer["edges-examined"] = edges_examined; 
             fout << json_writer;
             fout.close();
