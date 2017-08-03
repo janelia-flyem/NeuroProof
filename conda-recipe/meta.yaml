@@ -32,6 +32,7 @@ requirements:
     - hdf5        1.8.18
     - qt          4.8*
     - opencv-nopython      2.4*
+    - h5py
     
   run:
     - python {{PY_VER}}*
@@ -46,9 +47,6 @@ requirements:
     - opencv-nopython      2.4*
 
 test:
-  requires:
-    - h5py
-
   imports:
     - libNeuroProofMetrics
     - libNeuroProofPriority
