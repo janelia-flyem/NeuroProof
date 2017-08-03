@@ -2,6 +2,8 @@
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE rag_capabilities
 
+#include <iostream>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 
@@ -91,8 +93,6 @@ BOOST_AUTO_TEST_CASE (rag_node_combine)
 
     delete test_rag;
 }
-
-#include <iostream>
 
 BOOST_AUTO_TEST_CASE (rag_json_create)
 {
