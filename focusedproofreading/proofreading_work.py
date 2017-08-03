@@ -10,7 +10,7 @@ bodythres = float(sys.argv[4])
 synthres = float(sys.argv[5])
 gtadjacency = json.load(open(sys.argv[6]))
 
-print "Opened all files"
+print("Opened all files")
 
 # extract important bodies
 important_bodies = set()
@@ -49,14 +49,14 @@ for seg2gt in gtadjacency:
 remove_bodies = []
 for body in important_bodies:
     if body not in gt_mappings:
-        print "Orphan: ", body
+        print("Orphan: ", body)
         remove_bodies.append(body)
 
 for body in remove_bodies:
     important_bodies.remove(body)
 
 num_gt = len(gtbodies)
-print "Seg bodies: ", num_seg, "GT bodies: ", num_gt
+print("Seg bodies: ", num_seg, "GT bodies: ", num_gt)
 
 # grab on paths that contain these endpoints, sort from highest to lowest confidence
 sorted_paths = []
@@ -65,7 +65,7 @@ for path in paths:
         sorted_paths.append((path[2], path[0], path[1]))
 
 sorted_paths.sort(reverse=True)
-print "Total paths: ", len(sorted_paths)
+print("Total paths: ", len(sorted_paths))
 
 
 # iterate paths in order
@@ -99,10 +99,10 @@ for iter1, path in enumerate(sorted_paths):
 
     if iter1 % 10:
         # merge yes, merge no, redundant ignore, remaining segs, optimal GT, confidence
-        print num_correct, num_incorrect, num_red, num_seg, num_gt, path[0]
+        print(num_correct, num_incorrect, num_red, num_seg, num_gt, path[0])
 
-print "Final Results (yes, no, redundant, #seg, #gt)"
-print num_correct, num_incorrect, num_red, num_seg, num_gt
+print("Final Results (yes, no, redundant, #seg, #gt)")
+print(num_correct, num_incorrect, num_red, num_seg, num_gt)
 
 
 
