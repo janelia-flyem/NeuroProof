@@ -46,9 +46,17 @@ requirements:
     - opencv-nopython      2.4*
 
 test:
-  source_files:
-    - build
-    - lib
+  requires:
+    - h5py
+
+  imports:
+    - libNeuroProofMetrics
+    - libNeuroProofPriority
+    - libNeuroProofRag
+    - neuroproof
+    - neuroproof.Agglomeration
+    - neuroproof.FocusedProofreading
+    - neuroproof.Classifier
 
 about:
   home: http://github.com/janelia-flyem/NeuroProof
