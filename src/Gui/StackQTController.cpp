@@ -1,18 +1,25 @@
-#include "StackQTController.h"
-#include "StackQTUi.h"
-#include <StackGui/StackPlaneController.h>
-#include <StackGui/StackBodyController.h>
-#include <QTimer>
-#include <StackGui/StackSession.h>
+// These includes (ultimately) pull in python headers, which contain the word 'slots'
+// Therefore, they must be included BEFORE anything that pulls in Qt headers,
+// which redefines 'slots' as a keyword for its own purposes.
 #include <EdgeEditor/EdgeEditor.h>
 #include <EdgeEditor/EdgeRankToufiq.h>
-#include "MessageBox.h"
-#include <QFileDialog>
-#include <QApplication>
+
 #include <algorithm>
+#include <sstream>
+
 #include <json/json.h>
 #include <json/value.h>
-#include <sstream>
+
+#include <QTimer>
+#include <QFileDialog>
+#include <QApplication>
+
+#include "StackQTController.h"
+#include "StackQTUi.h"
+#include "MessageBox.h"
+#include <StackGui/StackPlaneController.h>
+#include <StackGui/StackBodyController.h>
+#include <StackGui/StackSession.h>
 
 using std::stringstream;
 using namespace NeuroProof;
