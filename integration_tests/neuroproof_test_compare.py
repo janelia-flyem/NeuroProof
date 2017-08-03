@@ -23,6 +23,7 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
     p = subprocess.Popen(exe_string.split(), stdout=subprocess.PIPE)
  
     testout_stdout, err = p.communicate()
+    testout_stdout = testout_stdout.decode('utf-8')
 
     # error returned from call
     if err is not None:
