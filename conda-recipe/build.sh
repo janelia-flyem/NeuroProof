@@ -35,8 +35,8 @@ cmake ..\
         -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
         -DCMAKE_PREFIX_PATH="${PREFIX}" \
         -DCMAKE_CXX_FLAGS=-I"${PREFIX}/include -std=c++11 ${CXXFLAGS}" \
-        -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -L${PREFIX}/lib" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -Wl,-rpath,${PREFIX}/lib/vtk-5.10 -L${PREFIX}/lib -L${PREFIX}/lib/vtk-5.10" \
+        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${PREFIX}/lib -Wl,-rpath,${PREFIX}/lib/vtk-5.10 -L${PREFIX}/lib -L${PREFIX}/lib/vtk-5.10" \
         -DBOOST_ROOT=${PREFIX} \
         -DBoost_LIBRARY_DIR="${PREFIX}/lib" \
         -DBoost_INCLUDE_DIR="${PREFIX}/include" \
