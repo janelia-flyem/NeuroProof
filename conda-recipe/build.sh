@@ -65,6 +65,9 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
             export LD_LIBRARY_PATH="$PREFIX/lib":"${LD_LIBRARY_PATH}"
         fi
         
+        # The tests don't work unless build/python is on the PYTHONPATH
+        export PYTHONPATH=$(pwd)/python
+        
         # Run the tests
         make test
     )

@@ -23,6 +23,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 message("Using cmake modules from ${CMAKE_MODULE_PATH}")
 set (BUILDLOC ${CMAKE_SOURCE_DIR})
 
+message("making the python output dir...")
+set(NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/python")
+make_directory( ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR})
+
+# Copy pure python source from source-dir to build-dir
+file(COPY "${CMAKE_SOURCE_DIR}/python/neuroproof" DESTINATION "${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}")
+
+set(CTEST_ENVIRONMENT "PYTHONPATH=${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}")
+
 ######################################################################
 #
 #      find default install directory for Python modules

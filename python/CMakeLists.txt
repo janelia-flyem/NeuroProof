@@ -154,6 +154,29 @@ add_library( _classifier_python SHARED src/Classifier.cpp )
 add_library( _agglomeration_python SHARED src/Agglomeration.cpp src/init_numpy.cpp )
 add_library( _focusedproofreading_python SHARED src/FocusedProofreading.cpp src/init_numpy.cpp )
 
+# Copy to the appropriate dirs of the temporary build output, for testing the package.
+add_custom_command(
+    TARGET _classifier_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_classifier_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/Classifier/
+    COMMENT "Copying target $<TARGET_FILE:_classifier_python> to temporary build output directory")
+
+add_custom_command(
+    TARGET _agglomeration_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_agglomeration_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/Agglomeration/
+    COMMENT "Copying target $<TARGET_FILE:_agglomeration_python> to temporary build output directory")
+
+add_custom_command(
+    TARGET _focusedproofreading_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_focusedproofreading_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/FocusedProofreading/
+    COMMENT "Copying target $<TARGET_FILE:_focusedproofreading_python> to temporary build output directory")
+
+
 target_link_libraries( _classifier_python Classifier ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _classifier_python PROPERTIES PREFIX  ""
                                                DEBUG_POSTFIX "" )
@@ -195,7 +218,6 @@ install(FILES neuroproof/Agglomeration/__init__.py
 install(FILES neuroproof/FocusedProofreading/__init__.py
     DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/FocusedProofreading)
 
-enable_testing() 
 
 add_test("test_agglom_python"
     ${PYTHON_EXE}

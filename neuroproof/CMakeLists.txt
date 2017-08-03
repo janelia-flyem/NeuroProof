@@ -1,7 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-enable_testing()
-
 if (ENABLE_GUI)
     add_subdirectory (../src/Gui "${CMAKE_CURRENT_BINARY_DIR}/Gui")
     add_subdirectory (../src/StackGui "${CMAKE_CURRENT_BINARY_DIR}/StackGui")
@@ -26,11 +24,26 @@ add_library (NeuroProofPriority SHARED pythonNeuroProofPriorityInterface.cpp
     ../src/EdgeEditor/NodeSizeRank.cpp ../src/EdgeEditor/OrphanRank.cpp
     ../src/EdgeEditor/SynapseRank.cpp ../src/EdgeEditor/ProbEdgeRank.cpp
     ../src/IO/RagIO.cpp ../src/Rag/RagUtils.cpp)
+
+# Copy the .so to the temporary build output, so we can test the python module correctly.
+add_custom_command(
+    TARGET NeuroProofPriority
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different $<TARGET_FILE:NeuroProofPriority> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/
+    COMMENT "Copying target $<TARGET_FILE:NeuroProofPriority> to temporary build output directory")
+
 add_library (NeuroProofRag SHARED pythonRagInterface.cpp ../src/IO/RagIO.cpp
     ../src/FeatureManager/FeatureMgr.cpp ../src/FeatureManager/Features.cpp
     ../src/Algorithms/MergePriorityFunction.cpp
     ../src/Algorithms/BatchMergeMRFh.cpp ../src/Rag/RagUtils.cpp
     ../src/Stack/Stack.cpp ../src/Stack/VolumeLabelData.cpp ../src/BioPriors/StackAgglomAlgs.cpp)
+
+# Copy the .so to the temporary build output, so we can test the python module correctly.
+add_custom_command(
+    TARGET NeuroProofRag
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different $<TARGET_FILE:NeuroProofRag> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/
+    COMMENT "Copying target $<TARGET_FILE:NeuroProofRag> to temporary build output directory")
 
 
 target_link_libraries (neuroproof_graph_analyze ${NEUROPROOF_INT_LIBS} ${NEUROPROOF_EXT_LIBS})
@@ -78,7 +91,6 @@ if (ENABLE_GUI)
 endif()
 # ctests
 
-enable_testing()
 add_test("test1_sample1_fullpredict"
     ${PYTHON_EXE}
     ${CMAKE_SOURCE_DIR}/integration_tests/test1.py
