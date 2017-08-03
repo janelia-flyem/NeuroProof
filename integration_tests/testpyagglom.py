@@ -24,4 +24,4 @@ assert result_unique == 239, \
     "Expected {} unique labels (including 0) in the resulting segmentation, but got {}"\
     .format(expected_unique, len(numpy.unique(res)))
 
-print "SUCCESS"
+print("SUCCESS")

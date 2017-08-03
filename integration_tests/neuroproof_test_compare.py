@@ -69,7 +69,7 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
             fing.close()
             fint.close()
 
-    print "SUCCESS"
+    print("SUCCESS")
 
 
 

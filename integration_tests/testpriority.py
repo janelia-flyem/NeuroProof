@@ -34,4 +34,4 @@ groundout = groundfile.read()
 if tempout != groundout:
     exit(1)
     
-print "SUCCESS"
+print("SUCCESS")
