@@ -148,11 +148,11 @@ endif()
 
 include_directories(${PYTHON_INCLUDE_PATH} ${PYTHON_NUMPY_INCLUDE_DIR})
 
-#add_library( _classifier_python SHARED src/Classifier.cpp ${CMAKE_SOURCE_DIR}/src/vigraRFclassifier.cpp ${CMAKE_SOURCE_DIR}/src/Classifier/opencvRFclassifier.cpp )
+#add_library( _classifier_python SHARED src/Classifier.cpp ${CMAKE_SOURCE_DIR}/src/vigraRFclassifier.cpp ${CMAKE_SOURCE_DIR}/src/Classifier/opencvRFclassifier.cpp init_numpy.cpp )
 
-add_library( _classifier_python SHARED src/Classifier.cpp)
-add_library( _agglomeration_python SHARED src/Agglomeration.cpp)
-add_library( _focusedproofreading_python SHARED src/FocusedProofreading.cpp)
+add_library( _classifier_python SHARED src/Classifier.cpp )
+add_library( _agglomeration_python SHARED src/Agglomeration.cpp src/init_numpy.cpp )
+add_library( _focusedproofreading_python SHARED src/FocusedProofreading.cpp src/init_numpy.cpp )
 
 target_link_libraries( _classifier_python Classifier ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _classifier_python PROPERTIES PREFIX  ""

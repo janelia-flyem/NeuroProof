@@ -1,14 +1,8 @@
 #include <Python.h>
 #include <boost/python.hpp>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-// http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-#define PY_ARRAY_UNIQUE_SYMBOL libdvid_PYTHON_BINDINGS
-#include <numpy/arrayobject.h>
-
+#include "init_numpy.h"
 #include "converters.hpp"
-
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <Utilities/ScopeTime.h>
@@ -73,8 +67,7 @@ VolumeLabelPtr agglomerate(VolumeLabelPtr labels,
 
 BOOST_PYTHON_MODULE(_agglomeration_python)
 {
-    // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-    import_array();
+    init_numpy();
     ndarray_to_segmentation();
     ndarray_to_predictionarray(); 
  

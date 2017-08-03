@@ -13,16 +13,12 @@
 #include <json/json.h>
 #include <sstream>
 #include <iomanip>
+#include <boost/algorithm/string/predicate.hpp>
+
 #include <Python.h>
 #include <boost/python.hpp>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-// http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-#define PY_ARRAY_UNIQUE_SYMBOL libdvid_PYTHON_BINDINGS
-
-#include <numpy/arrayobject.h>
-#include <boost/algorithm/string/predicate.hpp>
+#include "init_numpy.h"
 #include "converters.hpp"
 
 using namespace boost::python;
@@ -485,8 +481,7 @@ class ComputeProbPy {
 
 BOOST_PYTHON_MODULE(_focusedproofreading_python)
 {
-    // http://docs.scipy.org/doc/numpy/reference/c-api.array.html#importing-the-api
-    import_array();
+    init_numpy();
     ndarray_to_segmentation();
     ndarray_to_predictionarray(); 
     json_value_to_dict();
