@@ -22,13 +22,14 @@ res = Agglomeration.agglomerate(seg, pred, classifier, threshold)
 # The 'golden' results depend on std::unordered, and therefore
 # the expected answer is different on Mac and Linux.
 if platform.system() == "Darwin":
-    expected_unique = 239
+    expected_unique = [239]
 else:
-    expected_unique = 233
+    # Depending on which linux stdlib we use, we might get different results
+    expected_unique = [232, 233]
     
 result_unique = len(numpy.unique(res))
-assert result_unique == expected_unique, \
-    "Expected {} unique labels (including 0) in the resulting segmentation, but got {}"\
+assert result_unique in expected_unique, \
+    "Wrong number of unique labels in the segmentation. Expected one of {}, but got {}"\
     .format(expected_unique, len(numpy.unique(res)))
 
 print("SUCCESS")
