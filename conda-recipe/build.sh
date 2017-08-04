@@ -54,6 +54,7 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
     make -j${CPU_COUNT}
     
     # TEST
+    if [[ -z "$SKIP_NEUROPROOF_TESTS" || "$SKIP_NEUROPROOF_TESTS" == "0" ]]; then
     (
         set -e
     
@@ -71,6 +72,7 @@ if [[ $CONFIGURE_ONLY == 0 ]]; then
         # Run the tests
         make test
     )
+    fi
     
     # INSTALL
     make install
