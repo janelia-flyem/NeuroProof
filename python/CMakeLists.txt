@@ -6,17 +6,7 @@ cmake_minimum_required (VERSION 2.8)
 #
 ######################################################################
 
-FIND_PACKAGE(PythonInterp 2 REQUIRED)
-
-IF(PYTHONINTERP_FOUND)
-    # check that Python version 2.x is used
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-                         "import sys; print(sys.version[0])"
-                          OUTPUT_VARIABLE PYTHON_MAJOR_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-    IF(NOT (${PYTHON_MAJOR_VERSION} EQUAL 2))
-        MESSAGE(FATAL_ERROR "Python bindings require Python 2.x.")
-    ENDIF()
-ENDIF()
+FIND_PACKAGE(PythonInterp REQUIRED)
 
 ######################################################################
 #
@@ -25,7 +15,7 @@ ENDIF()
 ######################################################################
 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-                 "import sys; print sys.exec_prefix"
+                 "import sys; print(sys.exec_prefix)"
                   OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 IF(APPLE AND ${PYTHON_PREFIX} MATCHES ".*framework.*")
@@ -34,7 +24,7 @@ IF(APPLE AND ${PYTHON_PREFIX} MATCHES ".*framework.*")
         FORCE)
 ELSE()
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-                     "import sys; skip = 2 if sys.platform.startswith('win') else 1; print 'python' + sys.version[0:3:skip]"
+                     "import sys; skip = 2 if sys.platform.startswith('win') else 1; print('python' + sys.version[0:3:skip])"
                       OUTPUT_VARIABLE PYTHON_LIBRARY_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
     FIND_LIBRARY(PYTHON_LIBRARIES ${PYTHON_LIBRARY_NAME} HINTS "${PYTHON_PREFIX}" 
                  PATH_SUFFIXES lib lib64 libs DOC "Python libraries")
@@ -47,7 +37,7 @@ ENDIF()
 ######################################################################
 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-                "from distutils.sysconfig import *; print get_python_inc()"
+                "from distutils.sysconfig import *; print(get_python_inc())"
                 OUTPUT_VARIABLE PYTHON_INCLUDE OUTPUT_STRIP_TRAILING_WHITESPACE)
 SET(PYTHON_INCLUDE_PATH ${PYTHON_INCLUDE}
     CACHE PATH "Path to Python include files"
@@ -61,7 +51,7 @@ SET(PYTHON_INCLUDE_PATH ${PYTHON_INCLUDE}
 ######################################################################
 IF(NOT DEFINED LIBDVID_PYTHON_INSTALL_DIR OR LIBDVID_PYTHON_INSTALL_DIR MATCHES "^$")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-                     "from distutils.sysconfig import *; print get_python_lib(1)"
+                     "from distutils.sysconfig import *; print(get_python_lib(1))"
                       OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
     FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} LIBDVID_PYTHON_INSTALL_DIR)
 ENDIF()
@@ -158,11 +148,34 @@ endif()
 
 include_directories(${PYTHON_INCLUDE_PATH} ${PYTHON_NUMPY_INCLUDE_DIR})
 
-#add_library( _classifier_python SHARED src/Classifier.cpp ${CMAKE_SOURCE_DIR}/src/vigraRFclassifier.cpp ${CMAKE_SOURCE_DIR}/src/Classifier/opencvRFclassifier.cpp )
+#add_library( _classifier_python SHARED src/Classifier.cpp ${CMAKE_SOURCE_DIR}/src/vigraRFclassifier.cpp ${CMAKE_SOURCE_DIR}/src/Classifier/opencvRFclassifier.cpp init_numpy.cpp )
 
-add_library( _classifier_python SHARED src/Classifier.cpp)
-add_library( _agglomeration_python SHARED src/Agglomeration.cpp)
-add_library( _focusedproofreading_python SHARED src/FocusedProofreading.cpp)
+add_library( _classifier_python SHARED src/Classifier.cpp )
+add_library( _agglomeration_python SHARED src/Agglomeration.cpp src/init_numpy.cpp )
+add_library( _focusedproofreading_python SHARED src/FocusedProofreading.cpp src/init_numpy.cpp )
+
+# Copy to the appropriate dirs of the temporary build output, for testing the package.
+add_custom_command(
+    TARGET _classifier_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_classifier_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/Classifier/
+    COMMENT "Copying target $<TARGET_FILE:_classifier_python> to temporary build output directory")
+
+add_custom_command(
+    TARGET _agglomeration_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_agglomeration_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/Agglomeration/
+    COMMENT "Copying target $<TARGET_FILE:_agglomeration_python> to temporary build output directory")
+
+add_custom_command(
+    TARGET _focusedproofreading_python
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            $<TARGET_FILE:_focusedproofreading_python> ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}/neuroproof/FocusedProofreading/
+    COMMENT "Copying target $<TARGET_FILE:_focusedproofreading_python> to temporary build output directory")
+
 
 target_link_libraries( _classifier_python Classifier ${NEUROPROOF_EXT_LIBS} ${boostpython_LIB} ${PYTHON_LIBRARIES} )
 set_target_properties( _classifier_python PROPERTIES PREFIX  ""
@@ -205,7 +218,6 @@ install(FILES neuroproof/Agglomeration/__init__.py
 install(FILES neuroproof/FocusedProofreading/__init__.py
     DESTINATION ${LIBDVID_PYTHON_INSTALL_DIR}/neuroproof/FocusedProofreading)
 
-enable_testing() 
 
 add_test("test_agglom_python"
     ${PYTHON_EXE}

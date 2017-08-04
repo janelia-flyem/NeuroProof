@@ -16,8 +16,8 @@
 #include <iostream>
 
 using std::vector; using std::cerr; using std::endl;
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 using std::string;
 
 namespace NeuroProof {
@@ -351,7 +351,7 @@ int Stack::remove_small_regions(int threshold,
 int Stack::absorb_small_regions(VolumeProbPtr boundary_pred,
             int threshold, unordered_set<Label_t>& exclusions)
 {
-    std::tr1::unordered_map<Label_t, unsigned long long> regions_sz;
+    std::unordered_map<Label_t, unsigned long long> regions_sz;
     labelvol->rebase_labels();
 
     for (VolumeLabelData::iterator iter = labelvol->begin();
@@ -721,11 +721,11 @@ void Stack::compute_vi(double& merge, double& split,
     }
 
     // load all labels and gt labels with the VI contribution
-    for (std::tr1::unordered_map<Label_t, double>::iterator iter = seg_overmerge.begin();
+    for (std::unordered_map<Label_t, double>::iterator iter = seg_overmerge.begin();
             iter != seg_overmerge.end(); ++iter) {
         label_ranked.insert(make_pair(iter->second, iter->first));
     }
-    for (std::tr1::unordered_map<Label_t, double>::iterator iter = gt_overmerge.begin();
+    for (std::unordered_map<Label_t, double>::iterator iter = gt_overmerge.begin();
             iter != gt_overmerge.end(); ++iter) {
         gt_ranked.insert(make_pair(iter->second, iter->first));
     }

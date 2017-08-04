@@ -214,7 +214,7 @@ class EdgeEditor {
 
   private:
     //! defines type for holding node/edge properties
-    typedef std::tr1::unordered_map<std::string, boost::shared_ptr<Property> >
+    typedef std::unordered_map<std::string, boost::shared_ptr<Property> >
         NodePropertyMap; 
 
     /*!

@@ -19,37 +19,46 @@ build:
   #
   string: np{{np}}py{{py}}_{{PKG_BUILDNUM}}_g{{GIT_FULL_HASH[:7]}}
 
+  script_env:
+    - SKIP_NEUROPROOF_TESTS
+
 requirements:
   build:
-    - gcc 4.8.5*
-    - python 2.7*
+    - cmake
+    - python >=2.7
+    - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
+    - boost 1.63.0
     - jsoncpp 1.6.2
     - vigra 1.11*
     - libdvid-cpp
-    - vtk         5.10.1.99
-    - hdf5        1.8.16
-    - qt          4.8.6.99 # [osx]
-    - qt          4.8.6    # [linux]
-    - opencv      2.4.10.1
+    - vtk-nopython 5.10.1
+    - hdf5        1.8.18
+    - qt          4.8*
+    - opencv-nopython      2.4*
+    - h5py
     
   run:
-    - libgcc 4.8.5*
-    - python 2.7*
+    - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
+    - boost 1.63.0
     - jsoncpp 1.6.2
     - vigra 1.11*
     - libdvid-cpp
-    - vtk         5.10.1.99
-    - hdf5        1.8.16
-    - qt          4.8.6.99 # [osx]
-    - qt          4.8.6     # [linux]
-    - opencv      2.4.10.1
+    - vtk-nopython 5.10.1
+    - hdf5        1.8.18
+    - qt          4.8*
+    - opencv-nopython      2.4*
 
 test:
-  source_files:
-    - build
-    - lib
+  imports:
+    - libNeuroProofMetrics
+    - libNeuroProofPriority
+    - libNeuroProofRag
+    - neuroproof
+    - neuroproof.Agglomeration
+    - neuroproof.FocusedProofreading
+    - neuroproof.Classifier
 
 about:
   home: http://github.com/janelia-flyem/NeuroProof

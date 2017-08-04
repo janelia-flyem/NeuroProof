@@ -1,0 +1,14 @@
+{
+	"edge_list" : 
+	[
+		{
+			"false_edge" : false,
+			"node1" : 1,
+			"node2" : 2,
+			"preserve" : false,
+			"size1" : 55,
+			"size2" : 65,
+			"weight" : 3.6000000000000001
+		}
+	]
+}

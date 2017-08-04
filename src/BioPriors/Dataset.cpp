@@ -1,6 +1,8 @@
 
 #include "Dataset.h"
 
+#include <cstdlib>
+
 using namespace NeuroProof;
 
 void Dataset::initialize(){

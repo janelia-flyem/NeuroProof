@@ -26,7 +26,7 @@ using std::cerr; using std::cout; using std::endl;
 using std::string;
 using std::vector;
 using namespace boost::algorithm;
-using std::tr1::unordered_set;
+using std::unordered_set;
 using std::ofstream;
 
 static const char * SEG_DATASET_NAME = "stack";

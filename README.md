@@ -120,9 +120,10 @@ That will create a directory named `build` (if necessary) configured to install 
     % make
     % make install
 
-To use (or test) your custom build of NeuroProof, you'll need to set the `LD_LIBRARY_PATH` environment variable:
+To use (or test) your custom build of NeuroProof, you'll need to set the `LD_LIBRARY_PATH` and `PYTHONPATH` environment variables:
 
     % export LD_LIBRARY_PATH=/path/to/your/environment-prefix/lib
+    % export PYTHONPATH=/path/to/NeuroProof/build/python
     % make test
 
 For coding that requires adding new dependencies please consult documentation for

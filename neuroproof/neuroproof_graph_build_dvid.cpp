@@ -18,8 +18,8 @@ using std::cerr; using std::cout; using std::endl;
 using std::string;
 using std::vector;
 using namespace boost::algorithm;
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 using std::ifstream;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";

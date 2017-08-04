@@ -12,7 +12,7 @@
 #include "EdgeRank.h"
 
 #include <set>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <vector>
 
 /*
@@ -149,7 +149,7 @@ class NodeRankList {
     std::set<NodeRank> node_list;
 
     //! mapping between id and rank element to allow flexible, quick deletion
-    std::tr1::unordered_map<Node_t, NodeRank> stored_ids;
+    std::unordered_map<Node_t, NodeRank> stored_ids;
 
     //! enables checkpoint mechanisms when true
     bool checkpoint;

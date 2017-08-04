@@ -1,4 +1,5 @@
 import sys
+import platform
 import h5py
 import numpy
 
@@ -18,8 +19,16 @@ pred = pred.copy()
 
 res = Agglomeration.agglomerate(seg, pred, classifier, threshold)
 
-# should be 232 unique labels (including 0) in the resulting segmentation
-if len(numpy.unique(res)) != 232:
-    exit(1)
+# The 'golden' results depend on std::unordered, and therefore
+# the expected answer is different on Mac and Linux.
+if platform.system() == "Darwin":
+    expected_unique = 239
+else:
+    expected_unique = 233
+    
+result_unique = len(numpy.unique(res))
+assert result_unique == expected_unique, \
+    "Expected {} unique labels (including 0) in the resulting segmentation, but got {}"\
+    .format(expected_unique, len(numpy.unique(res)))
 
-print "SUCCESS"
+print("SUCCESS")

@@ -10,7 +10,7 @@ bodythres = float(sys.argv[4])
 synthres = float(sys.argv[5])
 gtadjacency = json.load(open(sys.argv[6]))
 
-print "opened files"
+print("opened files")
 
 # extract important bodies
 important_bodies = set()
@@ -41,7 +41,7 @@ for path in paths:
         sorted_paths.append((path[2], path[0], path[1]))
 
 sorted_paths.sort(reverse=True)
-print "Total paths to merged bodies: ", len(sorted_paths)
+print("Total paths to merged bodies: ", len(sorted_paths))
 
 # load gt maps
 num_seg = len(remaining_synbodies)
@@ -56,7 +56,7 @@ for seg2gt in gtadjacency:
         gt_mappings[seg2gt[0]] = seg2gt[1]
 
 num_gt = len(gtbodies)
-print "Syn fragments: ", num_seg, "GT big bodies covered: ", num_gt
+print("Syn fragments: ", num_seg, "GT big bodies covered: ", num_gt)
 
 # iterate paths in order
 
@@ -114,10 +114,10 @@ for iter1, path in enumerate(sorted_paths):
     
     if (iter1 % 10) == 0:
         # merge yes and size, merge no and size, orphans and size, remaining segs, optimal GT, confidence
-        print num_correct, size_correct, num_incorrect, size_incorrect, num_orphan, size_orphan, num_seg, num_gt, path[0]
+        print(num_correct, size_correct, num_incorrect, size_incorrect, num_orphan, size_orphan, num_seg, num_gt, path[0])
 
-print "Final Results (yes count and size, no count and size, orphan count and size, #syn bodies left, #gt)"
-print num_correct, size_correct, num_incorrect, size_incorrect, num_orphan, size_orphan, num_seg, num_gt
+print("Final Results (yes count and size, no count and size, orphan count and size, #syn bodies left, #gt)")
+print(num_correct, size_correct, num_incorrect, size_incorrect, num_orphan, size_orphan, num_seg, num_gt)
 
 
 

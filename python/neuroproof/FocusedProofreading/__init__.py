@@ -1,1 +1,1 @@
-from _focusedproofreading_python import *
+from ._focusedproofreading_python import *

@@ -1,1 +1,1 @@
-from _agglomeration_python import *
+from ._agglomeration_python import *

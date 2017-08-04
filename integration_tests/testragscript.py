@@ -47,4 +47,4 @@ rag = create_rag_from_jsonfile(sys.argv[1])
 if rag.get_num_regions() != 2:
     exit(1)
 
-print "SUCCESS"
+print("SUCCESS")

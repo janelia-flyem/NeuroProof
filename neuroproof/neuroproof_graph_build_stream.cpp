@@ -16,8 +16,8 @@ using std::cerr; using std::cin; using std::cout; using std::endl;
 using std::string;
 using std::vector;
 using namespace boost::algorithm;
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 
 static const char * PRED_DATASET_NAME = "volume/predictions";
 static const char * PROPERTY_KEY = "np-features";

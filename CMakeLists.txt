@@ -10,14 +10,27 @@ if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release)
 endif ()
 
-set (CMAKE_CXX_FLAGS_RELEASE "-O3")
-set (CMAKE_CXX_FLAGS_DEBUG "-ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
+
+if (NOT APPLE)
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS}")
+endif()
+
 set (CMAKE_CXX_LINK_FLAGS "-O3")
 set (CMAKE_DEBUG_POSTFIX "-g")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 message("Using cmake modules from ${CMAKE_MODULE_PATH}")
 set (BUILDLOC ${CMAKE_SOURCE_DIR})
+
+message("making the python output dir...")
+set(NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR "${CMAKE_BINARY_DIR}/python")
+make_directory( ${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR})
+
+# Copy pure python source from source-dir to build-dir
+file(COPY "${CMAKE_SOURCE_DIR}/python/neuroproof" DESTINATION "${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}")
+
+set(CTEST_ENVIRONMENT "PYTHONPATH=${NEUROPROOF_PYTHON_BUILD_OUTPUT_DIR}")
 
 ######################################################################
 #
@@ -26,7 +39,7 @@ set (BUILDLOC ${CMAKE_SOURCE_DIR})
 #
 ######################################################################
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-    "from distutils.sysconfig import *; print get_python_lib(1)"
+    "from distutils.sysconfig import *; print(get_python_lib(1))"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
 FILE(TO_CMAKE_PATH ${PYTHON_SITE_PACKAGES} NEUROPROOF_PYTHON_INSTALL_DIR)
 SET(NEUROPROOF_PYTHON_INSTALL_DIR ${NEUROPROOF_PYTHON_INSTALL_DIR}

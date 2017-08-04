@@ -1,0 +1,17 @@
+ignore features: 
+
+ ** Learning iteration 1  **
+
+Learn edge classifier ...
+Building RAG ...done with 164 nodes
+Inclusion removal ...done with 163 nodes
+gt label counting
+computed contingency table
+gt label determined for 163 nodes
+Features generated
+Number of samples and dimensions: 617, 190
+Number of merge: 192
+with training set accuracy :99.676
+Classifier learned
+accuracy = 99.6759
+done with 163 nodes

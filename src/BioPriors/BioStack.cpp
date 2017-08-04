@@ -8,8 +8,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <Classifier/opencvRFclassifier.h>
 
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 using std::vector;
 using std::string;
 using namespace boost::algorithm;

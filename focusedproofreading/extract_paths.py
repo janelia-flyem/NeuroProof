@@ -28,9 +28,9 @@ all_paths = []
 for iter1, body in enumerate(important_bodies):
     #if iter1 < 20483:
     #    continue
-    print "start"
+    print("start")
     path = graph.find_close_bodies(body,3,0.1) # grab to 10 percent certainty (infinite path size) (try limit to 1, 2, 3, etc) 
-    print iter1, num_bodies
+    print(iter1, num_bodies)
     #if iter1 > 10:
     #    break
 

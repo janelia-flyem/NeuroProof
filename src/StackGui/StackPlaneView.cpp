@@ -12,7 +12,7 @@
 #include <QVBoxLayout>
 
 using namespace NeuroProof;
-using std::tr1::unordered_map;
+using std::unordered_map;
 
 StackPlaneView::StackPlaneView(StackSession* stack_session_, 
         StackPlaneController* controller_, QWidget* widget_parent_) : 

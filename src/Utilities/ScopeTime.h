@@ -2,6 +2,7 @@
 #define SCOPETIME_H
 
 #include <time.h>
+#include <iostream>
 
 namespace NeuroProof {
 

@@ -1,4 +1,5 @@
 import sys
+import platform
 import subprocess
 import os
 
@@ -6,7 +7,11 @@ prefix_path = sys.argv[1]
 cmakepath = sys.argv[2]
 
 
-goldenprefix = cmakepath + "/integration_tests/outputs/"
+if platform.system() == "Darwin":
+    goldenprefix = cmakepath + "/integration_tests/outputs/mac/"
+else:
+    goldenprefix = cmakepath + "/integration_tests/outputs/linux/"
+
 testoutprefix = cmakepath + "/integration_tests/temp_data/"
 
 
@@ -23,6 +28,7 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
     p = subprocess.Popen(exe_string.split(), stdout=subprocess.PIPE)
  
     testout_stdout, err = p.communicate()
+    testout_stdout = testout_stdout.decode('utf-8')
 
     # error returned from call
     if err is not None:
@@ -69,7 +75,7 @@ def compare_outputs(exe_string, stdoutfile, file_comps=None):
             fing.close()
             fint.close()
 
-    print "SUCCESS"
+    print("SUCCESS")
 
 
 

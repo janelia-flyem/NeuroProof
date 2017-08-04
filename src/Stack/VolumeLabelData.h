@@ -11,7 +11,7 @@
 
 #include "VolumeData.h"
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <Utilities/Glb.h>
 
 namespace NeuroProof {
@@ -123,13 +123,13 @@ class VolumeLabelData : public VolumeData<Label_t> {
      * Retrieve all of the transform mappings since last rebasing.
      * \return copy of label mapping
     */
-    std::tr1::unordered_map<Label_t, Label_t> get_mappings()
+    std::unordered_map<Label_t, Label_t> get_mappings()
     {
         return label_mapping;
     }
 
     //! TODO: Factor out (DANGER) hash table that keeps track of label mappings
-    std::tr1::unordered_map<Label_t, Label_t> label_mapping;
+    std::unordered_map<Label_t, Label_t> label_mapping;
   private:
     /*!
      * Private definition of constructor to prevent stack allocation.
@@ -143,7 +143,7 @@ class VolumeLabelData : public VolumeData<Label_t> {
      * will have runtime complexity on the order of the number of distinct
      * labels in the dataset.
     */
-    std::tr1::unordered_map<Label_t, std::vector<Label_t> > label_remapping_history;
+    std::unordered_map<Label_t, std::vector<Label_t> > label_remapping_history;
 
 };
 

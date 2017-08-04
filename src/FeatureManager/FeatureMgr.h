@@ -5,7 +5,7 @@
 
 #include <Rag/RagEdge.h>
 #include "Features.h"
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 
 #include <Classifier/edgeclassifier.h>
@@ -21,8 +21,8 @@ class shared_ptr;
 
 namespace NeuroProof {
     
-typedef std::tr1::unordered_map<RagEdge_t*, std::vector<void *>, RagEdgePtrHash<Node_t>, RagEdgePtrEq<Node_t> > EdgeCaches; 
-typedef std::tr1::unordered_map<RagNode_t*, std::vector<void *>, RagNodePtrHash<Node_t>, RagNodePtrEq<Node_t> > NodeCaches; 
+typedef std::unordered_map<RagEdge_t*, std::vector<void *>, RagEdgePtrHash<Node_t>, RagEdgePtrEq<Node_t> > EdgeCaches; 
+typedef std::unordered_map<RagNode_t*, std::vector<void *>, RagNodePtrHash<Node_t>, RagNodePtrEq<Node_t> > NodeCaches; 
 
 class FeatureMgr {
   public:

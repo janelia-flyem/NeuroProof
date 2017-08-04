@@ -3,7 +3,7 @@
 
 #include <FeatureManager/FeatureMgr.h>
 #include <Rag/Rag.h>
-#include <tr1/unordered_set>
+#include <unordered_set>
 #include <Utilities/AffinityPair.h>
 
 namespace NeuroProof {
@@ -88,7 +88,7 @@ class ProbPriority : public MergePriority {
     double threshold;
     const double Epsilon;
     typedef std::multimap<double, std::pair<Node_t, Node_t> > EdgeRank_t; 
-    typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
+    typedef std::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;
     
@@ -119,7 +119,7 @@ class MitoPriority : public MergePriority {
     double threshold;
     const double Epsilon;
     typedef std::multimap<double, std::pair<Node_t, Node_t> > EdgeRank_t; 
-    typedef std::tr1::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
+    typedef std::unordered_set<OrderedPair, OrderedPair> Dirty_t; 
     EdgeRank_t ranking;
     Dirty_t dirty_edges;
 

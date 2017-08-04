@@ -7,8 +7,8 @@
 using std::string;
 using boost::shared_ptr;
 using std::vector;
-using std::tr1::unordered_set;
-using std::tr1::unordered_map;
+using std::unordered_set;
+using std::unordered_map;
 using std::ifstream;
 using std::ofstream;
 
@@ -21,10 +21,10 @@ static const char *SEG_DATASET_NAME = "stack";
 static const char * GRAY_DATASET_NAME = "gray";
 
 //! declaration of typedef for mapping of rag edges to doubles
-typedef std::tr1::unordered_map<RagEdge_t*, double> EdgeCount;
+typedef std::unordered_map<RagEdge_t*, double> EdgeCount;
     
 //! declaration of typedef for mapping of rag edges to location 
-typedef std::tr1::unordered_map<RagEdge_t*, Location> EdgeLoc; 
+typedef std::unordered_map<RagEdge_t*, Location> EdgeLoc; 
 
 /*!
  * Support function called by 'serialize_stack' that actually writes

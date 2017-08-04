@@ -11,7 +11,7 @@
 #include <Stack/StackObserver.h>
 #include <Stack/VolumeLabelData.h>
 
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 // vtk headers are included since class member variables are not pointers
 #include <vtkSmartPointer.h>
@@ -93,7 +93,7 @@ class StackBodyView : public StackObserver {
      * associated color ids only for the the bodies in the active labels list.
      * \param labels mapping for active labels to colors that should be shown
     */
-    void create_label_volume(std::tr1::unordered_map<unsigned int, int>& labels);
+    void create_label_volume(std::unordered_map<unsigned int, int>& labels);
     
     /*!
      * Internal update variable that will look for the initial

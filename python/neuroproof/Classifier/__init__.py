@@ -1,1 +1,1 @@
-from _classifier_python import *
+from ._classifier_python import *

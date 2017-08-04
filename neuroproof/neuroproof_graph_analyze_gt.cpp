@@ -62,8 +62,8 @@ using std::vector;
 using namespace NeuroProof;
 
 using namespace boost::program_options;
-using std::tr1::unordered_map; 
-using std::tr1::unordered_set;
+using std::unordered_map; 
+using std::unordered_set;
 using std::exception;
 
 // path to label in h5 file
@@ -490,7 +490,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     unordered_set<Label_t> seg_matched; 
     unordered_set<Label_t> gt_matched; 
     int matched = 0;
-    for (std::tr1::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
+    for (std::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
            iter != seg_orphans.end(); ++iter) {
         matched += stack.match_regions_overlap((*iter), gt_orphans,
                 gt_rag, seg_matched, gt_matched);
@@ -499,7 +499,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     cout << "Percent orphans matched for seg: " <<
         seg_matched.size()/double(seg_orphans.size())*100 << endl;
     if (options.dump_orphans) {
-        for (std::tr1::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
+        for (std::unordered_set<Label_t>::iterator iter = seg_orphans.begin();
                 iter != seg_orphans.end(); ++iter) {
             if (seg_matched.find(*iter) == seg_matched.end()) {
                 cout << "Unmatched seg orphan body: " << *iter << endl;
@@ -511,7 +511,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
    
     // print orphans that are not found in gt 
     if (options.dump_orphans) {
-        for (std::tr1::unordered_set<Label_t>::iterator iter = gt_orphans.begin();
+        for (std::unordered_set<Label_t>::iterator iter = gt_orphans.begin();
                 iter != gt_orphans.end(); ++iter) {
             if (gt_matched.find(*iter) == gt_matched.end()) {
                 cout << "Unmatched GT orphan body: " << *iter << endl;
@@ -559,7 +559,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     // TODO get affinity pairs for missed node pairs
     
 
-    std::tr1::unordered_map<Label_t, unsigned long long> body_changes;
+    std::unordered_map<Label_t, unsigned long long> body_changes;
     Rag_t opt_rag_copy(*opt_rag);
 
     bool change = true;
@@ -609,7 +609,7 @@ void dump_differences(BioStack& stack, Stack& synapse_stack,
     // determine bodies whose total body size is much greater than its
     // largest original component
     int num_undermerged_bodies = 0;
-    for (std::tr1::unordered_map<Label_t, unsigned long long>::iterator iter = body_changes.begin();
+    for (std::unordered_map<Label_t, unsigned long long>::iterator iter = body_changes.begin();
             iter != body_changes.end(); ++iter) {
         unsigned long long largest_orig = iter->second;
         RagNode_t* node1 = opt_rag_copy.find_rag_node(iter->first);
@@ -902,7 +902,7 @@ void run_recipe(string recipe_filename, BioStack& stack,
     stack.load_synapse_counts(synapse_counts);
     id = 0;
     Json::Value synapses;
-    for (std::tr1::unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
+    for (std::unordered_map<Label_t, int>::iterator iter = synapse_counts.begin();
             iter != synapse_counts.end(); ++iter) {
         Json::Value val_pair;
         val_pair[(unsigned int)(0)] = iter->first;

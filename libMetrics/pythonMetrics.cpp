@@ -3,7 +3,7 @@
 
 using namespace NeuroProof;
 using namespace boost::python;
-using std::tr1::unordered_map;
+using std::unordered_map;
 
 // ?! inherit properly from Stack (reuse some implementation, etC)
 class StackPython {
