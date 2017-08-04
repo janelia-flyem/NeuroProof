@@ -6,6 +6,7 @@ machine:
     TEST_ENV_NAME: test-env
     TEST_ENV_PREFIX: /home/ubuntu/miniconda/envs/test-env
     LD_LIBRARY_PATH: /home/ubuntu/miniconda/envs/test-env/lib
+    PYTHONPATH: /home/ubuntu/NeuroProof/build/python
     PATH: ${TEST_ENV_PREFIX}/bin:${CONDA_ROOT}/bin:${PATH}
 
 ## Customize dependencies
@@ -25,7 +26,7 @@ dependencies:
     - >
       if [[ ! -d ${CONDA_ROOT} ]]; then
           echo "Installing Miniconda...";
-          wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh &&
+          wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh &&
           bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
       else
           echo "Using cached Miniconda install";
@@ -36,9 +37,9 @@ dependencies:
     # Install neuroproof and all dependencies
     - >
       if [ ! -d ${TEST_ENV_PREFIX} ]; then
-          conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof;
+          conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem-forge neuroproof python=3;
       else
-          conda install --quiet -y -n ${TEST_ENV_NAME} -c flyem neuroproof;
+          conda install --quiet -y -n ${TEST_ENV_NAME} -c flyem-forge neuroproof python=3;
       fi
 
     # Remove neuroproof itself
