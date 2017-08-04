@@ -21,6 +21,7 @@ build:
 
 requirements:
   build:
+    - cmake
     - python >=2.7
     - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
