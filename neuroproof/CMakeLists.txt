@@ -135,11 +135,17 @@ add_test("test_rag_python"
     ${CMAKE_SOURCE_DIR}/integration_tests/temp_data/temp_rag.json
 )
 
+if (APPLE)
+    set(TEST_GOLDEN_OUTPUTS_DIR "${CMAKE_SOURCE_DIR}/integration_tests/outputs/mac")
+else()
+    set(TEST_GOLDEN_OUTPUTS_DIR "${CMAKE_SOURCE_DIR}/integration_tests/outputs/linux")
+endif()
+
 add_test("test_priority_python"
     ${PYTHON_EXE}
     ${CMAKE_SOURCE_DIR}/integration_tests/testpriority.py
     ${CMAKE_SOURCE_DIR}/integration_tests/inputs/samp1_graph_processed.json
     ${CMAKE_SOURCE_DIR}/integration_tests/temp_data/proofread_samp1_graph.json
-    ${CMAKE_SOURCE_DIR}/integration_tests/outputs/proofread_samp1_graph.json
+    ${TEST_GOLDEN_OUTPUTS_DIR}/proofread_samp1_graph.json
 )
 

@@ -1,0 +1,17 @@
+Read prediction array
+Read watershed
+RF loaded with 255 trees
+no features to ignore
+ignore features: 
+Building RAG ...done with 8179 nodes
+Inclusion removal ...done with 8081 nodes
+Agglomerating (agglo) upto threshold 0.2 ...Done with 251 regions
+Agglomerating (agglo) ignoring synapse constraints upto threshold 0.1
+Done with 249 regions
+Inclusion removal ...done with 235 nodes
+Merge Mitochondria (border-len) ...done with 235 regions
+Inclusion removal ...done with 235 nodes
+Removing small bodies ... 69 removed
+RF loaded with 255 trees, for 2 class prob with 190 dimensions
+no features to ignore
+ignore features: 
