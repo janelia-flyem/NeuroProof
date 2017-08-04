@@ -27,19 +27,22 @@ dependencies:
       if [[ ! -d ${CONDA_ROOT} ]]; then
           echo "Installing Miniconda...";
           wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh &&
-          bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
+          bash Miniconda3-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
       else
           echo "Using cached Miniconda install";
       fi
+
+    - conda config --add channels conda-forge
+    - conda config --add channels flyem-forge
 
     - conda install --quiet -y anaconda-client
     
     # Install neuroproof and all dependencies
     - >
       if [ ! -d ${TEST_ENV_PREFIX} ]; then
-          conda create --quiet -y -n ${TEST_ENV_NAME} -c flyem-forge neuroproof python=3;
+          conda create --quiet -y -n ${TEST_ENV_NAME} neuroproof python=3 h5py;
       else
-          conda install --quiet -y -n ${TEST_ENV_NAME} -c flyem-forge neuroproof python=3;
+          conda install --quiet -y -n ${TEST_ENV_NAME} neuroproof python=3 h5py;
       fi
 
     # Remove neuroproof itself
@@ -53,4 +56,4 @@ test:
     - cd build && make && cd -
     - cd build && make install && cd -
     - cd build && make test && cd -
-    
+    - cat build/Testing/Temporary/LastTest.log
