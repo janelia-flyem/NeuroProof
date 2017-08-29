@@ -28,7 +28,7 @@ requirements:
     - python >=2.7
     - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
-    - boost 1.63.0
+    - boost 1.64.*
     - jsoncpp 1.6.2
     - vigra 1.11*
     - libdvid-cpp
@@ -41,7 +41,7 @@ requirements:
   run:
     - python {{PY_VER}}*
     - numpy {{NPY_VER}}*
-    - boost 1.63.0
+    - boost 1.64.*
     - jsoncpp 1.6.2
     - vigra 1.11*
     - libdvid-cpp
