@@ -65,8 +65,65 @@ include_directories (BEFORE ${CMAKE_SOURCE_DIR}/src)
 # default gui enable off
 set (ENABLE_GUI NO CACHE BOOL "Build GUI for NeuroProof")
 
+FIND_PACKAGE(PythonInterp)
 FIND_PACKAGE(PythonLibs)
-FIND_PACKAGE(Boost)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system program_options unit_test_framework filesystem)
+
+######################################################################
+#
+#  Find boost::python library
+#
+#  (Copied from vigra/config/FindVIGRANUMPY_DEPENDENCIES.cmake)
+#
+# 'FIND_PACKAGE(Boost COMPONENTS python)' is unreliable because it often selects
+# boost_python for the wrong Python version
+#
+######################################################################
+IF(Boost_FOUND)
+
+    IF(Boost_USE_MULTITHREADED)
+        # define names for thread-safe library variants
+        SET(BOOST_PYTHON_NAMES
+                boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}-mt
+                boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}-mt
+                boost_python${PYTHON_VERSION_MAJOR}-mt
+                boost_python-mt)
+    ENDIF()
+
+    IF(Boost_LIB_SUFFIX)
+        SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+            # Windows with mangled library names
+            boost_python${PYTHON_VERSION_MAJOR}${Boost_LIB_SUFFIX}
+            boost_python${Boost_LIB_SUFFIX})
+    ENDIF()
+
+    # define names for boost_python library variants
+    # (may or may not be thread-safe)
+    SET(BOOST_PYTHON_NAMES ${BOOST_PYTHON_NAMES}
+            # Linux with multiple Python versions
+            boost_python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}
+            # Gentoo
+            boost_python-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}
+            # Mac with Python 3
+            boost_python${PYTHON_VERSION_MAJOR}
+            # default
+            boost_python)
+
+    FIND_LIBRARY(Boost_PYTHON_LIBRARY
+                 NAMES ${BOOST_PYTHON_NAMES}
+                 NAMES_PER_DIR
+                 HINTS "${Boost_LIBRARY_DIR}"
+                 DOC "boost_python libraries")
+ENDIF()
+
+if(Boost_PYTHON_LIBRARY)
+    MESSAGE(STATUS "Found boost_python library: ${Boost_PYTHON_LIBRARY}")
+else()
+    MESSAGE(FATAL_ERROR "Could NOT find boost_python library")
+endif()
+
+
+
 find_package(LIBDVIDCPP)
 
 
@@ -95,7 +152,23 @@ set (json_LIB jsoncpp)
 set (hdf5_LIBRARIES hdf5 hdf5_hl)
 set (vigra_LIB vigraimpex)
 set (opencv_LIBS opencv_ml opencv_core)
-set (boost_LIBS boost_thread boost_system boost_program_options boost_python boost_unit_test_framework boost_filesystem)
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set (boost_LIBS ${Boost_PYTHON_LIBRARY}
+                    ${Boost_THREAD_LIBRARY_RELEASE}
+                    ${Boost_SYSTEM_LIBRARY_RELEASE}
+                    ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
+                    ${Boost_UNIT_TEST_LIBRARY_RELEASEE}
+                    ${Boost_FILESYSTEM_LIBRARY_RELEASE})
+else()
+    set (boost_LIBS ${Boost_PYTHON_LIBRARY}
+                    ${Boost_THREAD_LIBRARY_DEBUG}
+                    ${Boost_SYSTEM_LIBRARY_DEBUG}
+                    ${Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG}
+                    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG}
+                    ${Boost_FILESYSTEM_LIBRARY_DEBUG})
+endif()
+
 set (libdvid_LIBS ${LIBDVIDCPP_LIBRARY})
 
 if (ENABLE_GUI)
