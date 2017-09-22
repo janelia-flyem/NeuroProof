@@ -124,6 +124,9 @@ class PriorityQCombine : public FeatureCombine {
 
         for(RagNode_t::edge_iterator iter = node_keep->edge_begin();
                 iter != node_keep->edge_end(); ++iter) {
+            if (((*iter)->get_node1() == node_remove) || 
+                ((*iter)->get_node2() == node_remove))
+                continue;
             double val = feature_mgr->get_prob(*iter);
             double prev_val = (*iter)->get_weight(); 
             (*iter)->set_weight(val);
