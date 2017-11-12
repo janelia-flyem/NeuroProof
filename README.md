@@ -13,7 +13,7 @@ is over-segmented.  It provides several advances over Fly EM's previous, but act
 * Faster implementation of agglomeration (written in C++ instead of Python)
 * Incorporation of biological priors (like mitochondria) to improve the quality of the segmentation
 (see [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825))
-* Interactive training of superpixel boundaries without exhaustive groundtruth ([Parag, et.al. 14] (http://www.researchgate.net/publication/265683774_Small_Sample_Learning_of_Superpixel_Classifiers_for_EM_Segmentation))
+* Interactive training of superpixel boundaries without exhaustive groundtruth ([Parag, et.al. 14](http://www.researchgate.net/publication/265683774_Small_Sample_Learning_of_Superpixel_Classifiers_for_EM_Segmentation))
 * Introduction of new metrics for analyzing segmentation quality
 
 While NeuroProof has been tested in the domain
@@ -45,8 +45,10 @@ editing operations in various tool environments like in
 ## Installation Instructions
 
 NeuroProof has been tested on several different linux environments and compiles on Mac.
-Documentation
-in NeuroProof follow Doxygen comment conventions; an html view can be created
+
+### Documentation
+
+In NeuroProof, follow Doxygen comment conventions; an html view can be created
 by running the following command:
 
     % doxygen doxygenconfig.file
